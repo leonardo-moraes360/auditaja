@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { EmendasDoParlamentar } from "@/data/emendas";
-import { brl, brlCompacto, pct } from "@/lib/format";
+import { baseDaColeta, brlMi } from "@/lib/emendas";
+import { brl, pct } from "@/lib/format";
 import { classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
 
@@ -73,6 +74,7 @@ export function SecaoEmendas({ dados, parlamentarId }: { dados: EmendasDoParlame
   const parametro = mandato ? "mandato" : String(periodo);
   const href = (p: string) => `/parlamentares/${parlamentarId}?emendas=${p}#emendas`;
   const botoesAno = anos.slice(0, 2);
+  const base = baseDaColeta(dados.coleta?.observacao);
 
   return (
     <section id="emendas" aria-labelledby="emendas-titulo" className={`${CARTAO} gap-3.5 sm:gap-5 sm:p-6`}>
@@ -115,7 +117,7 @@ export function SecaoEmendas({ dados, parlamentarId }: { dados: EmendasDoParlame
       )}
 
       <NotaFonte
-        rotulo="Portal da Transparência (CGU), Emendas Parlamentares, download em lote"
+        rotulo={`Portal da Transparência (CGU), Emendas Parlamentares, download em lote${base ? ` · base de ${base}` : ""}`}
         rotuloCurto="Portal da Transparência, emendas"
         coleta={dados.coleta ?? undefined}
         linkOriginal={PAGINA_EMENDAS_PORTAL}
@@ -158,7 +160,7 @@ function ConteudoEmendas({
       <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] sm:gap-3">
         <Indicador
           titulo={mandato ? "Empenhado no mandato" : `Empenhado em ${periodo}`}
-          valor={brlCompacto(totais.empenhado)}
+          valor={brlMi(totais.empenhado)}
           detalhe={
             mandato
               ? `${qtd}, orçamentos de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`
@@ -167,14 +169,14 @@ function ConteudoEmendas({
         />
         <Indicador
           titulo="Pago até agora"
-          valor={brlCompacto(totais.pago)}
+          valor={brlMi(totais.pago)}
           progresso={pctPago}
           detalhe={pctPago === null ? "—" : `${pctPago}% do empenhado, incluindo restos a pagar`}
         />
         <Indicador
           titulo="Transferências especiais (“emendas Pix”)"
-          valor={brlCompacto(totais.especiais)}
-          detalhe={`${pctEsp === null ? "—" : `${pctEsp}%`} do empenhado · repassadas direto a estados e municípios, sem finalidade definida`}
+          valor={brlMi(totais.especiais)}
+          detalhe={`${pctEsp === null ? "—" : `${pctEsp}%`} do empenhado · vão direto ao caixa de estados e municípios, sem objeto definido`}
         />
       </div>
 
@@ -245,9 +247,8 @@ function ConteudoEmendas({
             </table>
           </div>
           <span className="text-xs text-muted-foreground">
-            Valores em milhões de reais.
             {anos.includes(anoAtual) &&
-              ` Em ${anoAtual} o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.`}
+              `Em ${anoAtual} o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.`}
           </span>
         </figure>
       )}
@@ -258,20 +259,24 @@ function ConteudoEmendas({
           <Barras
             itens={dados.areas.map((a) => ({
               ...a,
-              detalhe: `${brlCompacto(a.valor)} · ${pct(a.valor, totais.empenhado) ?? 0}%`,
+              detalhe: `${brlMi(a.valor)} · ${pct(a.valor, totais.empenhado) ?? 0}%`,
             }))}
           />
         </div>
         <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-3">
           <h3 className={H3}>Onde o recurso foi aplicado</h3>
-          <Barras itens={dados.locais.map((l) => ({ ...l, detalhe: brlCompacto(l.valor) }))} />
+          <Barras itens={dados.locais.map((l) => ({ ...l, detalhe: brlMi(l.valor) }))} />
           {dados.locais.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhuma emenda do período tem local único no Orçamento.</p>
           )}
+          {totais.multiplo > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {brlMi(totais.multiplo)} ({pct(totais.multiplo, totais.empenhado)}% do empenhado) estão marcados como
+              “Múltiplo” no Orçamento, sem um local único; veja abaixo quem recebeu os pagamentos.
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
-            {totais.multiplo > 0 &&
-              `${brlCompacto(totais.multiplo)} (${pct(totais.multiplo, totais.empenhado)}% do empenhado) estão marcados como “Múltiplo” no Orçamento, sem um local único; veja abaixo quem recebeu os pagamentos. `}
-            “(UF)” e “Nacional” indicam emendas sem município definido.
+            “Estado (UF)” e “Nacional” indicam emendas sem município definido no Orçamento.
           </p>
         </div>
       </div>
@@ -291,7 +296,7 @@ function ConteudoEmendas({
                   <th scope="col" className="px-2 py-1.5 font-semibold">
                     CNPJ/CPF
                   </th>
-                  <th scope="col" className="hidden px-2 py-1.5 font-semibold sm:table-cell">
+                  <th scope="col" className="px-2 py-1.5 font-semibold">
                     Tipo
                   </th>
                   <th scope="col" className="px-2 py-1.5 font-semibold">
@@ -307,9 +312,9 @@ function ConteudoEmendas({
                   <tr key={i} className="border-t border-borda-suave">
                     <td className="py-2 pr-2">{f.nome}</td>
                     <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">{f.doc ?? "—"}</td>
-                    <td className="hidden px-2 py-2 text-muted-foreground sm:table-cell">{f.tipo}</td>
+                    <td className="px-2 py-2 text-muted-foreground">{f.tipo}</td>
                     <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{f.municipio ?? "—"}</td>
-                    <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlCompacto(f.valor)}</td>
+                    <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlMi(f.valor)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -317,7 +322,8 @@ function ConteudoEmendas({
           </div>
         )}
         <p className="text-xs text-muted-foreground">
-          CPF de pessoa física aparece mascarado, como no Portal da Transparência, e o nome não é exibido.
+          Prefeituras e fundos municipais aparecem pelo nome. CPF de pessoa física aparece mascarado, como no Portal da
+          Transparência.
         </p>
       </div>
     </>

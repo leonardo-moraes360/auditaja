@@ -44,6 +44,10 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 | Arquivo de sanções do dia | Tenta a data de hoje (fuso de Brasília) e volta um dia por vez até 7 dias atrás (8 datas); só 404 passa para a data anterior | O arquivo leva a data de geração e pode não existir ainda de manhã | n |
 | Rótulo de localidade | "MUNICÍPIO - UF" vira "Município (UF)"; "NOME (UF)" vira "Nome (UF)"; demais em caixa de título | Igual à proposta aprovada | n |
 | Localidade "MÚLTIPLO" | Fica fora da lista de locais e aparece numa frase com valor e percentual | Nas bases de 11/11/2026, 79% do empenhado individual desde 2024 vem como "MÚLTIPLO"; listá-la como local não informa nada | n |
+| Data da base | `coleta.observacao` guarda "base de DD/MM/AAAA": data da entrada `EmendasParlamentares.csv` no ZIP, ou a data do nome do arquivo CEIS/CNEP | O artboard mostra "base de" no rodapé e na nota do cruzamento | n |
+| Coluna "Tipo" dos favorecidos | Natureza jurídica publicada pelo Portal ("Município", "Associação Privada"…); sem ela, o tipo do favorecido ("Pessoa física") | As categorias do artboard ("Fundo municipal", "Empresa") não existem na fonte; inventar um mapeamento seria dado nosso, não do Portal | n |
+| Detalhe das transferências especiais | "vão direto ao caixa de estados e municípios, sem objeto definido" | O artboard dizia "do município"; a transferência especial também vai a estados (CF, art. 166-A) | n |
+| Bloco "Como ligamos" | Sem "até a conferência manual" e com link para a metodologia | Não existe processo de conferência manual; prometer um seria falso | n |
 | Filtro da seção | `?emendas=AAAA` ou `?emendas=mandato`; padrão "mandato"; botões para os dois anos mais recentes com emenda | Proposta aprovada destaca "Mandato todo"; parâmetro próprio para não colidir com `?ano=` da cota | n |
 | Versão da metodologia | Sobe de 1.3 para 1.4 | Nova regra pública de cruzamento | n |
 
@@ -96,10 +100,10 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 9. The system SHALL listar as 5 áreas ("Nome Função") de maior empenhado, com valor e percentual sobre o total. <!-- EMDUI-09 -->
 10. The system SHALL listar os 5 locais de aplicação de maior empenhado, sem a localidade "MÚLTIPLO", com o rótulo formatado conforme as Assumptions, e informar abaixo o valor e o percentual do empenhado marcado como "Múltiplo". <!-- EMDUI-10 -->
 11. The system SHALL listar até 5 favorecidos de maior valor recebido nas emendas do período, com nome, documento, tipo, município e valor. <!-- EMDUI-11 -->
-12. The system SHALL mostrar no rodapé da seção "Fonte: Portal da Transparência (CGU), Emendas Parlamentares, download em lote" e a data da coleta, com links "Ver no Portal", "Baixar CSV" e "Contestar". <!-- EMDUI-12 -->
+12. The system SHALL mostrar no rodapé da seção, no desktop, "Fonte: Portal da Transparência (CGU), Emendas Parlamentares, download em lote · base de DD/MM/AAAA" e a data da coleta, com links "Ver no Portal", "Baixar CSV" e "Contestar"; no celular, o rodapé curto das outras seções ("Fonte: Portal da Transparência, emendas · coletado em DD/MM/AAAA · ver original"). <!-- EMDUI-12 -->
 13. IF o deputado não tem emenda gravada THEN the system SHALL mostrar na seção a frase "Nenhuma emenda individual deste deputado foi encontrada no Portal da Transparência a partir do orçamento de 2024." e omitir indicadores, gráfico e listas. <!-- EMDUI-13 -->
 14. IF `?emendas=` traz valor que não é "mandato" nem um ano com emenda do deputado THEN the system SHALL usar o período "mandato". <!-- EMDUI-14 -->
-15. WHEN o usuário abre "Baixar CSV" THEN the system SHALL devolver `text/csv` com uma linha por emenda do período (código, ano, tipo, local, área, empenhado, liquidado, pago, restos pagos). <!-- EMDUI-15 -->
+15. WHEN o usuário abre "Baixar CSV" THEN the system SHALL devolver `text/csv` com uma linha por emenda e local de aplicação do período, como o Portal publica (código, ano, tipo, local, área, empenhado, liquidado, pago, restos pagos). <!-- EMDUI-15 -->
 
 **Independent Test**: com o banco de teste semeado, abrir `/parlamentares/{id}`, conferir valores dos indicadores, trocar para um ano e conferir as somas; abrir um deputado sem emendas e ver a frase de vazio.
 
@@ -144,7 +148,7 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 - IF o servidor de arquivos responde 401 ou 403 ao arquivo THEN the system SHALL encerrar a coleta com `ColetaBloqueada` sem gravar nada. <!-- EDGE-01 -->
 - IF nenhum arquivo de sanção existe nos últimos 7 dias THEN the system SHALL encerrar a coleta de sanções com erro e manter as sanções anteriores. <!-- EDGE-02 -->
 - IF um valor monetário vem vazio THEN the system SHALL gravá-lo como 0. <!-- EDGE-03 -->
-- WHEN o empenhado do período é 0 THEN the system SHALL mostrar o percentual pago como "—" em vez de dividir por zero. <!-- EDGE-04 -->
+- WHEN o empenhado do período é 0 THEN the system SHALL mostrar "—" no detalhe do indicador "Pago até agora", omitir a barra de progresso e escrever "— do empenhado" no indicador de transferências especiais. <!-- EDGE-04 -->
 - WHEN a seção é vista a 320 px de largura THEN the system SHALL não ter rolagem horizontal da página; a tabela de favorecidos rola dentro da própria caixa. <!-- EDGE-05 -->
 
 ---

@@ -66,7 +66,8 @@ const CSV_FAV = [
 function zipar(arquivos: Record<string, string>): Promise<Buffer> {
   return new Promise((resolve) => {
     const z = new yazl.ZipFile();
-    for (const [nome, conteudo] of Object.entries(arquivos)) z.addBuffer(iconv.encode(conteudo, "latin1"), nome);
+    for (const [nome, conteudo] of Object.entries(arquivos))
+      z.addBuffer(iconv.encode(conteudo, "latin1"), nome, { mtime: new Date(2026, 10, 10, 14, 2) });
     z.end();
     const partes: Buffer[] = [];
     z.outputStream.on("data", (c: Buffer) => partes.push(c));
@@ -154,7 +155,13 @@ describe("coletarEmendas", () => {
       .where("fonte", "=", "cgu_emendas")
       .orderBy("id", "desc")
       .executeTakeFirstOrThrow();
-    expect(c).toMatchObject({ url: URL_EMENDAS, sha256: sha256De(zip), bytes: zip.length, licenca: LICENCA_CGU });
+    expect(c).toMatchObject({
+      url: URL_EMENDAS,
+      sha256: sha256De(zip),
+      bytes: zip.length,
+      licenca: LICENCA_CGU,
+      observacao: "base de 10/11/2026",
+    });
     const ids = await db.selectFrom("emenda").select("coleta_id").execute();
     expect(ids.map((x) => x.coleta_id)).toEqual([c.id, c.id]);
   });

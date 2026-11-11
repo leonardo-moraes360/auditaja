@@ -52,7 +52,7 @@ test("EMDUI-03, EMDUI-05..08: mandato todo por padrão, com indicadores e série
   ]);
 });
 
-test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page, isMobile }) => {
+test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}`);
   const secao = page.locator("section#emendas");
   const areas = secao.locator("h3:text-is('Por área do governo') + ul li");
@@ -73,7 +73,8 @@ test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page, 
   await expect(linhas.first()).toContainText("22.222.222/0001-22");
   await expect(linhas.first()).toContainText("São Paulo (SP)");
   await expect(linhas.first()).toContainText(/R\$\s2 mi/);
-  if (!isMobile) await expect(linhas.first()).toContainText("Município");
+  await expect(linhas.first().locator("td").nth(2)).toHaveText("Município");
+  await expect(linhas.first().locator("td").nth(2)).toBeVisible();
 });
 
 test("EMDUI-04: escolher um ano soma só aquele orçamento", async ({ page }) => {
@@ -98,7 +99,7 @@ test("EMDUI-12: rodapé com fonte, data da coleta e links", async ({ page, isMob
     return;
   }
   await expect(secao).toContainText(
-    "Fonte: Portal da Transparência (CGU), Emendas Parlamentares, download em lote · coletado em 10/11/2026 05:12",
+    "Fonte: Portal da Transparência (CGU), Emendas Parlamentares, download em lote · base de 09/11/2026 · coletado em 10/11/2026 05:12",
   );
   await expect(secao.getByRole("link", { name: "Ver no Portal" })).toHaveAttribute(
     "href",
@@ -184,10 +185,10 @@ test("SAN-05..07: aviso factual com período, órgão, notas e ressalva", async 
   );
   for (const a of [posto, grafica]) {
     await expect(a).toContainText(
-      "O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar.",
+      "O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar: a cota é reembolso de despesa, não contrato público.",
     );
   }
-  await expect(posto.getByRole("link", { name: "Baixar as notas" })).toHaveAttribute(
+  await expect(posto.getByRole("link", { name: "Ver a nota" })).toHaveAttribute(
     "href",
     `/parlamentares/${ID}/gastos.csv?ano=2026&doc=${encodeURIComponent("55.666.777/0001-88")}`,
   );
@@ -241,4 +242,22 @@ test("MET-04, MET-05: fontes e regra de ligação na lateral do perfil", async (
   await expect(fontes.getByRole("link", { name: "Metodologia v1.4" })).toBeVisible();
   const bloco = page.getByRole("region", { name: "Como ligamos a emenda ao deputado" });
   await expect(bloco).toContainText("Quando dois deputados têm o mesmo nome, a emenda fica de fora.");
+});
+
+test("EDGE-04: empenhado zero mostra — no lugar dos percentuais", async ({ page }) => {
+  await page.goto("/parlamentares/900000003");
+  const ind = page.locator("section#emendas [data-indicador]");
+  await expect(ind.nth(1)).toContainText("Pago até agora");
+  await expect(ind.nth(1).locator("p").last()).toHaveText("—");
+  await expect(ind.nth(1).getByRole("img")).toHaveCount(0);
+  await expect(ind.nth(2).locator("p").last()).toHaveText(
+    "— do empenhado · vão direto ao caixa de estados e municípios, sem objeto definido",
+  );
+});
+
+test("C24: nota do cruzamento com a data da base", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  await expect(page.locator("section#gastos")).toContainText(
+    "Fonte do cruzamento: Portal da Transparência (CGU), CEIS e CNEP, download em lote · base de 10/11/2026 · comparação pelo CNPJ.",
+  );
 });

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   ANO_INICIAL_EMENDAS,
+  baseDaColeta,
+  brlMi,
+  dataLocalBr,
   frasesNotas,
   periodoDaSancao,
   autorDoNome,
@@ -143,5 +146,24 @@ describe("SAN-05, SAN-07: textos do aviso de sanção", () => {
     expect(frasesNotas(4, 9, "no mandato")).toBe(
       "4 das 9 notas pagas a essa empresa no mandato têm data dentro desse período.",
     );
+  });
+});
+
+describe("C06, C17: formatos da seção", () => {
+  it("milhões com uma casa; abaixo de 1 milhão, formato compacto", () => {
+    expect(brlMi(74_200_000)).toMatch(/^R\$\s74,2 mi$/);
+    expect(brlMi(110_580_000)).toMatch(/^R\$\s110,6 mi$/);
+    expect(brlMi(7_000_000)).toMatch(/^R\$\s7 mi$/);
+    expect(brlMi(399_000)).toMatch(/^R\$\s399 mil$/);
+  });
+  it("lê a data da base guardada na coleta", () => {
+    expect(baseDaColeta("base de 10/11/2026")).toBe("10/11/2026");
+    expect(baseDaColeta("seed · base de 09/11/2026")).toBe("09/11/2026");
+    expect(baseDaColeta("seed")).toBeNull();
+    expect(baseDaColeta(null)).toBeNull();
+  });
+  it("data local em DD/MM/AAAA", () => {
+    expect(dataLocalBr(new Date(2026, 10, 10, 14, 2))).toBe("10/11/2026");
+    expect(dataLocalBr(new Date(2026, 0, 5))).toBe("05/01/2026");
   });
 });

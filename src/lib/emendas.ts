@@ -1,5 +1,5 @@
 import { normalizarNome } from "@/ingest/arquivos";
-import { dataBr } from "@/lib/format";
+import { brlCompacto, dataBr } from "@/lib/format";
 import { formatarCnpj, soDigitos } from "@/lib/privacy";
 
 /** Emendas ao orçamento de 2023 foram apresentadas em 2022, pela legislatura anterior. */
@@ -92,4 +92,23 @@ export function frasesNotas(n: number, docs: number, periodo: string) {
 export function periodoDaSancao(s: { data_inicio: string | null; data_fim: string | null }) {
   const inicio = s.data_inicio ? dataBr(s.data_inicio) : "data não informada";
   return s.data_fim ? `de ${inicio} a ${dataBr(s.data_fim)}` : `desde ${inicio}, sem data final`;
+}
+
+/** "R$ 74,2 mi" (uma casa) a partir de 1 milhão; abaixo disso, o formato compacto do perfil. */
+export function brlMi(v: number): string {
+  if (Math.abs(v) >= 1_000_000) {
+    return `R$ ${(v / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi`;
+  }
+  return brlCompacto(v);
+}
+
+/** Data da base publicada, guardada em `coleta.observacao` como "base de DD/MM/AAAA". */
+export function baseDaColeta(observacao: string | null | undefined): string | null {
+  return /base de (\d{2}\/\d{2}\/\d{4})/.exec(observacao ?? "")?.[1] ?? null;
+}
+
+/** Date local → "DD/MM/AAAA" (datas de entrada de ZIP não têm fuso). */
+export function dataLocalBr(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
 }

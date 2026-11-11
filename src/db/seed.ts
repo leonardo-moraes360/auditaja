@@ -32,7 +32,7 @@ export async function semear(db: Kysely<Database>) {
     ] as const) {
       await trx.deleteFrom(t).execute();
     }
-    const coleta = async (fonte: string, url: string) =>
+    const coleta = async (fonte: string, url: string, observacao = "seed") =>
       (
         await trx
           .insertInto("coleta")
@@ -43,7 +43,7 @@ export async function semear(db: Kysely<Database>) {
             sha256: "0".repeat(64),
             bytes: 0,
             licenca: "dados fictícios de teste",
-            observacao: "seed",
+            observacao,
           })
           .returning("id")
           .executeTakeFirstOrThrow()
@@ -191,6 +191,7 @@ export async function semear(db: Kysely<Database>) {
     const cEmd = await coleta(
       "cgu_emendas",
       "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/emendas-parlamentares/EmendasParlamentares.zip",
+      "seed · base de 09/11/2026",
     );
     const FD = "Emenda Individual - Transferências com Finalidade Definida";
     const emenda = (
@@ -240,6 +241,8 @@ export async function semear(db: Kysely<Database>) {
         emenda("202490000007", 2024, "NACIONAL", "Assistência social", 400_000, 0, 400_000),
         emenda("202490000008", 2024, "BAURU - SP", "Cultura", 100_000, 0, 0),
         emenda("202690000009", 2026, "MÚLTIPLO", "Saúde", 1_000_000, 0, 0),
+        // EDGE-04: emenda sem empenho (deputada fora de exercício).
+        { ...emenda("202590000010", 2025, "ITU - SP", "Saúde", 0, 0, 0), parlamentar_id: SEED.foraDeExercicio },
       ])
       .execute();
     const fav = (
@@ -364,10 +367,12 @@ export async function semear(db: Kysely<Database>) {
     const cCeis = await coleta(
       "cgu_ceis",
       "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/ceis/20261110_CEIS.zip",
+      "seed · base de 10/11/2026",
     );
     const cCnep = await coleta(
       "cgu_cnep",
       "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/cnep/20261110_CNEP.zip",
+      "seed · base de 10/11/2026",
     );
     await trx
       .insertInto("sancao")

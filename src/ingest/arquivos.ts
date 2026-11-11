@@ -96,6 +96,26 @@ export async function* linhasCsvDoZip(
   for await (const linha of parser) yield linha as Linha;
 }
 
+/** Data de modificação de uma entrada do ZIP (a data em que o órgão gerou o arquivo). */
+export function dataDaEntrada(zip: Buffer, nome: string): Promise<Date> {
+  return new Promise((resolve, reject) => {
+    yauzl.fromBuffer(zip, { lazyEntries: true }, (err, z) => {
+      if (err || !z) return reject(err ?? new Error("zip inválido"));
+      let achou = false;
+      z.on("entry", (e: yauzl.Entry) => {
+        if (e.fileName !== nome) return z.readEntry();
+        achou = true;
+        z.close();
+        resolve(e.getLastModDate());
+      });
+      z.on("end", () => {
+        if (!achou) reject(new Error("entrada não encontrada no zip"));
+      });
+      z.readEntry();
+    });
+  });
+}
+
 /** Normaliza nomes para casamento entre bases: sem acento, maiúsculo, espaços simples. */
 export function normalizarNome(s: string | null | undefined): string {
   return (s ?? "")

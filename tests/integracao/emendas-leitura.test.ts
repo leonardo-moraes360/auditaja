@@ -175,7 +175,66 @@ describe("sancoesDosFornecedores", () => {
       nome: "POSTO ILUSTRATIVO LTDA",
       categoria: "Impedimento/proibição de contratar com prazo determinado",
       orgao: "Ministério Exemplo",
+      base: "10/11/2026",
     });
+  });
+
+  it("SAN-05: limites inclusive e fim nulo sem prazo", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { sancoesDosFornecedores } = await import("@/data/emendas");
+    const { coleta_id } = await db
+      .selectFrom("sancao")
+      .select("coleta_id")
+      .where("codigo", "=", "seed-ceis-1")
+      .executeTakeFirstOrThrow();
+    const doc = "77.888.999/0001-00";
+    const nota = (data: string, i: number) => ({
+      parlamentar_id: SEED.deputada,
+      ano: 2026,
+      mes: Number(data.slice(5, 7)),
+      tipo_despesa: "TESTE",
+      fornecedor_nome: "Limite Ltda",
+      fornecedor_doc: doc,
+      fornecedor_classe: "pessoa_juridica" as const,
+      data_emissao: data,
+      valor_documento: 1,
+      valor_glosa: 0,
+      valor_liquido: 1,
+      valor_restituicao: 0,
+      url_documento: null,
+      ide_documento: `limite-${i}`,
+      coleta_id,
+    });
+    await db
+      .insertInto("despesa_ceap")
+      .values(["2026-03-09", "2026-03-10", "2026-06-20", "2026-06-21", "2026-12-31"].map(nota))
+      .execute();
+    const sancao = (codigo: string, cadastro: "CEIS" | "CNEP", inicio: string, fim: string | null) => ({
+      cadastro,
+      codigo,
+      cnpj: "77888999000100",
+      nome: "LIMITE LTDA",
+      categoria: "Teste",
+      data_inicio: inicio,
+      data_fim: fim,
+      orgao: "Órgão",
+      coleta_id,
+    });
+    await db
+      .insertInto("sancao")
+      .values([sancao("lim-1", "CEIS", "2026-03-10", "2026-06-20"), sancao("lim-2", "CNEP", "2026-06-21", null)])
+      .execute();
+    try {
+      const r = await sancoesDosFornecedores(SEED.deputada, [doc], [2026]);
+      // CEIS: 10/03 e 20/06 (limites) dentro; 09/03 e 21/06 fora. CNEP sem fim: 21/06 e 31/12.
+      expect(r.map((s) => [s.cadastro, s.notas])).toEqual([
+        ["CEIS", 2],
+        ["CNEP", 2],
+      ]);
+    } finally {
+      await db.deleteFrom("sancao").where("codigo", "in", ["lim-1", "lim-2"]).execute();
+      await db.deleteFrom("despesa_ceap").where("fornecedor_doc", "=", doc).execute();
+    }
   });
 
   it("SAN-05: período da cota sem notas no intervalo dá zero", async (ctx) => {

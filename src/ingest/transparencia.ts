@@ -3,12 +3,13 @@ import type { Database, EmendaFavorecidoTable, EmendaTable, SancaoTable } from "
 import {
   ANO_INICIAL_EMENDAS,
   autorDoNome,
+  dataLocalBr,
   ehEmendaIndividual,
   favorecidoPublicavel,
   indiceDeAutores,
   valorBr,
 } from "@/lib/emendas";
-import { dataBrParaIso, linhasCsvDoZip } from "./arquivos";
+import { dataBrParaIso, dataDaEntrada, linhasCsvDoZip } from "./arquivos";
 import { inserirEmBlocos, registrarColeta } from "./coleta";
 import { soDigitos } from "@/lib/privacy";
 import type { ClienteEducado } from "./http";
@@ -37,6 +38,7 @@ export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado):
     sha256: zip.sha256,
     bytes: zip.bytes,
     licenca: LICENCA_CGU,
+    observacao: `base de ${dataLocalBr(await dataDaEntrada(zip.buf, "EmendasParlamentares.csv"))}`,
   });
   const indice = indiceDeAutores(await db.selectFrom("parlamentar").select(["id", "nome"]).execute());
 
@@ -122,7 +124,7 @@ async function baixarSancoesRecentes(cli: ClienteEducado, cadastro: Cadastro, ho
   for (let dias = 0; dias <= DIAS_DE_RECUO; dias++) {
     const url = urlSancoes(cadastro, dataDoArquivo(hoje, dias));
     try {
-      return { url, ...(await cli.baixar(url, ".cache/ingest")) };
+      return { url, data: dataDoArquivo(hoje, dias), ...(await cli.baixar(url, ".cache/ingest")) };
     } catch (e) {
       if (!(e instanceof Error) || !e.message.endsWith("HTTP 404")) throw e;
     }
@@ -154,6 +156,7 @@ export async function coletarSancoes(db: Kysely<Database>, cli: ClienteEducado, 
       sha256: arq.sha256,
       bytes: arq.bytes,
       licenca: LICENCA_CGU,
+      observacao: `base de ${arq.data.slice(6, 8)}/${arq.data.slice(4, 6)}/${arq.data.slice(0, 4)}`,
     });
     const linhas: Insertable<SancaoTable>[] = [];
     for await (const l of linhasCsvDoZip(arq.buf, (n) => n.endsWith(".csv"))) {

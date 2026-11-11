@@ -4,7 +4,7 @@ import yazl from "yazl";
 import { createDb } from "@/db/client";
 import { migrateToLatest } from "@/db/migrate";
 import { semear } from "@/db/seed";
-import { ClienteEducado } from "@/ingest/http";
+import { ClienteEducado, ColetaBloqueada } from "@/ingest/http";
 import { coletarSancoes, dataDoArquivo, LICENCA_CGU, urlSancoes } from "@/ingest/transparencia";
 
 /** SAN-01..03 e EDGE-02: ZIPs CEIS/CNEP falsos → banco real. */
@@ -44,6 +44,8 @@ const CEIS = [
   lin("CEIS", "102", "J", "99888777000166", "EMPRESA ALHEIA LTDA", "Suspensão", "01/01/2025", ""),
   // PF: nunca gravada.
   lin("CEIS", "103", "F", "12345678901", "FULANO SANCIONADO", "Impedimento", "01/01/2025", ""),
+  // Tipo F com 14 dígitos de um CNPJ da cota: o tipo de pessoa decide, não o tamanho do documento.
+  lin("CEIS", "104", "F", "55666777000188", "REGISTRO TIPO F", "Impedimento", "01/01/2025", ""),
 ].join("\r\n");
 const CNEP = [
   CAB,
@@ -115,14 +117,24 @@ describe("coletarSancoes", () => {
     ]);
     const coletas = await db
       .selectFrom("coleta")
-      .select(["fonte", "url", "licenca"])
+      .select(["fonte", "url", "licenca", "observacao"])
       .where("fonte", "in", ["cgu_ceis", "cgu_cnep"])
-      .where("observacao", "is", null)
+      .where("observacao", "not like", "seed%")
       .orderBy("fonte")
       .execute();
     expect(coletas).toEqual([
-      { fonte: "cgu_ceis", url: urlSancoes("CEIS", "20261110"), licenca: LICENCA_CGU },
-      { fonte: "cgu_cnep", url: urlSancoes("CNEP", "20261111"), licenca: LICENCA_CGU },
+      {
+        fonte: "cgu_ceis",
+        url: urlSancoes("CEIS", "20261110"),
+        licenca: LICENCA_CGU,
+        observacao: "base de 10/11/2026",
+      },
+      {
+        fonte: "cgu_cnep",
+        url: urlSancoes("CNEP", "20261111"),
+        licenca: LICENCA_CGU,
+        observacao: "base de 11/11/2026",
+      },
     ]);
   });
 
@@ -162,6 +174,28 @@ describe("coletarSancoes", () => {
     if (!disponivel) ctx.skip();
     await coletarSancoes(db, cliente(), HOJE);
     expect((await sancoes()).map((r) => r.codigo)).toEqual(["101", "201"]);
+  });
+
+  it("SAN-01: só o 404 recua um dia; 403 encerra sem tentar a data anterior", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const salvos = arquivos;
+    pedidos.length = 0;
+    const cli = new ClienteEducado({
+      intervaloMinMs: 0,
+      dormir: async () => {},
+      log: () => {},
+      fetchImpl: (async (input: URL | string) => {
+        const url = input.toString();
+        pedidos.push(url);
+        if (url.endsWith("/robots.txt")) return new Response("<Error/>", { status: 403 });
+        if (url === urlSancoes("CEIS", "20261111")) return new Response("", { status: 403 });
+        return new Response("", { status: 404 });
+      }) as typeof fetch,
+    });
+    await expect(coletarSancoes(db, cli, HOJE)).rejects.toBeInstanceOf(ColetaBloqueada);
+    expect(pedidos.filter((u) => u.endsWith(".zip"))).toEqual([urlSancoes("CEIS", "20261111")]);
+    expect((await sancoes()).map((r) => r.codigo)).toEqual(["101", "201"]);
+    arquivos = salvos;
   });
 
   it("EDGE-02: sem arquivo nos últimos 7 dias, falha e mantém as sanções anteriores", async (ctx) => {

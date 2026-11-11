@@ -73,7 +73,7 @@ export function AvisoSancao({
               </h3>
               <p className="text-sm leading-normal text-texto-2">
                 {s.categoria} {periodoDaSancao(s)}, aplicada por {s.orgao}. {notas} O registro é do cadastro oficial da
-                CGU e não indica irregularidade do parlamentar.
+                CGU e não indica irregularidade do parlamentar: a cota é reembolso de despesa, não contrato público.
               </p>
               <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
                 <a
@@ -85,7 +85,7 @@ export function AvisoSancao({
                   Ver a base do {s.cadastro} no Portal
                 </a>
                 <a href={hrefNotas(f.fornecedor_doc!)} download className="inline-flex min-h-6 items-center text-teto">
-                  Baixar as notas
+                  {f.documentos === 1 ? "Ver a nota" : `Ver as ${f.documentos} notas`}
                 </a>
                 <Link href="/metodologia#sancoes" className="inline-flex min-h-6 items-center text-teto">
                   Como cruzamos (metodologia)
@@ -96,7 +96,8 @@ export function AvisoSancao({
         );
       })}
       <p className="text-xs text-muted-foreground">
-        Fonte do cruzamento: Portal da Transparência (CGU), CEIS e CNEP, download em lote · comparação pelo CNPJ.
+        Fonte do cruzamento: Portal da Transparência (CGU), CEIS e CNEP, download em lote
+        {itens[0].s.base ? ` · base de ${itens[0].s.base}` : ""} · comparação pelo CNPJ.
       </p>
     </div>
   );

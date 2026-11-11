@@ -1,7 +1,13 @@
 import "server-only";
 import { sql } from "kysely";
 import { getDb } from "@/db/client";
-import { periodoEmendas, rotuloLocalidade, TIPO_TRANSFERENCIA_ESPECIAL, type PeriodoEmendas } from "@/lib/emendas";
+import {
+  baseDaColeta,
+  periodoEmendas,
+  rotuloLocalidade,
+  TIPO_TRANSFERENCIA_ESPECIAL,
+  type PeriodoEmendas,
+} from "@/lib/emendas";
 import { soDigitos } from "@/lib/privacy";
 
 const LIMITE = 5;
@@ -34,7 +40,7 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
   const coleta =
     (await db
       .selectFrom("coleta")
-      .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
+      .select(["fonte", "url", "coletado_em", "sha256", "licenca", "observacao"])
       .where("fonte", "=", "cgu_emendas")
       .orderBy("coletado_em", "desc")
       .executeTakeFirst()) ?? null;
@@ -131,14 +137,16 @@ export async function sancoesDosFornecedores(id: number, docs: (string | null)[]
   const db = getDb();
   const rows = await db
     .selectFrom("sancao")
+    .innerJoin("coleta", "coleta.id", "sancao.coleta_id")
     .select([
+      "coleta.observacao",
       "cadastro",
-      "cnpj",
-      "nome",
-      "categoria",
-      "data_inicio",
-      "data_fim",
-      "orgao",
+      "sancao.cnpj",
+      "sancao.nome",
+      "sancao.categoria",
+      "sancao.data_inicio",
+      "sancao.data_fim",
+      "sancao.orgao",
       (eb) =>
         eb
           .selectFrom("despesa_ceap")
@@ -150,12 +158,12 @@ export async function sancoesDosFornecedores(id: number, docs: (string | null)[]
           .where(sql<boolean>`despesa_ceap.data_emissao <= coalesce(sancao.data_fim, 'infinity'::date)`)
           .as("notas"),
     ])
-    .where("cnpj", "in", cnpjs)
-    .orderBy("cnpj")
-    .orderBy("cadastro")
-    .orderBy("data_inicio", "desc")
+    .where("sancao.cnpj", "in", cnpjs)
+    .orderBy("sancao.cnpj")
+    .orderBy("sancao.cadastro")
+    .orderBy("sancao.data_inicio", "desc")
     .execute();
-  return rows.map((r) => ({ ...r, notas: Number(r.notas ?? 0) }));
+  return rows.map(({ observacao, ...r }) => ({ ...r, base: baseDaColeta(observacao), notas: Number(r.notas ?? 0) }));
 }
 
 export type SancaoFornecedor = Awaited<ReturnType<typeof sancoesDosFornecedores>>[number];
