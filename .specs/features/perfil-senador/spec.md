@@ -43,7 +43,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 | Presença | Presente: Sim, Não, Abstenção, Votou, P-NRV, Obstrução, Presidente (art. 51 RISF). Fora do denominador: licenças e afastamentos (lista em SPRES-02). Ausente: todo o resto (AP, MIS, NCom, AUS, MER, L1, L4, L6, NA) | Mesmo princípio do deputado: licença não é falta; missão e atividade parlamentar contam como ausência, com o motivo exibido | n |
 | Orientação | Só a liderança do próprio partido (nome normalizado: Progressistas = PP, Podemos = PODE); Governo, Maioria, Minoria, Oposição, B.Feminina e blocos não contam | Equivale ao "partido" da Câmara; o Senado não orienta por federação | n |
 | Valores da orientação | SIM → Sim, NÃO → Não, LIVRE → Liberado, OBSTRUÇÃO → Obstrução | Mesmo vocabulário exibido para deputados | n |
-| Datas de nascimento | Uma requisição a `/senador/{codigo}` por senador da legislatura, para casar com o TSE | A lista não traz nascimento; 1 req/s fica em ~2 min | n |
+| Datas de nascimento | Uma requisição a `/senador/{codigo}` só por senador em exercício (81); os outros casam com o TSE por nome e UF | A lista não traz nascimento; buscar os 245 dobraria a coleta (~330 requisições). Confirmado pelo usuário em 11/11/2026 às 19:45 | y |
 | Comissões | Uma requisição a `/senador/{codigo}/comissoes` por senador em exercício; só participações sem data de fim e só da Casa SF | Mesmo recorte do deputado (órgãos atuais) | n |
 | robots.txt | `legis.senado.leg.br` e `adm.senado.gov.br` respondem 403 ao robots.txt; seguimos a RFC 9309 (4xx = sem restrição), já implementada no `ClienteEducado` | Um 403 em qualquer outra URL encerra a coleta | n |
 | Emendas de SCEAPS-02 (nota sem CNPJ válido) e SVOT-06 ("Votou (secreto)" no celular) | Ratificadas | Feitas durante as correções das verificações; confirmadas pelo usuário na thread em 11/11/2026 às 18:55 | y |
@@ -66,7 +66,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 1. WHEN a coleta `senadores` roda THEN the system SHALL gravar cada senador da 57ª legislatura com `casa = 'senado'` e `id = 10000000 + CodigoParlamentar`. <!-- SCAD-01 -->
 2. WHEN a coleta `senadores` roda THEN the system SHALL marcar `em_exercicio = true` só para os códigos presentes em `/senador/lista/atual`. <!-- SCAD-02 -->
 3. WHEN a coleta `senadores` roda THEN the system SHALL gravar início e fim do mandato, participação ("Titular", "1º Suplente"…), nome do bloco e os suplentes atuais com sua ordem. <!-- SCAD-03 -->
-4. WHEN a coleta `senadores` roda THEN the system SHALL gravar sexo "F" ou "M" a partir de `SexoParlamentar` ("Feminino"/"Masculino") e a data de nascimento de `/senador/{codigo}`. <!-- SCAD-04 -->
+4. WHEN a coleta `senadores` roda THEN the system SHALL gravar sexo "F" ou "M" a partir de `SexoParlamentar` ("Feminino"/"Masculino") e, para os senadores em exercício, a data de nascimento de `/senador/{codigo}`. <!-- SCAD-04 -->
 5. The system SHALL registrar uma linha em `coleta` por resposta baixada do Senado, com URL, SHA-256 e licença, e apontar cada registro para ela. <!-- SCAD-05 -->
 6. WHEN a coleta `senadores` roda de novo THEN the system SHALL substituir os dados do Senado sem duplicar senadores nem suplentes e sem alterar deputados. <!-- SCAD-06 -->
 
