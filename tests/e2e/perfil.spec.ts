@@ -22,6 +22,16 @@ test("indicadores do perfil", async ({ page }) => {
   await expect(page.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
 });
 
+test("CEAP-05: gráfico mensal mostra a linha do teto mensal da UF", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  const grafico = page.locator("section#gastos figure");
+  await expect(grafico.locator("figcaption")).toContainText("Teto mensal para SP: R$ 48.727");
+  const linha = grafico.locator("[data-teto]");
+  await expect(linha).toHaveCount(1);
+  // Teto (48.727,46) acima do maior mês do seed (30.000): a escala é o teto, linha no topo.
+  await expect(linha).toHaveAttribute("style", /bottom:\s*100%/);
+});
+
 test("PROV-02: cada seção mostra fonte, data de coleta e link para o original", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}`);
   for (const secao of ["gastos", "votacoes", "bens"]) {

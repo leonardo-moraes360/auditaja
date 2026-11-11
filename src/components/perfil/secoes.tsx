@@ -39,7 +39,9 @@ export function Indicador({ titulo, valor, detalhe }: { titulo: string; valor: s
 
 export function SecaoGastos({ perfil }: { perfil: Perfil }) {
   const { ceap, ano, parlamentar } = perfil;
-  const max = Math.max(1, ...ceap.porMes.map((m) => m.total));
+  const tetoMensal = ceap.teto?.mensal ?? null;
+  // A escala inclui o teto, para a linha do teto caber no gráfico.
+  const max = Math.max(1, tetoMensal ?? 0, ...ceap.porMes.map((m) => m.total));
   const meses = Array.from({ length: 12 }, (_, i) => ceap.porMes.find((m) => m.mes === i + 1)?.total ?? null);
   const maiorTipo = ceap.porTipo[0]?.total ?? 1;
 
@@ -70,12 +72,30 @@ export function SecaoGastos({ perfil }: { perfil: Perfil }) {
           </p>
 
           <figure className="space-y-2">
-            <figcaption className="text-sm font-medium">Gasto mensal em {ano}</figcaption>
+            <figcaption className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
+              <span className="font-medium">Gasto mensal em {ano}</span>
+              {tetoMensal !== null && (
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <span aria-hidden="true" className="inline-block w-5 border-t-2 border-dashed border-aviso" />
+                  Teto mensal para {parlamentar.sigla_uf}: {brl(tetoMensal)}
+                </span>
+              )}
+            </figcaption>
             <div
-              className="flex h-44 items-end gap-1 sm:gap-2"
+              className="relative flex h-44 items-end gap-1 sm:gap-2"
               role="img"
-              aria-label={`Gasto mensal da cota em ${ano}`}
+              aria-label={`Gasto mensal da cota em ${ano}${
+                tetoMensal !== null ? `, com o teto mensal de ${brl(tetoMensal)}` : ""
+              }`}
             >
+              {tetoMensal !== null && (
+                <div
+                  data-teto
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-dashed border-aviso"
+                  style={{ bottom: `${Math.round((tetoMensal / max) * 100)}%` }}
+                />
+              )}
               {meses.map((v, i) => (
                 <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
                   {v !== null && (
@@ -107,6 +127,14 @@ export function SecaoGastos({ perfil }: { perfil: Perfil }) {
                   </tr>
                 ))}
               </tbody>
+              {tetoMensal !== null && (
+                <tfoot>
+                  <tr>
+                    <th scope="row">Teto mensal</th>
+                    <td>{brl(tetoMensal)}</td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </figure>
 
