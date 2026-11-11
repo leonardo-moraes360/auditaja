@@ -18,7 +18,8 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "celular", use: { ...devices["Pixel 7"] } },
+    // EDGE-04: 390 px de largura, como no protótipo de celular.
+    { name: "celular", use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } } },
   ],
   webServer: {
     command: "pnpm start --port 3212",
