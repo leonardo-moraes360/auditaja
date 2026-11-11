@@ -241,8 +241,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] `casa=senado` só devolve senadores
-- [ ] Gate full passa
+- [x] `casa=senado` só devolve senadores
+- [x] Gate full passa
 
 **Tests**: integration
 **Gate**: full

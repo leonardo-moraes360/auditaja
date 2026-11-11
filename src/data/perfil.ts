@@ -12,8 +12,17 @@ import {
 } from "@/lib/metrics";
 import { orientacaoDaLideranca, ORGAO_PLENARIO_SENADO, presencaSenado } from "@/lib/senado";
 
+export type Casa = "camara" | "senado";
+
+/** `?casa=` aceita só "camara" e "senado"; qualquer outro valor é "Todos" (SUI-09). */
+export function casaDoFiltro(v: unknown): Casa | null {
+  return v === "camara" || v === "senado" ? v : null;
+}
+
 export type ResultadoBusca = {
   id: number;
+  casa: Casa;
+  sexo: string | null;
   nome: string;
   sigla_partido: string | null;
   sigla_uf: string | null;
@@ -34,15 +43,17 @@ export async function buscarParlamentares(opts: {
   uf?: string;
   todos?: boolean;
   limite?: number;
+  casa?: Casa | null;
 }): Promise<ResultadoBusca[]> {
   const db = getDb();
   let query = db
     .selectFrom("parlamentar")
-    .select(["id", "nome", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
+    .select(["id", "casa", "sexo", "nome", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
     .orderBy("nome")
     .limit(opts.limite ?? 60);
   if (!opts.todos) query = query.where("em_exercicio", "=", true);
   if (opts.uf) query = query.where("sigla_uf", "=", opts.uf);
+  if (opts.casa) query = query.where("casa", "=", opts.casa);
   const q = opts.q?.trim();
   if (q) {
     const padrao = `%${q.replace(/[%_\\]/g, "\\$&")}%`;
@@ -56,6 +67,19 @@ export async function buscarParlamentares(opts: {
     );
   }
   return query.execute();
+}
+
+/** Parlamentares em exercício por Casa, para os filtros da lista (SUI-06). */
+export async function contarPorCasa(): Promise<Record<Casa, number>> {
+  const rows = await getDb()
+    .selectFrom("parlamentar")
+    .select(["casa", sql<string>`count(*)`.as("n")])
+    .where("em_exercicio", "=", true)
+    .groupBy("casa")
+    .execute();
+  const r: Record<Casa, number> = { camara: 0, senado: 0 };
+  for (const x of rows) r[x.casa] = Number(x.n);
+  return r;
 }
 
 export async function ufsDisponiveis(): Promise<string[]> {

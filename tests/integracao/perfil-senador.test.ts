@@ -136,3 +136,39 @@ describe("perfil do senador (Postgres)", () => {
     expect(p.ceap.porTipo).toEqual([]);
   });
 });
+
+describe("busca por Casa (Postgres)", () => {
+  it("SUI-06: casa=senado só devolve senadores; casa=camara só deputados", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { buscarParlamentares } = await import("@/data/perfil");
+    expect((await buscarParlamentares({ casa: "senado" })).map((r) => r.id)).toEqual([SEED.senadora, SEED.senador]);
+    const camara = await buscarParlamentares({ casa: "camara" });
+    expect(camara.length).toBeGreaterThan(0);
+    expect(camara.every((r) => r.casa === "camara")).toBe(true);
+    const todos = await buscarParlamentares({});
+    expect(todos.map((r) => r.casa)).toContain("senado");
+    expect(todos.map((r) => r.casa)).toContain("camara");
+  });
+
+  it("SUI-06: contagem de parlamentares em exercício por Casa", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { contarPorCasa } = await import("@/data/perfil");
+    expect(await contarPorCasa()).toEqual({ camara: 2, senado: 2 });
+  });
+
+  it("SUI-09: valor desconhecido em ?casa= vira Todos", async () => {
+    const { casaDoFiltro } = await import("@/data/perfil");
+    expect(casaDoFiltro("senado")).toBe("senado");
+    expect(casaDoFiltro("camara")).toBe("camara");
+    expect(casaDoFiltro("stf")).toBeNull();
+    expect(casaDoFiltro(["senado"])).toBeNull();
+    expect(casaDoFiltro(undefined)).toBeNull();
+  });
+
+  it("busca por nome e UF também acha senadores", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { buscarParlamentares } = await import("@/data/perfil");
+    expect((await buscarParlamentares({ q: "otavio" })).map((r) => r.id)).toEqual([SEED.senador]);
+    expect((await buscarParlamentares({ q: "MG" })).map((r) => r.id)).toEqual([SEED.senador]);
+  });
+});
