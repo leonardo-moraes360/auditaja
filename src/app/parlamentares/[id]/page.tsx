@@ -163,7 +163,9 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
             valor={presenca === null ? "—" : `${presenca}%`}
             detalhe={
               comHistorico && votacoes.elegiveis === 0 && fora > 0
-                ? `Fora do exercício nas ${fora} votações de ${votacoes.ano}`
+                ? fora === 1
+                  ? `Fora do exercício na única votação de ${votacoes.ano}`
+                  : `Fora do exercício nas ${fora} votações de ${votacoes.ano}`
                 : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : ""} em ${votacoes.ano}${
                     votacoes.mediaPresenca !== null ? ` · média da Câmara ${votacoes.mediaPresenca}%` : ""
                   }`
@@ -171,9 +173,9 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
             detalheCurto={
               comHistorico && votacoes.elegiveis === 0 && fora > 0
                 ? votacoes.tipoFora === "licenca"
-                  ? "Em licença o ano todo"
-                  : "Fora do exercício o ano todo"
-                : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : ""}`
+                  ? "Em licença em todas as votações"
+                  : "Fora do exercício em todas as votações"
+                : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : " · pode incluir licenças"}`
             }
             nota={
               !comHistorico ? (

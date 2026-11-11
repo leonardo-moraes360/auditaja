@@ -317,7 +317,8 @@ test("PRES-03/04: votação em licença marcada, fora das ausências, e quadro d
 
 test("PRES-05: sem histórico coletado, a presença avisa que pode incluir licenças", async ({ page, isMobile }) => {
   await page.goto(`/parlamentares/${SEM_DADOS}`);
-  await expect(page.locator("section#votacoes").getByText(/ainda pode incluir períodos de licença/)).toBeVisible();
-  if (!isMobile)
-    await expect(page.locator("[data-indicador]").getByText("Pode incluir períodos de licença")).toBeVisible();
+  const ind = page.locator("[data-indicador]");
+  if (isMobile) await expect(ind.getByText("0 de 5 · pode incluir licenças", { exact: true })).toBeVisible();
+  else await expect(ind.getByText("Pode incluir períodos de licença", { exact: true })).toBeVisible();
+  await expect(page.locator("#periodos")).toHaveCount(0);
 });

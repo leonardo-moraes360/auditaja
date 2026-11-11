@@ -330,23 +330,20 @@ function corVoto(voto: string | null, orientacao: string | null) {
 const SELO_FORA = { licenca: "Em licença", antes_posse: "Antes da posse", outro: "Fora do exercício" } as const;
 
 function intervalo(inicio: string, fim: string | null) {
-  return fim ? `${dataBr(inicio).slice(0, 5)} a ${dataBr(fim).slice(0, 5)}` : `desde ${dataBr(inicio).slice(0, 5)}`;
+  const d = (x: string) => dataBr(x).slice(0, 5);
+  if (!fim) return `desde ${d(inicio)}`;
+  return fim === inicio ? d(inicio) : `${d(inicio)} a ${d(fim)}`;
 }
 
-/** Quadro dos períodos fora do exercício no ano das votações (licença, afastamento, antes da posse). */
+/**
+ * Quadro dos períodos fora do exercício no ano das votações (licença, afastamento, antes da posse).
+ * Só os que tiraram alguma votação da conta, como nas pranchas aprovadas.
+ */
 function PeriodosFora({ perfil }: { perfil: Perfil }) {
   const { votacoes, parlamentar } = perfil;
-  const f = parlamentar.sexo === "F";
-  const artigo = f ? "a deputada" : "o deputado";
-  if (!votacoes.historicoDisponivel) {
-    return (
-      <p className="mt-2 text-xs text-muted-foreground sm:mt-0">
-        A presença ainda pode incluir períodos de licença: o histórico de situação {f ? "da deputada" : "do deputado"}{" "}
-        não foi coletado.
-      </p>
-    );
-  }
-  if (!votacoes.periodosFora.length) return null;
+  const artigo = parlamentar.sexo === "F" ? "a deputada" : "o deputado";
+  const periodos = votacoes.periodosFora.filter((p) => p.votacoes > 0);
+  if (!periodos.length) return null;
   return (
     <div
       id="periodos"
@@ -356,7 +353,7 @@ function PeriodosFora({ perfil }: { perfil: Perfil }) {
         <Dois curto={`Fora do exercício em ${votacoes.ano}`} longo={`Períodos fora do exercício em ${votacoes.ano}`} />
       </h3>
       <ul className="flex flex-col gap-2 sm:gap-1.5">
-        {votacoes.periodosFora.map((p) => (
+        {periodos.map((p) => (
           <li
             key={p.inicio}
             className="flex flex-col gap-0.5 text-[13px] sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1 sm:text-sm"
@@ -502,14 +499,14 @@ export function SecaoVotacoes({
           })}
         </ul>
       )}
+      <PeriodosFora perfil={perfil} />
       {!completo && lista.length > 3 && (
         <Link href={verTodas} className="pt-2 text-sm font-semibold sm:hidden">
           Ver as {lista.length} votações
         </Link>
       )}
-      <PeriodosFora perfil={perfil} />
       <NotaFonte
-        rotulo="Câmara dos Deputados, Dados Abertos (votações)"
+        rotulo="Câmara dos Deputados, Dados Abertos (votações e histórico de situação dos deputados)"
         rotuloCurto="Câmara, Dados Abertos"
         coleta={perfil.coletas.camara_lote_votos}
         extras={completo || lista.length <= 5 ? [] : [{ rotulo: `Ver todas as ${lista.length}`, href: verTodas }]}

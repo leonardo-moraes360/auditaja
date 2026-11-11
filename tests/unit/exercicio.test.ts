@@ -128,6 +128,101 @@ describe("PRES-01: períodos fora do exercício a partir do histórico da Câmar
     ).toEqual([{ inicio: "2025-01-01", fim: null, situacao: "VACANCIA", motivo: "Renúncia" }]);
   });
 
+  it("já fora do exercício, registro avulso (ex.: 'Alteração de partido') não vira período com motivo falso", () => {
+    const p = periodosForaDoExercicio(
+      [
+        POSSE,
+        ev(
+          "2023-12-12T11:37",
+          "Licença",
+          "Saída - Afastamento com prazo determinado - Afastamento Conjunto Consecutivo",
+        ),
+        ev("2024-02-07T00:00", "Licença", "Alteração de partido"),
+        ev("2024-04-12T10:00", "Exercício", "Entrada - Reassunção"),
+      ],
+      INI,
+    );
+    expect(p).toEqual([
+      { inicio: "2023-12-13", fim: "2024-04-11", situacao: "Licença", motivo: "Afastamento Conjunto Consecutivo" },
+    ]);
+  });
+
+  it("convocação recusada no meio da suplência não repete o período (vizinhos iguais se juntam)", () => {
+    const imposs = "DIVERSO - Negativas de Recusa de Convocação - Impossibilidade de Assumir o Mandato";
+    const p = periodosForaDoExercicio(
+      [
+        POSSE,
+        ev(
+          "2023-10-27T00:00",
+          "SUPLENCIA",
+          "Saída - Afastamento sem prazo determinado - Afastamento de Suplente (automático)",
+        ),
+        ev(
+          "2024-09-11T18:45",
+          "CONVOCADO",
+          "DIVERSO - Convocação Eleito ou Suplente - Aguardando Convocação de Suplente",
+        ),
+        ev("2024-09-12T16:44", "SUPLENCIA", imposs),
+        ev("2024-09-19T18:07", "CONVOCADO", "DIVERSO - Convocação Eleito ou Suplente"),
+        ev("2024-09-19T18:47", "SUPLENCIA", imposs),
+        ev("2026-08-06T12:32", "Exercício", "DIVERSO - Decisão da Mesa - Torna-se titular por Retotalização"),
+      ],
+      INI,
+    );
+    expect(p).toEqual([
+      {
+        inicio: "2023-10-27",
+        fim: "2024-09-10",
+        situacao: "SUPLENCIA",
+        motivo: "Afastamento de Suplente (automático)",
+      },
+      { inicio: "2024-09-11", fim: "2024-09-11", situacao: "CONVOCADO", motivo: "Aguardando Convocação de Suplente" },
+      {
+        inicio: "2024-09-12",
+        fim: "2026-08-05",
+        situacao: "SUPLENCIA",
+        motivo: "Impossibilidade de Assumir o Mandato",
+      },
+    ]);
+  });
+
+  it("período de um dia é mantido e tira a votação daquele dia", () => {
+    const p = periodosForaDoExercicio(
+      [
+        POSSE,
+        ev("2026-07-08T00:00", "CONVOCADO", "DIVERSO - Convocação Eleito ou Suplente"),
+        ev("2026-07-09T08:00", "Exercício"),
+      ],
+      INI,
+    )!;
+    expect(p).toEqual([
+      { inicio: "2026-07-08", fim: "2026-07-08", situacao: "CONVOCADO", motivo: "Convocação Eleito ou Suplente" },
+    ]);
+    const r = presencaEmExercicio(
+      [
+        { id: "x", data: "2026-07-08" },
+        { id: "y", data: "2026-07-09" },
+      ],
+      new Map(),
+      p,
+      2026,
+    );
+    expect(r.elegiveis).toBe(1);
+    expect(r.periodosNoAno[0].votacoes).toBe(1);
+  });
+
+  it("motivo novo no mesmo dia de uma saída à tarde não tira o dia da saída", () => {
+    const p = periodosForaDoExercicio(
+      [
+        POSSE,
+        ev("2026-03-10T15:00", "Licença", "Saída - A - Um"),
+        ev("2026-03-10T16:00", "Licença", "Saída - A - Dois"),
+      ],
+      INI,
+    );
+    expect(p).toEqual([{ inicio: "2026-03-11", fim: null, situacao: "Licença", motivo: "Dois" }]);
+  });
+
   it("motivo é o último trecho da descrição; sem descrição, a situação", () => {
     expect(motivoDoStatus("Saída - Afastamento sem prazo determinado - Secretário de Estado", "Licença")).toBe(
       "Secretário de Estado",

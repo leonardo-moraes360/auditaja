@@ -52,6 +52,28 @@ export function motivoDoStatus(descricao: string | null, situacao: string): stri
   return partes.at(-1) ?? situacao;
 }
 
+function movimento(descricao: string | null): boolean {
+  return /^(Saída|DIVERSO)\s*-/i.test((descricao ?? "").trim());
+}
+
+/** Períodos colados com a mesma situação e o mesmo motivo (ex.: convocação recusada no meio) viram um só. */
+function juntarVizinhos(periodos: PeriodoFora[]): PeriodoFora[] {
+  const out: PeriodoFora[] = [];
+  for (const p of periodos) {
+    const ant = out.at(-1);
+    if (
+      ant &&
+      ant.fim !== null &&
+      somarDias(ant.fim, 1) === p.inicio &&
+      ant.situacao === p.situacao &&
+      ant.motivo === p.motivo
+    ) {
+      ant.fim = p.fim;
+    } else out.push({ ...p });
+  }
+  return out;
+}
+
 /**
  * Períodos fora do exercício na legislatura que começa em `inicioLegislatura`.
  * Devolve null quando o histórico não tem nenhum evento de situação (não dá para saber).
@@ -91,13 +113,16 @@ export function periodosForaDoExercicio(eventos: EventoHistorico[], inicioLegisl
     // Antes da primeira posse, convocação e outros eventos não mudam nada: segue "antes da posse".
     if (aberto.situacao === ANTES_DA_POSSE) continue;
     if (aberto.situacao === e.situacao && aberto.motivo === motivo) continue;
+    // Já fora, só um movimento ("Saída - ..." ou "DIVERSO - ...") muda o motivo; um registro avulso
+    // como "Alteração de partido" não é uma nova saída.
+    if (!movimento(e.descricaoStatus)) continue;
     // Já fora do exercício: o dia do novo evento é fora de qualquer jeito, então o novo período começa nele.
     const inicio: string = dia > aberto.inicio ? dia : aberto.inicio;
     fechar(somarDias(inicio, -1));
     aberto = { inicio, fim: null, situacao: e.situacao, motivo };
   }
   if (aberto) periodos.push(aberto);
-  return periodos;
+  return juntarVizinhos(periodos);
 }
 
 /** O período fora do exercício que cobre o dia, se houver. */

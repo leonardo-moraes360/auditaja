@@ -52,9 +52,9 @@ export default function Metodologia() {
         <p>
           Contamos as votações nominais do Plenário no ano em que o deputado estava em exercício e quantas delas têm
           voto registrado (Sim, Não, Abstenção, Obstrução ou Artigo 17). Usamos o histórico de situação publicado pela
-          Câmara: dias de licença, afastamento, suplência ou antes da posse ficam fora da conta. Se a situação muda no
-          dia da votação, ela conta quando o deputado esteve em exercício em algum momento daquele dia, e um voto
-          registrado sempre conta. Votações simbólicas não entram, porque não registram voto individual.
+          Câmara: dias de licença, afastamento, suplência, vacância, suspensão ou antes da posse ficam fora da conta. Se
+          a situação muda no dia da votação, ela conta quando o deputado esteve em exercício em algum momento daquele
+          dia, e um voto registrado sempre conta. Votações simbólicas não entram, porque não registram voto individual.
         </p>
         <p>
           A média da Câmara é a média simples da presença dos deputados em exercício, calculada do mesmo jeito. Enquanto
