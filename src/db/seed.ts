@@ -14,6 +14,9 @@ export const SEED = {
 export async function semear(db: Kysely<Database>) {
   await db.transaction().execute(async (trx) => {
     for (const t of [
+      "sancao",
+      "emenda_favorecido",
+      "emenda",
       "pedido_correcao",
       "bem_declarado",
       "candidatura",

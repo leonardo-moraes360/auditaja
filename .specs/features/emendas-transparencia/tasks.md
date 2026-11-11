@@ -63,9 +63,9 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] Migração registrada em `src/db/migrate.ts` e tipos em `src/db/types.ts`
-- [ ] `semear` limpa as três tabelas antes de `parlamentar`
-- [ ] Build gate passa
+- [x] Migração registrada em `src/db/migrate.ts` e tipos em `src/db/types.ts`
+- [x] `semear` limpa as três tabelas antes de `parlamentar`
+- [x] Build gate passa
 
 **Tests**: none
 **Gate**: build
