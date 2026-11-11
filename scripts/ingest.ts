@@ -2,15 +2,16 @@
  * Coletores manuais. Uso:
  *   pnpm ingest deputados
  *   pnpm ingest orgaos
+ *   pnpm ingest blocos
  *   pnpm ingest ceap 2026
  *   pnpm ingest votacoes 2026
  *   pnpm ingest bens 2022
- *   pnpm ingest tudo 2026   (deputados, órgãos, CEAP e votações do ano; bens 2018, 2022 e 2026)
+ *   pnpm ingest tudo 2026   (deputados, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
  */
 import { createDb } from "../src/db/client";
-import { coletarCeap, coletarDeputados, coletarOrgaos, coletarVotacoes } from "../src/ingest/camara";
+import { coletarBlocos, coletarCeap, coletarDeputados, coletarOrgaos, coletarVotacoes } from "../src/ingest/camara";
 import { ClienteEducado } from "../src/ingest/http";
 import { coletarBens } from "../src/ingest/tse";
 
@@ -28,6 +29,9 @@ async function main() {
       case "orgaos":
         console.log(`órgãos: ${await coletarOrgaos(db, cli)}`);
         break;
+      case "blocos":
+        console.log("blocos:", await coletarBlocos(db, cli));
+        break;
       case "ceap":
         console.log(`despesas ${ano}: ${await coletarCeap(db, cli, ano)}`);
         break;
@@ -40,6 +44,7 @@ async function main() {
       case "tudo":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);
         console.log(`órgãos: ${await coletarOrgaos(db, cli)}`);
+        console.log("blocos:", await coletarBlocos(db, cli));
         console.log(`despesas ${ano}: ${await coletarCeap(db, cli, ano)}`);
         console.log(`votações ${ano}:`, await coletarVotacoes(db, cli, ano));
         for (const a of [2018, 2022, 2026]) console.log(`bens ${a}:`, await coletarBens(db, cli, a));
