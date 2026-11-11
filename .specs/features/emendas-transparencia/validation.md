@@ -154,11 +154,57 @@ hífen), então hoje não há vazamento. `pnpm test` no worktree real: 18 arquiv
   `tests/unit/privacidade-nomes.test.ts`.
 - **Pronto quando**: N9 e N10 morrem (ou ficam equivalentes ao código corrigido).
 
+## Rodada 5, terceira continuação (`f8a3dde`, muda código)
+
+`git diff 993728b..HEAD -- src` muda só `src/lib/privacy.ts:44-45` (comentário e `CPF_NO_TEXTO`, agora
+`[-.\s]{0,2}` entre os grupos). Testes novos em `tests/unit/privacidade-nomes.test.ts:10-14` ("123-456-789-01",
+"123  456.789-01", "123. 456. 789 -01"). `tests/unit/privacy.test.ts` (vindo do Senado): 7/7 passam.
+
+Sensor sobre o regex novo, em worktree temporário, `vitest run` inteiro:
+
+| # | Mutação em `src/lib/privacy.ts:45` | Resultado (teste que falhou) |
+| --- | --- | --- |
+| N9 | 1º separador volta a `[.\s]?` | ✅ morto: `privacidade-nomes.test.ts:10-14` ("123-456-789-01") |
+| N10/M3a | 1º separador sem hífen | ✅ morto: `:10-14` ("123-456-789-01") |
+| M3b | 2º separador sem hífen | ✅ morto: `:10-14` |
+| M3c | 3º separador sem hífen | ✅ morto: `:7-8`, `:10-14`; `unit/privacy.test.ts:36`; `unit/emendas.test.ts:93` |
+| M1a | 1º `{0,2}` → `{0,1}` | ✅ morto: `:10-14` ("123  456.789-01") |
+| M1b | 2º `{0,2}` → `{0,1}` | ✅ morto: `:10-14` ("123. 456. 789 -01") |
+| M1c | 3º `{0,2}` → `{0,1}` | ✅ morto: `:10-14` ("123. 456. 789 -01") |
+| M4a | 1º separador sem `\s` | ✅ morto: `:10-14`, `:15-16`; `unit/privacy.test.ts:43` |
+| M4c | 3º separador sem `\s` | ✅ morto: idem |
+| M2a | 1º `{0,2}` → `{0,3}` | ❌ **sobreviveu** (174/174) |
+| M2c | 3º `{0,2}` → `{0,3}` | ❌ **sobreviveu** (174/174) |
+| M5 | `(?<!\d)` → `\b` | ❌ **sobreviveu** (174/174): CPF colado a letra ("FULANO12345678901") deixaria de ser mascarado |
+| M6 | `(?!\d)` → `\b` | ❌ **sobreviveu** (174/174): CPF seguido de letra ("12345678901ME") deixaria de ser mascarado |
+| M7 | `(?<!\d)` → `(?<![\d.])` | ❌ **sobreviveu** (174/174) |
+
+O limite superior `{0,2}` não tem teste (nenhum caso com 3 separadores que deve ficar inalterado), e nenhum teste
+tem CPF colado a letra. M5 e M6 são os que importam para a R3: com eles, um CPF grudado no nome vaza inteiro, e a
+suíte não percebe. O código real mascara esses casos (conferido: a âncora é `(?<!\d)`/`(?!\d)`).
+
+**Banco dev**: `mascararCpfsNoTexto` (código real, via `tsx`) sobre os nomes distintos com 3+ dígitos: `despesa_ceap`
+703, `emenda_favorecido` 375, `sancao` 18 (todos). **0 nomes mudariam**, e 0 diferem do regex antigo: o regex novo não
+mascara nenhum número real que não é CPF.
+
+**Gate** (`f8a3dde`): `pnpm test` 18 arquivos, 174 passaram; typecheck, lint e build exit 0; `pnpm test:e2e`
+(`E2E_PORT=3272`) 132 passaram, 4 pulados, 0 falharam. `git status --porcelain` vazio antes e depois; worktree
+temporário removido.
+
+**Veredito mantido: FAIL** (Minor, só teste; código e dados OK). G05 segue registrado como anterior à feature e fora
+do escopo.
+
+### Correção 8: limites do regex novo — M2a, M2c, M5, M6, M7
+- **Tarefa**: em `tests/unit/privacidade-nomes.test.ts`, asserir que "FULANO12345678901" e "12345678901ME" viram
+  `***.***.***-**` (letra colada), e decidir e asserir o caso de 3 separadores ("123...456.789-01") e de ponto antes
+  do número (".123.456.789-01").
+- **Pronto quando**: M2a, M2c, M5, M6 e M7 morrem.
+
 ## Resumo da rodada 5
 
 **Geral**: ❌ Not Ready por um teste. Código, paridade (100%), gate e banco dev estão OK.
-**Sensor**: N1, N6, N7, N8, N12, N13, N14 mortos; sobreviventes N9 e N10 (separadores em `src/lib/privacy.ts:45`); G05 fora do diff.
-**Gate**: 172 vitest + 132 e2e passaram; typecheck, lint e build ok.
+**Sensor**: N1, N6–N10, N12–N14, M1a–c, M3a–c, M4a, M4c mortos; sobreviventes M2a, M2c, M5, M6, M7 (limites e âncoras de `src/lib/privacy.ts:45`); G05 fora do diff.
+**Gate**: 174 vitest + 132 e2e passaram; typecheck, lint e build ok (`f8a3dde`).
 
 ---
 
