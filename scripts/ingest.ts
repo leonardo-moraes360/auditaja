@@ -7,6 +7,7 @@
  *   pnpm ingest votacoes 2026
  *   pnpm ingest bens 2022
  *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
+ *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
  *   pnpm ingest tudo 2026   (deputados, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
@@ -15,7 +16,7 @@ import { createDb } from "../src/db/client";
 import { coletarBlocos, coletarCeap, coletarDeputados, coletarOrgaos, coletarVotacoes } from "../src/ingest/camara";
 import { ClienteEducado } from "../src/ingest/http";
 import { coletarBens } from "../src/ingest/tse";
-import { coletarEmendas } from "../src/ingest/transparencia";
+import { coletarEmendas, coletarSancoes } from "../src/ingest/transparencia";
 
 const [cmd, anoArg] = process.argv.slice(2);
 const ano = Number(anoArg ?? new Date().getFullYear());
@@ -45,6 +46,9 @@ async function main() {
         break;
       case "emendas":
         console.log("emendas:", await coletarEmendas(db, cli));
+        break;
+      case "sancoes":
+        console.log("sanções:", await coletarSancoes(db, cli));
         break;
       case "tudo":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);

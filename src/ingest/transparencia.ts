@@ -1,5 +1,5 @@
 import type { Insertable, Kysely } from "kysely";
-import type { Database, EmendaFavorecidoTable, EmendaTable } from "@/db/types";
+import type { Database, EmendaFavorecidoTable, EmendaTable, SancaoTable } from "@/db/types";
 import {
   ANO_INICIAL_EMENDAS,
   autorDoNome,
@@ -8,8 +8,9 @@ import {
   indiceDeAutores,
   valorBr,
 } from "@/lib/emendas";
-import { linhasCsvDoZip } from "./arquivos";
+import { dataBrParaIso, linhasCsvDoZip } from "./arquivos";
 import { inserirEmBlocos, registrarColeta } from "./coleta";
+import { soDigitos } from "@/lib/privacy";
 import type { ClienteEducado } from "./http";
 
 /**
@@ -94,4 +95,81 @@ export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado):
     await inserirEmBlocos(trx, "emenda_favorecido", favorecidos);
   });
   return { emendas: emendas.length, favorecidos: favorecidos.length, autoresDescartados: descartados.size };
+}
+
+export type Cadastro = "CEIS" | "CNEP";
+/** Hoje e até 7 dias atrás: o arquivo leva a data de geração e pode não existir ainda de manhã. */
+export const DIAS_DE_RECUO = 7;
+
+/** "AAAAMMDD" no fuso de Brasília, `dias` antes de `hoje`. */
+export function dataDoArquivo(hoje: Date, dias: number): string {
+  const d = new Date(hoje.getTime() - dias * 86_400_000);
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d); // AAAA-MM-DD
+  return p.replaceAll("-", "");
+}
+
+export function urlSancoes(cadastro: Cadastro, data: string): string {
+  return `${ARQUIVOS_CGU}/${cadastro.toLowerCase()}/${data}_${cadastro}.zip`;
+}
+
+async function baixarSancoesRecentes(cli: ClienteEducado, cadastro: Cadastro, hoje: Date) {
+  for (let dias = 0; dias <= DIAS_DE_RECUO; dias++) {
+    const url = urlSancoes(cadastro, dataDoArquivo(hoje, dias));
+    try {
+      return { url, ...(await cli.baixar(url, ".cache/ingest")) };
+    } catch (e) {
+      if (!(e instanceof Error) || !e.message.endsWith("HTTP 404")) throw e;
+    }
+  }
+  throw new Error(`nenhum arquivo do ${cadastro} nos últimos ${DIAS_DE_RECUO} dias`);
+}
+
+/**
+ * CEIS e CNEP: guarda só sanções de pessoa jurídica cujo CNPJ forneceu à cota parlamentar (R2).
+ * Cada cadastro é substituído inteiro, numa transação, depois do download bem-sucedido.
+ */
+export async function coletarSancoes(db: Kysely<Database>, cli: ClienteEducado, hoje = new Date()) {
+  const cnpjs = new Set(
+    (
+      await db
+        .selectFrom("despesa_ceap")
+        .select("fornecedor_doc")
+        .distinct()
+        .where("fornecedor_classe", "=", "pessoa_juridica")
+        .execute()
+    ).map((r) => soDigitos(r.fornecedor_doc)),
+  );
+  const resumo: Record<Cadastro, number> = { CEIS: 0, CNEP: 0 };
+  for (const cadastro of ["CEIS", "CNEP"] as const) {
+    const arq = await baixarSancoesRecentes(cli, cadastro, hoje);
+    const coletaId = await registrarColeta(db, {
+      fonte: `cgu_${cadastro.toLowerCase()}`,
+      url: arq.url,
+      sha256: arq.sha256,
+      bytes: arq.bytes,
+      licenca: LICENCA_CGU,
+    });
+    const linhas: Insertable<SancaoTable>[] = [];
+    for await (const l of linhasCsvDoZip(arq.buf, (n) => n.endsWith(".csv"))) {
+      const cnpj = soDigitos(l["CPF OU CNPJ DO SANCIONADO"]);
+      if (l["TIPO DE PESSOA"] !== "J" || cnpj.length !== 14 || !cnpjs.has(cnpj)) continue;
+      linhas.push({
+        cadastro,
+        codigo: l["CÓDIGO DA SANÇÃO"] ?? "",
+        cnpj,
+        nome: (l["NOME DO SANCIONADO"] ?? "").trim(),
+        categoria: (l["CATEGORIA DA SANÇÃO"] ?? "").trim(),
+        data_inicio: dataBrParaIso(l["DATA INÍCIO SANÇÃO"]),
+        data_fim: dataBrParaIso(l["DATA FINAL SANÇÃO"]),
+        orgao: (l["ÓRGÃO SANCIONADOR"] ?? "").trim(),
+        coleta_id: coletaId,
+      });
+    }
+    await db.transaction().execute(async (trx) => {
+      await trx.deleteFrom("sancao").where("cadastro", "=", cadastro).execute();
+      await inserirEmBlocos(trx, "sancao", linhas);
+    });
+    resumo[cadastro] = linhas.length;
+  }
+  return resumo;
 }

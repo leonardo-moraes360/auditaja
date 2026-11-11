@@ -78,10 +78,10 @@ function abrirEntrada(zip: Buffer, casa: (n: string) => boolean): Promise<Readab
  */
 export async function* linhasCsvDoZip(
   zip: Buffer,
-  nome: string,
+  nome: string | ((n: string) => boolean),
   encoding: "utf8" | "latin1" = "latin1",
 ): AsyncGenerator<Linha> {
-  const entrada = await abrirEntrada(zip, (n) => n === nome);
+  const entrada = await abrirEntrada(zip, typeof nome === "string" ? (n) => n === nome : nome);
   const parser = entrada.pipe(iconv.decodeStream(encoding)).pipe(
     parseStream({
       columns: true,

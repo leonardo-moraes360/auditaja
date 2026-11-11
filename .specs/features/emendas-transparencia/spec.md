@@ -41,7 +41,7 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 | Favorecido sem documento válido ("Sem informação", "Inválido", "Inscrição Genérica") | Mantém o nome publicado e grava documento nulo (exibido "—") | Não são pessoas físicas identificáveis | n |
 | Sanção exibida | Só sanções de pessoa jurídica cujo CNPJ aparece em `despesa_ceap`; todas as datas de fim, inclusive já encerradas | Minimização (R2) e transparência sobre histórico | n |
 | Nota "dentro do período" | `data_emissao` entre início e fim da sanção, inclusive; fim nulo = sem prazo | Definição objetiva e verificável | n |
-| Arquivo de sanções do dia | Tenta a data de hoje e volta um dia por vez, até 7 dias | O arquivo leva a data de geração e pode não existir ainda de manhã | n |
+| Arquivo de sanções do dia | Tenta a data de hoje (fuso de Brasília) e volta um dia por vez até 7 dias atrás (8 datas); só 404 passa para a data anterior | O arquivo leva a data de geração e pode não existir ainda de manhã | n |
 | Rótulo de localidade | "MUNICÍPIO - UF" vira "Município (UF)"; "NOME (UF)" vira "Nome (UF)"; demais em caixa de título | Igual à proposta aprovada | n |
 | Filtro da seção | `?emendas=AAAA` ou `?emendas=mandato`; padrão "mandato"; botões para os dois anos mais recentes com emenda | Proposta aprovada destaca "Mandato todo"; parâmetro próprio para não colidir com `?ano=` da cota | n |
 | Versão da metodologia | Sobe de 1.3 para 1.4 | Nova regra pública de cruzamento | n |

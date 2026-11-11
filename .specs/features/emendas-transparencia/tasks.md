@@ -120,9 +120,9 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] Fixture com sanção PF, PJ fora da CEAP, PJ na CEAP e arquivo só de ontem
-- [ ] Sem arquivo em 7 dias não apaga sanções antigas
-- [ ] Full gate passa
+- [x] Fixture com sanção PF, PJ fora da CEAP, PJ na CEAP e arquivo só de ontem
+- [x] Sem arquivo em 7 dias não apaga sanções antigas
+- [x] Full gate passa
 
 **Tests**: integration
 **Gate**: full
