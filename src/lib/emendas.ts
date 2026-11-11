@@ -97,7 +97,7 @@ export function periodoDaSancao(s: { data_inicio: string | null; data_fim: strin
 /** "R$ 74,2 mi" (uma casa) a partir de 1 milhão; abaixo disso, o formato compacto do perfil. */
 export function brlMi(v: number): string {
   if (Math.abs(v) >= 1_000_000) {
-    return `R$ ${(v / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi`;
+    return `R$ ${(v / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`;
   }
   return brlCompacto(v);
 }
@@ -111,4 +111,9 @@ export function baseDaColeta(observacao: string | null | undefined): string | nu
 export function dataLocalBr(d: Date): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+/** Link para as notas dentro do período da sanção: "Ver a nota" / "Ver as N notas". */
+export function rotuloNotas(n: number): string {
+  return n === 1 ? "Ver a nota" : `Ver as ${n} notas`;
 }

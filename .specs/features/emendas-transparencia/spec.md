@@ -48,6 +48,8 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 | Coluna "Tipo" dos favorecidos | Natureza jurídica publicada pelo Portal ("Município", "Associação Privada"…); sem ela, o tipo do favorecido ("Pessoa física") | As categorias do artboard ("Fundo municipal", "Empresa") não existem na fonte; inventar um mapeamento seria dado nosso, não do Portal | n |
 | Detalhe das transferências especiais | "vão direto ao caixa de estados e municípios, sem objeto definido" | O artboard dizia "do município"; a transferência especial também vai a estados (CF, art. 166-A) | n |
 | Bloco "Como ligamos" | Sem "até a conferência manual" e com link para a metodologia | Não existe processo de conferência manual; prometer um seria falso | n |
+| Órgão no aviso de sanção | "{categoria} {período}. Órgão sancionador: {órgão}." | O artboard dizia "aplicado pelo"; a concordância muda com a categoria ("Multa", "Impedimento") e com o órgão, e a fonte não traz gênero | n |
+| Link de notas no aviso | "Ver a nota" / "Ver as N notas", com N = notas dentro do período da sanção; baixa `gastos.csv` filtrado por `de`/`ate`; sem nota no período, sem link | Igual ao artboard ("Ver as 4 notas") | n |
 | Filtro da seção | `?emendas=AAAA` ou `?emendas=mandato`; padrão "mandato"; botões para os dois anos mais recentes com emenda | Proposta aprovada destaca "Mandato todo"; parâmetro próprio para não colidir com `?ano=` da cota | n |
 | Versão da metodologia | Sobe de 1.3 para 1.4 | Nova regra pública de cruzamento | n |
 

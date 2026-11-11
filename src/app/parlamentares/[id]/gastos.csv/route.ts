@@ -19,6 +19,9 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
   const sp = request.nextUrl.searchParams;
   const ano = sp.get("ano");
   const doc = sp.get("doc");
+  // Período de uma sanção (aviso de sanção): datas ISO, inclusive.
+  const de = sp.get("de");
+  const ate = sp.get("ate");
 
   let q = getDb()
     .selectFrom("despesa_ceap")
@@ -40,6 +43,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
     .orderBy("data_emissao");
   if (ano && /^\d{4}$/.test(ano)) q = q.where("ano", "=", Number(ano));
   if (doc) q = q.where("fornecedor_doc", "=", doc);
+  if (de && /^\d{4}-\d{2}-\d{2}$/.test(de)) q = q.where("data_emissao", ">=", de);
+  if (ate && /^\d{4}-\d{2}-\d{2}$/.test(ate)) q = q.where("data_emissao", "<=", ate);
   const linhas = await q.execute();
 
   const cabecalho = [

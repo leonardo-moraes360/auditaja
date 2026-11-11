@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { SancaoFornecedor } from "@/data/emendas";
-import { frasesNotas, periodoDaSancao } from "@/lib/emendas";
+import { frasesNotas, periodoDaSancao, rotuloNotas } from "@/lib/emendas";
 import { soDigitos } from "@/lib/privacy";
 
 const PORTAL_DOWNLOAD = "https://portaldatransparencia.gov.br/download-de-dados";
@@ -36,8 +36,8 @@ export function AvisoSancao({
   fornecedores: { fornecedor_nome: string; fornecedor_doc: string | null; documentos: number }[];
   sancoes: SancaoFornecedor[];
   periodo: string;
-  /** CSV das notas de um fornecedor no período exibido (rota gastos.csv). */
-  hrefNotas: (doc: string) => string;
+  /** CSV das notas de um fornecedor no período exibido e dentro do período da sanção (rota gastos.csv). */
+  hrefNotas: (doc: string, de: string | null, ate: string | null) => string;
 }) {
   const itens = fornecedores.flatMap((f) => doFornecedor(f.fornecedor_doc, sancoes).map((s) => ({ f, s })));
   if (!itens.length) return null;
@@ -72,8 +72,9 @@ export function AvisoSancao({
                 {f.fornecedor_nome} tem sanção registrada no {s.cadastro}
               </h3>
               <p className="text-sm leading-normal text-texto-2">
-                {s.categoria} {periodoDaSancao(s)}, aplicada por {s.orgao}. {notas} O registro é do cadastro oficial da
-                CGU e não indica irregularidade do parlamentar: a cota é reembolso de despesa, não contrato público.
+                {s.categoria} {periodoDaSancao(s)}. Órgão sancionador: {s.orgao}. {notas} O registro é do cadastro
+                oficial da CGU e não indica irregularidade do parlamentar: a cota é reembolso de despesa, não contrato
+                público.
               </p>
               <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
                 <a
@@ -84,9 +85,15 @@ export function AvisoSancao({
                 >
                   Ver a base do {s.cadastro} no Portal
                 </a>
-                <a href={hrefNotas(f.fornecedor_doc!)} download className="inline-flex min-h-6 items-center text-teto">
-                  {f.documentos === 1 ? "Ver a nota" : `Ver as ${f.documentos} notas`}
-                </a>
+                {s.notas > 0 && (
+                  <a
+                    href={hrefNotas(f.fornecedor_doc!, s.data_inicio, s.data_fim)}
+                    download
+                    className="inline-flex min-h-6 items-center text-teto"
+                  >
+                    {rotuloNotas(s.notas)}
+                  </a>
+                )}
                 <Link href="/metodologia#sancoes" className="inline-flex min-h-6 items-center text-teto">
                   Como cruzamos (metodologia)
                 </Link>

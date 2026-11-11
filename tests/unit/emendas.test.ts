@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ANO_INICIAL_EMENDAS,
+  rotuloNotas,
   baseDaColeta,
   brlMi,
   dataLocalBr,
@@ -153,7 +154,7 @@ describe("C06, C17: formatos da seção", () => {
   it("milhões com uma casa; abaixo de 1 milhão, formato compacto", () => {
     expect(brlMi(74_200_000)).toMatch(/^R\$\s74,2 mi$/);
     expect(brlMi(110_580_000)).toMatch(/^R\$\s110,6 mi$/);
-    expect(brlMi(7_000_000)).toMatch(/^R\$\s7 mi$/);
+    expect(brlMi(7_000_000)).toMatch(/^R\$\s7,0 mi$/);
     expect(brlMi(399_000)).toMatch(/^R\$\s399 mil$/);
   });
   it("lê a data da base guardada na coleta", () => {
@@ -165,5 +166,12 @@ describe("C06, C17: formatos da seção", () => {
   it("data local em DD/MM/AAAA", () => {
     expect(dataLocalBr(new Date(2026, 10, 10, 14, 2))).toBe("10/11/2026");
     expect(dataLocalBr(new Date(2026, 0, 5))).toBe("05/01/2026");
+  });
+});
+
+describe("C22: rótulo do link de notas", () => {
+  it("singular e plural", () => {
+    expect(rotuloNotas(1)).toBe("Ver a nota");
+    expect(rotuloNotas(4)).toBe("Ver as 4 notas");
   });
 });

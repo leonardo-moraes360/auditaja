@@ -35,11 +35,11 @@ test("EMDUI-03, EMDUI-05..08: mandato todo por padrão, com indicadores e série
   await expect(ind.nth(0)).toContainText(/R\$\s11,1 mi/);
   await expect(ind.nth(0)).toContainText("9 emendas, orçamentos de 2024 a 2026");
   await expect(ind.nth(1)).toContainText("Pago até agora");
-  await expect(ind.nth(1)).toContainText(/R\$\s7 mi/);
+  await expect(ind.nth(1)).toContainText(/R\$\s7,0 mi/);
   await expect(ind.nth(1)).toContainText("63% do empenhado, incluindo restos a pagar");
   await expect(ind.nth(1).getByRole("img")).toHaveAttribute("aria-label", "63% do valor empenhado já foi pago");
   await expect(ind.nth(2)).toContainText("Transferências especiais (“emendas Pix”)");
-  await expect(ind.nth(2)).toContainText(/R\$\s2 mi/);
+  await expect(ind.nth(2)).toContainText(/R\$\s2,0 mi/);
   await expect(ind.nth(2)).toContainText("18% do empenhado");
   await expect(secao.getByRole("img", { name: /^Gráfico de barras/ })).toHaveAttribute(
     "aria-label",
@@ -57,7 +57,7 @@ test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }
   const secao = page.locator("section#emendas");
   const areas = secao.locator("h3:text-is('Por área do governo') + ul li");
   await expect(areas).toHaveCount(5);
-  await expect(areas.first()).toContainText(/Saúde\s*R\$\s6 mi · 54%/);
+  await expect(areas.first()).toContainText(/Saúde\s*R\$\s6,0 mi · 54%/);
   const locais = secao.locator("h3:text-is('Onde o recurso foi aplicado') + ul li");
   await expect(locais.locator("span.min-w-0")).toHaveText([
     "Campinas (SP)",
@@ -66,14 +66,22 @@ test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }
     "Ribeirão Preto (SP)",
     "Jundiaí (SP)",
   ]);
-  await expect(secao).toContainText("R$ 1 mi (9% do empenhado) estão marcados como “Múltiplo” no Orçamento");
+  await expect(secao).toContainText("R$ 1,0 mi (9% do empenhado) estão marcados como “Múltiplo” no Orçamento");
   const linhas = secao.locator("h3:text-is('Quem recebeu os pagamentos') ~ div table tbody tr");
   await expect(linhas).toHaveCount(5);
   await expect(linhas.first()).toContainText("Município de São Paulo");
   await expect(linhas.first()).toContainText("22.222.222/0001-22");
   await expect(linhas.first()).toContainText("São Paulo (SP)");
-  await expect(linhas.first()).toContainText(/R\$\s2 mi/);
+  await expect(linhas.first()).toContainText(/R\$\s2,0 mi/);
   await expect(linhas.first().locator("td").nth(2)).toHaveText("Município");
+  await expect(secao.getByRole("columnheader", { name: "Tipo" })).toBeVisible();
+  await expect(secao).toContainText("“Estado (UF)” e “Nacional” indicam emendas sem município definido no Orçamento.");
+  await expect(secao).toContainText(
+    "Prefeituras e fundos municipais aparecem pelo nome. CPF de pessoa física aparece mascarado, como no Portal da Transparência.",
+  );
+  await expect(secao.locator("figure")).toContainText(
+    "Em 2026 o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.",
+  );
   await expect(linhas.first().locator("td").nth(2)).toBeVisible();
 });
 
@@ -85,7 +93,7 @@ test("EMDUI-04: escolher um ano soma só aquele orçamento", async ({ page }) =>
   await expect(secao.getByRole("link", { name: "2025", exact: true })).toHaveAttribute("aria-current", "page");
   const ind = secao.locator("[data-indicador]");
   await expect(ind.nth(0)).toContainText("Empenhado em 2025");
-  await expect(ind.nth(0)).toContainText(/R\$\s4 mi/);
+  await expect(ind.nth(0)).toContainText(/R\$\s4,0 mi/);
   await expect(ind.nth(0)).toContainText("3 emendas do orçamento de 2025");
   await expect(ind.nth(1)).toContainText("75% do empenhado");
   await expect(secao.getByRole("img", { name: /^Gráfico de barras/ })).toHaveCount(0);
@@ -174,14 +182,14 @@ test("SAN-05..07: aviso factual com período, órgão, notas e ressalva", async 
     "Posto Ilustrativo Ltda tem sanção registrada no CEIS",
   );
   await expect(posto).toContainText(
-    "Impedimento/proibição de contratar com prazo determinado de 01/02/2026 a 01/02/2027, aplicada por Ministério Exemplo. A única nota paga a essa empresa em 2026 tem data dentro desse período.",
+    "Impedimento/proibição de contratar com prazo determinado de 01/02/2026 a 01/02/2027. Órgão sancionador: Ministério Exemplo. A única nota paga a essa empresa em 2026 tem data dentro desse período.",
   );
   const grafica = avisos.filter({ hasText: "Gráfica Exemplo Ltda" });
   await expect(grafica.getByRole("heading", { level: 3 })).toHaveText(
     "Gráfica Exemplo Ltda tem sanção registrada no CNEP",
   );
   await expect(grafica).toContainText(
-    "Multa desde 01/05/2026, sem data final, aplicada por Controladoria Exemplo. A única nota paga a essa empresa em 2026 não tem data dentro desse período.",
+    "Multa desde 01/05/2026, sem data final. Órgão sancionador: Controladoria Exemplo. A única nota paga a essa empresa em 2026 não tem data dentro desse período.",
   );
   for (const a of [posto, grafica]) {
     await expect(a).toContainText(
@@ -190,8 +198,10 @@ test("SAN-05..07: aviso factual com período, órgão, notas e ressalva", async 
   }
   await expect(posto.getByRole("link", { name: "Ver a nota" })).toHaveAttribute(
     "href",
-    `/parlamentares/${ID}/gastos.csv?ano=2026&doc=${encodeURIComponent("55.666.777/0001-88")}`,
+    `/parlamentares/${ID}/gastos.csv?ano=2026&doc=${encodeURIComponent("55.666.777/0001-88")}&de=2026-02-01&ate=2027-02-01`,
   );
+  // Sem nota dentro do período, não há link de notas.
+  await expect(grafica.getByRole("link", { name: /^Ver (a nota|as \d+ notas)$/ })).toHaveCount(0);
   await expect(posto.getByRole("link", { name: "Ver a base do CEIS no Portal" })).toHaveAttribute(
     "href",
     "https://portaldatransparencia.gov.br/download-de-dados/ceis",
@@ -260,4 +270,19 @@ test("C24: nota do cruzamento com a data da base", async ({ page }) => {
   await expect(page.locator("section#gastos")).toContainText(
     "Fonte do cruzamento: Portal da Transparência (CGU), CEIS e CNEP, download em lote · base de 10/11/2026 · comparação pelo CNPJ.",
   );
+});
+
+test("C22: CSV de notas filtra pelo período da sanção", async ({ request }) => {
+  const doc = encodeURIComponent("55.666.777/0001-88");
+  const dentro = await (
+    await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}&de=2026-02-01&ate=2027-02-01`)
+  ).text();
+  expect(dentro.trim().split("\r\n")).toHaveLength(2);
+  expect(dentro).toContain("2026-02-10");
+  const fora = await (
+    await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}&de=2026-02-11&ate=2027-02-01`)
+  ).text();
+  expect(fora.trim().split("\r\n")).toHaveLength(1);
+  const ate = await (await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}&ate=2026-02-09`)).text();
+  expect(ate.trim().split("\r\n")).toHaveLength(1);
 });

@@ -67,7 +67,10 @@ function zipar(arquivos: Record<string, string>): Promise<Buffer> {
   return new Promise((resolve) => {
     const z = new yazl.ZipFile();
     for (const [nome, conteudo] of Object.entries(arquivos))
-      z.addBuffer(iconv.encode(conteudo, "latin1"), nome, { mtime: new Date(2026, 10, 10, 14, 2) });
+      // Datas diferentes por entrada: a base é a do arquivo de emendas, não a dos favorecidos.
+      z.addBuffer(iconv.encode(conteudo, "latin1"), nome, {
+        mtime: nome === "EmendasParlamentares.csv" ? new Date(2026, 10, 10, 14, 2) : new Date(2026, 10, 5, 9, 0),
+      });
     z.end();
     const partes: Buffer[] = [];
     z.outputStream.on("data", (c: Buffer) => partes.push(c));
