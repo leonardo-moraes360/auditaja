@@ -14,6 +14,9 @@ describe("mascararCpfsNoTexto", () => {
     expect(mascararCpfsNoTexto("00469171000326HOTEL CENTRAL")).toBe("00469171000326HOTEL CENTRAL");
     expect(mascararCpfsNoTexto("HOTEL 00469171000326")).toBe("HOTEL 00469171000326");
     expect(mascararCpfsNoTexto("X 1123456789012")).toBe("X 1123456789012");
+    // 10 dígitos não é CPF (nome real da CEAP: "… MIDIA LTDA 2000004245").
+    expect(mascararCpfsNoTexto("MIDIA LTDA 2000004245")).toBe("MIDIA LTDA 2000004245");
+    expect(mascararCpfsNoTexto("A 123.456.789-0")).toBe("A 123.456.789-0");
   });
   it("favorecido de emenda com dois CPFs no nome", () => {
     expect(favorecidoPublicavel("Pessoa Jurídica", "11854334000149", "A 12345678901 B 98765432100").nome).toBe(
