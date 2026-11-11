@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Parlamentares" };
 
 export default function Parlamentares({ searchParams }: PageProps<"/parlamentares">) {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-[1200px] space-y-6 px-4 py-8 sm:px-6">
       <h1 className="font-heading text-3xl font-bold">Parlamentares federais em exercício</h1>
       <Suspense fallback={<Esqueleto linhas={4} />}>
         <Resultados searchParams={searchParams} />
@@ -84,14 +84,19 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
             defaultValue={q}
             type="search"
             placeholder="Ex.: Maria, Silva ou SP"
-            className="h-10 rounded-md border border-input bg-white px-3"
+            className="h-10 rounded-[8px] border border-input bg-white px-3 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="uf" className="text-sm font-medium">
             UF
           </label>
-          <select id="uf" name="uf" defaultValue={uf} className="h-10 rounded-md border border-input bg-white px-3">
+          <select
+            id="uf"
+            name="uf"
+            defaultValue={uf}
+            className="h-10 rounded-[8px] border border-input bg-white px-3 text-sm"
+          >
             <option value="">Todas</option>
             {ufs.map((u) => (
               <option key={u} value={u}>
@@ -100,7 +105,10 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
             ))}
           </select>
         </div>
-        <button type="submit" className="h-10 rounded-md bg-primary px-4 font-medium text-primary-foreground">
+        <button
+          type="submit"
+          className="h-10 rounded-[8px] bg-primary px-4 text-sm font-semibold text-primary-foreground"
+        >
           Filtrar
         </button>
       </form>
@@ -118,7 +126,7 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
               href={`/parlamentares/${p.id}`}
               className="flex items-center gap-3 rounded-lg border bg-superficie p-3 text-foreground no-underline hover:border-primary"
             >
-              <FotoParlamentar nome={p.nome} url={p.url_foto} tamanho={48} />
+              <FotoParlamentar nome={p.nome} url={p.url_foto} tamanho={48} raio="rounded-[8px]" />
               <span>
                 <span className="block font-medium">{p.nome}</span>
                 <span className="block text-sm text-muted-foreground">

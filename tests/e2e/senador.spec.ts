@@ -82,11 +82,18 @@ test("SCEAPS-06: gastos sem teto e com o aviso do Senado", async ({ page, isMobi
 test("SVOT-06/07/08: voto secreto, ausência com motivo e filtro de divergência", async ({ page, isMobile }) => {
   await page.goto(`/parlamentares/${SENADOR}?lista=completa`);
   const vot = page.locator("section#votacoes");
-  await expect(vot.getByText("Votou (voto secreto)")).toBeVisible();
+  await expect(
+    vot.getByText(isMobile ? "Votou (secreto)" : "Votou (voto secreto)", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
   await expect(vot.getByText("Orientação: não se aplica")).toBeVisible();
   await expect(vot.getByText("Ausente: missão oficial")).toBeVisible();
   await expect(vot.getByText("Em licença ou afastado")).toBeVisible();
-  await expect(vot.getByText("Liderança do PFX: Sim").first()).toBeVisible();
+  await expect(
+    vot
+      .getByText(isMobile ? "Liderança: Sim" : "Liderança do PFX: Sim", { exact: true })
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   if (!isMobile) {
     await expect(
       vot.getByRole("heading", { level: 2 }).getByText("Votações nominais no Plenário", { exact: true }),
@@ -101,18 +108,45 @@ test("SVOT-06/07/08: voto secreto, ausência com motivo e filtro de divergência
   }
 });
 
-test("SUI-04: bloco Mandato com Casa, período, situação, bloco e suplentes", async ({ page }) => {
+test("SUI-04: bloco Mandato com Casa, período, situação, bloco e suplentes", async ({ page, isMobile }) => {
   await page.goto(`/parlamentares/${SENADOR}`);
   const m = page.locator("section#mandato");
-  await expect(m.getByText("Senado Federal", { exact: true })).toBeVisible();
-  await expect(m.getByText("01/02/2023")).toBeVisible();
-  await expect(m.getByText("31/01/2031")).toBeVisible();
-  await expect(m.getByText("Titular, em exercício")).toBeVisible();
-  await expect(m.getByText("Bloco Parlamentar Exemplo")).toBeVisible();
-  await expect(m.getByText("Beatriz Suplente Fictícia")).toBeVisible();
-  await expect(m.getByText("2º suplente")).toBeVisible();
-  await expect(m.getByText("Comissão de Assuntos Econômicos")).toBeVisible();
-  await expect(m.getByText("Posse para o mandato 2023–2031")).toBeVisible();
+  const ver = (t: string | RegExp) => m.getByText(t, { exact: true }).filter({ visible: true });
+  if (isMobile) {
+    // Versão compacta do artboard SenadorMobile.
+    await expect(ver("01/02/2023 a 31/01/2031")).toBeVisible();
+    await expect(ver("Titular, em exercício")).toBeVisible();
+    await expect(ver("Bloco Parlamentar Exemplo")).toBeVisible();
+    await expect(ver("Beatriz Suplente Fictícia (1º) · Carlos Suplente Fictício (2º)")).toBeVisible();
+    await expect(m.getByText("Linha do tempo")).toBeHidden();
+  } else {
+    await expect(ver("Senado Federal")).toBeVisible();
+    await expect(ver("Minas Gerais")).toBeVisible();
+    await expect(ver("01/02/2023")).toBeVisible();
+    await expect(ver("31/01/2031")).toBeVisible();
+    await expect(ver("Titular, em exercício")).toBeVisible();
+    await expect(ver("Bloco Parlamentar Exemplo")).toBeVisible();
+    await expect(ver("Beatriz Suplente Fictícia")).toBeVisible();
+    await expect(ver("2º suplente")).toBeVisible();
+    await expect(m.getByText("Assuntos Econômicos (CAE)")).toBeVisible();
+    await expect(m.getByText("Posse para o mandato 2023–2031")).toBeVisible();
+    await expect(m.getByText("Eleito senador por MG")).toBeVisible();
+    await expect(m.getByText("Fonte: Senado, Dados Abertos /senador/9001 · TSE (candidaturas).")).toBeVisible();
+  }
+});
+
+test("textos de correção do senador", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  await expect(
+    page
+      .getByText(
+        isMobile
+          ? "Qualquer pessoa pode pedir correção de um dado deste perfil."
+          : "Senadores, assessorias e qualquer pessoa podem pedir correção de um dado deste perfil.",
+        { exact: true },
+      )
+      .filter({ visible: true }),
+  ).toBeVisible();
 });
 
 test("SUI-05: fontes do Senado, sem as da Câmara", async ({ page, isMobile }) => {

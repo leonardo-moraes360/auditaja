@@ -172,3 +172,27 @@ describe("busca por Casa (Postgres)", () => {
     expect((await buscarParlamentares({ q: "MG" })).map((r) => r.id)).toEqual([SEED.senador]);
   });
 });
+
+describe("lista do Senado inteira (meta: 81 senadores)", () => {
+  it("casa=senado não corta em 60", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { buscarParlamentares } = await import("@/data/perfil");
+    const coleta = await db.selectFrom("coleta").select("id").limit(1).executeTakeFirstOrThrow();
+    await db
+      .insertInto("parlamentar")
+      .values(
+        Array.from({ length: 79 }, (_, i) => ({
+          id: 10008000 + i,
+          casa: "senado" as const,
+          nome: `Senador Fictício ${String(i).padStart(2, "0")}`,
+          em_exercicio: true,
+          source_url: "https://legis.senado.leg.br/dadosabertos/senador/0",
+          coleta_id: coleta.id,
+        })),
+      )
+      .execute();
+    expect(await buscarParlamentares({ casa: "senado" })).toHaveLength(81);
+    expect(await buscarParlamentares({ casa: "camara" })).toHaveLength(2);
+    await semear(db);
+  });
+});

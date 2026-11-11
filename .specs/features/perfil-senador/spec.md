@@ -106,7 +106,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 3. WHEN a coleta `votacoes-senado {ano}` roda THEN the system SHALL gravar as orientações de liderança do período, ligadas à votação pelo `sequencialVotacao`, com os valores normalizados (SIM → Sim, NÃO → Não, LIVRE → Liberado, OBSTRUÇÃO → Obstrução). <!-- SVOT-03 -->
 4. The system SHALL fazer no máximo 2 requisições por ano coletado de votações do Senado (uma de votações com votos, uma de orientações). <!-- SVOT-04 -->
 5. WHEN o perfil de um senador abre THEN the system SHALL listar as votações do `PLEN-SF` do ano mais recente com votações, mais recentes primeiro. <!-- SVOT-05 -->
-6. WHEN a votação é secreta THEN the system SHALL exibir "Votou (voto secreto)" se o voto é `Votou` e "Orientação: não se aplica". <!-- SVOT-06 -->
+6. WHEN a votação é secreta THEN the system SHALL exibir "Votou (voto secreto)" no desktop e "Votou (secreto)" no celular se o voto é `Votou`, e "Orientação: não se aplica". <!-- SVOT-06 -->
 7. WHEN o voto é uma ausência justificada THEN the system SHALL exibir "Ausente: " seguido do motivo (AP → "atividade parlamentar", MIS → "missão oficial", MER → "Parlamento do Mercosul", AUS → "ausência comunicada"); NCom SHALL aparecer como "Não compareceu". <!-- SVOT-07 -->
 8. The system SHALL rotular o filtro de divergência do senador como "Divergiu da liderança" e o indicador como "Votou como a liderança orientou". <!-- SVOT-08 -->
 

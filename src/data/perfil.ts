@@ -50,7 +50,8 @@ export async function buscarParlamentares(opts: {
     .selectFrom("parlamentar")
     .select(["id", "casa", "sexo", "nome", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
     .orderBy("nome")
-    .limit(opts.limite ?? 60);
+    // O Senado tem 81 cadeiras: a lista do Senado cabe inteira; a da Câmara segue limitada a 60.
+    .limit(opts.limite ?? (opts.casa === "senado" ? 100 : 60));
   if (!opts.todos) query = query.where("em_exercicio", "=", true);
   if (opts.uf) query = query.where("sigla_uf", "=", opts.uf);
   if (opts.casa) query = query.where("casa", "=", opts.casa);
@@ -374,6 +375,8 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     return {
       ...v,
       voto: voto?.voto || null,
+      /** Partido do parlamentar no dia do voto (pode diferir do atual). */
+      partidoNoVoto: voto?.sigla_partido ?? null,
       orientacao: orient?.orientacao ?? null,
       tipoOrientacao: orient?.tipo ?? null,
     };

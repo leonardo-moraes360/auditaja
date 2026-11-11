@@ -3,7 +3,7 @@ import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
 import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
-import { classificarVotoSenado, rotuloVotoSenado } from "@/lib/senado";
+import { classificarVotoSenado, codigoSenado, rotuloVotoSenado } from "@/lib/senado";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
 
@@ -174,7 +174,7 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
               {senado && <span>Valor reembolsado pelo Senado</span>}
             </figcaption>
             <div
-              className="relative flex h-[140px] items-end gap-1.5 border-b border-linha sm:h-[200px] sm:gap-2.5 sm:pt-2.5"
+              className="relative flex h-[140px] items-end gap-1.5 border-b border-linha sm:h-[211px] sm:gap-2.5 sm:pt-2.5"
               role="img"
               aria-label={`${mandato ? "Gasto anual da cota no mandato" : `Gasto mensal da cota em ${ano}`}${
                 linhaTeto !== null ? `, com o teto mensal de ${brl(linhaTeto)}` : ""
@@ -384,7 +384,8 @@ export function SecaoVotacoes({
     ["divergiu", senado ? "Divergiu da liderança" : "Divergiu do partido"],
     ["ausencias", "Ausências"],
   ] as const;
-  const visiveis = completo ? lista : lista.slice(0, 5);
+  // Resumo: 5 votações no perfil do deputado e 6 no do senador, como nos artboards.
+  const visiveis = completo ? lista : lista.slice(0, senado ? 6 : 5);
   const verTodas = `/parlamentares/${parlamentar.id}?ano=${ano}&votos=${filtro}&lista=completa#votacoes`;
 
   return (
@@ -425,21 +426,37 @@ export function SecaoVotacoes({
             const res = resultado(v.descricao, v.aprovacao);
             const titulo = v.proposicao_sigla ?? v.descricao;
             const ementa = v.proposicao_sigla ? (v.proposicao_ementa ?? v.descricao) : null;
-            const orient = senado
-              ? v.secreta
-                ? "Orientação: não se aplica"
-                : v.orientacao
-                  ? `Liderança${parlamentar.sigla_partido ? ` do ${parlamentar.sigla_partido}` : ""}: ${v.orientacao}`
-                  : "Liderança: sem orientação"
-              : v.tipoOrientacao
-                ? `Partido: ${v.orientacao}`
-                : "Partido: sem orientação";
+            const partidoDoDia = v.partidoNoVoto ?? parlamentar.sigla_partido;
+            const orient = senado ? (
+              v.secreta ? (
+                "Orientação: não se aplica"
+              ) : v.orientacao ? (
+                <Dois
+                  curto={`Liderança: ${v.orientacao}`}
+                  longo={`Liderança${partidoDoDia ? ` do ${partidoDoDia}` : ""}: ${v.orientacao}`}
+                />
+              ) : (
+                "Liderança: sem orientação"
+              )
+            ) : v.tipoOrientacao ? (
+              `Partido: ${v.orientacao}`
+            ) : (
+              "Partido: sem orientação"
+            );
             const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
             const selo = (
               <span
                 className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-[13px] ${corVoto(v.voto, v.orientacao)}`}
               >
-                {senado ? rotuloVotoSenado(v.voto, v.secreta) : `Votou: ${v.voto ?? "sem registro"}`}
+                {senado ? (
+                  v.secreta && v.voto === "Votou" ? (
+                    <Dois curto="Votou (secreto)" longo="Votou (voto secreto)" />
+                  ) : (
+                    rotuloVotoSenado(v.voto, v.secreta)
+                  )
+                ) : (
+                  `Votou: ${v.voto ?? "sem registro"}`
+                )}
                 {diverge(v.voto, v.orientacao) && <span className="sr-only"> (divergiu da orientação)</span>}
               </span>
             );
@@ -686,14 +703,16 @@ function marcoCandidatura(c: Perfil["candidaturas"][number], sexo: string | null
   const cargo = c.cargo.toLowerCase();
   const sit = (c.situacao ?? "").toUpperCase();
   let texto: string;
+  // Senado: "Eleito senador por MG" e "Eleita 1ª suplente de senador por MA" (artboard do senador).
+  const suplenteSenado = /^(\d)º suplente$/.exec(cargo);
+  if (sit.startsWith("ELEITO") && suplenteSenado) {
+    const ordinal = `${suplenteSenado[1]}${sexo === "F" ? "ª" : "º"}`;
+    return `${sexo === "F" ? "Eleita" : "Eleito"} ${ordinal} suplente de senador por ${c.sigla_uf}`;
+  }
+  if (sit.startsWith("ELEITO") && cargo === "senador") return feminino(`Eleito senador por ${c.sigla_uf}`, sexo);
   if (sit.startsWith("ELEITO")) {
     const via = sit.includes("MÉDIA") ? ", por média" : sit.includes("QP") ? ", por quociente partidário" : "";
-    const mandato =
-      cargo === "deputado federal"
-        ? ` · mandato ${c.ano_eleicao + 1}–${c.ano_eleicao + 5}`
-        : cargo === "senador"
-          ? ` · mandato ${c.ano_eleicao + 1}–${c.ano_eleicao + 9}`
-          : "";
+    const mandato = cargo === "deputado federal" ? ` · mandato ${c.ano_eleicao + 1}–${c.ano_eleicao + 5}` : "";
     texto = `Eleito ${cargo} (${c.sigla_uf})${via}${mandato}`;
   } else if (sit === "SUPLENTE") {
     texto = `Suplente de ${cargo} (${c.sigla_uf})`;
@@ -793,7 +812,28 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         <h2 id="mandato-titulo" className={H2_LATERAL}>
           Mandato
         </h2>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+        {senado && (
+          // Celular: versão compacta do artboard SenadorMobile (Período, Situação, Bloco, Suplentes).
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm sm:hidden">
+            <dt className="text-muted-foreground">Período</dt>
+            <dd>{leg ? `${dataBr(leg.inicio)} a ${dataBr(leg.fim)}` : "—"}</dd>
+            <dt className="text-muted-foreground">Situação</dt>
+            <dd>{p.participacao ? `${p.participacao}, ${situacao}` : situacao}</dd>
+            {p.bloco && (
+              <>
+                <dt className="text-muted-foreground">Bloco</dt>
+                <dd>{p.bloco}</dd>
+              </>
+            )}
+            {suplentes.length > 0 && (
+              <>
+                <dt className="text-muted-foreground">Suplentes</dt>
+                <dd>{suplentes.map((s) => `${s.nome} (${s.ordem}º)`).join(" · ")}</dd>
+              </>
+            )}
+          </dl>
+        )}
+        <dl className={`grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm ${senado ? "max-sm:hidden" : ""}`}>
           <dt className="text-muted-foreground">Casa</dt>
           <dd>{senado ? "Senado Federal" : "Câmara dos Deputados"}</dd>
           <dt className="text-muted-foreground">UF</dt>
@@ -818,7 +858,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
           )}
         </dl>
         {senado && suplentes.length > 0 && (
-          <>
+          <div className="flex flex-col gap-3.5 max-sm:hidden">
             <h3 className="mt-1 text-sm font-bold">Suplentes</h3>
             <ul className="flex flex-col gap-1.5 text-sm">
               {suplentes.map((s) => (
@@ -832,23 +872,25 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
               Quando um suplente assume, ele ganha perfil próprio e os gastos e votos ficam no nome de quem estava em
               exercício.
             </p>
-          </>
+          </div>
         )}
         {comissoes.length > 0 && (
-          <>
+          <div className={`flex flex-col gap-3.5 ${senado ? "max-sm:hidden" : ""}`}>
             <h3 className="mt-1 text-sm font-bold">Comissões como titular</h3>
             <ul className="flex list-disc flex-col gap-1 pl-[18px] text-sm">
               {comissoes.map((o) => (
                 <li key={`${o.sigla_orgao}-${o.cargo}`}>
-                  {o.nome_orgao}
+                  {senado
+                    ? `${o.nome_orgao.replace(/^Comiss[ãa]o (de |da |do |das |dos )?/i, "")} (${o.sigla_orgao})`
+                    : o.nome_orgao}
                   {/titular/i.test(o.cargo) ? null : <span className="text-muted-foreground"> · {o.cargo}</span>}
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         )}
         {marcos.length > 0 && (
-          <>
+          <div className={`flex flex-col gap-3.5 ${senado ? "max-sm:hidden" : ""}`}>
             <h3 className="mt-1 text-sm font-bold">Linha do tempo</h3>
             <ol className="flex flex-col gap-2.5 text-[13px]">
               {marcos.map((m, i) => (
@@ -863,11 +905,11 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
                 </li>
               ))}
             </ol>
-          </>
+          </div>
         )}
-        <p className="text-xs text-muted-foreground">
+        <p className={`text-xs text-muted-foreground ${senado ? "max-sm:hidden" : ""}`}>
           {senado
-            ? "Fonte: Senado, Dados Abertos /senador/{código} · TSE (candidaturas). "
+            ? `Fonte: Senado, Dados Abertos /senador/${codigoSenado(p.id)} · TSE (candidaturas). `
             : `Fonte: Câmara, API v2 /deputados/${p.id} e /legislaturas · TSE (candidaturas). `}
           <a href={p.source_url} target="_blank" rel="noopener noreferrer">
             Ver na fonte
@@ -910,8 +952,16 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         </h2>
         <p className="text-[13px] leading-[1.45] text-texto-2 sm:text-sm sm:leading-normal">
           <Dois
-            curto="Qualquer pessoa pode pedir correção."
-            longo="Parlamentares, assessorias e qualquer pessoa podem pedir correção. Registramos cada pedido e toda alteração."
+            curto={
+              senado
+                ? "Qualquer pessoa pode pedir correção de um dado deste perfil."
+                : "Qualquer pessoa pode pedir correção."
+            }
+            longo={
+              senado
+                ? "Senadores, assessorias e qualquer pessoa podem pedir correção de um dado deste perfil."
+                : "Parlamentares, assessorias e qualquer pessoa podem pedir correção. Registramos cada pedido e toda alteração."
+            }
           />
         </p>
         <Link

@@ -385,8 +385,8 @@ T13 → T14 → T15
 
 **Done when**:
 
-- [ ] e2e do senador e do deputado passam
-- [ ] Gate full passa
+- [x] e2e do senador e do deputado passam
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full
