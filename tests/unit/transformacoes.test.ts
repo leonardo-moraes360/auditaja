@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linhaCeap, montarParlamentares, montarVotacoes } from "@/ingest/camara";
+import { linhaCeap, montarBlocos, montarParlamentares, montarVotacoes } from "@/ingest/camara";
 import { casarCandidaturas, montarBens } from "@/ingest/tse";
 import { normalizarNome } from "@/ingest/arquivos";
 
@@ -93,6 +93,35 @@ describe("votações", () => {
     expect(m.votacoes.map((v) => v.id)).toEqual(["a"]);
     expect(m.votos).toHaveLength(1);
     expect(m.orientacoes).toHaveLength(1);
+  });
+});
+
+describe("blocos", () => {
+  it("usa os partidos da API e, se a API vier vazia, os do nome", () => {
+    const m = montarBlocos(
+      [
+        { id: "589", uri: "", nome: "UNIÃO, PP, Federação PSDB CIDADANIA", idLegislatura: "57", federacao: false },
+        { id: "590", uri: "", nome: "AVANTE, SOLIDARIEDADE, PRD", idLegislatura: "57", federacao: false },
+        { id: "", uri: "", nome: "sem id", idLegislatura: "57", federacao: false },
+      ],
+      new Map([
+        ["589", [{ sigla: "PSDB" }, { sigla: "CIDADANIA" }, { sigla: "UNIÃO" }, { sigla: "PP" }, { sigla: "PP" }]],
+      ]),
+      7,
+    );
+    expect(m.blocos.map((b) => b.id)).toEqual([589, 590]);
+    expect(m.partidos.filter((p) => p.bloco_id === 589).map((p) => [p.sigla_partido, p.origem])).toEqual([
+      ["PSDB", "api"],
+      ["CIDADANIA", "api"],
+      ["UNIÃO", "api"],
+      ["PP", "api"],
+    ]);
+    expect(m.partidos.filter((p) => p.bloco_id === 590).map((p) => [p.sigla_partido, p.origem])).toEqual([
+      ["AVANTE", "nome"],
+      ["SOLIDARIEDADE", "nome"],
+      ["PRD", "nome"],
+    ]);
+    expect(m.partidos.every((p) => p.coleta_id === 7)).toBe(true);
   });
 });
 

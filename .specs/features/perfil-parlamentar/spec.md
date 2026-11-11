@@ -96,6 +96,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 5. WHEN o usuário escolhe o filtro "Divergiu da orientação" THEN the system SHALL listar só votações em que voto e orientação são Sim/Não e diferentes. <!-- VOTO-05 -->
 6. WHEN uma votação não tem voto do deputado THEN the system SHALL mostrar "Votou: sem registro" no lugar do voto. <!-- VOTO-06 -->
 7. WHEN o usuário escolhe o filtro "Sem voto registrado" THEN the system SHALL listar só votações sem voto do deputado. <!-- VOTO-07 -->
+8. WHEN a orientação é de um bloco com abreviação truncada (ex.: "Bl UniPpPsd...") e exatamente um bloco da legislatura na API da Câmara casa com ela THEN the system SHALL aplicá-la a todos os partidos desse bloco, inclusive os de federação e os fora da abreviação; sem bloco identificado, só aos partidos visíveis na abreviação. <!-- VOTO-08 -->
 
 **Independent Test**: no seed, presença 67% (2 de 3) e alinhamento 50% (1 de 2); o filtro de divergência mostra só a PEC fictícia.
 
@@ -244,6 +245,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | VOTO-04 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-05 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-07 | P1: Ver votações e alinhamento | Tasks | Verified |
+| VOTO-08 | P1: Ver votações e alinhamento | Tasks | Implemented |
 | VOTO-06 | P1: Ver votações e alinhamento | Tasks | Verified |
 | BENS-01 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-02 | P1: Ver bens declarados | Tasks | Verified |

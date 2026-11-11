@@ -99,6 +99,21 @@ export interface OrientacaoTable {
   coleta_id: number;
 }
 
+export interface BlocoTable {
+  id: number;
+  nome: string;
+  id_legislatura: number;
+  federacao: boolean;
+  coleta_id: number;
+}
+
+export interface BlocoPartidoTable {
+  bloco_id: number;
+  sigla_partido: string;
+  origem: "api" | "nome";
+  coleta_id: number;
+}
+
 export interface CandidaturaTable {
   ano_eleicao: number;
   sq_candidato: string;
@@ -140,6 +155,8 @@ export interface Database {
   votacao: VotacaoTable;
   voto: VotoTable;
   orientacao: OrientacaoTable;
+  bloco: BlocoTable;
+  bloco_partido: BlocoPartidoTable;
   candidatura: CandidaturaTable;
   bem_declarado: BemDeclaradoTable;
   pedido_correcao: PedidoCorrecaoTable;

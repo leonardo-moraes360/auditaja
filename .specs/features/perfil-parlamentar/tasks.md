@@ -536,6 +536,26 @@ T25
 
 ---
 
+### T28: Orientação de bloco pela composição da API
+
+**What**: Coletor `pnpm ingest blocos` (API v2 `/blocos?idLegislatura=57` e `/blocos/{id}/partidos`, pelo `ClienteEducado`), tabelas `bloco` e `bloco_partido` (migração 0003) e identificação do bloco da orientação truncada pelo nome. PSDB, Cidadania, Republicanos, MDB e Podemos passam a receber a orientação do "Bl UniPpPsd...".
+**Where**: `src/db/migrations/0003_blocos.ts`, `src/ingest/camara.ts`, `scripts/ingest.ts`, `src/lib/metrics.ts`, `src/data/perfil.ts`, `src/app/metodologia/page.tsx`
+**Depends on**: None
+**Requirement**: VOTO-02, VOTO-04, VOTO-08
+
+**Done when**:
+
+- [x] "Bl UniPpPsd..." vale para os 8 partidos do bloco 589 e não para PL ou Avante
+- [x] Bloco 590 (API sem partidos) usa a lista do nome
+- [x] Abreviação ambígua ou sem bloco cai na regra antiga
+- [x] Metodologia 1.2 descreve a regra e o limite da composição atual
+- [x] Gate full passa
+
+**Tests**: unit, integration, e2e
+**Gate**: full
+
+---
+
 ### T27: Teto da CEAP por UF
 
 **What**: Liga a comparação do gasto com o teto acumulado usando os 27 valores mensais de 2026 publicados na página oficial "Cota Parlamentar" da Câmara (reajuste do Ato da Mesa nº 244/2026). Teto só vale para 2026; outros anos ficam sem comparação.
@@ -546,7 +566,7 @@ T25
 **Done when**:
 
 - [x] 27 UFs com valor conferido; DF R$ 41.612,55 e RR R$ 58.474,70 batem com os valores de 2026 noticiados
-- [x] Metodologia 1.1 cita a fonte, o ato, a data de conferência e a aproximação de jan–fev
+- [x] Metodologia 1.3 cita a fonte, o ato, a data de conferência e a aproximação de jan–fev
 - [x] Perfil do seed (SP, até março) mostra "30% do teto acumulado até mar"
 - [x] Gate full passa
 

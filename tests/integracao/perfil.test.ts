@@ -91,6 +91,53 @@ describe("perfilParlamentar (Postgres)", () => {
     await db.deleteFrom("despesa_ceap").where("parlamentar_id", "=", SEED.deputado).execute();
   });
 
+  it("VOTO-08: orientação de bloco vale para partido fora da abreviação, pela composição da API", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const coleta = (await db.selectFrom("coleta").select("id").executeTakeFirstOrThrow()).id;
+    await db
+      .insertInto("bloco")
+      .values({ id: 999001, nome: "PFZ, PFW, PFY", id_legislatura: 57, federacao: false, coleta_id: coleta })
+      .execute();
+    await db
+      .insertInto("bloco_partido")
+      .values(
+        ["PFZ", "PFW", "PFY"].map((sigla) => ({
+          bloco_id: 999001,
+          sigla_partido: sigla,
+          origem: "api" as const,
+          coleta_id: coleta,
+        })),
+      )
+      .execute();
+    await db
+      .insertInto("voto")
+      .values([
+        { votacao_id: "seed-1", parlamentar_id: SEED.deputado, voto: "Sim", sigla_partido: "PFY", coleta_id: coleta },
+        { votacao_id: "seed-2", parlamentar_id: SEED.deputado, voto: "Sim", sigla_partido: "PFY", coleta_id: coleta },
+      ])
+      .execute();
+    await db
+      .insertInto("orientacao")
+      .values([
+        { votacao_id: "seed-1", sigla_bancada: "Bl PfzPfw...", orientacao: "Sim", coleta_id: coleta },
+        { votacao_id: "seed-2", sigla_bancada: "Bl PfzPfw...", orientacao: "Não", coleta_id: coleta },
+      ])
+      .execute();
+    try {
+      const { perfilParlamentar } = await import("@/data/perfil");
+      const p = (await perfilParlamentar(SEED.deputado))!;
+      expect(p.votacoes.alinhamento).toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 });
+      expect(p.votacoes.lista.find((v) => v.id === "seed-1")).toMatchObject({
+        orientacao: "Sim",
+        tipoOrientacao: "bloco",
+      });
+    } finally {
+      await db.deleteFrom("orientacao").where("sigla_bancada", "=", "Bl PfzPfw...").execute();
+      await db.deleteFrom("voto").where("parlamentar_id", "=", SEED.deputado).execute();
+      await db.deleteFrom("bloco").where("id", "=", 999001).execute();
+    }
+  });
+
   it("VOTO-01/03: presença 2 de 4 (voto vazio não conta) e alinhamento 1 de 2; sem voto vira null", async (ctx) => {
     if (!disponivel) ctx.skip();
     const { perfilParlamentar } = await import("@/data/perfil");

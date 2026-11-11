@@ -65,8 +65,20 @@ export default function Metodologia() {
         </p>
         <p>
           Só comparamos votações em que a orientação foi Sim ou Não e o deputado votou Sim ou Não. Liberação, obstrução,
-          abstenção e ausência ficam de fora do cálculo. A Câmara abrevia nomes de blocos (por exemplo &quot;Bl
-          UniPpPsd...&quot;); quando o partido não aparece na abreviação, a votação fica sem orientação.
+          abstenção e ausência ficam de fora do cálculo.
+        </p>
+        <p>
+          A Câmara abrevia o nome do bloco na orientação (por exemplo &quot;Bl UniPpPsd...&quot;). Para saber quais
+          partidos o bloco reúne, usamos a lista de blocos da legislatura na{" "}
+          <a href="https://dadosabertos.camara.leg.br/swagger/api.html" target="_blank" rel="noopener noreferrer">
+            API de Dados Abertos da Câmara
+          </a>{" "}
+          (/blocos e /blocos/&#123;id&#125;/partidos): o bloco é aquele cujo nome começa pelas mesmas siglas da
+          abreviação, e a orientação vale para todos os seus partidos, inclusive os de federações (como PSDB e
+          Cidadania) e os que não couberam na abreviação (como Republicanos). Quando a API não lista os partidos de um
+          bloco, eles saem do nome do bloco. Usamos a composição atual do bloco para todas as votações do ano; se um
+          partido entrou ou saiu do bloco no meio do ano, isso não aparece. Se nenhum bloco casar com a abreviação, só
+          contam os partidos visíveis nela.
         </p>
       </section>
 

@@ -134,7 +134,7 @@ Todo registro de dado coletado tem `coleta_id` com FK para `coleta`.
 
 | Concern | Location (file:line) | Impact | Mitigation |
 | ------- | -------------------- | ------ | ---------- |
-| Orientação de bloco truncada pela Câmara | `src/lib/metrics.ts:55` | Partidos fora da abreviação ficam sem alinhamento | Documentado na metodologia; follow-up: mapear blocos pela API `/orgaos` |
+| Composição de bloco é a atual | `src/data/perfil.ts` (`blocosDaLegislatura`) | Partido que mudou de bloco no ano recebe a orientação do bloco atual | API `/blocos` não traz datas; limitação descrita na metodologia 1.2 |
 | Lista fixa de siglas completas | `src/lib/metrics.ts:31` | Partido novo pode virar prefixo de outro | Revisar a lista a cada legislatura; teste cobre PSD × PSDB |
 | Teto da CEAP só para 2026 | `src/data/teto-ceap.ts:58` | Outros anos sem % do teto; jan–fev/2026 usam o valor novo (teto um pouco acima do real) | Valores da página oficial da Câmara, conferidos em 11/11/2026; aproximação descrita na metodologia |
 | Perfil inexistente responde 200 | `src/app/loading.tsx:1` | Crawlers podem indexar | `noindex` emitido pelo Next; avaliar `instant = false` no perfil |
