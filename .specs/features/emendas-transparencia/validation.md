@@ -1,5 +1,12 @@
 # Validation: emendas-transparencia — FAIL ❌ (rodada 5)
 
+> **Encerramento por decisão do usuário (2026-11-11, thread do projeto):** a verificação termina aqui, com ressalva.
+> Paridade 100% nas rodadas 3 a 5; os 43 critérios têm evidência; gate verde (177 vitest, 132 e2e). As rodadas finais só
+> acharam formatos novos de CPF dentro de nomes (`mascararCpfsNoTexto`, `src/lib/privacy.ts`). A última versão do regex
+> (commit 7605615: até três separadores `[-./\s]` por intervalo; na dúvida, mascara) não passou por verificador
+> independente. Nenhum nome real das bases de 11/11/2026 muda com ela. Esta nota foi escrita pelo autor, não pelo verificador.
+
+
 **Data**: 2026-11-11 (rodada 5, focada nas lacunas de teste da rodada 4)
 **Faixa**: `d12a683..b8aaf47` (1 commit, só `tests/`: `tests/unit/privacy.test.ts`, `tests/unit/privacidade-nomes.test.ts`,
 `tests/e2e/emendas.spec.ts`; +45/−0)
