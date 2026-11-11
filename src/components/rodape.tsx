@@ -18,9 +18,12 @@ export function Rodape() {
         </div>
         <div className="space-y-2 md:text-right">
           <p>Alertas e indicadores são pontos de partida para verificação, não acusações.</p>
-          <p className="flex flex-wrap gap-x-4 md:justify-end">
+          <p className="flex flex-wrap gap-x-4 gap-y-2 md:justify-end">
             <Link href="/metodologia" className="text-[#a9bef5] hover:text-white">
               Metodologia
+            </Link>
+            <Link href="/privacidade" className="text-[#a9bef5] hover:text-white">
+              Política de privacidade
             </Link>
             <Link href="/fontes" className="text-[#a9bef5] hover:text-white">
               Fontes e licenças
