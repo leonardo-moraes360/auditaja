@@ -153,49 +153,49 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| EMD-01 | P1: Coletar emendas | Tasks | Pending |
-| EMD-02 | P1: Coletar emendas | Tasks | Pending |
-| EMD-03 | P1: Coletar emendas | Tasks | Pending |
-| EMD-04 | P1: Coletar emendas | Tasks | Pending |
-| EMD-05 | P1: Coletar emendas | Tasks | Pending |
-| EMD-06 | P1: Coletar emendas | Tasks | Pending |
-| EMD-07 | P1: Coletar emendas | Tasks | Pending |
-| EMD-08 | P1: Coletar emendas | Tasks | Pending |
-| EMD-09 | P1: Coletar emendas | Tasks | Pending |
-| EMD-10 | P1: Coletar emendas | Tasks | Pending |
-| EMD-11 | P1: Coletar emendas | Tasks | Pending |
-| EMDUI-01 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-02 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-03 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-04 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-05 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-06 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-07 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-08 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-09 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-10 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-11 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-12 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-13 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-14 | P1: Ver as emendas | Tasks | Pending |
-| EMDUI-15 | P1: Ver as emendas | Tasks | Pending |
-| SAN-01 | P2: Sanção de fornecedor | Tasks | Pending |
-| SAN-02 | P2: Sanção de fornecedor | Tasks | Pending |
-| SAN-03 | P2: Sanção de fornecedor | Tasks | Pending |
-| SAN-04 | P2: Sanção de fornecedor | Tasks | Pending |
-| SAN-05 | P2: Sanção de fornecedor | Tasks | Pending |
-| SAN-06 | P2: Sanção de fornecedor | Tasks | Pending |
-| SAN-07 | P2: Sanção de fornecedor | Tasks | Pending |
-| MET-01 | P2: Metodologia e fontes | Tasks | Pending |
-| MET-02 | P2: Metodologia e fontes | Tasks | Pending |
-| MET-03 | P2: Metodologia e fontes | Tasks | Pending |
-| MET-04 | P2: Metodologia e fontes | Tasks | Pending |
-| MET-05 | P2: Metodologia e fontes | Tasks | Pending |
-| EDGE-01 | Edge cases | Tasks | Pending |
-| EDGE-02 | Edge cases | Tasks | Pending |
-| EDGE-03 | Edge cases | Tasks | Pending |
-| EDGE-04 | Edge cases | Tasks | Pending |
-| EDGE-05 | Edge cases | Tasks | Pending |
+| EMD-01 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-02 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-03 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-04 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-05 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-06 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-07 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-08 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-09 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-10 | P1: Coletar emendas | Tasks | Implementing |
+| EMD-11 | P1: Coletar emendas | Tasks | Implementing |
+| EMDUI-01 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-02 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-03 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-04 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-05 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-06 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-07 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-08 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-09 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-10 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-11 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-12 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-13 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-14 | P1: Ver as emendas | Tasks | Implementing |
+| EMDUI-15 | P1: Ver as emendas | Tasks | Implementing |
+| SAN-01 | P2: Sanção de fornecedor | Tasks | Implementing |
+| SAN-02 | P2: Sanção de fornecedor | Tasks | Implementing |
+| SAN-03 | P2: Sanção de fornecedor | Tasks | Implementing |
+| SAN-04 | P2: Sanção de fornecedor | Tasks | Implementing |
+| SAN-05 | P2: Sanção de fornecedor | Tasks | Implementing |
+| SAN-06 | P2: Sanção de fornecedor | Tasks | Implementing |
+| SAN-07 | P2: Sanção de fornecedor | Tasks | Implementing |
+| MET-01 | P2: Metodologia e fontes | Tasks | Implementing |
+| MET-02 | P2: Metodologia e fontes | Tasks | Implementing |
+| MET-03 | P2: Metodologia e fontes | Tasks | Implementing |
+| MET-04 | P2: Metodologia e fontes | Tasks | Implementing |
+| MET-05 | P2: Metodologia e fontes | Tasks | Implementing |
+| EDGE-01 | Edge cases | Tasks | Implementing |
+| EDGE-02 | Edge cases | Tasks | Implementing |
+| EDGE-03 | Edge cases | Tasks | Implementing |
+| EDGE-04 | Edge cases | Tasks | Implementing |
+| EDGE-05 | Edge cases | Tasks | Implementing |
 
 **Coverage:** 43 total, 43 mapped to tasks, 0 unmapped.
 

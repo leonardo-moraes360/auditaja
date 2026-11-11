@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/emendas-transparencia/design.md`
-**Status**: In Progress
+**Status**: Done (aguardando verificação independente)
 
 ---
 
@@ -194,8 +194,8 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] e2e: CSV com cabeçalho e linhas do período; textos da metodologia e da lateral
-- [ ] Build gate e full gate passam
+- [x] e2e: CSV com cabeçalho e linhas do período; textos da metodologia e da lateral
+- [x] Build gate e full gate passam
 
 **Tests**: e2e
 **Gate**: full

@@ -7,6 +7,7 @@ import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
 import { AvisoSancao, SeloSancao } from "./sancao";
+import { ComoLigamosEmendas } from "./secao-emendas";
 
 /** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
 function fraseCase(s: string) {
@@ -691,6 +692,16 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       det: `Votações, votos e orientações${coletadoEm("camara_lote_votos")}`,
     },
     {
+      nome: "Portal da Transparência · Emendas (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
+      det: `Emendas e pagamentos por favorecido${coletadoEm("cgu_emendas")}`,
+    },
+    {
+      nome: "Portal da Transparência · CEIS e CNEP (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+      det: `Empresas sancionadas${coletadoEm("cgu_ceis")}`,
+    },
+    {
       nome: "TSE · Dados Abertos (lote)",
       href: "https://dadosabertos.tse.jus.br/",
       det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
@@ -780,6 +791,8 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
           <Link href="/fontes">Ver todas as coletas</Link>
         </p>
       </section>
+
+      <ComoLigamosEmendas />
 
       <section
         aria-labelledby="erro-titulo"

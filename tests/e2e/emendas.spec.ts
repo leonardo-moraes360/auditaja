@@ -197,3 +197,44 @@ test("SAN-05: deputado sem fornecedor sancionado não vê aviso", async ({ page 
   await page.goto(`/parlamentares/${SEM_EMENDAS}`);
   await expect(page.locator("[data-sancao]")).toHaveCount(0);
 });
+
+test("EMDUI-15: CSV com uma linha por emenda do período", async ({ request }) => {
+  const r = await request.get(`/parlamentares/${ID}/emendas.csv?emendas=2025`);
+  expect(r.status()).toBe(200);
+  expect(r.headers()["content-type"]).toBe("text/csv; charset=utf-8");
+  expect(r.headers()["content-disposition"]).toBe(`attachment; filename="emendas-${ID}-2025.csv"`);
+  const linhas = (await r.text()).replace(/^﻿/, "").trim().split("\r\n");
+  expect(linhas[0]).toBe("codigo_emenda;ano;tipo;local;area;empenhado;liquidado;pago;restos_a_pagar_pagos");
+  expect(linhas.slice(1)).toEqual([
+    "202590000003;2025;Emenda Individual - Transferências com Finalidade Definida;ITU - SP;Saúde;500000.00;0.00;0.00;0.00",
+    "202590000003;2025;Emenda Individual - Transferências com Finalidade Definida;SOROCABA - SP;Saúde;1500000.00;900000.00;900000.00;300000.00",
+    "202590000004;2025;Emenda Individual - Transferências com Finalidade Definida;RIBEIRÃO PRETO - SP;Urbanismo;1200000.00;600000.00;600000.00;400000.00",
+    "202590000005;2025;Emenda Individual - Transferências com Finalidade Definida;JUNDIAÍ - SP;Educação;800000.00;800000.00;800000.00;0.00",
+  ]);
+  const mandato = (await (await request.get(`/parlamentares/${ID}/emendas.csv?emendas=mandato`)).text()).trim();
+  expect(mandato.split("\r\n")).toHaveLength(1 + 10);
+});
+
+test("MET-01..03: metodologia 1.4 com emendas e sanções", async ({ page }) => {
+  await page.goto("/metodologia");
+  await expect(page.getByText("Versão 1.4. Toda mudança gera nova versão.")).toBeVisible();
+  const emendas = page.locator("section#emendas");
+  await expect(emendas.getByRole("heading", { level: 2 })).toHaveText("Emendas parlamentares");
+  await expect(emendas).toContainText("orçamento de 2024 em diante");
+  await expect(emendas).toContainText("exatamente um deputado");
+  await expect(emendas).toContainText("Pago é a soma do valor pago no ano com os restos a pagar pagos depois.");
+  const sancoes = page.locator("section#sancoes");
+  await expect(sancoes.getByRole("heading", { level: 2 })).toHaveText("Sanções de fornecedores");
+  await expect(sancoes).toContainText("A comparação é pelo CNPJ");
+  await expect(sancoes).toContainText("dentro do período da sanção");
+});
+
+test("MET-04, MET-05: fontes e regra de ligação na lateral do perfil", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  const fontes = page.locator("section#fontes");
+  await expect(fontes.getByRole("link", { name: "Portal da Transparência · Emendas (lote)" })).toBeVisible();
+  await expect(fontes.getByRole("link", { name: "Portal da Transparência · CEIS e CNEP (lote)" })).toBeVisible();
+  await expect(fontes.getByRole("link", { name: "Metodologia v1.4" })).toBeVisible();
+  const bloco = page.getByRole("region", { name: "Como ligamos a emenda ao deputado" });
+  await expect(bloco).toContainText("Quando dois deputados têm o mesmo nome, a emenda fica de fora.");
+});

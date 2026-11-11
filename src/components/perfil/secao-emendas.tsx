@@ -323,3 +323,18 @@ function ConteudoEmendas({
     </>
   );
 }
+
+/** MET-05: bloco da lateral com a regra de ligação autor ↔ deputado. */
+export function ComoLigamosEmendas() {
+  return (
+    <section aria-labelledby="como-ligamos-titulo" className={`${CARTAO} gap-2.5 sm:p-5`}>
+      <h2 id="como-ligamos-titulo" className="font-heading text-lg font-bold">
+        Como ligamos a emenda ao deputado
+      </h2>
+      <p className="text-sm leading-normal text-texto-2">
+        O Portal identifica o autor pelo nome parlamentar. Ligamos esse nome ao cadastro da Câmara. Quando dois
+        deputados têm o mesmo nome, a emenda fica de fora. <Link href="/metodologia#emendas">Ver a metodologia</Link>
+      </p>
+    </section>
+  );
+}
