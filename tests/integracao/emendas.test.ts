@@ -44,13 +44,20 @@ const CSV_BASE = [
 
 const CAB_FAV =
   '"Código da Emenda";"Código do Autor da Emenda";"Nome do Autor da Emenda";"Número da emenda";"Tipo de Emenda";"Ano/Mês";"Código do Favorecido";"Favorecido";"Natureza Jurídica";"Tipo Favorecido";"UF Favorecido";"Município Favorecido";"Valor Recebido"';
-const fav = (codigo: string, doc: string, nome: string, tipo: string, valor: string) =>
-  `"${codigo}";"1";"MARIA EXEMPLO";"0001";"${FD}";"202605";"${doc}";"${nome}";"Sem informação";"${tipo}";"SP";"CAMPINAS";"${valor}"`;
+const fav = (codigo: string, doc: string, nome: string, tipo: string, valor: string, natureza = "Sem informação") =>
+  `"${codigo}";"1";"MARIA EXEMPLO";"0001";"${FD}";"202605";"${doc}";"${nome}";"${natureza}";"${tipo}";"SP";"CAMPINAS";"${valor}"`;
 const CSV_FAV = [
   CAB_FAV,
   fav("202500010001", "***.113.861-**", "ACÁCIA GONÇALVES", "Pessoa Fisica", "300,00"),
   fav("202500010001", "12345678901", "FULANO COMPLETO", "Pessoa Fisica", "50,00"),
-  fav("202500010001", "11854334000149", "EMPRESA ÚNICA LTDA", "Pessoa Jurídica", "1.200,00"),
+  fav(
+    "202500010001",
+    "11854334000149",
+    "EMPRESA ÚNICA LTDA",
+    "Pessoa Jurídica",
+    "1.200,00",
+    "Sociedade Empresária Limitada",
+  ),
   fav("202400010002", "-11", "MUNICÍPIO DE SÃO PAULO", "Sem informação", "2.000,50"),
   fav("202300010003", "22222222000122", "EMPRESA DE 2023", "Pessoa Jurídica", "10,00"),
   fav("202500020005", "33333333000133", "EMPRESA DO HOMÔNIMO", "Pessoa Jurídica", "10,00"),
@@ -191,10 +198,12 @@ describe("coletarEmendas", () => {
       ano_emenda: 2025,
       ano_mes: "202605",
       tipo_favorecido: "Pessoa Jurídica",
+      natureza_juridica: "Sociedade Empresária Limitada",
       uf: "SP",
       municipio: "CAMPINAS",
     });
     expect(rows[3].ano_emenda).toBe(2024);
+    expect(rows[0].natureza_juridica).toBeNull();
     const tudo = JSON.stringify(rows);
     expect(tudo).not.toContain("ACÁCIA");
     expect(tudo).not.toContain("FULANO");

@@ -182,6 +182,8 @@ export interface EmendaFavorecidoTable {
   /** CNPJ formatado, CPF já mascarado (`***.ddd.ddd-**`) ou null. */
   favorecido_doc: string | null;
   tipo_favorecido: string;
+  /** "Município", "Associação Privada"…; null quando a fonte diz "Sem informação". */
+  natureza_juridica: string | null;
   uf: string | null;
   municipio: string | null;
   valor: Numeric;

@@ -139,9 +139,9 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] Seed com 6+ áreas, 6+ locais e 6+ favorecidos (passa do limite de 5)
-- [ ] Totais por período conferidos com valores exatos
-- [ ] Full gate passa
+- [x] Seed com 6+ áreas, 6+ locais e 6+ favorecidos (passa do limite de 5)
+- [x] Totais por período conferidos com valores exatos
+- [x] Full gate passa
 
 **Tests**: integration
 **Gate**: full

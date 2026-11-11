@@ -117,6 +117,7 @@ describe("coletarSancoes", () => {
       .selectFrom("coleta")
       .select(["fonte", "url", "licenca"])
       .where("fonte", "in", ["cgu_ceis", "cgu_cnep"])
+      .where("observacao", "is", null)
       .orderBy("fonte")
       .execute();
     expect(coletas).toEqual([

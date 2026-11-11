@@ -22,6 +22,11 @@ export const ARQUIVOS_CGU = "https://dadosabertos-download.cgu.gov.br/PortalDaTr
 export const URL_EMENDAS = `${ARQUIVOS_CGU}/emendas-parlamentares/EmendasParlamentares.zip`;
 export const LICENCA_CGU = "Portal da Transparência (CGU); dados abertos, Decreto 8.777/2016";
 
+function naturezaJuridica(s: string | undefined): string | null {
+  const t = (s ?? "").trim();
+  return t && t !== "Sem informação" ? t : null;
+}
+
 export type ResumoEmendas = { emendas: number; favorecidos: number; autoresDescartados: number };
 
 export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado): Promise<ResumoEmendas> {
@@ -81,6 +86,7 @@ export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado):
       favorecido_nome: f.nome,
       favorecido_doc: f.doc,
       tipo_favorecido: tipo,
+      natureza_juridica: naturezaJuridica(l["Natureza Jurídica"]),
       uf: l["UF Favorecido"] || null,
       municipio: l["Município Favorecido"] || null,
       valor: valorBr(l["Valor Recebido"]),

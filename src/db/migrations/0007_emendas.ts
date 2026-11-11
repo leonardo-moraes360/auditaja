@@ -38,6 +38,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     // CNPJ formatado, CPF já mascarado pela fonte (***.ddd.ddd-**) ou nulo. Nunca CPF completo.
     .addColumn("favorecido_doc", "text")
     .addColumn("tipo_favorecido", "text", (c) => c.notNull())
+    .addColumn("natureza_juridica", "text")
     .addColumn("uf", "text")
     .addColumn("municipio", "text")
     .addColumn("valor", "numeric(16, 2)", (c) => c.notNull())
