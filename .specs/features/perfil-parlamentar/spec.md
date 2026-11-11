@@ -262,11 +262,11 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | VOTO-07 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-08 | P1: Ver votações e alinhamento | Tasks | Implemented |
 | VOTO-06 | P1: Ver votações e alinhamento | Tasks | Verified |
-| PRES-01 | P1: Ver votações e alinhamento | Tasks | Implemented |
-| PRES-02 | P1: Ver votações e alinhamento | Tasks | Implemented |
-| PRES-03 | P1: Ver votações e alinhamento | Tasks | Implemented |
-| PRES-04 | P1: Ver votações e alinhamento | Tasks | Implemented |
-| PRES-05 | P1: Ver votações e alinhamento | Tasks | Implemented |
+| PRES-01 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-02 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-03 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-04 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-05 | P1: Ver votações e alinhamento | Tasks | Verified |
 | BENS-01 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-02 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-03 | P1: Ver bens declarados | Tasks | Verified |

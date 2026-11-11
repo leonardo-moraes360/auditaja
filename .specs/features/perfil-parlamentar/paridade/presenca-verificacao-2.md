@@ -116,6 +116,22 @@ Na tabela, "pendente" quer dizer FAIL pendente de aceite do usuário. O item con
 - Diferença para a rodada 1: PL06, PC15 e PC20 passaram a PASS. PC14 e PC18 passaram a FAIL pendente, por causa das
   mudanças de texto pedidas nos achados A6 e A8. PC23 e PB09 são itens novos.
 
+## Aceite do usuário (11/11/2026)
+
+O usuário aceitou na thread os 5 itens pendentes (PV15, PC14, PC18, PC19, PC23) como divergências intencionais
+(IP1 a IP5). Com eles fora do denominador: **paridade = 51 ÷ 51 = 100%** (meta ≥ 95% atingida).
+
+| ID  | Item | Divergência aceita |
+| --- | ---- | ------------------ |
+| IP1 | PV15 | Metodologia em 16 px, como o resto da página |
+| IP2 | PC14 | Celular: "Em licença em todas as votações" em vez de "o ano todo" |
+| IP3 | PC18 | Metodologia cita vacância e suspensão |
+| IP4 | PC19 | Metodologia explica a conta sem histórico coletado |
+| IP5 | PC23 | Celular sem histórico: "N de M · pode incluir licenças" |
+
+Depois desta verificação: B2 (testes de vizinhos não colados) e B3 (mudança de situação sem prefixo abre período)
+foram corrigidos com testes no commit seguinte; B4, A3, A9 e A10 ficam registrados como limitações.
+
 ## Checagem adversarial
 
 ### Achados da rodada 1

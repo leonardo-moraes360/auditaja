@@ -744,8 +744,8 @@ Phase 9:  T26
 - [x] Unit: dia de saída e de volta, renovações, motivo novo, suplente antes da posse, eventos fora de ordem e de outras legislaturas, recorte do ano, voto em licença conta
 - [x] Integração: seed com licença em julho (2 de 4 em exercício), média da Câmara com e sem histórico
 - [x] E2E: cartão, selo, quadro dos períodos, filtro "Ausências" sem a votação em licença, aviso sem histórico
-- [ ] Verificação adversarial independente com paridade ≥ 95% às pranchas aprovadas
-- [ ] Gate full passa
+- [x] Verificação adversarial independente com paridade ≥ 95% às pranchas aprovadas (verificação 2: 91,1%, 100% com as 5 divergências aceitas pelo usuário; `paridade/presenca-verificacao-2.md`)
+- [x] Gate full passa (lint, typecheck, 120 unit e 22 integração, build, 94 e2e e 4 pulados por tamanho de tela)
 
 **Tests**: unit, integration, e2e
 **Gate**: full
