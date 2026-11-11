@@ -186,53 +186,53 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| SCAD-01 | P1: Coletar os senadores | Tasks | Pending |
-| SCAD-02 | P1: Coletar os senadores | Tasks | Pending |
-| SCAD-03 | P1: Coletar os senadores | Tasks | Pending |
-| SCAD-04 | P1: Coletar os senadores | Tasks | Pending |
-| SCAD-05 | P1: Coletar os senadores | Tasks | Pending |
-| SCAD-06 | P1: Coletar os senadores | Tasks | Pending |
-| SCEAPS-01 | P1: Gastos da CEAPS | Tasks | Pending |
-| SCEAPS-02 | P1: Gastos da CEAPS | Tasks | Pending |
-| SCEAPS-03 | P1: Gastos da CEAPS | Tasks | Pending |
-| SCEAPS-04 | P1: Gastos da CEAPS | Tasks | Pending |
-| SCEAPS-05 | P1: Gastos da CEAPS | Tasks | Pending |
-| SCEAPS-06 | P1: Gastos da CEAPS | Tasks | Pending |
-| SCEAPS-07 | P1: Gastos da CEAPS | Tasks | Pending |
-| SVOT-01 | P1: Votações | Tasks | Pending |
-| SVOT-02 | P1: Votações | Tasks | Pending |
-| SVOT-03 | P1: Votações | Tasks | Pending |
-| SVOT-04 | P1: Votações | Tasks | Pending |
-| SVOT-05 | P1: Votações | Tasks | Pending |
-| SVOT-06 | P1: Votações | Tasks | Pending |
-| SVOT-07 | P1: Votações | Tasks | Pending |
-| SVOT-08 | P1: Votações | Tasks | Pending |
-| SPRES-01 | P1: Indicadores | Tasks | Pending |
-| SPRES-02 | P1: Indicadores | Tasks | Pending |
-| SPRES-03 | P1: Indicadores | Tasks | Pending |
-| SPRES-04 | P1: Indicadores | Tasks | Pending |
-| SALI-01 | P1: Indicadores | Tasks | Pending |
-| SALI-02 | P1: Indicadores | Tasks | Pending |
-| SALI-03 | P1: Indicadores | Tasks | Pending |
-| SUI-01 | P1: Perfil e lista | Tasks | Pending |
-| SUI-02 | P1: Perfil e lista | Tasks | Pending |
-| SUI-03 | P1: Perfil e lista | Tasks | Pending |
-| SUI-04 | P1: Perfil e lista | Tasks | Pending |
-| SUI-05 | P1: Perfil e lista | Tasks | Pending |
-| SUI-06 | P1: Perfil e lista | Tasks | Pending |
-| SUI-07 | P1: Perfil e lista | Tasks | Pending |
-| SUI-08 | P1: Perfil e lista | Tasks | Pending |
-| SUI-09 | P1: Perfil e lista | Tasks | Pending |
-| SUI-10 | P1: Perfil e lista | Tasks | Pending |
-| SUI-11 | P1: Perfil e lista | Tasks | Pending |
-| SBENS-01 | P2: Bens | Tasks | Pending |
-| SBENS-02 | P2: Bens | Tasks | Pending |
-| SERR-01 | Edge cases | Tasks | Pending |
-| SERR-02 | Edge cases | Tasks | Pending |
-| SERR-03 | Edge cases | Tasks | Pending |
-| SERR-04 | Edge cases | Tasks | Pending |
+| SCAD-01 | P1: Coletar os senadores | Tasks | Implementing |
+| SCAD-02 | P1: Coletar os senadores | Tasks | Implementing |
+| SCAD-03 | P1: Coletar os senadores | Tasks | Implementing |
+| SCAD-04 | P1: Coletar os senadores | Tasks | Implementing |
+| SCAD-05 | P1: Coletar os senadores | Tasks | Implementing |
+| SCAD-06 | P1: Coletar os senadores | Tasks | Implementing |
+| SCEAPS-01 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SCEAPS-02 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SCEAPS-03 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SCEAPS-04 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SCEAPS-05 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SCEAPS-06 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SCEAPS-07 | P1: Gastos da CEAPS | Tasks | Implementing |
+| SVOT-01 | P1: Votações | Tasks | Implementing |
+| SVOT-02 | P1: Votações | Tasks | Implementing |
+| SVOT-03 | P1: Votações | Tasks | Implementing |
+| SVOT-04 | P1: Votações | Tasks | Implementing |
+| SVOT-05 | P1: Votações | Tasks | Implementing |
+| SVOT-06 | P1: Votações | Tasks | Implementing |
+| SVOT-07 | P1: Votações | Tasks | Implementing |
+| SVOT-08 | P1: Votações | Tasks | Implementing |
+| SPRES-01 | P1: Indicadores | Tasks | Implementing |
+| SPRES-02 | P1: Indicadores | Tasks | Implementing |
+| SPRES-03 | P1: Indicadores | Tasks | Implementing |
+| SPRES-04 | P1: Indicadores | Tasks | Implementing |
+| SALI-01 | P1: Indicadores | Tasks | Implementing |
+| SALI-02 | P1: Indicadores | Tasks | Implementing |
+| SALI-03 | P1: Indicadores | Tasks | Implementing |
+| SUI-01 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-02 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-03 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-04 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-05 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-06 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-07 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-08 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-09 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-10 | P1: Perfil e lista | Tasks | Implementing |
+| SUI-11 | P1: Perfil e lista | Tasks | Implementing |
+| SBENS-01 | P2: Bens | Tasks | Implementing |
+| SBENS-02 | P2: Bens | Tasks | Implementing |
+| SERR-01 | Edge cases | Tasks | Implementing |
+| SERR-02 | Edge cases | Tasks | Implementing |
+| SERR-03 | Edge cases | Tasks | Implementing |
+| SERR-04 | Edge cases | Tasks | Implementing |
 
-**Coverage:** 45 total, 0 mapped to tasks, 45 unmapped ⚠️ (mapeados em tasks.md)
+**Coverage:** 45 total, 45 mapped to tasks (T1–T12), 0 unmapped
 
 ---
 

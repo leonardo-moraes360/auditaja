@@ -14,6 +14,7 @@ import {
   type ListaAtualApi,
   type ListaLegislaturaApi,
 } from "@/ingest/senado";
+import { casarCandidaturas } from "@/ingest/tse";
 
 /** Respostas reais da API do Senado (11/11/2026), reduzidas a poucos senadores. */
 const fixture = <T>(nome: string): T =>
@@ -187,5 +188,38 @@ describe("votações do Senado (SVOT-01..03)", () => {
 
   it("ignora orientação de votação não coletada", () => {
     expect(montarOrientacoesSenado(fixture("orientacao-20261014.json"), new Set(["SF-1"]), 5)).toEqual([]);
+  });
+});
+
+describe("bens do TSE para senadores (SBENS-01)", () => {
+  it("casa a candidatura a senador pelo nome civil e pela data de nascimento", () => {
+    const r = casarCandidaturas(
+      [
+        {
+          NM_CANDIDATO: "ALAN RICK MIRANDA",
+          DT_NASCIMENTO: "23/10/1976",
+          SG_UF: "AC",
+          SQ_CANDIDATO: "10001",
+          DS_CARGO: "SENADOR",
+          SG_PARTIDO: "UNIÃO",
+          DS_SIT_TOT_TURNO: "ELEITO",
+        },
+        // Homônimo com outra data de nascimento: não casa.
+        {
+          NM_CANDIDATO: "ALAN RICK MIRANDA",
+          DT_NASCIMENTO: "01/01/1950",
+          SG_UF: "SP",
+          SQ_CANDIDATO: "10002",
+          DS_CARGO: "DEPUTADO ESTADUAL",
+          SG_PARTIDO: "PFX",
+          DS_SIT_TOT_TURNO: "NÃO ELEITO",
+        },
+      ],
+      [{ id: 10005672, nome_civil: "Alan Rick Miranda", data_nascimento: "1976-10-23", sigla_uf: "AC" }],
+      2022,
+      1,
+    );
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ parlamentar_id: 10005672, cargo: "SENADOR", sq_candidato: "10001" });
   });
 });

@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/perfil-senador/design.md`
-**Status**: In Progress
+**Status**: Done (aguardando verificação)
 
 ---
 
@@ -333,8 +333,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] axe sem violações no perfil e na lista do senador
-- [ ] Gate build passa
+- [x] axe sem violações no perfil e na lista do senador
+- [x] Gate build passa
 
 **Tests**: e2e
 **Gate**: build
