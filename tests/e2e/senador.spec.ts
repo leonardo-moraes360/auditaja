@@ -95,6 +95,10 @@ test("SVOT-06/07/08: voto secreto, ausência com motivo e filtro de divergência
       .first(),
   ).toBeVisible();
   if (!isMobile) {
+    // Partido do dia do voto (PFW), não o atual (PFX).
+    await expect(
+      vot.locator("li", { hasText: "PL 2468/2026" }).getByText("Liderança do PFW: Sim", { exact: true }),
+    ).toBeVisible();
     await expect(
       vot.getByRole("heading", { level: 2 }).getByText("Votações nominais no Plenário", { exact: true }),
     ).toBeVisible();
@@ -117,7 +121,7 @@ test("SUI-04: bloco Mandato com Casa, período, situação, bloco e suplentes", 
     await expect(ver("01/02/2023 a 31/01/2031")).toBeVisible();
     await expect(ver("Titular, em exercício")).toBeVisible();
     await expect(ver("Bloco Parlamentar Exemplo")).toBeVisible();
-    await expect(ver("Beatriz Suplente Fictícia (1º) · Carlos Suplente Fictício (2º)")).toBeVisible();
+    await expect(ver("Beatriz Suplente Fictícia (1ª) · Carlos Suplente Fictício (2º)")).toBeVisible();
     await expect(m.getByText("Linha do tempo")).toBeHidden();
   } else {
     await expect(ver("Senado Federal")).toBeVisible();
@@ -127,6 +131,7 @@ test("SUI-04: bloco Mandato com Casa, período, situação, bloco e suplentes", 
     await expect(ver("Titular, em exercício")).toBeVisible();
     await expect(ver("Bloco Parlamentar Exemplo")).toBeVisible();
     await expect(ver("Beatriz Suplente Fictícia")).toBeVisible();
+    await expect(ver("1ª suplente")).toBeVisible(); // suplente cadastrada como F no Senado
     await expect(ver("2º suplente")).toBeVisible();
     await expect(m.getByText("Assuntos Econômicos (CAE)")).toBeVisible();
     await expect(m.getByText("Posse para o mandato 2023–2031")).toBeVisible();
@@ -238,13 +243,11 @@ test("SUI-11: metodologia descreve as regras do Senado e fontes lista o Senado",
   await expect(page.getByText(/^Senado Federal: API de Dados Abertos/)).toBeVisible();
 });
 
-test("SERR-03/04: senadora sem votações nem notas mostra os estados vazios", async ({ page, isMobile }) => {
+test("SERR-03/04: senadora sem votações nem notas mostra os estados vazios", async ({ page }) => {
   await page.goto("/parlamentares/10009004");
   const ind = page.locator("[data-indicador]");
   await expect(
-    ind
-      .getByText(isMobile ? "sem votações" : "Sem votações registradas em 2026", { exact: true })
-      .filter({ visible: true }),
+    ind.getByText("Sem votações registradas em 2026", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
   await expect(page.locator("section#gastos").getByText(/^Nenhuma despesa publicada para \d{4}\.$/)).toBeVisible();
   await expect(page.getByText(/^Não encontramos declarações de bens associadas a este senador/)).toBeVisible();
@@ -259,4 +262,13 @@ test("SBENS-02: bens do senador com a nota dos 8 anos", async ({ page, isMobile 
   ).toBeVisible();
   await expect(bens.getByText("Eleição 2022").filter({ visible: true })).toBeVisible();
   await expect(bens.getByText(/^R\$\s2,68 mi$/).filter({ visible: true })).toBeVisible();
+});
+
+test("SUI-04: no celular, Mandato vem entre Votações e Bens", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "ordem própria do artboard SenadorMobile");
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const y = async (id: string) => (await page.locator(`section#${id}`).boundingBox())!.y;
+  const [vot, mand, bens] = [await y("votacoes"), await y("mandato"), await y("bens")];
+  expect(vot).toBeLessThan(mand);
+  expect(mand).toBeLessThan(bens);
 });

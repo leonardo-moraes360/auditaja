@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/perfil-senador/design.md`
-**Status**: In Progress (correções da verificação nº 1)
+**Status**: In Progress (correções da verificação nº 2)
 
 ---
 
@@ -65,6 +65,12 @@ T9 → T10 → T11 → T12
 
 ```
 T13 → T14 → T15
+```
+
+### Phase 6: Correções da verificação nº 2
+
+```
+T16
 ```
 
 ---
@@ -409,6 +415,29 @@ T13 → T14 → T15
 **Done when**:
 
 - [x] Mutantes M02 e M12 da verificação nº 1 morrem
+- [x] Gate full passa
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T16: CPF em razão social de MEI e lacunas da verificação nº 2
+
+**What**: Mascarar CPF solto no nome do fornecedor (Câmara e Senado); testes de nascimento no banco (SCAD-04), coleta de órgãos da Câmara sem tocar comissões de senadores, partido do dia no rótulo da liderança; suplente com ordinal pelo sexo cadastrado; ordem do celular (Mandato antes de Bens); espaçamento da marca; texto completo de "Sem votações registradas" no celular.
+**Where**: `src/lib/privacy.ts`, `src/data/perfil.ts`, `src/components/perfil/secoes.tsx`, `src/app/parlamentares/[id]/page.tsx`, `src/components/topo.tsx`, `src/db/seed.ts`, testes
+**Depends on**: None (fase anterior concluída)
+**Reuses**: `mascararCpf`
+**Requirement**: SCEAPS-02, SCAD-04, SUI-04, SVOT-08, SERR-03
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Nenhum CPF de 11 dígitos sobra no nome do fornecedor
 - [x] Gate full passa
 
 **Tests**: e2e

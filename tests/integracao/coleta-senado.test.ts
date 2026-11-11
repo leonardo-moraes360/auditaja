@@ -6,7 +6,7 @@ import { migrateToLatest } from "@/db/migrate";
 import { SEED, semear } from "@/db/seed";
 import { ColetaBloqueada, ClienteEducado } from "@/ingest/http";
 import yazl from "yazl";
-import { coletarCeap, coletarVotacoes, urlCeap } from "@/ingest/camara";
+import { coletarCeap, coletarOrgaos, coletarVotacoes, urlCeap } from "@/ingest/camara";
 import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "@/ingest/senado";
 
 /** SCAD-05/06, SCEAPS-07, SVOT-04 e SERR-01 de ponta a ponta: respostas gravadas → banco real. */
@@ -72,6 +72,8 @@ describe("coleta do Senado", () => {
     });
     expect(coleta.sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(coleta.licenca).toContain("Senado Federal");
+    // SCAD-04: nascimento do detalhe /senador/{codigo} chega ao banco.
+    expect(alan.data_nascimento).toBe("1976-10-23");
     expect(await db.selectFrom("parlamentar").selectAll().where("casa", "=", "camara").execute()).toEqual(
       deputadosAntes,
     );
@@ -168,10 +170,16 @@ describe("coleta do Senado", () => {
         .orderBy("id")
         .execute(),
       votos: await db.selectFrom("voto").select("votacao_id").where("parlamentar_id", "=", SEED.senador).execute(),
+      orgaos: await db
+        .selectFrom("orgao_membro")
+        .select("sigla_orgao")
+        .where("parlamentar_id", "=", SEED.senador)
+        .execute(),
     });
     const antes = await senado();
     expect(antes.notas.length).toBeGreaterThan(0);
     expect(antes.votacoes.length).toBeGreaterThan(0);
+    expect(antes.orgaos.length).toBeGreaterThan(0);
     const zipCeap = await new Promise<Buffer>((resolve) => {
       const z = new yazl.ZipFile();
       z.addBuffer(
@@ -196,11 +204,13 @@ describe("coleta do Senado", () => {
         if (url.endsWith("/robots.txt")) return new Response("", { status: 404 });
         if (url === urlCeap(2026)) return new Response(new Uint8Array(zipCeap), { status: 200 });
         if (url.includes("/arquivos/votacoes")) return new Response("id\n", { status: 200 });
+        if (url.includes("/arquivos/orgaosDeputados")) return new Response("uriDeputado\n", { status: 200 });
         return new Response("", { status: 404 });
       }) as typeof fetch,
     });
     expect(await coletarCeap(db, cliCamara, 2026)).toBe(1);
     await coletarVotacoes(db, cliCamara, 2026);
+    await coletarOrgaos(db, cliCamara);
     expect(await senado()).toEqual(antes);
     await semear(db);
   });

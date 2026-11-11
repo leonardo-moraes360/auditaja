@@ -10,7 +10,7 @@ import {
   type BlocoParlamentar,
   type VotoComOrientacoes,
 } from "@/lib/metrics";
-import { orientacaoDaLideranca, ORGAO_PLENARIO_SENADO, presencaSenado } from "@/lib/senado";
+import { DESLOCAMENTO_SENADO, orientacaoDaLideranca, ORGAO_PLENARIO_SENADO, presencaSenado } from "@/lib/senado";
 
 export type Casa = "camara" | "senado";
 
@@ -430,9 +430,11 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
   const suplentes = senado
     ? await db
         .selectFrom("suplente")
-        .select(["ordem", "nome"])
-        .where("parlamentar_id", "=", id)
-        .orderBy("ordem")
+        // O sexo do suplente vem do cadastro dele no Senado, quando ele também é parlamentar da legislatura.
+        .leftJoin("parlamentar as sp", (j) => j.on(sql`sp.id`, "=", sql`${DESLOCAMENTO_SENADO} + suplente.codigo`))
+        .select(["suplente.ordem", "suplente.nome", "sp.sexo"])
+        .where("suplente.parlamentar_id", "=", id)
+        .orderBy("suplente.ordem")
         .execute()
     : [];
 

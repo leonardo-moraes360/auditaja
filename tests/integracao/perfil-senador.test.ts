@@ -94,8 +94,8 @@ describe("perfil do senador (Postgres)", () => {
       bloco: "Bloco Parlamentar Exemplo",
     });
     expect(p.suplentes).toEqual([
-      { ordem: 1, nome: "Beatriz Suplente Fictícia" },
-      { ordem: 2, nome: "Carlos Suplente Fictício" },
+      { ordem: 1, nome: "Beatriz Suplente Fictícia", sexo: "F" },
+      { ordem: 2, nome: "Carlos Suplente Fictício", sexo: null },
     ]);
   });
 

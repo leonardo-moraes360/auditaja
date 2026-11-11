@@ -257,3 +257,16 @@ describe("CEAPS: documento malformado ou ausente (R3)", () => {
     }
   });
 });
+
+describe("CEAPS: CPF dentro da razão social (R3)", () => {
+  it("a nota de MEI com CNPJ válido mantém o nome, mas com o CPF mascarado", () => {
+    const notas = fixture<DespesaCeapsApi[]>("ceaps-2026.json");
+    const { linhas } = montarDespesasCeaps(
+      [{ ...notas[0], cpfCnpj: "12.345.678/0001-90", fornecedor: "FULANO DE TAL 12345678901" }],
+      new Set([10005672]),
+      1,
+    );
+    expect(linhas[0].fornecedor_nome).toBe("FULANO DE TAL ***.456.789-**");
+    expect(JSON.stringify(linhas)).not.toContain("12345678901");
+  });
+});

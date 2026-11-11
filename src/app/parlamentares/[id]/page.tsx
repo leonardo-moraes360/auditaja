@@ -218,7 +218,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
             }
             detalheCurto={
               votacoes.denominadorPresenca === 0
-                ? "sem votações"
+                ? `Sem votações registradas em ${votacoes.ano}`
                 : `${votacoes.presentes} de ${votacoes.denominadorPresenca}`
             }
           />
@@ -273,7 +273,10 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
       <AbasSecoes />
 
       <div className="flex flex-col gap-4 px-4 pt-4 pb-6 sm:gap-5 sm:px-0 sm:pt-0 sm:pb-0 lg:flex-row lg:items-start">
-        <div className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[999_1_560px]">
+        {/* Senado no celular: Mandato entre Votações e Bens, como no artboard SenadorMobile (ordem via CSS). */}
+        <div
+          className={`flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[999_1_560px] ${senado ? "max-sm:contents" : ""}`}
+        >
           <SecaoGastos perfil={perfil} completo={completo} />
           <SecaoVotacoes perfil={perfil} filtro={filtro} completo={completo} />
           <SecaoBens perfil={perfil} />

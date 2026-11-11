@@ -407,7 +407,7 @@ export async function semear(db: Kysely<Database>) {
     await trx
       .insertInto("suplente")
       .values([
-        { parlamentar_id: SEED.senador, ordem: 1, nome: "Beatriz Suplente Fictícia", codigo: null, coleta_id: cSen },
+        { parlamentar_id: SEED.senador, ordem: 1, nome: "Beatriz Suplente Fictícia", codigo: 9004, coleta_id: cSen },
         { parlamentar_id: SEED.senador, ordem: 2, nome: "Carlos Suplente Fictício", codigo: null, coleta_id: cSen },
       ])
       .execute();
@@ -525,7 +525,8 @@ export async function semear(db: Kysely<Database>) {
     await trx
       .insertInto("voto")
       .values([
-        votoSen("SF-seed-1", SEED.senador, "Sim", "PFX"),
+        // Partido do dia diferente do atual: o rótulo da liderança usa o do voto.
+        votoSen("SF-seed-1", SEED.senador, "Sim", "PFW"),
         votoSen("SF-seed-2", SEED.senador, "Não", "PFX"),
         votoSen("SF-seed-3", SEED.senador, "Votou", "PFX"),
         votoSen("SF-seed-4", SEED.senador, "MIS", "PFX"),
@@ -545,6 +546,7 @@ export async function semear(db: Kysely<Database>) {
       .insertInto("orientacao")
       .values([
         { votacao_id: "SF-seed-1", sigla_bancada: "PFX", orientacao: "Sim", coleta_id: cOriSen },
+        { votacao_id: "SF-seed-1", sigla_bancada: "PFW", orientacao: "Sim", coleta_id: cOriSen },
         { votacao_id: "SF-seed-2", sigla_bancada: "PFX", orientacao: "Sim", coleta_id: cOriSen },
         { votacao_id: "SF-seed-2", sigla_bancada: "Governo", orientacao: "Não", coleta_id: cOriSen },
         { votacao_id: "SF-seed-4", sigla_bancada: "PFX", orientacao: "Liberado", coleta_id: cOriSen },
