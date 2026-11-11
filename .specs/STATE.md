@@ -37,10 +37,10 @@
 ## Handoff
 
 - **Feature**: `.specs/features/perfil-senador`
-- **Phase / Task**: Execute concluído (T1–T16 e correção da verificação nº 3); aguardando decisões do usuário
-- **Completed**: T1–T16
+- **Phase / Task**: Verificação nº 4 PASS (validation.md); aguardando rebase sobre a main e ok do usuário para push e PR
+- **Completed**: T1–T17
 - **In-progress** (file:line): none
-- **Next step**: decisões do usuário (divergências I10, I11, I13, I14; emendas de SCEAPS-02 e SVOT-06; nascimento só de quem está em exercício), verificação nº 4 e rebase sobre a main depois do PR #6
+- **Next step**: rebase sobre a main depois dos PRs #6 e #7 (ver pendências na memória do projeto), gates e push com ok do usuário
 - **Blockers**: none
 - **Uncommitted files**: none
 - **Branch**: feat/senadores (worktree ../auditaja-wt/senadores; bancos auditaja_senado_test e auditaja_senado_dev; e2e com E2E_PORT=3242)

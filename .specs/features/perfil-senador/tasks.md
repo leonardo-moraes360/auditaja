@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/perfil-senador/design.md`
-**Status**: In Progress (correções da verificação nº 2)
+**Status**: Done (verificação nº 4: PASS)
 
 ---
 
@@ -71,6 +71,12 @@ T13 → T14 → T15
 
 ```
 T16
+```
+
+### Phase 7: Correções da verificação nº 3
+
+```
+T17
 ```
 
 ---
@@ -424,7 +430,7 @@ T16
 
 ### T16: CPF em razão social de MEI e lacunas da verificação nº 2
 
-**What**: Mascarar CPF solto no nome do fornecedor (Câmara e Senado); testes de nascimento no banco (SCAD-04), coleta de órgãos da Câmara sem tocar comissões de senadores, partido do dia no rótulo da liderança; suplente com ordinal pelo sexo cadastrado; ordem do celular (Mandato antes de Bens); espaçamento da marca; texto completo de "Sem votações registradas" no celular.
+**What**: Mascarar CPF solto no nome do fornecedor (Câmara e Senado); testes de nascimento no banco (SCAD-04), coleta de órgãos da Câmara sem tocar comissões de senadores, partido do dia no rótulo da liderança; suplente com ordinal pelo sexo cadastrado; espaçamento da marca; texto completo de "Sem votações registradas" no celular.
 **Where**: `src/lib/privacy.ts`, `src/data/perfil.ts`, `src/components/perfil/secoes.tsx`, `src/app/parlamentares/[id]/page.tsx`, `src/components/topo.tsx`, `src/db/seed.ts`, testes
 **Depends on**: None (fase anterior concluída)
 **Reuses**: `mascararCpf`
@@ -438,6 +444,29 @@ T16
 **Done when**:
 
 - [x] Nenhum CPF de 11 dígitos sobra no nome do fornecedor
+- [x] Gate full passa
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T17: Máscara sem dígitos no nome e ordem do celular pelo DOM
+
+**What**: CPF solto no nome do fornecedor vira `***.***.***-**` (regex alinhado ao da branch de emendas); a reordenação do celular via CSS é desfeita (ordem do DOM, divergência I14 aceita) e ganha teste de ordem; divergências e emendas aprovadas pelo usuário registradas.
+**Where**: `src/lib/privacy.ts`, `src/app/parlamentares/[id]/page.tsx`, `src/components/perfil/secoes.tsx`, `tests/unit/privacy.test.ts`, `tests/e2e/senador.spec.ts`
+**Depends on**: None (fase anterior concluída)
+**Reuses**: `mascararCpfsNoTexto`
+**Requirement**: SCEAPS-02, SUI-04
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Nenhuma máscara parcial de CPF no nome do fornecedor
 - [x] Gate full passa
 
 **Tests**: e2e

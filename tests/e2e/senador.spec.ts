@@ -263,3 +263,17 @@ test("SBENS-02: bens do senador com a nota dos 8 anos", async ({ page, isMobile 
   await expect(bens.getByText("Eleição 2022").filter({ visible: true })).toBeVisible();
   await expect(bens.getByText(/^R\$\s2,68 mi$/).filter({ visible: true })).toBeVisible();
 });
+
+test("SUI-04: no celular, as seções seguem a ordem de leitura (Votações, Bens, Mandato)", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "ordem de uma coluna só no celular");
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const secao = (id: string) => page.locator(`section#${id}`);
+  for (const id of ["votacoes", "bens", "mandato"]) await expect(secao(id)).toBeVisible();
+  const y = async (id: string) => (await secao(id).boundingBox())!.y;
+  const [vot, bens, mand] = [await y("votacoes"), await y("bens"), await y("mandato")];
+  expect(vot).toBeLessThan(bens);
+  expect(bens).toBeLessThan(mand);
+});

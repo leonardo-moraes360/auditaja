@@ -43,6 +43,10 @@ Viewports: 1440×900 (desktop) e 390×844 (celular, `isMobile`, `hasTouch`).
 | I8 | Teto só em 2026 | **substituída**: senador nunca tem linha, legenda nem barra de teto (SCEAPS-06) |
 | I9 | Rodapé do celular com o nome do encarregado (SenadorMobile:134) | vale |
 
+## Divergências aceitas pelo usuário em 11/11/2026
+
+I10 (C18), I11 (V12, V13, V14), I13 (P10) e I14 (M12, C32 em parte): ver `divergencias-propostas.md`.
+
 ## Itens
 
 ### Visual (tokens), desktop e celular

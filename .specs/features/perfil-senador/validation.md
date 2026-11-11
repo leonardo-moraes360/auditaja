@@ -1,82 +1,60 @@
 # Perfil do senador: validação
 
-**Result**: FAIL (rodada 3)
+**Result**: PASS (rodada 4)
+
+Condição antes de publicar o ramo: apagar as refs locais que ainda guardam o relatório antigo com o CPF parcial
+(lacuna 1). Isso não muda o veredito do código nem do banco. Muda o que pode ir para o GitHub.
 
 - **Data**: 2026-11-11
-- **Spec**: `.specs/features/perfil-senador/spec.md` (45 requisitos), `design.md`, `tasks.md` (T1–T16) e a AD-004 em
-  `.specs/STATE.md`.
+- **Spec**: `.specs/features/perfil-senador/spec.md` (45 requisitos, com as emendas de SCEAPS-02, SVOT-06 e SCAD-04
+  confirmadas pelo usuário), `design.md`, `tasks.md` (T1–T16) e a AD-004 em `.specs/STATE.md`.
 - **Faixa do diff**:
-  - Total: `e4e563d..be9cf19` (20 commits, 52 arquivos, +6270/−131).
-  - Correções desta rodada: `b2943c6..be9cf19`, ou seja, só o `be9cf19` (T16; 13 arquivos, +152/−26).
+  - Total: `e4e563d..abc95ff` (26 commits).
+  - Correções desde a rodada 3: `d733ab1..abc95ff` (`bb97def`, `3460770`, `3f7d10e`, `1c0910c`, `32679b9`,
+    `abc95ff`). O histórico foi reescrito, então os hashes citados nas rodadas anteriores não existem mais neste ramo.
 - **Verificador**: independente (autor ≠ verificador). Adversarial: na dúvida, FAIL. Sem `file:line`, sem cobertura.
 - **Ambiente**:
-  - Postgres em docker (porta 5436). Os testes usam `auditaja_senado_test`. Os dados reais estão em
-    `auditaja_senado_dev`, recoletado às 15:27 com o código de `be9cf19`.
-  - O servidor `:3243` ficou intacto.
-  - Gates e mutantes rodaram no worktree temporário `…/scratchpad/verif3/wt`, já removido. O e2e usou a porta 3245 e
-    a sonda, a 3246.
+  - Postgres em docker (porta 5436). Os testes usaram `auditaja_senado_test`. Os dados reais estão em
+    `auditaja_senado_dev`: CEAPS 2026 recoletada às 15:46 com a máscara sem dígitos.
+  - O servidor `:3243` ficou intacto. A paridade foi medida nele.
+  - Gates e mutantes rodaram no worktree temporário `…/scratchpad/verif4/wt` (`git worktree add --detach … HEAD`), já
+    removido. O e2e usou a porta 3245.
   - No real, `git status --porcelain` estava vazio antes. Depois, só aparecem estes relatórios.
   - O seed do banco de teste foi reaplicado no fim.
 
-## Por que FAIL
+## Por que PASS
 
-1. **A R3 é violável por remontagem.**
-   - A máscara nova do CPF dentro da razão social de MEI (`src/lib/privacy.ts:45-52`) segue o padrão da Receita e
-     mostra os **6 dígitos do meio**. O banco e a tela mostram isso, por exemplo, no perfil `10003806`.
-   - O relatório da rodada 2, commitado em `b2943c6` (`validation.md:172` daquele commit), publicou o **mesmo
-     fornecedor com os 3 primeiros e os 2 últimos dígitos**. Juntos, os dois dão o CPF inteiro.
-   - É o mesmo risco que a premissa "CPF já mascarado pelo Senado" da spec quer evitar. E ele vale também contra a
-     fonte: o Senado publica o CPF de pessoa física com os 3 primeiros e os 2 últimos dígitos.
-   - Esta versão do relatório já não traz o exemplo, mas o histórico ainda traz. O ramo não foi publicado (não existe
-     `origin/feat/senadores`).
-2. **O gate e2e está vermelho.**
-   - O teste novo `tests/e2e/senador.spec.ts:267-273` falhou na rodada base e em 10 de 10 tentativas isoladas.
-   - Causa: ele chama `boundingBox()` antes de o `Suspense` (`src/app/parlamentares/[id]/page.tsx:47`) revelar o perfil.
-     Na sonda, a primeira leitura devolveu `null` nas 3 seções, e 1,5 s depois as caixas estavam certas.
-   - Na suíte completa, o teste às vezes passa (por exemplo, nas execuções dos mutantes M08, M17 e M22). O "Gate full
-     passa" da T16 não se confirma.
-3. **A paridade (a) é de 94,5%, abaixo da meta de 95%.**
-   - V23, M12, M14 e C29 foram corrigidos.
-   - A correção do M12 trouxe uma regressão no **B03**: no celular, com Bens na tela, a aba ativa é "Mandato"
-     (`src/components/perfil/abas.tsx:24-30`).
-4. **O mutante M22 sobrevive e não é equivalente.**
-   - O M22 tira o `max-sm:contents` da lateral, e Bens vai para depois de "Encontrou um erro?".
-   - O teste da ordem só confere votações < mandato < bens.
-5. **A SCAD-04 está em GAP.**
-   - O detalhe `/senador/{codigo}` só é pedido para os 81 senadores em exercício (`src/ingest/senado.ts:341-358`).
-   - Por isso, 164 dos 245 senadores da legislatura ficam sem `data_nascimento`. Desses, 12 têm votos ou notas.
-   - A premissa da spec diz "por senador da legislatura".
+1. Os gates estão verdes: vitest 186/186, e2e 131 passados e 0 falhas, além de lint, typecheck, format e build. O e2e
+   rodou completo 12 vezes (base e mutantes) sem nenhuma falha fora das esperadas.
+2. Checagem ancorada na spec: **45 PASS, 0 GAP, 0 FAIL**. A SCAD-04 saiu do GAP pela emenda aprovada.
+3. R3 no banco real e na tela: nenhum CPF completo e nenhuma máscara parcial em nenhuma das 55 colunas de texto, nem
+   nos 90 CSVs.
+4. Sensor: 35 execuções e 31 mortes. Os 4 vivos são M02 (equivalente) e M22n, M23 e M24 (só visuais, cobertos pela
+   paridade).
+5. Paridade: 100%, com as divergências aceitas fora do denominador (meta de 95%). A regressão do B03 foi corrigida.
+6. Não regressão do deputado: a suíte inteira passa.
 
 ## Gates
 
 | Gate | Comando | Resultado |
 | ---- | ------- | --------- |
-| Unit + integração | `pnpm test` (TEST_DATABASE_URL = auditaja_senado_test, depois do seed) | 16 arquivos, **183 passaram**, 0 falharam |
-| e2e + axe | `pnpm build`, depois `E2E_PORT=3245 PW_CHROME=… pnpm test:e2e` | **131 passaram, 1 falhou, 8 pulados**. A falha é `[celular] senador.spec.ts:267` (`TypeError: Cannot read properties of null (reading 'y')`). Rodado isolado, falhou 10 de 10 vezes |
+| Unit + integração | `pnpm test` (TEST_DATABASE_URL = auditaja_senado_test, depois do seed) | 16 arquivos, **186 passaram**, 0 falharam |
+| e2e + axe | `pnpm build`, depois `E2E_PORT=3245 PW_CHROME=… pnpm test:e2e` | **131 passaram, 0 falharam, 7 pulados**. O teste instável da rodada 3 foi removido |
 | Build | `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, `pnpm build` | os quatro com saída 0 |
+
+- **Estabilidade**: além da base, o e2e completo rodou 11 vezes, nos mutantes M02, M08, M10, M12, M12m, M17, M21a,
+  M21b, M22n, M23 e M24. Em todas as execuções, só falharam os testes que o próprio mutante quebra.
 
 **Não regressão do deputado: PASS.**
 
-- Nenhum teste do deputado mudou em `be9cf19`. Entrou só um teste novo da Câmara (`tests/unit/transformacoes.test.ts:229`).
-- Todos os testes do deputado passam.
-- O layout do celular está atrás de `senado` (`secoes.tsx:565`, `:814`, `:818`, `:934`, `:963`; `page.tsx:278`).
-- A marca (`topo.tsx:20`) segue o protótipo comum e fecha também a X03 do deputado.
-- A máscara no nome vale também para a coleta da Câmara (`src/ingest/camara.ts:100`). Os bancos da Câmara coletados
-  antes deste commit só ficam limpos com uma recoleta. Não conferi, porque não posso usar outros bancos.
-
-## Tarefas
-
-T16 `[x]`:
-
-- "Nenhum CPF de 11 dígitos sobra no nome": **confirmado** (ver a R3), mas a máscara escolhida permite a remontagem
-  (FAIL 1).
-- "Gate full passa": **não confirmado** (FAIL 2).
-
-Processo:
-
-- `divergencias-propostas.md` ainda lista a I12 e a parte M12 da I14, que já não divergem.
-- O Handoff de `.specs/STATE.md` e a rastreabilidade da spec ainda dizem "T1–T12".
-- As emendas de SCEAPS-02 e SVOT-06 (rodada 2) seguem sem a ratificação do usuário.
+- Desde a rodada 3, nenhum teste pré-existente do deputado mudou.
+- Na faixa total, os testes do deputado mudaram só nestes pontos, já avaliados nas rodadas anteriores:
+  - o placeholder da busca (SUI-08, `tests/e2e/perfil.spec.ts`);
+  - a versão da metodologia;
+  - o filtro dos senadores do seed em `tests/integracao/coleta.test.ts`.
+- A suíte inteira passa.
+- A reversão de `bb97def` tira as classes do celular que só valiam para o Senado (`page.tsx:276`, `secoes.tsx:562`,
+  `:810`, `:927`, `:955`). O layout do deputado volta a ser o da `main`.
 
 ## Checagem ancorada na spec
 
@@ -86,7 +64,7 @@ Legenda:
 - **GAP**: não há teste, o teste não discrimina ou o comportamento é parcial.
 - **FAIL**: o comportamento contraria a spec.
 
-Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos os testes citados passaram nesta rodada.
+As linhas citadas foram conferidas no `HEAD` (`abc95ff`), e todos os testes citados passaram nesta rodada.
 
 ### Coletar os senadores
 
@@ -95,8 +73,8 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 | SCAD-01 | `tests/unit/senado-ingest.test.ts:32`; `tests/unit/senado.test.ts:16` | PASS |
 | SCAD-02 | `tests/unit/senado-ingest.test.ts:42`; M09 morto | PASS |
 | SCAD-03 | `tests/unit/senado-ingest.test.ts:50` | PASS |
-| SCAD-04 | Agora a ligação é testada: `tests/integracao/coleta-senado.test.ts:76` (`data_nascimento = '1976-10-23'`), e o M19 morre. **A cobertura é parcial**: o detalhe só é pedido para quem está em exercício (`src/ingest/senado.ts:349-358`). No banco real, 81 de 245 senadores têm nascimento, e 12 dos que não têm têm votos ou notas. A premissa da spec ("uma requisição a `/senador/{codigo}` por senador da legislatura") conflita com a R7: seriam 245 + 81 + 2 = 328 requisições, acima de 200. Cabe ao usuário decidir | **GAP** |
-| SCAD-05 | `tests/integracao/coleta-senado.test.ts:82-109`; M15 morto. No banco real, 164 linhas de cadastro com URLs reais. As ressalvas da rodada 2 continuam: `parlamentar.coleta_id` aponta só para a lista, e as coletas ficam fora da transação (`senado.ts:361-377`) | PASS (com ressalvas) |
+| SCAD-04 (emendada) | Sexo e nascimento: `tests/unit/senado-ingest.test.ts:64`, `:230`, `:233`; a ligação com o banco, `tests/integracao/coleta-senado.test.ts:76`; M19 morto. O detalhe só é pedido para quem está em exercício (`src/ingest/senado.ts:349-358`), como diz a emenda aprovada às 19:45 (`spec.md:46`, `:69`). No banco real, 81 de 81 senadores em exercício têm nascimento. Os outros 164 não têm, e 67 deles casam com o TSE pelo nome e pela UF (`src/ingest/tse.ts:46`), como diz a premissa emendada | PASS |
+| SCAD-05 | `tests/integracao/coleta-senado.test.ts:82-109`; M15 morto. Ressalvas mantidas (lacuna 6) | PASS (com ressalvas) |
 | SCAD-06 | `tests/integracao/coleta-senado.test.ts:62`, `:111` | PASS |
 
 ### Gastos da CEAPS
@@ -104,7 +82,7 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 | ID | Evidência | Resultado |
 | -- | --------- | --------- |
 | SCEAPS-01 | `tests/unit/senado-ingest.test.ts:103` | PASS |
-| SCEAPS-02 (emendada) | `tests/unit/senado-ingest.test.ts:116`, `:125`, `:243-258` e `:261-272` (MEI); `tests/unit/privacy.test.ts:35-49`. M06, M18, M20 e M20b mortos. Continua a ressalva de que "CNPJ válido" é só "14 dígitos" (`privacy.ts:31`). A remontagem do FAIL 1 é da R3, não da letra deste requisito | PASS (literal) |
+| SCEAPS-02 (emenda ratificada às 18:55) | `tests/unit/senado-ingest.test.ts:116`, `:125`, `:244`, `:262`; `tests/unit/privacy.test.ts:35-59`. M06, M18, M20, M20b e M25–M30 mortos. A máscara do nome não tem dígitos (`src/lib/privacy.ts:45`, `:54`) | PASS |
 | SCEAPS-03 | `tests/unit/senado-ingest.test.ts:132` | PASS |
 | SCEAPS-04 | `tests/unit/senado-ingest.test.ts:137`; `tests/integracao/coleta-senado.test.ts:118` | PASS |
 | SCEAPS-05 | `tests/integracao/perfil-senador.test.ts:34`; `tests/e2e/senador.spec.ts:38` | PASS |
@@ -116,11 +94,11 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 | ID | Evidência | Resultado |
 | -- | --------- | --------- |
 | SVOT-01 | `tests/unit/senado-ingest.test.ts:149`, `:163` | PASS |
-| SVOT-02 | `tests/unit/senado-ingest.test.ts:169`. O partido do dia aparece na tela: `tests/e2e/senador.spec.ts:100` ("Liderança do PFW: Sim"; seed em `src/db/seed.ts:529` e `:549`). M17 morto | PASS |
+| SVOT-02 | `tests/unit/senado-ingest.test.ts:169`; `tests/e2e/senador.spec.ts:100`; M17 morto | PASS |
 | SVOT-03 | `tests/unit/senado-ingest.test.ts:177`; `tests/unit/senado.test.ts:34` | PASS |
 | SVOT-04 | `tests/integracao/coleta-senado.test.ts:137` | PASS |
 | SVOT-05 | `tests/integracao/perfil-senador.test.ts:50` | PASS |
-| SVOT-06 (emendada) | `tests/e2e/senador.spec.ts:82-89`; M10 e M13 mortos | PASS |
+| SVOT-06 (emenda ratificada às 18:55) | `tests/e2e/senador.spec.ts:82-89`; M10 e M13 mortos | PASS |
 | SVOT-07 | `tests/unit/senado.test.ts:114`; `tests/e2e/senador.spec.ts:82` | PASS |
 | SVOT-08 | `tests/e2e/senador.spec.ts:82`, `:38`; M08 morto | PASS |
 
@@ -131,9 +109,9 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 | SPRES-01 | `tests/unit/senado.test.ts:68` | PASS |
 | SPRES-02 | `tests/unit/senado.test.ts:73`; M01 morto | PASS |
 | SPRES-03 | `tests/unit/senado.test.ts:83`; `tests/integracao/perfil-senador.test.ts:65` | PASS |
-| SPRES-04 | `tests/integracao/perfil-senador.test.ts:209-214` | PASS |
+| SPRES-04 | `tests/integracao/perfil-senador.test.ts:72`, `:209` | PASS |
 | SALI-01 | `tests/unit/senado.test.ts:40`, `:52`; M03 morto | PASS |
-| SALI-02 | `tests/integracao/perfil-senador.test.ts:201-207`; M13 e M02b mortos | PASS |
+| SALI-02 | `tests/integracao/perfil-senador.test.ts:201`; M13 e M02b mortos | PASS |
 | SALI-03 | `tests/unit/senado.test.ts:47` | PASS |
 
 ### Perfil e lista do senador
@@ -141,11 +119,11 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 | ID | Evidência | Resultado |
 | -- | --------- | --------- |
 | SUI-01 | `tests/e2e/senador.spec.ts:6` | PASS |
-| SUI-02 | `tests/e2e/senador.spec.ts:17-24`, `:31` | PASS |
+| SUI-02 | `tests/e2e/senador.spec.ts:17`, `:31` | PASS |
 | SUI-03 | `tests/e2e/senador.spec.ts:17`, `:31` | PASS |
-| SUI-04 | `tests/e2e/senador.spec.ts:115-141` (ordinal pelo gênero em `:124` e `:134`; UF); `tests/integracao/perfil-senador.test.ts:96-99` (`left join` em `src/data/perfil.ts:434`). M21a, M21b e M21c mortos. O teste da ordem no celular (`:267`) não conta como evidência: falha por corrida e não discrimina o M22 | PASS (conteúdo) |
+| SUI-04 | `tests/e2e/senador.spec.ts:115-141`; `tests/integracao/perfil-senador.test.ts:87-99`; M21a, M21b e M21c mortos. A ordem no celular não é requisito (I14 aceita); o teste de ordem foi removido | PASS |
 | SUI-05 | `tests/integracao/perfil-senador.test.ts:102`; `tests/e2e/senador.spec.ts:157` | PASS |
-| SUI-06 | `tests/integracao/perfil-senador.test.ts:141`, `:153`, `:177-197`; M14 morto. A lista real é idêntica à da rodada 2, com 81 cartões | PASS |
+| SUI-06 | `tests/integracao/perfil-senador.test.ts:141`, `:153`, `:177`; M14 morto | PASS |
 | SUI-07 | `tests/e2e/senador.spec.ts:185` | PASS |
 | SUI-08 | `tests/e2e/senador.spec.ts:221` | PASS |
 | SUI-09 | `tests/e2e/senador.spec.ts:212` | PASS |
@@ -156,7 +134,7 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 
 | ID | Evidência | Resultado |
 | -- | --------- | --------- |
-| SBENS-01 | `tests/unit/senado-ingest.test.ts:197`. No banco real, só casa quem tem nascimento (ver SCAD-04) | PASS |
+| SBENS-01 | `tests/unit/senado-ingest.test.ts:197` | PASS |
 | SBENS-02 | `tests/integracao/perfil-senador.test.ts:113`; `tests/e2e/senador.spec.ts:256` | PASS |
 
 ### Casos de borda
@@ -165,175 +143,199 @@ Os requisitos sem mudança em `be9cf19` mantêm a evidência da rodada 2. Todos 
 | -- | --------- | --------- |
 | SERR-01 | `tests/unit/http.test.ts:124`; `tests/integracao/coleta-senado.test.ts:151` | PASS |
 | SERR-02 | `tests/unit/senado.test.ts:26`; `tests/unit/senado-ingest.test.ts:77` | PASS |
-| SERR-03 | No celular, agora aparece o texto completo (`src/app/parlamentares/[id]/page.tsx:221`). O teste `tests/e2e/senador.spec.ts:246-251` cobre os dois viewports. M12 (desktop) e M12m (celular, novo) mortos | PASS (fechado) |
-| SERR-04 | `tests/e2e/senador.spec.ts:252`; `tests/integracao/perfil-senador.test.ts:216` | PASS |
+| SERR-03 | `tests/e2e/senador.spec.ts:246` (desktop e celular); M12 e M12m mortos | PASS |
+| SERR-04 | `tests/e2e/senador.spec.ts:246`; `tests/integracao/perfil-senador.test.ts:131`, `:216` | PASS |
 
-**Placar**: 44 PASS, 1 GAP (SCAD-04) e 0 FAIL, de 45 requisitos.
+**Placar**: 45 PASS, 0 GAP e 0 FAIL, de 45 requisitos.
 
 ### Metas da spec
 
 | Meta | Resultado | Evidência |
 | ---- | --------- | --------- |
-| 81 senadores na busca e na lista | PASS | `/parlamentares?casa=senado` mostra 81 cartões |
-| Bloco com fonte, data e link | PASS | Recoleta das 15:27, com as URLs reais `/senador/{código}.json` |
-| **R3** | **FAIL** | Nenhum CPF completo, mas o CPF pode ser remontado (FAIL 1) |
-| R7 | PASS | 164 requisições do cadastro + 1 da CEAPS + 2 das votações = 167 |
+| 81 senadores na busca e na lista | PASS | `ql-*-parlamentares_casa_senado.json` idênticos aos da rodada 3 (81 cartões) |
+| Bloco com fonte, data e link | PASS | "Fonte: Senado Federal … coletado em 11/11/2026 15:4x" nos três perfis medidos |
+| R3 | PASS | ver abaixo |
+| R7 | PASS | 81 detalhes + 81 comissões + 2 listas + 1 CEAPS + 2 votações = 167 requisições, abaixo de 200 |
 | Perfil do deputado igual | PASS | ver Gates |
 
 ## R3 no banco real (`auditaja_senado_dev`)
 
-Varri as 55 colunas de texto de `public` com o script `…/scratchpad/verif3/r3.sql`. Ele procura:
+Varri as 55 colunas de texto de `public` com o script `…/scratchpad/verif4/r3.sql`. Ele procura:
 
-- CPF de 11 dígitos, com ou sem `.`, espaço ou `-`;
+- CPF completo pela regra antiga (com `.`, espaço ou `-`);
+- CPF completo pela regra larga: até 3 símbolos quaisquer entre os grupos, para cobrir hífens, barras e separadores
+  duplos;
 - a máscara do Senado (3 primeiros e 2 últimos dígitos);
-- a máscara da Receita;
-- sequências de 10 dígitos (CPF sem o zero à esquerda).
+- a máscara da Receita (6 do meio);
+- qualquer dígito colado a `**`;
+- 10 dígitos isolados;
+- e conta a máscara sem dígitos.
 
-| Coluna | CPF completo | Máscara do Senado | Máscara da Receita | Leitura |
-| ------ | ------------ | ----------------- | ------------------ | ------- |
-| `despesa_ceap.fornecedor_nome` | **0** (eram 62) | 0 | 62 | Razão social de MEI no formato "NOME \*\*\*.ddd.ddd-\*\*" |
-| `candidatura.sq_candidato`, `bem_declarado.sq_candidato` | 38 e 390 | 0 | 0 | Falso positivo: sequencial do TSE |
-| `coleta.sha256` | 4 | 0 | 0 | Falso positivo: hash hexadecimal |
-| demais 50 colunas | 0 | 0 | 0 | — |
+| Coluna | CPF completo | Máscara do Senado | Máscara da Receita | Dígito colado a `**` | Sem dígitos | Leitura |
+| ------ | ------------ | ----------------- | ------------------ | -------------------- | ----------- | ------- |
+| `despesa_ceap.fornecedor_nome` | **0** | **0** | **0** (eram 62) | **0** | 62 | Razão social de MEI com o CPF trocado por `***.***.***-**` |
+| `candidatura.sq_candidato` e `bem_declarado.sq_candidato` | 38 e 390 | 0 | 0 | 0 | 0 | Falso positivo: sequencial do TSE. Os 38 valores distintos de 11 dígitos foram testados, e **0** têm dígitos verificadores de CPF válidos |
+| `coleta.sha256` | 4 | 0 | 0 | 0 | 0 | Falso positivo: hash hexadecimal |
+| demais 50 colunas | 0 | 0 | 0 | 0 | 0 | — |
 
-- **Notas**: há 237 de `terceiro_pf`, todas com documento nulo e o nome "Prestador pessoa física", e 16.268 de
-  `pessoa_juridica`. Não sobrou nenhuma `desconhecido` (lacuna 6 da rodada 2 fechada).
-- **Tela**: baixei o `gastos.csv?ano=2026` dos **90 senadores com notas**. Nenhum tem CPF completo ou a máscara do
-  Senado, e 62 linhas trazem a máscara da Receita no nome. Nos perfis `10003806` e `10004639`, a tabela "Maiores
-  fornecedores" mostra a mesma máscara.
+- **Notas**: há 237 de `terceiro_pf`, todas com o nome "Prestador pessoa física" e `fornecedor_doc` nulo, e 16.268 de
+  `pessoa_juridica`, todas com CNPJ formatado.
+- **Tela**: baixei o `gastos.csv?ano=2026` dos **90 senadores com notas** (16.595 linhas). O resultado:
+  - CPF completo pela regra larga: **0**;
+  - máscara parcial: **0**;
+  - linhas com `***.***.***-**`: 62.
+  - Sobraram 5 linhas em que um dígito encosta num `*`. São falsos positivos: um nome que termina em `*`, seguido do
+    CNPJ da coluna ao lado.
+  - Das 237 linhas de "Prestador pessoa física", nenhuma tem documento.
 
-**R3: FAIL por remontagem.** Para corrigir:
-
-- Trocar a máscara no nome por uma sem dígitos (`***.***.***-**`) ou retirar o CPF (`src/lib/privacy.ts:51-52`).
-- Ajustar os testes `tests/unit/privacy.test.ts:36-44`, `senado-ingest.test.ts:261` e `transformacoes.test.ts:229`.
-- Recoletar.
-- Antes de publicar o ramo, decidir com o usuário se o exemplo sai do histórico de `b2943c6`.
+**R3: PASS** no banco e na tela.
 
 ## A coleta só troca dados da própria Casa
 
-| Direção | Código | Teste | Mutante |
-| ------- | ------ | ----- | ------- |
-| Senado → suplente, órgãos, CEAPS, votações | `src/ingest/senado.ts:387-390`, `:409`, `:442-447` | `coleta-senado.test.ts:62`, `:118`, `:137` | M05 morto |
-| Câmara → CEAP | `src/ingest/camara.ts:328-334` | `coleta-senado.test.ts:161-216` | M04 morto |
-| Câmara → votações | `src/ingest/camara.ts:375-381` | idem | M11 morto |
-| Câmara → órgãos | `src/ingest/camara.ts:400-406` | idem: `coletarOrgaos` em `:213`, e os órgãos do senador conferidos em `:173-182` | **M16 morto** (vivo na rodada 2) |
-
-Continua o desvio menor: nas votações, a separação é pelo órgão (`camara.ts:378`), e não por `casa`, como a AD-004 manda.
+Sem mudança desde a rodada 3. M04, M05, M11 e M16 continuam mortos.
 
 ## Sensor de discriminação
 
-- **Ambiente**: um worktree temporário, criado com `git worktree add --detach …/verif3/wt HEAD` e preparado com
-  `pnpm install --offline`. O script é `…/verif3/mutantes.py`, e cada substituição exige um número exato de
+- **Ambiente**: um worktree temporário, criado com `git worktree add --detach …/verif4/wt HEAD` e preparado com
+  `pnpm install --offline`. O script é `…/verif4/mutantes.py`, e cada substituição exige um número exato de
   ocorrências.
 - **Execução**: para cada mutante, roda o seed e depois o vitest. Se o vitest não matar, roda `pnpm build` (saída 0 em
-  todos) e o e2e completo. No fim, `git checkout -- src`.
-- **Regra de contagem**: como o `senador.spec.ts:267` falha sozinho na rodada base, falhar só nele não conta como morte.
+  todos) e o e2e completo. No fim, `git checkout -- src` e a confirmação de que `src` e `tests` ficaram limpos (nenhum
+  mutante deixou sujeira).
+- **M22 da rodada 3**: não se aplica mais, porque o `max-sm:contents` saiu do código em `bb97def`. No lugar dele entra o
+  M22n.
 
 | # | Mutação | Resultado | Teste que matou |
 | - | ------- | --------- | --------------- |
 | M01 | tira `LS` das licenças | Morto | vitest |
-| M02 | "Votou" vira a orientação no alinhamento | **Vivo, equivalente** (como na rodada 2) | só o `:267`, que não conta |
+| M02 | "Votou" vira a orientação no alinhamento | **Vivo, equivalente** (a guarda do M13 tira o voto secreto antes) | — |
 | M02b | M02 sem a guarda | Morto | vitest |
 | M03–M07 | rodada 1 | Mortos | vitest |
 | M08 | "Divergiu do partido" | Morto | `senador.spec.ts:82` [D] |
 | M09 | todos em exercício | Morto | vitest |
 | M10 | votação secreta sem "Orientação: não se aplica" | Morto | `senador.spec.ts:82` [D e M] |
 | M11 | votações da Câmara apagam as `PLEN-SF` | Morto | vitest |
-| M12 | desktop mostra "0 de 0 em {ano}" | Morto | `senador.spec.ts:246` [D] |
-| M12m (novo) | celular volta a "sem votações" | Morto | `senador.spec.ts:246` [M] |
-| M13–M15 | rodada 2 | Mortos | vitest |
-| **M16** | coleta de órgãos da Câmara apaga as comissões dos senadores | **Morto** | `coleta-senado.test.ts:161` |
-| **M17** | liderança com o partido atual | **Morto** | `senador.spec.ts:82` [D], em `:100` |
-| M18 | documento malformado grava o nome | Morto | vitest |
-| **M19** | o nascimento não chega ao banco | **Morto** | `coleta-senado.test.ts:76` |
-| **M20 (novo)** | desliga a máscara de CPF no nome do fornecedor | **Morto** | `privacy.test.ts:36`, `senado-ingest.test.ts:262`, `transformacoes.test.ts:229` |
-| M20b (novo) | a máscara só pega 11 dígitos sem pontuação | Morto | `privacy.test.ts:36` |
-| M21a (novo) | celular com ordinal sempre "º" | Morto | `senador.spec.ts:115` [M] |
-| M21b (novo) | desktop com ordinal sempre "º" | Morto | `senador.spec.ts:115` [D] |
-| M21c (novo) | leitura sem o `sexo` do suplente | Morto | `perfil-senador.test.ts:96` |
-| **M22 (novo)** | lateral sem `max-sm:contents`: Bens vai para o fim | **Vivo, não equivalente** | nenhum. O e2e passa inteiro, inclusive o `:267` |
-| M23 (novo) | `gap` do Mandato compacto volta a 14 px | Vivo (só visual) | nenhum. A paridade cobre (M14) |
-| M24 (novo) | marca volta a `tracking-tight` | Vivo (só visual) | nenhum. A paridade cobre (V23) |
+| M12 / M12m | "0 de 0" no desktop / "sem votações" no celular | Mortos | `senador.spec.ts:246` [D] / [M] |
+| M13–M16 | rodadas 2 e 3 | Mortos | vitest |
+| M17 | liderança com o partido atual | Morto | `senador.spec.ts:82` [D] |
+| M18, M19 | rodadas 2 e 3 | Mortos | vitest |
+| M20 | desliga a máscara no nome | Morto | `privacy.test.ts:36` e outros |
+| M20b | a máscara só pega 11 dígitos sem pontuação | Morto | `privacy.test.ts:36`, `:45`, `:49` |
+| M21a, M21b, M21c | ordinal do suplente | Mortos | `senador.spec.ts:115` [M] e [D]; `perfil-senador.test.ts:87` |
+| **M22n (novo)** | contêiner do perfil com `flex-col-reverse`: no celular, a lateral sobe para antes de Gastos | **Vivo (só visual)** | nenhum. Nenhum teste confere a ordem do celular |
+| M23 | `gap` do Mandato compacto volta a 14 px | Vivo (só visual) | nenhum. A paridade cobre (M14) |
+| M24 | marca volta a `tracking-tight` | Vivo (só visual) | nenhum. A paridade cobre (V23) |
+| **M25 (novo)** | volta o regex da rodada 3 (sem hífen entre grupos, sem barra, um separador só) | Morto | `privacy.test.ts:45`, `:49` |
+| **M26 (novo)** | volta a máscara parcial da Receita no nome | Morto | `privacy.test.ts:36`, `:45`, `:49` |
+| **M27 (novo)** | tira o `(?<!\d)` | Morto | `privacy.test.ts:56` |
+| **M28 (novo)** | tira o `(?!\d)` | Morto | `privacy.test.ts:56` |
+| **M29 (novo)** | `{0,3}` vira `?` (um separador só) | Morto | `privacy.test.ts:45`, `:49` |
+| **M30 (novo)** | tira a barra dos separadores | Morto | `privacy.test.ts:49` |
 
-**Resultado: 29 execuções, 25 mortes.**
+**Resultado: 35 execuções, 31 mortes.**
 
-- Ficaram 4 vivos: M02, que é equivalente; M22, que não é; e M23 e M24, que são só de paridade.
-- Sem contar o equivalente e os 2 visuais: 25 de 26 (96%). Contando tudo: 25 de 29 (86%).
-- **M16, M17 e M19 morreram.**
-- **Sensor: FAIL por causa do M22.**
+- Ficaram 4 vivos: M02, que é equivalente, e M22n, M23 e M24, que são só visuais.
+- Nenhum vivo muda o resultado de um requisito da spec.
+- Sem contar o equivalente e os 3 visuais: 31 de 31. Contando tudo: 31 de 35 (89%).
+- **Sensor: PASS**, com a ressalva da lacuna 3 (M22n).
 
 ## Paridade visual
 
-Detalhes em `paridade/verificacao-3.md`. São 130 itens: 3 N/V, 120 PASS e 7 FAIL.
+Detalhes em `paridade/verificacao-4.md`. São 130 itens:
 
-- **(a) Com as divergências propostas contadas como FAIL: 120 ÷ 127 = 94,5%.** Fica abaixo da meta de 95%.
-- **(b) Se o usuário aceitar I10, I11, I13 e a parte C32 da I14: 120 ÷ 121 = 99,2%.**
-- Passaram a PASS: V23, M12, M14 e C29.
-- **Regressão nova: B03.**
-- Já não divergem, mas continuam no arquivo de propostas: a **I12** e a **parte M12 da I14**.
+- 3 N/V;
+- 7 INTENCIONAIS, com as divergências aceitas: V12, V13, V14, C18, P10, M12 e C32;
+- 120 PASS;
+- 0 FAIL.
+
+**Paridade = 120 ÷ 120 = 100%.** A meta de 95% é atingida.
+
+- Pessimista, com N/V contado como FAIL: 97,6%.
+- **B03 corrigido**: no celular, a aba ativa acompanha a seção na linha de leitura, nos dois perfis medidos.
+- A ordem do DOM voltou a ser a ordem visual. Com isso, o risco de WCAG 1.3.2 e 2.4.3 da rodada 3 fica resolvido.
 
 ## Lacunas ranqueadas
 
-1. **R3: a máscara do nome permite remontar o CPF.**
-   - Onde: `src/lib/privacy.ts:45-52`. O exemplo remontável está no histórico de `b2943c6`.
-   - Correção: usar uma máscara sem dígitos no nome e recoletar a CEAPS e a CEAP. Antes de publicar o ramo, decidir
-     com o usuário se o exemplo sai do histórico.
-2. **O e2e está vermelho.**
-   - Onde: `tests/e2e/senador.spec.ts:267-273`. O teste mede as seções antes de o `Suspense` terminar.
-   - Correção: `await expect(page.locator("section#bens")).toBeVisible()` antes de medir, e rodar a suíte de novo.
-3. **Regressão do B03, que deixa a paridade (a) em 94,5%.**
-   - Onde: `src/components/perfil/abas.tsx:24-30`.
-   - Correção: escolher a aba pela posição na tela, e não pela ordem de `ABAS`. Outra saída é um Mandato compacto com
-     `sm:hidden` na posição certa do DOM, o que resolve também a ordem de foco (WCAG 1.3.2 e 2.4.3), que hoje está
-     invertida: no DOM, Bens vem antes do Mandato.
-   - Acrescentar um e2e da aba ativa no celular.
-4. **M22 vivo.**
-   - Onde: o teste em `tests/e2e/senador.spec.ts:271-273` e o código em `src/components/perfil/secoes.tsx:814`.
-   - Correção: o teste também deve conferir bens < fontes < erro.
-5. **SCAD-04: só os senadores em exercício têm nascimento.**
-   - Onde: `src/ingest/senado.ts:341-358`. Hoje, 164 senadores ficam sem a data, e 12 deles têm votos ou notas.
-   - Correção: depende do usuário. Ou emendar a spec, ou pedir também o detalhe de quem tem votos ou notas, respeitando
-     a R7.
-6. **Processo.**
-   - Atualizar `divergencias-propostas.md`: tirar a I12 e a parte M12 da I14.
-   - Levar ao usuário I10, I11, I13 e a C32.
-   - Ratificar as emendas de SCEAPS-02 e SVOT-06.
-   - Atualizar `.specs/STATE.md` e a rastreabilidade da spec.
-7. **Ressalvas da rodada 2 que continuam.**
-   - SCAD-05: `senado.ts:361-377`.
-   - "CNPJ válido" com 14 dígitos: `privacy.ts:31`.
-   - A AD-004 separando votações por órgão: `camara.ts:378`.
+1. **O CPF parcial do relatório antigo ainda está no repositório local.**
+   - A ref `refs/heads/backup/feat-senadores-antes-da-limpeza` e a ref `refs/original/refs/heads/feat/senadores`
+     apontam para `65ce785`. As duas contêm o antigo `b2943c6`, cujo `.specs/features/perfil-senador/validation.md`
+     traz 1 máscara do Senado de um fornecedor real.
+   - O reflog (289 entradas) também mantém esse objeto.
+   - O `HEAD` está limpo, e `origin` não tem ramo do Senado.
+   - Risco: um `git push --all`, um `push --mirror` ou um clone do diretório publicaria o dado.
+   - Correção, que cabe ao usuário por ser uma remoção:
+     - `git branch -D backup/feat-senadores-antes-da-limpeza`;
+     - `git update-ref -d refs/original/refs/heads/feat/senadores`;
+     - `git reflog expire --expire=now --all && git gc --prune=now`.
+   - Os rascunhos da rodada 3 em `…/scratchpad/verif3/` (`csv/`, `p10003806.html`, `p10004639.html`) também guardam a
+     máscara antiga e podem ser apagados.
+2. **R3 contra a fonte, para a Câmara (fora deste banco).**
+   - O documento do prestador PF segue a máscara da Receita, que mostra os 6 dígitos do meio (`src/lib/privacy.ts`,
+     `mascararCpf`).
+   - O Senado publica o CPF de pessoa física com os 3 primeiros e os 2 últimos dígitos.
+   - Se a mesma pessoa física fornece a um deputado com o CPF completo na fonte da Câmara e a um senador, a tela do
+     Auditaja mais a fonte pública do Senado remontam o número.
+   - É o mesmo raciocínio da premissa da spec (`spec.md:37`) e da lacuna 1 da rodada 3. Não aparece em
+     `auditaja_senado_dev`, que não tem notas da Câmara (0 máscaras da Receita).
+   - Cabe ao usuário decidir se o documento PF da Câmara e o da SCEAPS-02 também devem ficar sem dígitos.
+3. **Nada automático guarda a ordem do celular nem a aba ativa.**
+   - O M22n vive: uma inversão inteira da ordem do celular passa no e2e. O B03 regrediu na rodada 3 sem nenhum teste
+     falhar e hoje só a paridade manual o confere (`src/components/perfil/abas.tsx:23-35`).
+   - Correção: um e2e no celular que role até Bens e confira `aria-current="location"` na aba "Bens", e que confira a
+     ordem gastos < votações < bens < mandato < fontes.
+4. **Exemplo de máscara do Senado no código e na spec.**
+   - Em `spec.md:37`, `spec.md:86` e `src/ingest/senado.ts:199`, o exemplo de "CPF já mascarado pelo Senado" usa
+     dígitos que não são os da fixture fictícia (`tests/fixtures/senado/ceaps-2026.json` usa só zeros).
+   - Sem rede, não dá para saber se é o CPF de uma pessoa real. Na dúvida, troque pelo exemplo fictício da fixture.
+5. **Processo.**
+   - `.specs/STATE.md:40` e `:43` ainda dizem "aguardando decisões do usuário" e "verificação nº 4", embora as
+     decisões já tenham sido tomadas.
+   - `tasks.md:427` (T16) ainda descreve a "ordem do celular (Mandato antes de Bens)", que foi revertida, e as
+     correções da rodada 3 (`bb97def`, `1c0910c`, `32679b9`) não têm tarefa.
+   - `paridade/rubrica.md:32-44` não lista as divergências I10, I11, I13 e I14 aceitas.
+6. **Ressalvas antigas que continuam** (não bloqueiam):
+   - SCAD-05: `parlamentar.coleta_id` aponta só para a lista, e as coletas ficam fora da transação
+     (`src/ingest/senado.ts:361-377`).
+   - "CNPJ válido" é só "14 dígitos" (`src/lib/privacy.ts:31`).
+   - A AD-004 separa as votações pelo órgão, não pela `casa` (`src/ingest/camara.ts:378`).
 
 ---
 
+## Rodada 3 (resumo)
+
+**Veredito**: FAIL, na faixa `e4e563d..be9cf19` (o hash é de antes da reescrita).
+
+- **Requisitos**: 44 PASS e 1 GAP (SCAD-04).
+- **Gates**: vitest 183/183. No e2e, 131 passaram e 1 falhou: o teste de ordem do celular, por corrida com o
+  `Suspense`.
+- **Sensor**: 25 de 29 mortos. O M22 ficou vivo e não era equivalente.
+- **Paridade**: (a) 94,5%, com a regressão do B03.
+- **R3**: FAIL, porque a máscara da Receita no nome, junto com a máscara do Senado publicada no relatório da rodada 2,
+  remontava o CPF.
+
+O que a rodada 4 encontrou dessas lacunas:
+
+- A máscara no nome ficou sem dígitos, e o regex foi ampliado.
+- O teste instável e a reordenação via CSS saíram (I14).
+- O B03 foi corrigido.
+- O M22 não se aplica mais.
+- A SCAD-04 foi emendada.
+- O histórico do ramo foi reescrito, mas ficaram refs locais (lacuna 1).
+
 ## Rodada 2 (resumo)
 
-**Result**: FAIL, na faixa `e4e563d..96e0fc0`.
+**Veredito**: FAIL.
 
-- **Requisitos**: 43 PASS e 2 GAP (SCAD-04 e SERR-03 no celular).
-- **Gates**: vitest 179/179; e2e com 131 testes passando e 7 pulados.
-- **Sensor**: 16 de 20 mutantes mortos. Ficaram vivos M02 (equivalente), M16, M17 e M19.
-- **Paridade**: (a) 92,1% e (b) 98,3%.
+- **Requisitos**: 43 PASS e 2 GAP.
+- **Sensor**: 16 de 20 mortos.
+- **Paridade**: (a) 92,1%.
 - **R3**: FAIL, com CPF completo na razão social de MEI em 62 notas.
-- **Banco real**: não tinha sido recoletado.
-
-O que a rodada 3 encontrou dessas lacunas:
-
-- O CPF completo foi corrigido, mas a máscara nova permite a remontagem.
-- M16, M17 e M19 morrem.
-- A SERR-03 foi fechada.
-- V23, M14, C29 e M12 foram corrigidos.
-- O banco foi recoletado.
 
 ## Rodada 1 (resumo)
 
-**Result**: FAIL, na faixa `e4e563d..187abaf` (13 commits).
+**Veredito**: FAIL.
 
 - **Requisitos**: 37 PASS, 7 GAP e 1 FAIL (SCAD-05).
-- **Gates**: vitest 170/170; e2e com 126 testes passando e 6 pulados.
-- **Sensor**: 8 de 12 mutantes mortos. Ficaram vivos M02, M04, M11 e M12.
+- **Sensor**: 8 de 12 mortos.
 - **Paridade**: 82,5%.
 - **Limite de 60 resultados**: FAIL.
-- **R3**: deu PASS, mas a rodada 2 achou o CPF de MEI.
-
-As rodadas 2 e 3 corrigiram tudo isso, menos o que aparece nas lacunas acima.
