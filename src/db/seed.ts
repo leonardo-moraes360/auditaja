@@ -239,6 +239,7 @@ export async function semear(db: Kysely<Database>) {
         emenda("202490000006", 2024, "SANTOS - SP", "Agricultura", 600_000, 300_000, 300_000),
         emenda("202490000007", 2024, "NACIONAL", "Assistência social", 400_000, 0, 400_000),
         emenda("202490000008", 2024, "BAURU - SP", "Cultura", 100_000, 0, 0),
+        emenda("202690000009", 2026, "MÚLTIPLO", "Saúde", 1_000_000, 0, 0),
       ])
       .execute();
     const fav = (

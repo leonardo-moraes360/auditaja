@@ -1,0 +1,325 @@
+import Link from "next/link";
+import type { EmendasDoParlamentar } from "@/data/emendas";
+import { brl, brlCompacto, pct } from "@/lib/format";
+import { classeFiltro } from "./estilos";
+import { NotaFonte } from "./fonte";
+
+/** Mesmo cartão e títulos das outras seções do perfil (secoes.tsx). */
+const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
+const H2 = "font-heading text-lg font-bold sm:text-[22px]";
+const H3 = "text-[15px] font-bold";
+
+export const PAGINA_EMENDAS_PORTAL = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares";
+
+/** "17,1" (milhões, uma casa) para o rótulo acima da barra. */
+function milhoes(v: number) {
+  return (v / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function Indicador({
+  titulo,
+  valor,
+  detalhe,
+  progresso,
+}: {
+  titulo: string;
+  valor: string;
+  detalhe: string;
+  progresso?: number | null;
+}) {
+  return (
+    <div
+      data-indicador
+      className="flex flex-col gap-1 rounded-[10px] bg-background p-3 sm:gap-1.5 sm:rounded-[12px] sm:p-4"
+    >
+      <p className="text-xs text-muted-foreground sm:text-[13px]">{titulo}</p>
+      <p className="font-heading text-xl font-bold sm:text-[26px]">{valor}</p>
+      {progresso != null && (
+        <div
+          className="h-2 overflow-hidden rounded bg-border"
+          role="img"
+          aria-label={`${progresso}% do valor empenhado já foi pago`}
+        >
+          <div className="h-2 bg-primary" style={{ width: `${Math.min(100, progresso)}%` }} />
+        </div>
+      )}
+      <p className="text-[11px] text-muted-foreground sm:text-xs">{detalhe}</p>
+    </div>
+  );
+}
+
+function Barras({ itens }: { itens: { nome: string; valor: number; detalhe: string }[] }) {
+  const maior = itens[0]?.valor || 1;
+  return (
+    <ul className="flex flex-col gap-2.5 sm:gap-3">
+      {itens.map((c) => (
+        <li key={c.nome} className="flex flex-col gap-1">
+          <div className="flex justify-between gap-3 text-[13px]">
+            <span className="min-w-0 break-words">{c.nome}</span>
+            <span className="shrink-0 whitespace-nowrap text-muted-foreground">{c.detalhe}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded bg-muted">
+            <div className="h-2 bg-chart-2" style={{ width: `${Math.max(1, Math.round((c.valor / maior) * 100))}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function SecaoEmendas({ dados, parlamentarId }: { dados: EmendasDoParlamentar; parlamentarId: number }) {
+  const { periodo, anos } = dados;
+  const mandato = periodo === "mandato";
+  const parametro = mandato ? "mandato" : String(periodo);
+  const href = (p: string) => `/parlamentares/${parlamentarId}?emendas=${p}#emendas`;
+  const botoesAno = anos.slice(0, 2);
+
+  return (
+    <section id="emendas" aria-labelledby="emendas-titulo" className={`${CARTAO} gap-3.5 sm:gap-5 sm:p-6`}>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 id="emendas-titulo" className={H2}>
+          Emendas parlamentares individuais
+        </h2>
+        {!dados.vazio && (
+          <nav aria-label="Período das emendas" className="flex flex-wrap gap-1.5">
+            {botoesAno.map((a) => (
+              <Link
+                key={a}
+                href={href(String(a))}
+                aria-current={periodo === a ? "page" : undefined}
+                className={classeFiltro(periodo === a)}
+              >
+                {a}
+              </Link>
+            ))}
+            <Link href={href("mandato")} aria-current={mandato ? "page" : undefined} className={classeFiltro(mandato)}>
+              Mandato todo
+            </Link>
+          </nav>
+        )}
+      </div>
+
+      <p className="text-sm leading-normal text-texto-2">
+        Emenda é a parte do Orçamento da União que o parlamentar indica para uma área ou um lugar. Quem executa é o
+        governo federal. <strong>Empenhado</strong> é o valor reservado para a despesa; <strong>pago</strong> é o que já
+        saiu do caixa. Emendas de bancada e de comissão têm autoria coletiva e não entram nesta soma.
+      </p>
+
+      {dados.vazio ? (
+        <p className="text-muted-foreground">
+          Nenhuma emenda individual deste deputado foi encontrada no Portal da Transparência a partir do orçamento de
+          2024.
+        </p>
+      ) : (
+        <ConteudoEmendas dados={dados} mandato={mandato} />
+      )}
+
+      <NotaFonte
+        rotulo="Portal da Transparência (CGU), Emendas Parlamentares, download em lote"
+        rotuloCurto="Portal da Transparência, emendas"
+        coleta={dados.coleta ?? undefined}
+        linkOriginal={PAGINA_EMENDAS_PORTAL}
+        rotuloOriginal="Ver no Portal"
+        extras={
+          dados.vazio
+            ? []
+            : [
+                {
+                  rotulo: "Baixar CSV",
+                  href: `/parlamentares/${parlamentarId}/emendas.csv?emendas=${parametro}`,
+                  download: true,
+                },
+              ]
+        }
+        parlamentarId={parlamentarId}
+        secao="emendas"
+      />
+    </section>
+  );
+}
+
+function ConteudoEmendas({
+  dados,
+  mandato,
+}: {
+  dados: Extract<EmendasDoParlamentar, { vazio: false }>;
+  mandato: boolean;
+}) {
+  const { totais, periodo, anos } = dados;
+  const pctPago = pct(totais.pago, totais.empenhado);
+  const pctEsp = pct(totais.especiais, totais.empenhado);
+  const anosOrdem = anos.toSorted((a, b) => a - b);
+  const qtd = `${totais.emendas} ${totais.emendas === 1 ? "emenda" : "emendas"}`;
+  const anoAtual = new Date().getFullYear();
+  const max = Math.max(1, ...dados.porAno.flatMap((a) => [a.empenhado, a.pago])) * 1.08;
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] sm:gap-3">
+        <Indicador
+          titulo={mandato ? "Empenhado no mandato" : `Empenhado em ${periodo}`}
+          valor={brlCompacto(totais.empenhado)}
+          detalhe={
+            mandato
+              ? `${qtd}, orçamentos de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`
+              : `${qtd} do orçamento de ${periodo}`
+          }
+        />
+        <Indicador
+          titulo="Pago até agora"
+          valor={brlCompacto(totais.pago)}
+          progresso={pctPago}
+          detalhe={pctPago === null ? "—" : `${pctPago}% do empenhado, incluindo restos a pagar`}
+        />
+        <Indicador
+          titulo="Transferências especiais (“emendas Pix”)"
+          valor={brlCompacto(totais.especiais)}
+          detalhe={`${pctEsp === null ? "—" : `${pctEsp}%`} do empenhado · repassadas direto a estados e municípios, sem finalidade definida`}
+        />
+      </div>
+
+      {mandato && (
+        <figure className="flex flex-col gap-2">
+          <figcaption className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+            <span>Por ano do orçamento</span>
+            <span className="flex gap-4" aria-hidden="true">
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 rounded-[3px] bg-anterior" />
+                Empenhado
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 rounded-[3px] bg-primary" />
+                Pago
+              </span>
+            </span>
+          </figcaption>
+          <div
+            className="flex h-[150px] items-end gap-4 border-b border-linha px-1 pt-2.5 sm:h-[190px] sm:gap-8 sm:px-2"
+            role="img"
+            aria-label={`Gráfico de barras: valor empenhado e pago por ano do orçamento, de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`}
+          >
+            {dados.porAno.map((a) => (
+              <div key={a.ano} className="flex h-full flex-1 items-end justify-center gap-1.5">
+                {[
+                  { v: a.empenhado, cor: "bg-anterior" },
+                  { v: a.pago, cor: "bg-primary" },
+                ].map((b, i) => (
+                  <div key={i} className="flex h-full w-[44%] max-w-[52px] flex-col items-center justify-end gap-1">
+                    <span className="text-[11px] text-muted-foreground">{milhoes(b.v)}</span>
+                    <div
+                      className={`w-full rounded-t-[4px] ${b.cor}`}
+                      style={{ height: `${Math.max(1, (b.v / max) * 100)}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-4 px-1 sm:gap-8 sm:px-2" aria-hidden="true">
+            {dados.porAno.map((a) => (
+              <span key={a.ano} className="flex-1 text-center text-xs text-muted-foreground">
+                {a.ano}
+              </span>
+            ))}
+          </div>
+          {/* Tabela fora da tela: `sr-only` direto na tabela não encolhe a largura (estoura 320 px). */}
+          <div className="sr-only">
+            <table>
+              <caption>Empenhado e pago por ano do orçamento</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Ano</th>
+                  <th scope="col">Empenhado</th>
+                  <th scope="col">Pago</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dados.porAno.map((a) => (
+                  <tr key={a.ano}>
+                    <th scope="row">{a.ano}</th>
+                    <td>{brl(a.empenhado)}</td>
+                    <td>{brl(a.pago)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            Valores em milhões de reais.
+            {anos.includes(anoAtual) &&
+              ` Em ${anoAtual} o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.`}
+          </span>
+        </figure>
+      )}
+
+      <div className="flex flex-wrap gap-6">
+        <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-3">
+          <h3 className={H3}>Por área do governo</h3>
+          <Barras
+            itens={dados.areas.map((a) => ({
+              ...a,
+              detalhe: `${brlCompacto(a.valor)} · ${pct(a.valor, totais.empenhado) ?? 0}%`,
+            }))}
+          />
+        </div>
+        <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-3">
+          <h3 className={H3}>Onde o recurso foi aplicado</h3>
+          <Barras itens={dados.locais.map((l) => ({ ...l, detalhe: brlCompacto(l.valor) }))} />
+          {dados.locais.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhuma emenda do período tem local único no Orçamento.</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {totais.multiplo > 0 &&
+              `${brlCompacto(totais.multiplo)} (${pct(totais.multiplo, totais.empenhado)}% do empenhado) estão marcados como “Múltiplo” no Orçamento, sem um local único; veja abaixo quem recebeu os pagamentos. `}
+            “(UF)” e “Nacional” indicam emendas sem município definido.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h3 className={H3}>Quem recebeu os pagamentos</h3>
+        {dados.favorecidos.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum pagamento a favorecido publicado para este período.</p>
+        ) : (
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Quem recebeu os pagamentos">
+            <table className="w-full border-collapse text-[13px]">
+              <thead>
+                <tr className="text-left text-muted-foreground">
+                  <th scope="col" className="py-1.5 pr-2 font-semibold">
+                    Favorecido
+                  </th>
+                  <th scope="col" className="px-2 py-1.5 font-semibold">
+                    CNPJ/CPF
+                  </th>
+                  <th scope="col" className="hidden px-2 py-1.5 font-semibold sm:table-cell">
+                    Tipo
+                  </th>
+                  <th scope="col" className="px-2 py-1.5 font-semibold">
+                    Município
+                  </th>
+                  <th scope="col" className="py-1.5 text-right font-semibold">
+                    Recebido
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {dados.favorecidos.map((f, i) => (
+                  <tr key={i} className="border-t border-borda-suave">
+                    <td className="py-2 pr-2">{f.nome}</td>
+                    <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">{f.doc ?? "—"}</td>
+                    <td className="hidden px-2 py-2 text-muted-foreground sm:table-cell">{f.tipo}</td>
+                    <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{f.municipio ?? "—"}</td>
+                    <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlCompacto(f.valor)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          CPF de pessoa física aparece mascarado, como no Portal da Transparência, e o nome não é exibido.
+        </p>
+      </div>
+    </>
+  );
+}

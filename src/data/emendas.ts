@@ -5,6 +5,8 @@ import { periodoEmendas, rotuloLocalidade, TIPO_TRANSFERENCIA_ESPECIAL, type Per
 import { soDigitos } from "@/lib/privacy";
 
 const LIMITE = 5;
+/** Emenda aplicada em vários lugares: o Orçamento não diz onde. */
+export const LOCALIDADE_MULTIPLA = "MÚLTIPLO";
 
 const ROTULO_TIPO: Record<string, string> = {
   "Pessoa Fisica": "Pessoa física",
@@ -32,7 +34,7 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
   const coleta =
     (await db
       .selectFrom("coleta")
-      .select(["url", "coletado_em"])
+      .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
       .where("fonte", "=", "cgu_emendas")
       .orderBy("coletado_em", "desc")
       .executeTakeFirst()) ?? null;
@@ -48,6 +50,7 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
         sql<string>`coalesce(sum(pago + rp_pagos), 0)`.as("pago"),
         sql<string>`coalesce(sum(empenhado) filter (where tipo = ${TIPO_TRANSFERENCIA_ESPECIAL}), 0)`.as("especiais"),
         sql<string>`count(distinct codigo)`.as("emendas"),
+        sql<string>`coalesce(sum(empenhado) filter (where localidade = ${LOCALIDADE_MULTIPLA}), 0)`.as("multiplo"),
       ])
       .executeTakeFirstOrThrow(),
     base
@@ -64,6 +67,7 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
       .execute(),
     base
       .select(["localidade", sql<string>`sum(empenhado)`.as("valor")])
+      .where("localidade", "<>", LOCALIDADE_MULTIPLA)
       .groupBy("localidade")
       .orderBy(sql`sum(empenhado)`, "desc")
       .orderBy("localidade")
@@ -100,6 +104,7 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
       pago: Number(totais.pago),
       especiais: Number(totais.especiais),
       emendas: Number(totais.emendas),
+      multiplo: Number(totais.multiplo),
     },
     porAno: porAno.map((a) => ({ ano: a.ano, empenhado: Number(a.empenhado), pago: Number(a.pago) })),
     areas: areas.map((a) => ({ nome: a.funcao, valor: Number(a.valor) })),

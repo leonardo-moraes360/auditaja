@@ -43,6 +43,7 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 | Nota "dentro do período" | `data_emissao` entre início e fim da sanção, inclusive; fim nulo = sem prazo | Definição objetiva e verificável | n |
 | Arquivo de sanções do dia | Tenta a data de hoje (fuso de Brasília) e volta um dia por vez até 7 dias atrás (8 datas); só 404 passa para a data anterior | O arquivo leva a data de geração e pode não existir ainda de manhã | n |
 | Rótulo de localidade | "MUNICÍPIO - UF" vira "Município (UF)"; "NOME (UF)" vira "Nome (UF)"; demais em caixa de título | Igual à proposta aprovada | n |
+| Localidade "MÚLTIPLO" | Fica fora da lista de locais e aparece numa frase com valor e percentual | Nas bases de 11/11/2026, 79% do empenhado individual desde 2024 vem como "MÚLTIPLO"; listá-la como local não informa nada | n |
 | Filtro da seção | `?emendas=AAAA` ou `?emendas=mandato`; padrão "mandato"; botões para os dois anos mais recentes com emenda | Proposta aprovada destaca "Mandato todo"; parâmetro próprio para não colidir com `?ano=` da cota | n |
 | Versão da metodologia | Sobe de 1.3 para 1.4 | Nova regra pública de cruzamento | n |
 
@@ -86,14 +87,14 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 
 1. The system SHALL mostrar a aba "Emendas" entre "Gastos da cota" e "Votações", apontando para a seção `#emendas`. <!-- EMDUI-01 -->
 2. The system SHALL mostrar a seção com título de nível 2 "Emendas parlamentares individuais" depois da seção de gastos e antes da de votações. <!-- EMDUI-02 -->
-3. WHILE o período é "mandato" the system SHALL somar todas as emendas gravadas do deputado e marcar o botão "Mandato todo" com `aria-pressed="true"`. <!-- EMDUI-03 -->
+3. WHILE o período é "mandato" the system SHALL somar todas as emendas gravadas do deputado e marcar o link "Mandato todo" com `aria-current="page"`. <!-- EMDUI-03 -->
 4. WHEN o usuário escolhe um ano THEN the system SHALL abrir `?emendas=AAAA#emendas` e somar só as emendas desse "Ano da Emenda". <!-- EMDUI-04 -->
 5. The system SHALL mostrar o indicador "Empenhado" com a soma do empenhado em reais compactos e a quantidade de emendas distintas pelo código. <!-- EMDUI-05 -->
 6. The system SHALL mostrar o indicador "Pago até agora" com a soma de pago e restos a pagar pagos, e o percentual arredondado sobre o empenhado. <!-- EMDUI-06 -->
 7. The system SHALL mostrar o indicador "Transferências especiais (“emendas Pix”)" com a soma do empenhado desse tipo e o percentual sobre o empenhado total. <!-- EMDUI-07 -->
 8. WHILE o período é "mandato" the system SHALL mostrar um gráfico de barras com empenhado e pago por "Ano da Emenda", com rótulo acessível que cita os anos. <!-- EMDUI-08 -->
 9. The system SHALL listar as 5 áreas ("Nome Função") de maior empenhado, com valor e percentual sobre o total. <!-- EMDUI-09 -->
-10. The system SHALL listar os 5 locais de aplicação de maior empenhado, com o rótulo formatado conforme as Assumptions. <!-- EMDUI-10 -->
+10. The system SHALL listar os 5 locais de aplicação de maior empenhado, sem a localidade "MÚLTIPLO", com o rótulo formatado conforme as Assumptions, e informar abaixo o valor e o percentual do empenhado marcado como "Múltiplo". <!-- EMDUI-10 -->
 11. The system SHALL listar até 5 favorecidos de maior valor recebido nas emendas do período, com nome, documento, tipo, município e valor. <!-- EMDUI-11 -->
 12. The system SHALL mostrar no rodapé da seção "Fonte: Portal da Transparência (CGU), Emendas Parlamentares, download em lote" e a data da coleta, com links "Ver no Portal", "Baixar CSV" e "Contestar". <!-- EMDUI-12 -->
 13. IF o deputado não tem emenda gravada THEN the system SHALL mostrar na seção a frase "Nenhuma emenda individual deste deputado foi encontrada no Portal da Transparência a partir do orçamento de 2024." e omitir indicadores, gráfico e listas. <!-- EMDUI-13 -->

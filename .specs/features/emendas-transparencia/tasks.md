@@ -158,8 +158,8 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] e2e: valores do seed, troca de ano, vazio, período inválido, 320 px, axe
-- [ ] Full gate passa
+- [x] e2e: valores do seed, troca de ano, vazio, período inválido, 320 px, axe
+- [x] Full gate passa
 
 **Tests**: e2e
 **Gate**: full

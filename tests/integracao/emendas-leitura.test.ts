@@ -34,7 +34,13 @@ describe("emendasDoParlamentar", () => {
     if (r.vazio) throw new Error("seed sem emendas");
     expect(r.periodo).toBe("mandato");
     expect(r.anos).toEqual([2026, 2025, 2024]);
-    expect(r.totais).toEqual({ empenhado: 10_100_000, pago: 7_000_000, especiais: 2_000_000, emendas: 8 });
+    expect(r.totais).toEqual({
+      empenhado: 11_100_000,
+      pago: 7_000_000,
+      especiais: 2_000_000,
+      emendas: 9,
+      multiplo: 1_000_000,
+    });
   });
 
   it("EMDUI-08: série por ano com empenhado e pago (pago + restos pagos)", async (ctx) => {
@@ -44,16 +50,16 @@ describe("emendasDoParlamentar", () => {
     expect(r.porAno).toEqual([
       { ano: 2024, empenhado: 1_100_000, pago: 1_000_000 },
       { ano: 2025, empenhado: 4_000_000, pago: 3_000_000 },
-      { ano: 2026, empenhado: 5_000_000, pago: 3_000_000 },
+      { ano: 2026, empenhado: 6_000_000, pago: 3_000_000 },
     ]);
   });
 
-  it("EMDUI-09, EMDUI-10: cinco áreas e cinco locais de maior empenhado, com rótulo formatado", async (ctx) => {
+  it("EMDUI-09, EMDUI-10: cinco áreas e cinco locais de maior empenhado (sem MÚLTIPLO), com rótulo formatado", async (ctx) => {
     if (!disponivel) ctx.skip();
     const r = await (await carregar())(SEED.deputada);
     if (r.vazio) throw new Error("seed sem emendas");
     expect(r.areas).toEqual([
-      { nome: "Saúde", valor: 5_000_000 },
+      { nome: "Saúde", valor: 6_000_000 },
       { nome: "Encargos especiais", valor: 2_000_000 },
       { nome: "Urbanismo", valor: 1_200_000 },
       { nome: "Educação", valor: 800_000 },
@@ -116,7 +122,7 @@ describe("emendasDoParlamentar", () => {
     const r = await (await carregar())(SEED.deputada, "2025");
     if (r.vazio) throw new Error("seed sem emendas");
     expect(r.periodo).toBe(2025);
-    expect(r.totais).toEqual({ empenhado: 4_000_000, pago: 3_000_000, especiais: 0, emendas: 3 });
+    expect(r.totais).toEqual({ empenhado: 4_000_000, pago: 3_000_000, especiais: 0, emendas: 3, multiplo: 0 });
     expect(r.favorecidos.map((f) => f.nome)).toEqual([
       "Santa Casa Exemplo",
       "Construtora Ilustrativa Ltda",
