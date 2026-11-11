@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/perfil-senador/design.md`
-**Status**: Done (aguardando verificação)
+**Status**: In Progress (correções da verificação nº 1)
 
 ---
 
@@ -59,6 +59,12 @@ T7 → T8
 
 ```
 T9 → T10 → T11 → T12
+```
+
+### Phase 5: Correções da verificação nº 1
+
+```
+T13 → T14 → T15
 ```
 
 ---
@@ -338,3 +344,72 @@ T9 → T10 → T11 → T12
 
 **Tests**: e2e
 **Gate**: build
+
+---
+
+### T13: Proveniência por resposta, proteção entre Casas e R3 de borda
+
+**What**: Uma linha em `coleta` por resposta do Senado; teste de que as coletas da Câmara não tocam o Senado; nota da CEAPS sem CNPJ válido sem nome nem documento; nascimento lido do detalhe por função testada.
+**Where**: `src/ingest/senado.ts`, `tests/integracao/coleta-senado.test.ts`, `tests/unit/senado-ingest.test.ts`
+**Depends on**: None (fase anterior concluída)
+**Reuses**: `registrarColeta`
+**Requirement**: SCAD-04, SCAD-05, SCEAPS-02, SCEAPS-07
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [x] Mutantes M04 e M11 da verificação nº 1 morrem
+- [x] Gate quick passa
+
+**Tests**: integration
+**Gate**: quick
+
+---
+
+### T14: Paridade com os artboards do Senado
+
+**What**: Corrige os FAIL de paridade da verificação nº 1 que não são divergência intencional: Mandato compacto antes de Bens no celular, 6 votações no resumo, comissão com nome curto e sigla, textos de correção, rótulos curtos do celular, linha do tempo do senador, partido do dia do voto, `{código}` literal, lista no layout do artboard e sem limite de 60 no Senado.
+**Where**: `src/components/perfil/secoes.tsx`, `src/app/parlamentares/[id]/page.tsx`, `src/app/parlamentares/page.tsx`, `src/data/perfil.ts`, `tests/e2e/senador.spec.ts`
+**Depends on**: T13
+**Reuses**: componentes do perfil
+**Requirement**: SUI-04, SUI-06, SUI-07, SVOT-06
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] e2e do senador e do deputado passam
+- [ ] Gate full passa
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T15: Lacunas de teste da verificação nº 1
+
+**What**: Orientação em votação secreta no seed (SALI-02), senador fora de exercício com votos (SPRES-04), senador sem votos nem notas (SERR-03, SERR-04), nota dos 8 anos (SBENS-02) e UF no bloco Mandato (SUI-04), com asserções.
+**Where**: `src/db/seed.ts`, `tests/integracao/perfil-senador.test.ts`, `tests/e2e/senador.spec.ts`
+**Depends on**: T14
+**Reuses**: `src/db/seed.ts`
+**Requirement**: SALI-02, SPRES-04, SERR-03, SERR-04, SBENS-02, SUI-04
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Mutantes M02 e M12 da verificação nº 1 morrem
+- [ ] Gate full passa
+
+**Tests**: e2e
+**Gate**: full

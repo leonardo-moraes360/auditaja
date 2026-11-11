@@ -82,7 +82,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 **Acceptance Criteria**:
 
 1. WHEN a coleta `ceaps {ano}` roda THEN the system SHALL gravar cada nota da API `despesas_ceaps/{ano}` cujo `codSenador` corresponde a um senador cadastrado, com `valor_liquido = valorReembolsado`. <!-- SCEAPS-01 -->
-2. IF o `cpfCnpj` da nota é um CPF THEN the system SHALL gravar o nome "Prestador pessoa física" e, como documento, o CPF mascarado no padrão da Receita quando a fonte traz os 11 dígitos, ou nenhum documento quando a fonte já traz o CPF mascarado ("000.***.***-00"); nunca o CPF completo. <!-- SCEAPS-02 -->
+2. IF o `cpfCnpj` da nota não é um CNPJ válido THEN the system SHALL gravar o nome "Prestador pessoa física" e, como documento, o CPF mascarado no padrão da Receita quando a fonte traz os 11 dígitos, ou nenhum documento nos outros casos (CPF já mascarado pela fonte, como "000.***.***-00", documento malformado ou ausente); nunca o CPF completo. <!-- SCEAPS-02 -->
 3. IF a nota não tem `tipoDespesa` THEN the system SHALL gravá-la com o tipo "Não informado pelo Senado". <!-- SCEAPS-03 -->
 4. IF o `codSenador` não corresponde a senador cadastrado THEN the system SHALL descartar a nota e informar a quantidade descartada no resultado da coleta. <!-- SCEAPS-04 -->
 5. WHEN o perfil de um senador abre THEN the system SHALL exibir o título "Gastos da cota do senador (CEAPS)", o total do ano e a média mensal (total ÷ meses com notas no ano). <!-- SCEAPS-05 -->

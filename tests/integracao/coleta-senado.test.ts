@@ -5,6 +5,8 @@ import { createDb } from "@/db/client";
 import { migrateToLatest } from "@/db/migrate";
 import { SEED, semear } from "@/db/seed";
 import { ColetaBloqueada, ClienteEducado } from "@/ingest/http";
+import yazl from "yazl";
+import { coletarCeap, coletarVotacoes, urlCeap } from "@/ingest/camara";
 import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "@/ingest/senado";
 
 /** SCAD-05/06, SCEAPS-07, SVOT-04 e SERR-01 de ponta a ponta: respostas gravadas → banco real. */
@@ -75,6 +77,35 @@ describe("coleta do Senado", () => {
     );
   });
 
+  it("SCAD-05: uma linha em coleta por resposta baixada, e cada registro aponta para a sua", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const n = async () =>
+      Number((await db.selectFrom("coleta").select(db.fn.countAll<string>().as("n")).executeTakeFirstOrThrow()).n);
+    const antes = await n();
+    const { cli, pedidos } = cliente();
+    await coletarSenadores(db, cli);
+    const dados = pedidos.filter((u) => !u.endsWith("/robots.txt"));
+    expect(dados).toHaveLength(6); // 2 listas + detalhe e comissões dos 2 senadores em exercício
+    expect((await n()) - antes).toBe(dados.length);
+    const urls = await db.selectFrom("coleta").select(["id", "url", "fonte"]).where("id", ">", 0).execute();
+    for (const u of dados) expect(urls.map((c) => c.url)).toContain(u);
+    const com = await db
+      .selectFrom("orgao_membro")
+      .innerJoin("coleta", "coleta.id", "orgao_membro.coleta_id")
+      .select(["coleta.url", "orgao_membro.parlamentar_id"])
+      .where("orgao_membro.parlamentar_id", "=", 10006358)
+      .execute();
+    expect(com.length).toBeGreaterThan(0);
+    expect(com.every((c) => c.url.endsWith("/senador/6358/comissoes.json"))).toBe(true);
+    const sup = await db
+      .selectFrom("suplente")
+      .innerJoin("coleta", "coleta.id", "suplente.coleta_id")
+      .select("coleta.url")
+      .where("suplente.parlamentar_id", "=", 10005672)
+      .execute();
+    expect(sup.every((c) => c.url.endsWith("/senador/lista/atual.json"))).toBe(true);
+  });
+
   it("SCAD-06: coletar de novo não duplica", async (ctx) => {
     if (!disponivel) ctx.skip();
     const antes = [await contar("parlamentar"), await contar("suplente")];
@@ -123,5 +154,54 @@ describe("coleta do Senado", () => {
     );
     await expect(coletarSenadores(db, cliente({ bloquear: /comissoes/ }).cli)).rejects.toBeInstanceOf(ColetaBloqueada);
     expect(await contar("despesa_ceap")).toBe(antes);
+  });
+
+  it("AD-004: as coletas da Câmara não tocam notas nem votações do Senado", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    await semear(db);
+    const senado = async () => ({
+      notas: await db.selectFrom("despesa_ceap").select("id").where("parlamentar_id", "=", SEED.senador).execute(),
+      votacoes: await db
+        .selectFrom("votacao")
+        .select("id")
+        .where("sigla_orgao", "=", "PLEN-SF")
+        .orderBy("id")
+        .execute(),
+      votos: await db.selectFrom("voto").select("votacao_id").where("parlamentar_id", "=", SEED.senador).execute(),
+    });
+    const antes = await senado();
+    expect(antes.notas.length).toBeGreaterThan(0);
+    expect(antes.votacoes.length).toBeGreaterThan(0);
+    const zipCeap = await new Promise<Buffer>((resolve) => {
+      const z = new yazl.ZipFile();
+      z.addBuffer(
+        Buffer.from(
+          '"ideCadastro";"txtDescricao";"txtFornecedor";"txtCNPJCPF";"datEmissao";"vlrDocumento";"vlrGlosa";"vlrLiquido";"numMes";"numAno";"vlrRestituicao";"ideDocumento";"urlDocumento"\n' +
+            `"${SEED.deputada}";"PASSAGEM AÉREA";"Aérea";"12.345.678/0001-90";"2026-03-10T00:00:00";"10";"0";"10";"3";"2026";"";"x1";""`,
+          "utf8",
+        ),
+        "Ano-2026.csv",
+      );
+      z.end();
+      const partes: Buffer[] = [];
+      z.outputStream.on("data", (c: Buffer) => partes.push(c));
+      z.outputStream.on("end", () => resolve(Buffer.concat(partes)));
+    });
+    const cliCamara = new ClienteEducado({
+      intervaloMinMs: 0,
+      dormir: async () => {},
+      log: () => {},
+      fetchImpl: (async (input: URL | string) => {
+        const url = input.toString();
+        if (url.endsWith("/robots.txt")) return new Response("", { status: 404 });
+        if (url === urlCeap(2026)) return new Response(new Uint8Array(zipCeap), { status: 200 });
+        if (url.includes("/arquivos/votacoes")) return new Response("id\n", { status: 200 });
+        return new Response("", { status: 404 });
+      }) as typeof fetch,
+    });
+    expect(await coletarCeap(db, cliCamara, 2026)).toBe(1);
+    await coletarVotacoes(db, cliCamara, 2026);
+    expect(await senado()).toEqual(antes);
+    await semear(db);
   });
 });

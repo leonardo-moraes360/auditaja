@@ -98,6 +98,7 @@ export function montarSenadores(
   atual: ListaAtualApi,
   nascimentos: Map<string, string>,
   coletaId: number,
+  coletaAtualId: number = coletaId,
 ): DadosSenadores {
   const atuais = new Map(
     comoLista(atual.ListaParlamentarEmExercicio.Parlamentares?.Parlamentar).map((s) => [
@@ -149,12 +150,18 @@ export function montarSenadores(
           ordem,
           nome: sup.NomeParlamentar,
           codigo: sup.CodigoParlamentar ? Number(sup.CodigoParlamentar) : null,
-          coleta_id: coletaId,
+          coleta_id: coletaAtualId,
         });
       });
     }
   }
   return { parlamentares, suplentes };
+}
+
+/** Data de nascimento do detalhe do senador (`/senador/{codigo}`), para casar com o TSE (SCAD-04). */
+export function nascimentoDoDetalhe(d: DetalheApi): string | null {
+  const v = d.DetalheParlamentar?.Parlamentar?.DadosBasicosParlamentar?.DataNascimento;
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
 }
 
 /** Comissões atuais do Senado (sem data de fim, Casa SF). */
@@ -190,7 +197,8 @@ export const TIPO_NAO_INFORMADO = "Não informado pelo Senado";
 /**
  * Notas da CEAPS. O Senado publica só o valor reembolsado (sem glosa), que vira o valor líquido.
  * R3: CPF com 11 dígitos sai mascarado; CPF que o Senado já publica mascarado ("000.***.***-00")
- * não é gravado, porque a máscara do Senado e a da Câmara juntas remontariam o número.
+ * não é gravado, porque a máscara do Senado e a da Câmara juntas remontariam o número. Documento
+ * malformado ou ausente é tratado como de pessoa física: sem documento e sem nome.
  */
 export function montarDespesasCeaps(notas: DespesaCeapsApi[], idsValidos: Set<number>, coletaId: number) {
   const linhas: Insertable<DespesaCeapTable>[] = [];
@@ -202,10 +210,13 @@ export function montarDespesasCeaps(notas: DespesaCeapsApi[], idsValidos: Set<nu
       continue;
     }
     const bruto = (n.cpfCnpj ?? "").trim();
-    const cpfMascaradoNaFonte = bruto.includes("*");
-    const { doc, classe } = cpfMascaradoNaFonte
-      ? { doc: null, classe: "terceiro_pf" as const }
-      : documentoPublicavel(bruto);
+    const pub = documentoPublicavel(bruto);
+    // Só CNPJ válido mantém nome e documento. CPF mascarado na fonte, documento malformado ou ausente
+    // podem ser de pessoa física: sem documento e com o rótulo genérico (R3).
+    const { doc, classe } =
+      pub.classe === "pessoa_juridica" || pub.classe === "terceiro_pf"
+        ? pub
+        : { doc: null, classe: "terceiro_pf" as const };
     const valor = Number(n.valorReembolsado) || 0;
     linhas.push({
       parlamentar_id: id,
@@ -338,38 +349,32 @@ export async function coletarSenadores(db: Kysely<Database>, cli: ClienteEducado
   const codigos = comoLista(atual.dado.ListaParlamentarEmExercicio.Parlamentares?.Parlamentar).map(
     (s) => s.IdentificacaoParlamentar.CodigoParlamentar,
   );
-  const nascimentos = new Map<string, string>();
-  const comissoes = new Map<string, ComissoesApi>();
-  const hashes: string[] = [];
-  let bytes = 0;
+  const detalhes: { cod: string; url: string; r: Awaited<ReturnType<typeof baixarJson<DetalheApi>>> }[] = [];
+  const comissoes: { cod: string; url: string; r: Awaited<ReturnType<typeof baixarJson<ComissoesApi>>> }[] = [];
   for (const cod of codigos) {
-    const det = await baixarJson<DetalheApi>(cli, `${API_SENADO}/senador/${cod}.json`);
-    const nasc = det.dado.DetalheParlamentar.Parlamentar.DadosBasicosParlamentar?.DataNascimento;
-    if (nasc) nascimentos.set(cod, nasc);
-    const com = await baixarJson<ComissoesApi>(cli, `${API_SENADO}/senador/${cod}/comissoes.json`);
-    comissoes.set(cod, com.dado);
-    hashes.push(det.sha256, com.sha256);
-    bytes += det.bytes + com.bytes;
+    const urlDet = `${API_SENADO}/senador/${cod}.json`;
+    detalhes.push({ cod, url: urlDet, r: await baixarJson<DetalheApi>(cli, urlDet) });
+    const urlCom = `${API_SENADO}/senador/${cod}/comissoes.json`;
+    comissoes.push({ cod, url: urlCom, r: await baixarJson<ComissoesApi>(cli, urlCom) });
   }
 
-  const cCadastro = await registrarColeta(db, {
-    fonte: "senado_api_senadores",
-    url: urlLeg,
-    sha256: sha256De(leg.sha256 + atual.sha256),
-    bytes: leg.bytes + atual.bytes,
-    licenca: LICENCA_SENADO,
-    observacao: `Inclui ${urlAtual} para a situação em exercício`,
-  });
-  const cDetalhes = await registrarColeta(db, {
-    fonte: "senado_api_detalhes",
-    url: `${API_SENADO}/senador/{codigo}`,
-    sha256: sha256De(hashes.join("\n")),
-    bytes,
-    licenca: LICENCA_SENADO,
-    observacao: `Detalhe e comissões de ${codigos.length} senadores em exercício`,
-  });
-  const m = montarSenadores(leg.dado, atual.dado, nascimentos, cCadastro);
-  const orgaos = [...comissoes].flatMap(([cod, r]) => montarComissoes(cod, r, cDetalhes));
+  // R1/SCAD-05: uma linha em `coleta` por resposta baixada.
+  const registrar = (fonte: string, url: string, r: { sha256: string; bytes: number }) =>
+    registrarColeta(db, { fonte, url, sha256: r.sha256, bytes: r.bytes, licenca: LICENCA_SENADO });
+  const cCadastro = await registrar("senado_api_senadores", urlLeg, leg);
+  const cAtual = await registrar("senado_api_senadores_atual", urlAtual, atual);
+  const nascimentos = new Map<string, string>();
+  for (const d of detalhes) {
+    await registrar("senado_api_detalhe", d.url, d.r);
+    const nasc = nascimentoDoDetalhe(d.r.dado);
+    if (nasc) nascimentos.set(d.cod, nasc);
+  }
+  const orgaos: Insertable<OrgaoMembroTable>[] = [];
+  for (const c of comissoes) {
+    const id = await registrar("senado_api_comissoes", c.url, c.r);
+    orgaos.push(...montarComissoes(c.cod, c.r.dado, id));
+  }
+  const m = montarSenadores(leg.dado, atual.dado, nascimentos, cCadastro, cAtual);
 
   await db.transaction().execute(async (trx) => {
     for (const r of m.parlamentares) {

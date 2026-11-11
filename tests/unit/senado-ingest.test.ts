@@ -3,6 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   montarComissoes,
+  nascimentoDoDetalhe,
+  type DetalheApi,
   montarDespesasCeaps,
   montarOrientacoesSenado,
   montarVotacoesSenado,
@@ -221,5 +223,37 @@ describe("bens do TSE para senadores (SBENS-01)", () => {
     );
     expect(r).toHaveLength(1);
     expect(r[0]).toMatchObject({ parlamentar_id: 10005672, cargo: "SENADOR", sq_candidato: "10001" });
+  });
+});
+
+describe("detalhe do senador (SCAD-04)", () => {
+  it("lê a data de nascimento do detalhe", () => {
+    expect(nascimentoDoDetalhe(fixture<DetalheApi>("senador-5672.json"))).toBe("1976-10-23");
+  });
+  it("ignora nascimento ausente ou fora do formato", () => {
+    expect(nascimentoDoDetalhe({ DetalheParlamentar: { Parlamentar: {} } })).toBeNull();
+    expect(
+      nascimentoDoDetalhe({
+        DetalheParlamentar: { Parlamentar: { DadosBasicosParlamentar: { DataNascimento: "23/10/1976" } } },
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("CEAPS: documento malformado ou ausente (R3)", () => {
+  it("sem CNPJ válido, não grava documento nem nome", () => {
+    const notas = fixture<DespesaCeapsApi[]>("ceaps-2026.json");
+    for (const cpfCnpj of ["1234567890123", null, ""]) {
+      const { linhas } = montarDespesasCeaps(
+        [{ ...notas[0], cpfCnpj, fornecedor: "Pessoa Possivelmente Física" }],
+        new Set([10005672]),
+        1,
+      );
+      expect(linhas[0]).toMatchObject({
+        fornecedor_doc: null,
+        fornecedor_classe: "terceiro_pf",
+        fornecedor_nome: "Prestador pessoa física",
+      });
+    }
   });
 });
