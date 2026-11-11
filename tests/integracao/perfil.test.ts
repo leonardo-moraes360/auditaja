@@ -148,6 +148,8 @@ describe("buscarParlamentares (Postgres)", () => {
     const { buscarParlamentares, ufDaBusca } = await import("@/data/perfil");
     expect((await buscarParlamentares({ q: "sp" })).map((r) => r.id)).toEqual([SEED.deputada]);
     expect((await buscarParlamentares({ q: "RJ" })).map((r) => r.id)).toEqual([SEED.deputado]);
+    // "MA" é UF sem deputado no seed, mas "Maria" casa pelo nome: a UF soma, não substitui.
+    expect((await buscarParlamentares({ q: "ma" })).map((r) => r.id)).toEqual([SEED.deputada]);
     expect(ufDaBusca(" mg ")).toBe("MG");
     expect(ufDaBusca("XX")).toBeNull();
     expect(ufDaBusca("maria")).toBeNull();
