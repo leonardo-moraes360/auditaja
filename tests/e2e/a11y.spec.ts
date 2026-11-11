@@ -13,6 +13,7 @@ const PAGINAS = [
   "/parlamentares/900000001/contestar?enviado=1",
   "/metodologia",
   "/fontes",
+  "/privacidade",
   "/parlamentares/abc",
 ];
 
@@ -39,6 +40,7 @@ test("A11Y-02: perfil não rola na horizontal a 320 px (reflow, 1.4.10)", async 
     "/parlamentares/900000001",
     "/parlamentares",
     "/fontes",
+    "/privacidade",
     "/parlamentares/900000001/contestar",
   ]) {
     await page.goto(caminho);
