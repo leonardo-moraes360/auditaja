@@ -46,8 +46,10 @@ const CPF_NO_TEXTO = /(?<!\d)\d{3}[.\s]?\d{3}[.\s]?\d{3}[-.\s]?\d{2}(?!\d)/g;
 
 /**
  * R3: a razão social de MEI costuma trazer o CPF do dono ("FULANO DE TAL 12345678901").
- * Todo CPF solto no nome sai mascarado no padrão da Receita; CNPJ (14 dígitos) não é afetado.
+ * Todo CPF solto no nome vira "***.***.***-**", sem nenhum dígito: qualquer máscara parcial poderia ser
+ * combinada com outra (a da Receita mostra os 6 do meio; a do Senado, os 3 primeiros e os 2 últimos)
+ * e remontar o número. CNPJ (14 dígitos) não é afetado.
  */
 export function mascararCpfsNoTexto(texto: string): string {
-  return texto.replace(CPF_NO_TEXTO, (m) => mascararCpf(m));
+  return texto.replace(CPF_NO_TEXTO, "***.***.***-**");
 }

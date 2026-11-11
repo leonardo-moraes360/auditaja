@@ -35,12 +35,12 @@ describe("R3: mascaramento", () => {
 describe("CPF dentro do nome do fornecedor (R3, verificação 2 do senador)", () => {
   it("mascara CPF solto na razão social de MEI, com ou sem pontuação", () => {
     expect(nomeFornecedorPublicavel("FULANO DE TAL 12345678901", "pessoa_juridica")).toBe(
-      "FULANO DE TAL ***.456.789-**",
+      "FULANO DE TAL ***.***.***-**",
     );
     expect(nomeFornecedorPublicavel("12.345.678 FULANO DE TAL 123.456.789-01", "pessoa_juridica")).toBe(
-      "12.345.678 FULANO DE TAL ***.456.789-**",
+      "12.345.678 FULANO DE TAL ***.***.***-**",
     );
-    expect(nomeFornecedorPublicavel("Fulano 123 456 789 01 ME", "pessoa_juridica")).toBe("Fulano ***.456.789-** ME");
+    expect(nomeFornecedorPublicavel("Fulano 123 456 789 01 ME", "pessoa_juridica")).toBe("Fulano ***.***.***-** ME");
   });
   it("não mexe em CNPJ nem em números curtos", () => {
     expect(nomeFornecedorPublicavel("Loja 12345678000190", "pessoa_juridica")).toBe("Loja 12345678000190");

@@ -37,10 +37,10 @@
 ## Handoff
 
 - **Feature**: `.specs/features/perfil-senador`
-- **Phase / Task**: Execute concluído (T1–T12); verificação independente
-- **Completed**: T1–T12
+- **Phase / Task**: Execute concluído (T1–T16 e correção da verificação nº 3); aguardando decisões do usuário
+- **Completed**: T1–T16
 - **In-progress** (file:line): none
-- **Next step**: Verifier (validation.md) e paridade com os artboards do Senado no canvas
+- **Next step**: decisões do usuário (divergências I10, I11, I13, I14; emendas de SCEAPS-02 e SVOT-06; nascimento só de quem está em exercício), verificação nº 4 e rebase sobre a main depois do PR #6
 - **Blockers**: none
 - **Uncommitted files**: none
 - **Branch**: feat/senadores (worktree ../auditaja-wt/senadores; bancos auditaja_senado_test e auditaja_senado_dev; e2e com E2E_PORT=3242)

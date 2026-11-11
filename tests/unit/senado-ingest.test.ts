@@ -266,7 +266,7 @@ describe("CEAPS: CPF dentro da razão social (R3)", () => {
       new Set([10005672]),
       1,
     );
-    expect(linhas[0].fornecedor_nome).toBe("FULANO DE TAL ***.456.789-**");
+    expect(linhas[0].fornecedor_nome).toBe("FULANO DE TAL ***.***.***-**");
     expect(JSON.stringify(linhas)).not.toContain("12345678901");
   });
 });

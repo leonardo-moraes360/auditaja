@@ -232,7 +232,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 | SERR-03 | Edge cases | Tasks | Implementing |
 | SERR-04 | Edge cases | Tasks | Implementing |
 
-**Coverage:** 45 total, 45 mapped to tasks (T1–T12), 0 unmapped
+**Coverage:** 45 total, 45 mapped to tasks (T1–T16), 0 unmapped
 
 ---
 

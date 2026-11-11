@@ -233,6 +233,6 @@ describe("CEAP da Câmara: CPF dentro da razão social (R3)", () => {
       new Set([100]),
       1,
     )!;
-    expect(r.fornecedor_nome).toBe("FULANO DE TAL ***.456.789-**");
+    expect(r.fornecedor_nome).toBe("FULANO DE TAL ***.***.***-**");
   });
 });

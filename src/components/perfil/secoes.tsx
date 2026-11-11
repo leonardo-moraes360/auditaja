@@ -559,11 +559,7 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
   const mil = (v: number) => (v >= 10_000 ? `${Math.round(v / 1000).toLocaleString("pt-BR")} mil` : brl(v));
 
   return (
-    <section
-      id="bens"
-      aria-labelledby="bens-titulo"
-      className={`${CARTAO} gap-3 sm:gap-4 sm:p-6 ${perfil.parlamentar.casa === "senado" ? "max-sm:order-2" : ""}`}
-    >
+    <section id="bens" aria-labelledby="bens-titulo" className={`${CARTAO} gap-3 sm:gap-4 sm:p-6`}>
       <h2 id="bens-titulo" className={H2}>
         <Dois curto="Bens declarados ao TSE" longo="Bens declarados à Justiça Eleitoral" />
       </h2>
@@ -811,11 +807,11 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
   const situacao = p.em_exercicio ? "em exercício" : "fora de exercício";
 
   return (
-    <aside className={`flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[1_1_300px] ${senado ? "max-sm:contents" : ""}`}>
+    <aside className={`flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[1_1_300px]`}>
       <section
         id="mandato"
         aria-labelledby="mandato-titulo"
-        className={`${CARTAO} sm:gap-3.5 sm:p-5 ${senado ? "gap-2.5 max-sm:order-1" : "gap-3.5"}`}
+        className={`${CARTAO} sm:gap-3.5 sm:p-5 ${senado ? "gap-2.5" : "gap-3.5"}`}
       >
         <h2 id="mandato-titulo" className={H2_LATERAL}>
           Mandato
@@ -928,11 +924,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         </p>
       </section>
 
-      <section
-        id="fontes"
-        aria-labelledby="fontes-titulo"
-        className={`${CARTAO} gap-3 sm:p-5 ${senado ? "max-sm:order-2" : ""}`}
-      >
+      <section id="fontes" aria-labelledby="fontes-titulo" className={`${CARTAO} gap-3 sm:p-5`}>
         <h2 id="fontes-titulo" className={H2_LATERAL}>
           De onde vêm os dados
         </h2>
@@ -960,7 +952,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
 
       <section
         aria-labelledby="erro-titulo"
-        className={`flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5 ${senado ? "max-sm:order-2" : ""}`}
+        className={`flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5`}
       >
         <h2 id="erro-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
           Encontrou um erro?
