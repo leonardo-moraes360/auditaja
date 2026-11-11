@@ -1,4 +1,115 @@
-# Validation: emendas-transparencia — FAIL ❌
+# Validation: emendas-transparencia — FAIL ❌ (rodada 5)
+
+**Data**: 2026-11-11 (rodada 5, focada nas lacunas de teste da rodada 4)
+**Faixa**: `d12a683..b8aaf47` (1 commit, só `tests/`: `tests/unit/privacy.test.ts`, `tests/unit/privacidade-nomes.test.ts`,
+`tests/e2e/emendas.spec.ts`; +45/−0)
+**Verificador**: sub-agente independente (autor ≠ verificador), só leitura no worktree real; mutações em worktree
+temporário
+
+---
+
+## Veredito da rodada 5
+
+**FAIL**, por um mutante novo que sobrevive (Minor, só teste). Os 7 sobreviventes da rodada 4 em código da feature
+(P03, P04, P06, P07, P10, D01, D06) **morrem todos**, cada um num teste que cita a regra; 4 das 5 variações novas
+morrem; o gate passa inteiro; o banco dev não tem CPF em nenhum dos três campos; a paridade da rodada 4 continua
+valendo (100%), porque nenhum arquivo de `src/` mudou.
+
+O que sobra: **N1**, regex de CPF com o último grupo `\d{1,2}` em vez de `\d{2}` (`src/lib/privacy.ts:45`). Com ele,
+números de **10 dígitos** passam a ser mascarados, contra a docstring "11 dígitos" (`src/lib/privacy.ts:44`) e "CPF
+solto". Nenhum teste tem número de 10 dígitos no nome. Não é vazamento (mascara a mais, não a menos), mas tem efeito
+real: o banco dev tem 5 linhas de `despesa_ceap.fornecedor_nome` com 10 dígitos soltos (ex.: "JD COMUNICACAO,
+MARKETING E MIDIA LTDA 2000004245") que o mutante estragaria. O código real está certo; falta o teste.
+
+G05 (filtro `ano` do `gastos.csv`, anterior à feature e fora do diff) segue vivo, como nas rodadas 3 e 4; não pesa
+no veredito.
+
+## 1. Código de produção e paridade
+
+- `git diff d12a683..HEAD -- src` → 0 linhas; `git diff --stat d12a683..HEAD` → só os 3 arquivos de teste acima.
+- `git show b8aaf47`: só adiciona asserções (nenhuma removida ou afrouxada). `tests/unit/privacy.test.ts:35-49` é o
+  bloco de `feat/senadores`; `tests/unit/privacidade-nomes.test.ts` é novo; `tests/e2e/emendas.spec.ts:300-305`
+  acrescenta o laço de datas inválidas dentro do teste C22 existente.
+- **Paridade**: `paridade/verificacao-4.md` (65 PASS, 0 FAIL, 9 INTENCIONAL = 100%) continua valendo: sem mudança em
+  `src/`, e o e2e que cobre cada item passa (gate abaixo).
+
+## 2. Sensor
+
+Worktree temporário (`git worktree add --detach <scratchpad>/mut HEAD`), `pnpm install --frozen-lockfile --offline`,
+`.env` e `.env.local` copiados, banco `auditaja_emendas_test`. Um mutante por vez, troca exata conferida por script
+(uma ocorrência) e `git checkout --` depois. Mutantes de `privacy.ts`: `vitest run` inteiro. Mutantes da rota:
+`pnpm build` + `playwright test tests/e2e/emendas.spec.ts` (desktop e celular, porta 3282). Em cada morto, conferi no
+log o teste e a asserção que falharam.
+
+### Sobreviventes da rodada 4, refeitos
+
+| # | `arquivo:linha` | Mutação | Resultado (teste que falhou) |
+| --- | --- | --- | --- |
+| P03 | `src/lib/privacy.ts:45` | sem `(?<!\d)` | ✅ morto: `unit/privacidade-nomes.test.ts:13-16` "não mascara CNPJ colado ao nome…" e `unit/privacy.test.ts:45-47` "não mexe em CNPJ…" |
+| P04 | `src/lib/privacy.ts:45` | sem `(?!\d)` | ✅ morto: idem (`privacidade-nomes.test.ts:14`, `privacy.test.ts:46`) |
+| P06 | `src/lib/privacy.ts:45` | separadores só `.` e `-` | ✅ morto: `privacidade-nomes.test.ts:10-11` "mascara CPF escrito com espaços"; `privacy.test.ts:43` |
+| P07 | `src/lib/privacy.ts:45` | sem a flag `g` | ✅ morto: `privacidade-nomes.test.ts:7-8` "mascara todos os CPFs…"; `:18-20` "favorecido de emenda com dois CPFs" |
+| P10 | `src/lib/privacy.ts:41` | `nomeFornecedorPublicavel` sem `mascararCpfsNoTexto` | ✅ morto: `privacy.test.ts:36-43` "mascara CPF solto na razão social de MEI…" |
+| D01 | `src/app/parlamentares/[id]/gastos.csv/route.ts:8` | sem a volta pela data ISO | ✅ morto: `e2e/emendas.spec.ts:301-303` C22, `&de=2026-02-30` → 500 (esperado 200), nos dois projetos |
+| D06 | `…/gastos.csv/route.ts:53` | `de` volta ao regex antigo | ✅ morto: `e2e/emendas.spec.ts:303` C22, `&de=2026-02-30` → 500 |
+| G05 | `…/gastos.csv/route.ts:51` | remove o filtro `ano` | ❌ sobreviveu (anterior à feature, fora do diff) |
+
+### Variações novas
+
+| # | `arquivo:linha` | Mutação | Resultado (teste que falhou) |
+| --- | --- | --- | --- |
+| N1 | `src/lib/privacy.ts:45` | último grupo `\d{2}` → `\d{1,2}` (aceita 10 dígitos) | ❌ **sobreviveu** (172/172 passam) |
+| N2 | `src/lib/privacy.ts:45` | último separador `[-.\s]?` → `[-.]?` | ✅ morto: `privacidade-nomes.test.ts:10-11`; `privacy.test.ts:43` |
+| N3 | `src/lib/privacy.ts:45` | segundo separador `[.\s]?` → `[.]?` | ✅ morto: idem |
+| N4 | `…/gastos.csv/route.ts:8` | compara só o ano (`slice(0, 4)`) na volta pela data ISO | ✅ morto: `e2e/emendas.spec.ts:303` C22, `&de=2026-02-30` → 500 |
+| N5 | `…/gastos.csv/route.ts:8` | `&&` → `\|\|` entre a checagem `NaN` e a volta ISO | ✅ morto: `e2e/emendas.spec.ts:303` C22, `&de=2026-02-30` → 500 |
+
+**Resultado**: 11/12 mortos em código da feature (P03, P04, P06, P07, P10, D01, D06, N2, N3, N4, N5); 1 sobrevivente
+novo (N1); G05 fora do diff. FAIL ❌
+
+**Isolamento**: `git status --porcelain` do worktree real vazio antes e depois do sensor e do gate (só este relatório
+muda). Nenhum `git stash`. Worktree temporário removido (`git worktree remove --force`, `git worktree prune`). Os
+servidores do Playwright (3282 no sensor, 3272 no gate) pararam sozinhos; 3243 é de outra frente e não foi tocado.
+
+## 3. Gate (worktree real, `b8aaf47`)
+
+| Comando | Resultado |
+| --- | --- |
+| `TEST_DATABASE_URL=…/auditaja_emendas_test pnpm test` | 18 arquivos, 172 passaram, 0 falharam (rodada 4: 166; +6 de `b8aaf47`) |
+| `pnpm typecheck`, `pnpm lint`, `pnpm build` | exit 0 |
+| `pnpm test:e2e` (`E2E_PORT=3272`, Chromium 1228) | 132 passaram, 4 pulados (os mesmos de `perfil.spec.ts`), 0 falharam |
+
+O número de e2e não muda porque as asserções novas entraram no teste C22 existente (`emendas.spec.ts:290`).
+
+## 4. Banco dev (`auditaja_emendas_dev`)
+
+Regex de CPF solto (11 dígitos com `.`, espaço ou `-`, sem dígito colado), no Postgres:
+
+| Tabela.coluna | Linhas | Com CPF | Já mascaradas (`***.***.***-**`) |
+| --- | --- | --- | --- |
+| `despesa_ceap.fornecedor_nome` | 123.497 | **0** | 389 |
+| `emenda_favorecido.favorecido_nome` | 114.669 | **0** | 57 |
+| `sancao.nome` | 22 | **0** | 0 |
+
+O achado 1 da rodada 4 (389 CPFs na CEAP) está resolvido: a CEAP foi recoletada e as mesmas 389 linhas agora
+aparecem mascaradas. 5 nomes da CEAP têm 10 dígitos soltos e estão inalterados (é o caso que N1 quebraria).
+
+## Plano de correção (só teste)
+
+### Correção 5: número de 10 dígitos no nome não é CPF (Minor, regra do `mascararCpfsNoTexto`) — N1
+- **Tarefa**: em `tests/unit/privacidade-nomes.test.ts:13`, asserir que "JD COMUNICACAO LTDA 2000004245" (10 dígitos)
+  sai inalterado, e de preferência também "X 123.456.789-0".
+- **Pronto quando**: N1 morre; P03, P04, P06, P07 seguem mortos.
+
+## Resumo da rodada 5
+
+**Geral**: ❌ Not Ready por um teste. Código, paridade (100%), gate e banco dev estão OK.
+**Sensor**: 11/12 mortos; sobrevivente N1 (`src/lib/privacy.ts:45`, 10 dígitos); G05 fora do diff.
+**Gate**: 172 vitest + 132 e2e passaram; typecheck, lint e build ok.
+
+---
+
+# Histórico: rodada 4
 
 **Data**: 2026-11-11 (rodada 4, autorizada pelo usuário depois do limite de 3)
 **Spec**: `.specs/features/emendas-transparencia/spec.md` (43 critérios + 22 Assumptions)
@@ -9,7 +120,7 @@ temporário
 
 ---
 
-## Veredito
+## Veredito (rodada 4)
 
 **FAIL**, só por lacunas de teste. O código de produção está certo em todos os casos que conferi à mão e em dados
 reais. O gate passa, os 43 critérios têm evidência `arquivo:linha` com o valor da spec e a paridade é **100%**
