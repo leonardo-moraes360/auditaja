@@ -101,10 +101,33 @@ aparecem mascaradas. 5 nomes da CEAP têm 10 dígitos soltos e estão inalterado
   sai inalterado, e de preferência também "X 123.456.789-0".
 - **Pronto quando**: N1 morre; P03, P04, P06, P07 seguem mortos.
 
+## Rodada 5, continuação (`fd59ce8`)
+
+`fd59ce8` só acrescenta 2 asserções em `tests/unit/privacidade-nomes.test.ts:17-19` ("MIDIA LTDA 2000004245" e
+"A 123.456.789-0" saem inalterados); `git diff 819217a..HEAD -- src` → 0 linhas. Sensor em worktree temporário novo
+(mesmo método), `vitest run` inteiro:
+
+| # | `arquivo:linha` | Mutação | Resultado (teste que falhou) |
+| --- | --- | --- | --- |
+| N1 | `src/lib/privacy.ts:45` | último grupo `\d{2}` → `\d{1,2}` (aceita 10 dígitos) | ✅ morto: `privacidade-nomes.test.ts:13`, `:18-19` "não mascara CNPJ colado ao nome nem trechos de um número maior" |
+| N6 | `src/lib/privacy.ts:45` | primeiro grupo `\d{3}` → `\d{2,3}` (aceita 10 dígitos) | ✅ morto: idem (`:18-19`) |
+| N7 | `src/lib/privacy.ts:45` | último grupo `\d{2}` → `\d{2,3}` (aceita **12** dígitos soltos) | ❌ **sobreviveu** (172/172 passam) |
+
+N7 mascara um número solto de 12 dígitos ("X 123456789012"), que não é CPF; os casos de `:14-16` têm 13 e 14 dígitos
+e não o pegam. Mesma natureza de N1 (mascara a mais, não vaza). `pnpm test` no worktree real: 18 arquivos, 172
+passaram (as asserções novas entraram num `it` existente). `git status --porcelain` vazio antes e depois; worktree
+temporário removido.
+
+**Veredito mantido: FAIL** (Minor, só teste). G05 segue registrado como anterior à feature e fora do escopo.
+
+### Correção 6: número de 12 dígitos no nome não é CPF — N7
+- **Tarefa**: em `tests/unit/privacidade-nomes.test.ts:13`, asserir que "X 123456789012" sai inalterado.
+- **Pronto quando**: N7 morre; N1 e N6 seguem mortos.
+
 ## Resumo da rodada 5
 
 **Geral**: ❌ Not Ready por um teste. Código, paridade (100%), gate e banco dev estão OK.
-**Sensor**: 11/12 mortos; sobrevivente N1 (`src/lib/privacy.ts:45`, 10 dígitos); G05 fora do diff.
+**Sensor**: N1 morto em `fd59ce8`; N6 morto; sobrevivente N7 (`src/lib/privacy.ts:45`, 12 dígitos); G05 fora do diff.
 **Gate**: 172 vitest + 132 e2e passaram; typecheck, lint e build ok.
 
 ---
