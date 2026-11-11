@@ -16,12 +16,13 @@ describe("mascararCpfsNoTexto", () => {
     expect(mascararCpfsNoTexto("FULANO12345678901ME")).toBe("FULANO***.***.***-**ME");
     expect(mascararCpfsNoTexto("ITEM.12345678901")).toBe("ITEM.***.***.***-**");
   });
-  it("aceita no máximo dois separadores entre os grupos", () => {
-    expect(mascararCpfsNoTexto("A 123 - 456 - 789 - 01")).toBe("A 123 - 456 - 789 - 01");
-    // Três separadores em um único intervalo (primeiro, segundo ou terceiro) já não é CPF.
-    expect(mascararCpfsNoTexto("A 123 - 456.789-01")).toBe("A 123 - 456.789-01");
-    expect(mascararCpfsNoTexto("A 123.456 - 789-01")).toBe("A 123.456 - 789-01");
-    expect(mascararCpfsNoTexto("A 123.456.789 - 01")).toBe("A 123.456.789 - 01");
+  it("na dúvida mascara: até três separadores por intervalo, inclusive barra", () => {
+    expect(mascararCpfsNoTexto("A 123 - 456 - 789 - 01")).toBe("A ***.***.***-**");
+    expect(mascararCpfsNoTexto("A 123/456/789-01")).toBe("A ***.***.***-**");
+    expect(mascararCpfsNoTexto("A 123 -  456.789-01")).toBe("A 123 -  456.789-01");
+  });
+  it("mascara CPF seguido de ponto final", () => {
+    expect(mascararCpfsNoTexto("FULANO 12345678901.")).toBe("FULANO ***.***.***-**.");
   });
   it("mascara CPF escrito com espaços", () => {
     expect(mascararCpfsNoTexto("FULANO 123 456 789 01")).toBe("FULANO ***.***.***-**");
