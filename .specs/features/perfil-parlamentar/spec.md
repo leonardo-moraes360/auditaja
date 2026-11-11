@@ -19,7 +19,6 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | ------- | ------ |
 | Senado Federal (senadores, CEAPS) | Decisão do usuário: MVP só com deputados federais. |
 | Alerta de "padrão atípico" | Exige geolocalização de fornecedores e metodologia publicada (R4); etapa própria. |
-| Comparação com o teto da CEAP por UF | Valores do Ato da Mesa 244/2026 não publicados na página do ato; só entra com valor conferido. |
 | Coleta agendada (cron) | Coletores rodam à mão no MVP. |
 | Painel de moderação dos pedidos de correção | O MVP só registra o pedido. |
 | Contagem de votos recebidos na eleição | Exige arquivo do TSE muito grande; fora do MVP. |
@@ -75,7 +74,8 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 2. WHEN o perfil abre THEN the system SHALL agrupar os gastos por tipo de despesa, em ordem decrescente de valor. <!-- CEAP-02 -->
 3. WHEN o perfil abre THEN the system SHALL listar até 8 maiores fornecedores com documento publicável e total. <!-- CEAP-03 -->
 4. IF o ano pedido em `?ano=` não tem despesas do deputado THEN the system SHALL exibir o ano mais recente que tem. <!-- CEAP-04 -->
-5. WHILE não houver teto verificado para a UF the system SHALL omitir a comparação com o teto. <!-- CEAP-05 -->
+5. WHEN o perfil abre e há teto conferido para a UF e o ano THEN the system SHALL exibir o total do ano como % do teto acumulado (teto mensal × meses até o último mês com dados). <!-- CEAP-05 -->
+6. WHILE não houver teto conferido para a UF e o ano the system SHALL omitir a comparação com o teto. <!-- CEAP-06 -->
 
 **Independent Test**: no seed, o total de 2026 é R$ 44.100 e o maior tipo é "Divulgação da atividade parlamentar".
 
@@ -238,6 +238,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | CEAP-03 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-04 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-05 | P1: Ver gastos da cota | Tasks | Verified |
+| CEAP-06 | P1: Ver gastos da cota | Tasks | Implemented |
 | VOTO-01 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-02 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-03 | P1: Ver votações e alinhamento | Tasks | Verified |

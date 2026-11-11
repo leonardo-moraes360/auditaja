@@ -136,7 +136,7 @@ Todo registro de dado coletado tem `coleta_id` com FK para `coleta`.
 | ------- | -------------------- | ------ | ---------- |
 | Composição de bloco é a atual | `src/data/perfil.ts` (`blocosDaLegislatura`) | Partido que mudou de bloco no ano recebe a orientação do bloco atual | API `/blocos` não traz datas; limitação descrita na metodologia 1.2 |
 | Lista fixa de siglas completas | `src/lib/metrics.ts:31` | Partido novo pode virar prefixo de outro | Revisar a lista a cada legislatura; teste cobre PSD × PSDB |
-| Teto da CEAP não verificado | `src/data/teto-ceap.ts:19` | Indicador sem % do teto | Só liga com valor conferido (`verificado: true`) |
+| Teto da CEAP só para 2026 | `src/data/teto-ceap.ts:58` | Outros anos sem % do teto; jan–fev/2026 usam o valor novo (teto um pouco acima do real) | Valores da página oficial da Câmara, conferidos em 11/11/2026; aproximação descrita na metodologia |
 | Perfil inexistente responde 200 | `src/app/loading.tsx:1` | Crawlers podem indexar | `noindex` emitido pelo Next; avaliar `instant = false` no perfil |
 | Arquivos inteiros em memória | `src/ingest/http.ts:110` | CEAP anual ~47 MB descompactado | Aceitável no MVP; trocar por stream se crescer |
 | Busca por `like` com `unaccent` sem índice funcional | `src/data/perfil.ts:40` | Lento com muitos registros | ~650 linhas hoje; criar índice se crescer |
