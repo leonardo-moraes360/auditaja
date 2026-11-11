@@ -3,6 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   montarComissoes,
+  montarDespesasCeaps,
+  type DespesaCeapsApi,
   montarSenadores,
   type ComissoesApi,
   type ListaAtualApi,
@@ -84,5 +86,50 @@ describe("comissões do senador", () => {
     const r = montarComissoes("5672", fixture<ComissoesApi>("comissoes-5672.json"), 3);
     expect(r.map((c) => c.sigla_orgao)).toEqual(["CAE", "CE"]);
     expect(r.every((c) => c.parlamentar_id === 10005672 && c.data_fim === null)).toBe(true);
+  });
+});
+
+describe("CEAPS (SCEAPS-01..04)", () => {
+  const notas = fixture<DespesaCeapsApi[]>("ceaps-2026.json");
+  const ids = new Set([10005672, 10006304]);
+
+  it("grava o valor reembolsado como valor líquido, sem glosa", () => {
+    const { linhas } = montarDespesasCeaps(notas, ids, 9);
+    const n = linhas.find((l) => l.ide_documento === "2279778")!;
+    expect(n.parlamentar_id).toBe(10005672);
+    expect(n.valor_liquido).toBe(462.18);
+    expect(n.valor_documento).toBe(462.18);
+    expect(n.valor_glosa).toBe(0);
+    expect(n.fornecedor_doc).toBe("66.970.229/0132-26");
+    expect(n.fornecedor_classe).toBe("pessoa_juridica");
+    expect(n.data_emissao).toBe("2026-01-20");
+    expect(n.coleta_id).toBe(9);
+  });
+
+  it("CPF mascarado pela fonte: sem documento e sem nome", () => {
+    const { linhas } = montarDespesasCeaps(notas, ids, 9);
+    const pf = linhas.find((l) => l.ide_documento === "2280723")!;
+    expect(pf.fornecedor_doc).toBeNull();
+    expect(pf.fornecedor_classe).toBe("terceiro_pf");
+    expect(pf.fornecedor_nome).toBe("Prestador pessoa física");
+    expect(JSON.stringify(linhas)).not.toContain("PESSOA FICTICIA");
+  });
+
+  it("CPF completo sai mascarado no padrão da Receita", () => {
+    const { linhas } = montarDespesasCeaps([{ ...notas[0], cpfCnpj: "123.456.789-01", fornecedor: "Fulano" }], ids, 1);
+    expect(linhas[0].fornecedor_doc).toBe("***.456.789-**");
+    expect(linhas[0].fornecedor_nome).toBe("Prestador pessoa física");
+    expect(JSON.stringify(linhas)).not.toContain("12345678901");
+  });
+
+  it("nota sem tipo vira 'Não informado pelo Senado'", () => {
+    const { linhas } = montarDespesasCeaps(notas, ids, 9);
+    expect(linhas.find((l) => l.ide_documento === "2280723")!.tipo_despesa).toBe("Não informado pelo Senado");
+  });
+
+  it("descarta e conta notas de senador não cadastrado", () => {
+    const r = montarDespesasCeaps(notas, new Set([10005672]), 9);
+    expect(r.linhas).toHaveLength(3);
+    expect(r.descartadas).toBe(1);
   });
 });

@@ -149,8 +149,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] CPF de fornecedor nunca sai completo
-- [ ] Gate quick passa
+- [x] CPF de fornecedor nunca sai completo
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick

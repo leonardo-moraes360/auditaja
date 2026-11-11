@@ -12,7 +12,6 @@ import type {
 } from "@/db/types";
 import { numeroBr } from "@/lib/format";
 import { partidosDoNomeDoBloco } from "@/lib/metrics";
-import { DESLOCAMENTO_SENADO } from "@/lib/senado";
 import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
 import { extrairDoZip, idDaUri, lerCsv, type Linha } from "./arquivos";
 import { inserirEmBlocos, LICENCA_CAMARA, registrarColeta } from "./coleta";
@@ -325,7 +324,12 @@ export async function coletarCeap(db: Kysely<Database>, cli: ClienteEducado, ano
     return r ? [r] : [];
   });
   await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("despesa_ceap").where("ano", "=", ano).execute();
+    // Só as notas de deputados: a CEAPS dos senadores vem de outra coleta.
+    await trx
+      .deleteFrom("despesa_ceap")
+      .where("ano", "=", ano)
+      .where("parlamentar_id", "in", trx.selectFrom("parlamentar").select("id").where("casa", "=", "camara"))
+      .execute();
     await inserirEmBlocos(trx, "despesa_ceap", rows);
   });
   return rows.length;
@@ -388,7 +392,10 @@ export async function coletarOrgaos(db: Kysely<Database>, cli: ClienteEducado) {
   const rows = montarOrgaos(lerCsv(arq.buf), await idsParlamentares(db), coletaId);
   await db.transaction().execute(async (trx) => {
     // Só os órgãos de deputados: as comissões dos senadores vêm de outra coleta.
-    await trx.deleteFrom("orgao_membro").where("parlamentar_id", "<", DESLOCAMENTO_SENADO).execute();
+    await trx
+      .deleteFrom("orgao_membro")
+      .where("parlamentar_id", "in", trx.selectFrom("parlamentar").select("id").where("casa", "=", "camara"))
+      .execute();
     await inserirEmBlocos(trx, "orgao_membro", rows);
   });
   return rows.length;

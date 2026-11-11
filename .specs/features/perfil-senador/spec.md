@@ -34,6 +34,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 | --------------------- | -------------- | --------- | ---------- |
 | Identificador do senador | `parlamentar.id = 10_000_000 + CodigoParlamentar`; a URL segue `/parlamentares/{id}` | Ids da Câmara vão até ~240 mil; o deslocamento evita colisão sem mudar rota, feed, CSV e contestação | n |
 | Universo de senadores | Lista da 57ª legislatura (`/senador/lista/legislatura/57`); `em_exercicio` vem de `/senador/lista/atual` | Mantém gastos e votos de quem exerceu e saiu, como suplentes | n |
+| CPF já mascarado pelo Senado ("000.***.***-00") | Não gravar documento | O Senado mostra os 3 primeiros e os 2 últimos dígitos e a Câmara, os 6 do meio: guardar os dois deixaria remontar o CPF de quem fornece às duas Casas (R3) | n |
 | Valor da cota | `valorReembolsado` da CEAPS vira `valor_documento` e `valor_liquido`; glosa e restituição = 0 | O Senado não publica glosa | n |
 | Teto da cota | Não exibir comparação com teto para senadores | Sem valor conferido (CEAP-06 já cobre "sem teto") | n |
 | Identidade da votação | `votacao.id = "SF-" + sequencialVotacao` | O mesmo número aparece em `/votacao` e em `/orientacaoBancada`, o que permite o casamento | n |
@@ -81,7 +82,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 **Acceptance Criteria**:
 
 1. WHEN a coleta `ceaps {ano}` roda THEN the system SHALL gravar cada nota da API `despesas_ceaps/{ano}` cujo `codSenador` corresponde a um senador cadastrado, com `valor_liquido = valorReembolsado`. <!-- SCEAPS-01 -->
-2. IF o `cpfCnpj` da nota é um CPF THEN the system SHALL gravar o documento mascarado e o nome "Prestador pessoa física", nunca o CPF completo. <!-- SCEAPS-02 -->
+2. IF o `cpfCnpj` da nota é um CPF THEN the system SHALL gravar o nome "Prestador pessoa física" e, como documento, o CPF mascarado no padrão da Receita quando a fonte traz os 11 dígitos, ou nenhum documento quando a fonte já traz o CPF mascarado ("000.***.***-00"); nunca o CPF completo. <!-- SCEAPS-02 -->
 3. IF a nota não tem `tipoDespesa` THEN the system SHALL gravá-la com o tipo "Não informado pelo Senado". <!-- SCEAPS-03 -->
 4. IF o `codSenador` não corresponde a senador cadastrado THEN the system SHALL descartar a nota e informar a quantidade descartada no resultado da coleta. <!-- SCEAPS-04 -->
 5. WHEN o perfil de um senador abre THEN the system SHALL exibir o título "Gastos da cota do senador (CEAPS)", o total do ano e a média mensal (total ÷ meses com notas no ano). <!-- SCEAPS-05 -->

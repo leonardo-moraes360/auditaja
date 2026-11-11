@@ -11,7 +11,6 @@ export const ORGAO_PLENARIO_SENADO = "PLEN-SF";
 
 export const idSenador = (codigo: number | string) => DESLOCAMENTO_SENADO + Number(codigo);
 export const codigoSenado = (id: number) => id - DESLOCAMENTO_SENADO;
-export const ehIdSenador = (id: number) => id > DESLOCAMENTO_SENADO;
 
 /** A API do Senado devolve objeto único em vez de lista quando há um só item. */
 export function comoLista<T>(v: T | T[] | null | undefined): T[] {

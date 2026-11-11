@@ -1,6 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
-import type { Database, OrgaoMembroTable, ParlamentarTable, SuplenteTable } from "@/db/types";
-import { comoLista, DESLOCAMENTO_SENADO, idSenador, sexoDoSenado } from "@/lib/senado";
+import type { Database, DespesaCeapTable, OrgaoMembroTable, ParlamentarTable, SuplenteTable } from "@/db/types";
+import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
+import { comoLista, idSenador, sexoDoSenado } from "@/lib/senado";
 import { inserirEmBlocos, LICENCA_SENADO, registrarColeta } from "./coleta";
 import { sha256De, type ClienteEducado } from "./http";
 
@@ -162,9 +163,66 @@ export function montarComissoes(codigo: string, r: ComissoesApi, coletaId: numbe
     }));
 }
 
+export type DespesaCeapsApi = {
+  id: number;
+  ano: number;
+  mes: number;
+  codSenador: number;
+  tipoDespesa: string | null;
+  cpfCnpj: string | null;
+  fornecedor: string | null;
+  documento: string | null;
+  data: string | null;
+  valorReembolsado: number;
+};
+
+export const TIPO_NAO_INFORMADO = "Não informado pelo Senado";
+
+/**
+ * Notas da CEAPS. O Senado publica só o valor reembolsado (sem glosa), que vira o valor líquido.
+ * R3: CPF com 11 dígitos sai mascarado; CPF que o Senado já publica mascarado ("000.***.***-00")
+ * não é gravado, porque a máscara do Senado e a da Câmara juntas remontariam o número.
+ */
+export function montarDespesasCeaps(notas: DespesaCeapsApi[], idsValidos: Set<number>, coletaId: number) {
+  const linhas: Insertable<DespesaCeapTable>[] = [];
+  let descartadas = 0;
+  for (const n of notas) {
+    const id = idSenador(n.codSenador);
+    if (!idsValidos.has(id)) {
+      descartadas++;
+      continue;
+    }
+    const bruto = (n.cpfCnpj ?? "").trim();
+    const cpfMascaradoNaFonte = bruto.includes("*");
+    const { doc, classe } = cpfMascaradoNaFonte
+      ? { doc: null, classe: "terceiro_pf" as const }
+      : documentoPublicavel(bruto);
+    const valor = Number(n.valorReembolsado) || 0;
+    linhas.push({
+      parlamentar_id: id,
+      ano: n.ano,
+      mes: n.mes,
+      tipo_despesa: n.tipoDespesa?.trim() || TIPO_NAO_INFORMADO,
+      fornecedor_nome: nomeFornecedorPublicavel(n.fornecedor ?? "", classe) || "Não informado",
+      fornecedor_doc: doc,
+      fornecedor_classe: classe,
+      data_emissao: n.data ? n.data.slice(0, 10) : null,
+      valor_documento: valor,
+      valor_glosa: 0,
+      valor_liquido: valor,
+      valor_restituicao: 0,
+      url_documento: null,
+      ide_documento: String(n.id),
+      coleta_id: coletaId,
+    });
+  }
+  return { linhas, descartadas };
+}
+
 // ---------- carregadores (rede + banco) ----------
 
-const ehSenado = DESLOCAMENTO_SENADO;
+/** Subconsulta dos ids de senadores: as trocas da coleta do Senado nunca tocam deputados. */
+const doSenado = (q: Kysely<Database>) => q.selectFrom("parlamentar").select("id").where("casa", "=", "senado");
 
 /** Baixa JSON e devolve também o texto, para o hash da proveniência (R1). */
 async function baixarJson<T>(cli: ClienteEducado, url: string) {
@@ -225,10 +283,30 @@ export async function coletarSenadores(db: Kysely<Database>, cli: ClienteEducado
         .onConflict((oc) => oc.column("id").doUpdateSet(r))
         .execute();
     }
-    await trx.deleteFrom("suplente").where("parlamentar_id", ">", ehSenado).execute();
+    await trx.deleteFrom("suplente").where("parlamentar_id", "in", doSenado(trx)).execute();
     await inserirEmBlocos(trx, "suplente", m.suplentes);
-    await trx.deleteFrom("orgao_membro").where("parlamentar_id", ">", ehSenado).execute();
+    await trx.deleteFrom("orgao_membro").where("parlamentar_id", "in", doSenado(trx)).execute();
     await inserirEmBlocos(trx, "orgao_membro", orgaos);
   });
   return { senadores: m.parlamentares.length, suplentes: m.suplentes.length, comissoes: orgaos.length };
+}
+
+/** CEAPS de um ano: uma requisição à API administrativa do Senado. Só troca as notas de senadores. */
+export async function coletarCeaps(db: Kysely<Database>, cli: ClienteEducado, ano: number) {
+  const url = urlCeaps(ano);
+  const r = await baixarJson<DespesaCeapsApi[]>(cli, url);
+  const coletaId = await registrarColeta(db, {
+    fonte: "senado_ceaps",
+    url,
+    sha256: r.sha256,
+    bytes: r.bytes,
+    licenca: LICENCA_SENADO,
+  });
+  const ids = await db.selectFrom("parlamentar").select("id").where("casa", "=", "senado").execute();
+  const m = montarDespesasCeaps(r.dado, new Set(ids.map((i) => i.id)), coletaId);
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("despesa_ceap").where("ano", "=", ano).where("parlamentar_id", "in", doSenado(trx)).execute();
+    await inserirEmBlocos(trx, "despesa_ceap", m.linhas);
+  });
+  return { notas: m.linhas.length, descartadas: m.descartadas };
 }
