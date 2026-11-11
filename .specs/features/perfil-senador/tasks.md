@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/perfil-senador/design.md`
-**Status**: Draft
+**Status**: In Progress
 
 ---
 
@@ -80,8 +80,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] Migração sobe e desce no banco de teste
-- [ ] `pnpm typecheck` sem erros
+- [x] Migração sobe e desce no banco de teste
+- [x] `pnpm typecheck` sem erros
 
 **Tests**: none
 **Gate**: build

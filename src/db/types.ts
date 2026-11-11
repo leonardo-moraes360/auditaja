@@ -26,7 +26,7 @@ export interface ColetaTable {
 
 export interface ParlamentarTable {
   id: number;
-  casa: "camara";
+  casa: "camara" | "senado";
   nome: string;
   nome_civil: string | null;
   sigla_partido: string | null;
@@ -38,7 +38,22 @@ export interface ParlamentarTable {
   sexo: string | null;
   id_legislatura: number | null;
   em_exercicio: boolean;
+  /** Senado: início e fim do mandato de 8 anos; null para deputados. */
+  mandato_inicio: ColumnType<string | null, string | null | undefined, string | null>;
+  mandato_fim: ColumnType<string | null, string | null | undefined, string | null>;
+  /** Senado: "Titular", "1º Suplente"… */
+  participacao: ColumnType<string | null, string | null | undefined, string | null>;
+  /** Senado: nome do bloco parlamentar. */
+  bloco: ColumnType<string | null, string | null | undefined, string | null>;
   source_url: string;
+  coleta_id: number;
+}
+
+export interface SuplenteTable {
+  parlamentar_id: number;
+  ordem: number;
+  nome: string;
+  codigo: number | null;
   coleta_id: number;
 }
 
@@ -85,6 +100,8 @@ export interface VotacaoTable {
   votos_sim: number;
   votos_nao: number;
   votos_outros: number;
+  /** Senado: votação secreta (o voto individual não é publicado). */
+  secreta: ColumnType<boolean, boolean | undefined, boolean>;
   source_url: string;
   coleta_id: number;
 }
@@ -156,6 +173,7 @@ export interface Database {
   coleta: ColetaTable;
   parlamentar: ParlamentarTable;
   orgao_membro: OrgaoMembroTable;
+  suplente: SuplenteTable;
   despesa_ceap: DespesaCeapTable;
   votacao: VotacaoTable;
   voto: VotoTable;
