@@ -100,4 +100,15 @@
   html {
     @apply font-sans;
   }
+  /* Botões: cursor de clique; desabilitados mostram que não dá para clicar. */
+  button,
+  [role="button"],
+  input:is([type="button"], [type="submit"], [type="reset"]) {
+    @apply cursor-pointer;
+  }
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  input:is([type="button"], [type="submit"], [type="reset"]):disabled {
+    @apply cursor-not-allowed;
+  }
 }

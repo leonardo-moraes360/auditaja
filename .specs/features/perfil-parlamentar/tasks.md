@@ -83,7 +83,7 @@ T15 → T16 → T17 → T18 → T19
 ### Phase 7: Pedidos da revisão e correções da verificação nº 2
 
 ```
-T20 → T21 → T22
+T20 → T21 → T22 → T23
 ```
 
 ---
@@ -476,6 +476,23 @@ T20 → T21 → T22
 
 ---
 
+### T23: Cursor dos botões
+
+**What**: Regra global em `@layer base`: `cursor-pointer` em botões e `cursor-not-allowed` quando desabilitados; o `Button` do shadcn troca `pointer-events-none` por `cursor-not-allowed`.
+**Where**: `src/app/globals.css`
+**Depends on**: T22
+**Requirement**: UI-04
+
+**Done when**:
+
+- [x] E2E confere `cursor` `pointer` e, com `disabled`, `not-allowed`
+- [x] Gate full passa
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -487,7 +504,7 @@ Phase 3:  T6 ------→ T7 ------→ T8
 Phase 4:  T9 ------→ T10 -----→ T11 -----→ T12
 Phase 5:  T13 -----→ T14
 Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
-Phase 7:  T20 -----→ T21 -----→ T22
+Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23
 ```
 
 ---
@@ -518,6 +535,7 @@ Phase 7:  T20 -----→ T21 -----→ T22
 | T20 | 4 páginas, mesmo padrão | ⚠️ Coeso: mudança mecânica idêntica |
 | T21 | 1 função + 2 placeholders | ✅ Granular |
 | T22 | testes em 6 arquivos + seed | ⚠️ Coeso: lista de lacunas de uma verificação |
+| T23 | 1 regra CSS (+ variante do Button) | ✅ Granular |
 
 ## Diagram-Definition Cross-Check
 
@@ -545,6 +563,7 @@ Phase 7:  T20 -----→ T21 -----→ T22
 | T20 | None | - | ✅ Match |
 | T21 | T20 | T20 → T21 | ✅ Match |
 | T22 | T21 | T21 → T22 | ✅ Match |
+| T23 | T22 | T22 → T23 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -572,3 +591,4 @@ Phase 7:  T20 -----→ T21 -----→ T22
 | T20 | Páginas | e2e | unit (estrutura) + e2e existentes | ✅ OK |
 | T21 | Camada de leitura + páginas | integration | integration + e2e | ✅ OK |
 | T22 | Testes | e2e | e2e + integration + unit | ✅ OK |
+| T23 | Estilo global | e2e | e2e | ✅ OK |

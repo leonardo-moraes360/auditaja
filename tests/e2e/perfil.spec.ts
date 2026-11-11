@@ -137,3 +137,11 @@ for (const caminho of ["/parlamentares/1", "/parlamentares/abc"]) {
     expect(await page.locator('meta[name="robots"][content*="noindex"]').count()).toBeGreaterThan(0);
   });
 }
+
+test("UI-04: botões usam cursor de clique e, desabilitados, cursor de bloqueio", async ({ page }) => {
+  await page.goto("/parlamentares");
+  const botao = page.getByRole("button", { name: "Filtrar" });
+  await expect(botao).toHaveCSS("cursor", "pointer");
+  await botao.evaluate((b) => b.setAttribute("disabled", ""));
+  await expect(botao).toHaveCSS("cursor", "not-allowed");
+});

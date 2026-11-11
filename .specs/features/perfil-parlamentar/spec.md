@@ -151,6 +151,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 3. WHILE o usuário está em uma página do menu principal (ou abaixo dela) the system SHALL marcar o item com `aria-current="page"` e sublinhado de 2 px na cor da marca `#1F4FD1`. <!-- NAV-01 -->
 4. The system SHALL exibir o rodapé com fundo `#15181E`, como no protótipo. <!-- UI-02 -->
 5. The system SHALL renderizar de forma estática a casca das páginas com dados (o componente da página não é assíncrono) e carregar a parte com dados dentro de `<Suspense>`, para a navegação ser instantânea. <!-- UI-03 -->
+6. The system SHALL exibir `cursor: pointer` em todo botão e `cursor: not-allowed` quando o botão estiver desabilitado. <!-- UI-04 -->
 
 **Independent Test**: no seed, a lateral mostra "Comissão de Finanças e Tributação"; o item "Parlamentares" fica sublinhado no perfil; `/metodologia` mostra "Versão 1.0.".
 
@@ -239,6 +240,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | METOD-01 | P2: Contexto do mandato | Tasks | Verified |
 | NAV-01 | P2: Contexto do mandato | Tasks | Verified |
 | UI-02 | P2: Contexto do mandato | Tasks | Verified |
+| UI-04 | P2: Contexto do mandato | Tasks | Implementing |
 | UI-03 | P2: Contexto do mandato | Tasks | Needs Fix |
 | CORR-01 | P1: Pedir correção | Tasks | Verified |
 | CORR-02 | P1: Pedir correção | Tasks | Verified |
@@ -257,7 +259,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | EDGE-04 | Edge cases | Tasks | Verified |
 | EDGE-05 | Edge cases | Tasks | Verified |
 
-**Coverage:** 49 total, 49 mapped to tasks, 0 unmapped.
+**Coverage:** 50 total, 50 mapped to tasks, 0 unmapped.
 
 ---
 
