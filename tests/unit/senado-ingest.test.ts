@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest";
 import {
   montarComissoes,
   montarDespesasCeaps,
+  montarOrientacoesSenado,
+  montarVotacoesSenado,
+  type OrientacoesSenadoApi,
+  type VotacaoSenadoApi,
   type DespesaCeapsApi,
   montarSenadores,
   type ComissoesApi,
@@ -131,5 +135,57 @@ describe("CEAPS (SCEAPS-01..04)", () => {
     const r = montarDespesasCeaps(notas, new Set([10005672]), 9);
     expect(r.linhas).toHaveLength(3);
     expect(r.descartadas).toBe(1);
+  });
+});
+
+describe("votações do Senado (SVOT-01..03)", () => {
+  const lista = fixture<VotacaoSenadoApi[]>("votacao-2026.json");
+  const ids = new Set([10005672, 10006358]);
+  const m = montarVotacoesSenado(lista, ids, 4);
+
+  it("grava a votação com id SF-sequencial, órgão PLEN-SF, matéria, ementa, data e resultado", () => {
+    const pec = m.votacoes.find((v) => v.id === "SF-4420")!;
+    expect(pec).toMatchObject({
+      sigla_orgao: "PLEN-SF",
+      data: "2026-10-14",
+      proposicao_sigla: "PEC 221/2019",
+      aprovacao: 1,
+      secreta: false,
+      coleta_id: 4,
+    });
+    expect(pec.proposicao_ementa).toMatch(/^Altera o art\. 7º da Constituição/);
+    expect(pec.source_url).toBe("https://www25.senado.leg.br/web/atividade/materias/-/materia/174386");
+  });
+
+  it("marca a votação secreta e usa os totais publicados", () => {
+    const msf = m.votacoes.find((v) => v.id === "SF-4367")!;
+    expect(msf.secreta).toBe(true);
+    expect([msf.votos_sim, msf.votos_nao, msf.votos_outros]).toEqual([43, 2, 1]);
+  });
+
+  it("grava o voto e o partido do dia só de senadores cadastrados", () => {
+    expect(m.votos.every((v) => ids.has(v.parlamentar_id as number))).toBe(true);
+    const alan = m.votos.find((v) => v.votacao_id === "SF-4420" && v.parlamentar_id === 10005672)!;
+    expect(alan.voto).toBe("Sim");
+    expect(alan.sigla_partido).toBe("REPUBLICANOS");
+    expect(m.votos.find((v) => v.votacao_id === "SF-4367" && v.parlamentar_id === 10005672)!.voto).toBe("P-NRV");
+  });
+
+  it("liga as orientações pelo sequencial e normaliza os valores", () => {
+    const o = montarOrientacoesSenado(
+      fixture<OrientacoesSenadoApi>("orientacao-20261014.json"),
+      new Set(m.votacoes.map((v) => v.id)),
+      5,
+    );
+    const de = (b: string) => o.find((x) => x.sigla_bancada === b)?.orientacao;
+    expect(o.every((x) => x.votacao_id === "SF-4420")).toBe(true);
+    expect(de("PT")).toBe("Sim");
+    expect(de("Progressistas")).toBe("Liberado");
+    expect(de("PL")).toBe("Liberado");
+    expect(o).toHaveLength(13);
+  });
+
+  it("ignora orientação de votação não coletada", () => {
+    expect(montarOrientacoesSenado(fixture("orientacao-20261014.json"), new Set(["SF-1"]), 5)).toEqual([]);
   });
 });

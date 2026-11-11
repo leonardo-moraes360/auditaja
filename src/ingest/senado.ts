@@ -1,7 +1,16 @@
 import type { Insertable, Kysely } from "kysely";
-import type { Database, DespesaCeapTable, OrgaoMembroTable, ParlamentarTable, SuplenteTable } from "@/db/types";
+import type {
+  Database,
+  DespesaCeapTable,
+  OrgaoMembroTable,
+  OrientacaoTable,
+  ParlamentarTable,
+  SuplenteTable,
+  VotacaoTable,
+  VotoTable,
+} from "@/db/types";
 import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
-import { comoLista, idSenador, sexoDoSenado } from "@/lib/senado";
+import { comoLista, idSenador, normalizarOrientacao, ORGAO_PLENARIO_SENADO, sexoDoSenado } from "@/lib/senado";
 import { inserirEmBlocos, LICENCA_SENADO, registrarColeta } from "./coleta";
 import { sha256De, type ClienteEducado } from "./http";
 
@@ -219,6 +228,93 @@ export function montarDespesasCeaps(notas: DespesaCeapsApi[], idsValidos: Set<nu
   return { linhas, descartadas };
 }
 
+export type VotacaoSenadoApi = {
+  codigoMateria: number | null;
+  dataSessao: string;
+  descricaoVotacao: string | null;
+  ementa: string | null;
+  identificacao: string | null;
+  resultadoVotacao: string | null;
+  sequencialVotacao: number;
+  votacaoSecreta: string | null;
+  totalVotosSim: number | null;
+  totalVotosNao: number | null;
+  totalVotosAbstencao: number | null;
+  votos: { codigoParlamentar: number; siglaPartidoParlamentar: string | null; siglaVotoParlamentar: string }[];
+};
+export type OrientacoesSenadoApi = {
+  votacoes: { sequencialVotacao: number; orientacoesLideranca?: { partido: string; voto: string }[] }[];
+};
+
+export const idVotacaoSenado = (sequencial: number | string) => `SF-${sequencial}`;
+export const urlMateriaSenado = (codigo: number) =>
+  `https://www25.senado.leg.br/web/atividade/materias/-/materia/${codigo}`;
+
+/** Votações nominais do Plenário do Senado com o voto de cada senador cadastrado (SVOT-01, SVOT-02). */
+export function montarVotacoesSenado(lista: VotacaoSenadoApi[], idsValidos: Set<number>, coletaId: number) {
+  const votacoes = new Map<string, Insertable<VotacaoTable>>();
+  const votos: Insertable<VotoTable>[] = [];
+  for (const v of lista) {
+    const id = idVotacaoSenado(v.sequencialVotacao);
+    if (votacoes.has(id)) continue;
+    const conta = (s: string) => v.votos.filter((x) => x.siglaVotoParlamentar === s).length;
+    const sim = v.totalVotosSim ?? conta("Sim");
+    const nao = v.totalVotosNao ?? conta("Não");
+    const abst = v.totalVotosAbstencao ?? conta("Abstenção");
+    votacoes.set(id, {
+      id,
+      data: v.dataSessao.slice(0, 10),
+      sigla_orgao: ORGAO_PLENARIO_SENADO,
+      descricao: v.descricaoVotacao?.trim() || v.identificacao || id,
+      proposicao: v.identificacao,
+      proposicao_sigla: v.identificacao,
+      proposicao_ementa: v.ementa?.trim() || null,
+      aprovacao: v.resultadoVotacao === "A" ? 1 : v.resultadoVotacao === "R" ? 0 : null,
+      votos_sim: sim,
+      votos_nao: nao,
+      votos_outros: abst,
+      secreta: v.votacaoSecreta === "S",
+      source_url: v.codigoMateria ? urlMateriaSenado(v.codigoMateria) : `${API_SENADO}/votacao`,
+      coleta_id: coletaId,
+    });
+    for (const x of v.votos) {
+      const pid = idSenador(x.codigoParlamentar);
+      if (!idsValidos.has(pid)) continue;
+      votos.push({
+        votacao_id: id,
+        parlamentar_id: pid,
+        voto: x.siglaVotoParlamentar,
+        sigla_partido: x.siglaPartidoParlamentar || null,
+        coleta_id: coletaId,
+      });
+    }
+  }
+  return { votacoes: [...votacoes.values()], votos };
+}
+
+/** Orientações das lideranças, ligadas à votação pelo sequencial (SVOT-03). */
+export function montarOrientacoesSenado(
+  r: OrientacoesSenadoApi,
+  idsVotacoes: Set<string>,
+  coletaId: number,
+): Insertable<OrientacaoTable>[] {
+  const linhas = new Map<string, Insertable<OrientacaoTable>>();
+  for (const v of r.votacoes ?? []) {
+    const id = idVotacaoSenado(v.sequencialVotacao);
+    if (!idsVotacoes.has(id)) continue;
+    for (const o of v.orientacoesLideranca ?? []) {
+      if (!o.partido || !o.voto) continue;
+      linhas.set(`${id}|${o.partido}`, {
+        votacao_id: id,
+        sigla_bancada: o.partido.trim(),
+        orientacao: normalizarOrientacao(o.voto),
+        coleta_id: coletaId,
+      });
+    }
+  }
+  return [...linhas.values()];
+}
+
 // ---------- carregadores (rede + banco) ----------
 
 /** Subconsulta dos ids de senadores: as trocas da coleta do Senado nunca tocam deputados. */
@@ -309,4 +405,45 @@ export async function coletarCeaps(db: Kysely<Database>, cli: ClienteEducado, an
     await inserirEmBlocos(trx, "despesa_ceap", m.linhas);
   });
   return { notas: m.linhas.length, descartadas: m.descartadas };
+}
+
+const aaaammdd = (d: string) => d.replaceAll("-", "");
+
+/** Votações do ano: uma requisição de votações (com os votos) e uma de orientações (SVOT-04). */
+export async function coletarVotacoesSenado(db: Kysely<Database>, cli: ClienteEducado, ano: number) {
+  const ini = `${ano}-01-01`;
+  const fim = `${ano}-12-31`;
+  const urlVot = `${API_SENADO}/votacao?dataInicio=${ini}&dataFim=${fim}`;
+  const urlOri = `${API_SENADO}/plenario/votacao/orientacaoBancada/${aaaammdd(ini)}/${aaaammdd(fim)}.json`;
+  const vot = await baixarJson<VotacaoSenadoApi[]>(cli, urlVot);
+  const ori = await baixarJson<OrientacoesSenadoApi>(cli, urlOri);
+  const cVot = await registrarColeta(db, {
+    fonte: "senado_votacoes",
+    url: urlVot,
+    sha256: vot.sha256,
+    bytes: vot.bytes,
+    licenca: LICENCA_SENADO,
+  });
+  const cOri = await registrarColeta(db, {
+    fonte: "senado_orientacoes",
+    url: urlOri,
+    sha256: ori.sha256,
+    bytes: ori.bytes,
+    licenca: LICENCA_SENADO,
+  });
+  const ids = await db.selectFrom("parlamentar").select("id").where("casa", "=", "senado").execute();
+  const m = montarVotacoesSenado(comoLista(vot.dado), new Set(ids.map((i) => i.id)), cVot);
+  const orientacoes = montarOrientacoesSenado(ori.dado, new Set(m.votacoes.map((v) => v.id)), cOri);
+  await db.transaction().execute(async (trx) => {
+    await trx
+      .deleteFrom("votacao")
+      .where("sigla_orgao", "=", ORGAO_PLENARIO_SENADO)
+      .where("data", ">=", ini)
+      .where("data", "<=", fim)
+      .execute();
+    await inserirEmBlocos(trx, "votacao", m.votacoes);
+    await inserirEmBlocos(trx, "voto", m.votos);
+    await inserirEmBlocos(trx, "orientacao", orientacoes);
+  });
+  return { votacoes: m.votacoes.length, votos: m.votos.length, orientacoes: orientacoes.length };
 }

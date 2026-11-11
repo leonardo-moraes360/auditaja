@@ -1,0 +1,110 @@
+[
+  {
+    "ano": 2019,
+    "casaSessao": "SF",
+    "codigoMateria": 174386,
+    "codigoSessao": 591267,
+    "codigoSessaoLegislativa": 874,
+    "codigoSessaoVotacao": 7106,
+    "dataApresentacao": "2026-05-28",
+    "dataSessao": "2026-10-14",
+    "descricaoVotacao": "Votação nominal da Proposta de Emenda à Constituição nº 221, de 2019, em primeiro turno.",
+    "ementa": "Altera o art. 7º da Constituição Federal para reduzir a duração máxima semanal do trabalho e prever 2 (dois) dias de repouso semanal remunerado, sem qualquer redução salarial; e dá outras providências.",
+    "idProcesso": 9056435,
+    "identificacao": "PEC 221/2019",
+    "numero": "221",
+    "numeroSessao": 134,
+    "resultadoVotacao": "A",
+    "sequencialSessao": 1,
+    "sequencialVotacao": 4420,
+    "sigla": "PEC",
+    "siglaTipoSessao": "DOR",
+    "totalVotosAbstencao": null,
+    "totalVotosNao": null,
+    "totalVotosSim": null,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 5672,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alan Rick",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "REPUBLICANOS",
+        "siglaUFParlamentar": "AC",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 6358,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Ana Paula Lobato",
+        "sexoParlamentar": "F",
+        "siglaPartidoParlamentar": "PSB",
+        "siglaUFParlamentar": "MA",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 5982,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alessandro Vieira",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SE",
+        "siglaVotoParlamentar": "Sim"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoMateria": 169690,
+    "codigoSessao": 550736,
+    "codigoSessaoLegislativa": 874,
+    "codigoSessaoVotacao": 7053,
+    "dataApresentacao": "2025-07-22",
+    "dataSessao": "2026-04-08",
+    "descricaoVotacao": "Votação nominal da Mensagem nº 46, de 2025 - Manuel Adalberto Carlos Montenegro Lopes da Cruz (Jamaica).",
+    "ementa": "Submete à apreciação do Senado Federal, de conformidade com o art. 52, inciso IV, da Constituição Federal, e com o art. 39, combinado com o art. 46, da Lei nº 11.440, de 2006, o nome do Senhor MANUEL ADALBERTO CARLOS MONTENEGRO LOPES DA CRUZ, Ministro de Segunda Classe do Quadro Especial da Carreira de Diplomata do Ministério das Relações Exteriores, para exercer o cargo de Embaixador do Brasil na Jamaica.",
+    "idProcesso": 8871339,
+    "identificacao": "MSF 46/2025",
+    "numero": "46",
+    "numeroSessao": 30,
+    "resultadoVotacao": "A",
+    "sequencialSessao": 2,
+    "sequencialVotacao": 4367,
+    "sigla": "MSF",
+    "siglaTipoSessao": "DOR",
+    "totalVotosAbstencao": 1,
+    "totalVotosNao": 2,
+    "totalVotosSim": 43,
+    "votacaoSecreta": "S",
+    "votos": [
+      {
+        "codigoParlamentar": 5672,
+        "descricaoVotoParlamentar": "Presente – Não registrou voto",
+        "nomeParlamentar": "Alan Rick",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "REPUBLICANOS",
+        "siglaUFParlamentar": "AC",
+        "siglaVotoParlamentar": "P-NRV"
+      },
+      {
+        "codigoParlamentar": 6358,
+        "descricaoVotoParlamentar": "Presente – Não registrou voto",
+        "nomeParlamentar": "Ana Paula Lobato",
+        "sexoParlamentar": "F",
+        "siglaPartidoParlamentar": "PSB",
+        "siglaUFParlamentar": "MA",
+        "siglaVotoParlamentar": "P-NRV"
+      },
+      {
+        "codigoParlamentar": 5982,
+        "descricaoVotoParlamentar": "Presente – Não registrou voto",
+        "nomeParlamentar": "Alessandro Vieira",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SE",
+        "siglaVotoParlamentar": "P-NRV"
+      }
+    ]
+  }
+]

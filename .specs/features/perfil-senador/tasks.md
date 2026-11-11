@@ -172,8 +172,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] PEC 221/2019 de 14/10/2026 vira `SF-4420` com orientação do PT
-- [ ] Gate quick passa
+- [x] PEC 221/2019 de 14/10/2026 vira `SF-4420` com orientação do PT
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick

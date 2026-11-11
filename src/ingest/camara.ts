@@ -12,6 +12,7 @@ import type {
 } from "@/db/types";
 import { numeroBr } from "@/lib/format";
 import { partidosDoNomeDoBloco } from "@/lib/metrics";
+import { ORGAO_PLENARIO_SENADO } from "@/lib/senado";
 import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
 import { extrairDoZip, idDaUri, lerCsv, type Linha } from "./arquivos";
 import { inserirEmBlocos, LICENCA_CAMARA, registrarColeta } from "./coleta";
@@ -371,7 +372,13 @@ export async function coletarVotacoes(db: Kysely<Database>, cli: ClienteEducado,
     lerCsv(arquivos.objetos.buf),
   );
   await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("votacao").where("data", ">=", `${ano}-01-01`).where("data", "<=", `${ano}-12-31`).execute();
+    // As votações do Senado (PLEN-SF) vêm de outra coleta e não são tocadas aqui.
+    await trx
+      .deleteFrom("votacao")
+      .where("sigla_orgao", "<>", ORGAO_PLENARIO_SENADO)
+      .where("data", ">=", `${ano}-01-01`)
+      .where("data", "<=", `${ano}-12-31`)
+      .execute();
     await inserirEmBlocos(trx, "votacao", m.votacoes);
     await inserirEmBlocos(trx, "voto", m.votos);
     await inserirEmBlocos(trx, "orientacao", m.orientacoes);
