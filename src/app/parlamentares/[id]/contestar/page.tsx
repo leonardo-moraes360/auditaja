@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
@@ -8,7 +10,21 @@ import { FormularioPedido } from "./formulario";
 
 export const metadata: Metadata = { title: "Pedir correção" };
 
-export default async function Contestar({ params, searchParams }: PageProps<"/parlamentares/[id]/contestar">) {
+export default function Contestar({ params, searchParams }: PageProps<"/parlamentares/[id]/contestar">) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-2xl px-4 py-8">
+          <Esqueleto linhas={3} />
+        </div>
+      }
+    >
+      <ConteudoContestar params={params} searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function ConteudoContestar({ params, searchParams }: PageProps<"/parlamentares/[id]/contestar">) {
   await connection();
   const raw = (await params).id;
   if (!/^\d{1,9}$/.test(raw)) notFound();

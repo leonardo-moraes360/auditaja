@@ -1,11 +1,29 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Suspense } from "react";
+import { Esqueleto } from "@/components/esqueleto";
 import { getDb } from "@/db/client";
 import { dataHoraBr } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Fontes e licenças" };
 
-export default async function Fontes() {
+export default function Fontes() {
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <h1 className="font-heading text-3xl font-bold">Fontes e licenças</h1>
+      <p className="max-w-3xl text-muted-foreground">
+        Coletas mais recentes. Os coletores se identificam pelo User-Agent, respeitam o robots.txt de cada site e fazem
+        no máximo uma requisição por segundo. O hash SHA-256 permite conferir que o arquivo é o mesmo publicado pelo
+        órgão.
+      </p>
+      <Suspense fallback={<Esqueleto linhas={4} />}>
+        <TabelaColetas />
+      </Suspense>
+    </div>
+  );
+}
+
+async function TabelaColetas() {
   await connection();
   const coletas = await getDb()
     .selectFrom("coleta")
@@ -15,13 +33,7 @@ export default async function Fontes() {
     .execute();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <h1 className="font-heading text-3xl font-bold">Fontes e licenças</h1>
-      <p className="max-w-3xl text-muted-foreground">
-        Coletas mais recentes. Os coletores se identificam pelo User-Agent, respeitam o robots.txt de cada site e fazem
-        no máximo uma requisição por segundo. O hash SHA-256 permite conferir que o arquivo é o mesmo publicado pelo
-        órgão.
-      </p>
+    <>
       {coletas.length === 0 ? (
         <p>Nenhuma coleta registrada ainda.</p>
       ) : (
@@ -62,6 +74,6 @@ export default async function Fontes() {
           </table>
         </div>
       )}
-    </div>
+    </>
   );
 }

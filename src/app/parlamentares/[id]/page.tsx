@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { perfilParlamentar } from "@/data/perfil";
@@ -19,7 +21,21 @@ export async function generateMetadata({ params }: PageProps<"/parlamentares/[id
   return { title: perfil ? perfil.parlamentar.nome : "Parlamentar não encontrado" };
 }
 
-export default async function PaginaPerfil({ params, searchParams }: PageProps<"/parlamentares/[id]">) {
+export default function PaginaPerfil({ params, searchParams }: PageProps<"/parlamentares/[id]">) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-4 py-6">
+          <Esqueleto linhas={5} />
+        </div>
+      }
+    >
+      <Perfil params={params} searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">) {
   await connection();
   const id = idValido((await params).id);
   if (!id) notFound();
