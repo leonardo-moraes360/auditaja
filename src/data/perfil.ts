@@ -7,6 +7,7 @@ import {
   orientacaoDoPartido,
   ORGAO_PLENARIO,
   tetoAcumulado,
+  type BlocoParlamentar,
   type VotoComOrientacoes,
 } from "@/lib/metrics";
 
@@ -78,6 +79,25 @@ async function coletasRecentes() {
     .orderBy("coletado_em", "desc")
     .execute();
   return Object.fromEntries(rows.map((r) => [r.fonte, r]));
+}
+
+/** Blocos (não federações) da legislatura com a composição completa, para orientações de bloco. */
+async function blocosDaLegislatura(idLegislatura: number | null): Promise<BlocoParlamentar[]> {
+  if (!idLegislatura) return [];
+  const rows = await getDb()
+    .selectFrom("bloco")
+    .innerJoin("bloco_partido", "bloco_partido.bloco_id", "bloco.id")
+    .select(["bloco.id", "bloco.nome", "bloco_partido.sigla_partido"])
+    .where("bloco.id_legislatura", "=", idLegislatura)
+    .where("bloco.federacao", "=", false)
+    .execute();
+  const porId = new Map<number, BlocoParlamentar>();
+  for (const r of rows) {
+    const b = porId.get(r.id) ?? { nome: r.nome, partidos: [] };
+    b.partidos.push(r.sigla_partido);
+    porId.set(r.id, b);
+  }
+  return [...porId.values()];
 }
 
 export type Coleta = Awaited<ReturnType<typeof coletasRecentes>>[string];
@@ -172,6 +192,7 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
     .orderBy("id", "desc")
     .execute();
   const idsPlen = plenario.map((v) => v.id);
+  const blocos = await blocosDaLegislatura(p.id_legislatura);
   const [votos, orientacoes] = idsPlen.length
     ? await Promise.all([
         db
@@ -200,15 +221,18 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
     orientacoes: orientPorVotacao.get(v.votacao_id) ?? [],
   }));
   const presentes = votos.filter((v) => v.voto !== "").length;
-  const alin = alinhamento(comOrientacao);
+  const alin = alinhamento(comOrientacao, blocos);
 
   const listaVotacoes = plenario.map((v) => {
     const voto = votoPorVotacao.get(v.id);
-    const orient = orientacaoDoPartido({
-      voto: voto?.voto ?? "",
-      siglaPartido: voto?.sigla_partido ?? p.sigla_partido,
-      orientacoes: orientPorVotacao.get(v.id) ?? [],
-    });
+    const orient = orientacaoDoPartido(
+      {
+        voto: voto?.voto ?? "",
+        siglaPartido: voto?.sigla_partido ?? p.sigla_partido,
+        orientacoes: orientPorVotacao.get(v.id) ?? [],
+      },
+      blocos,
+    );
     return {
       ...v,
       voto: voto?.voto || null,

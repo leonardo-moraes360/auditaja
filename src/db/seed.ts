@@ -22,6 +22,8 @@ export async function semear(db: Kysely<Database>) {
       "votacao",
       "despesa_ceap",
       "orgao_membro",
+      "bloco_partido",
+      "bloco",
       "parlamentar",
       "coleta",
     ] as const) {
