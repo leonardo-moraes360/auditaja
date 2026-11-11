@@ -42,6 +42,10 @@ describe("CPF dentro do nome do fornecedor (R3, verificação 2 do senador)", ()
     );
     expect(nomeFornecedorPublicavel("Fulano 123 456 789 01 ME", "pessoa_juridica")).toBe("Fulano ***.***.***-** ME");
   });
+  it("mascara CPF com hífens ou separadores duplos", () => {
+    expect(nomeFornecedorPublicavel("Fulano 123-456-789-01", "pessoa_juridica")).toBe("Fulano ***.***.***-**");
+    expect(nomeFornecedorPublicavel("Fulano 123  456.789-01", "pessoa_juridica")).toBe("Fulano ***.***.***-**");
+  });
   it("não mexe em CNPJ nem em números curtos", () => {
     expect(nomeFornecedorPublicavel("Loja 12345678000190", "pessoa_juridica")).toBe("Loja 12345678000190");
     expect(nomeFornecedorPublicavel("Posto 24 Horas Ltda", "pessoa_juridica")).toBe("Posto 24 Horas Ltda");
