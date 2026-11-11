@@ -237,3 +237,26 @@ test("SUI-11: metodologia descreve as regras do Senado e fontes lista o Senado",
   await page.goto("/fontes");
   await expect(page.getByText(/^Senado Federal: API de Dados Abertos/)).toBeVisible();
 });
+
+test("SERR-03/04: senadora sem votações nem notas mostra os estados vazios", async ({ page, isMobile }) => {
+  await page.goto("/parlamentares/10009004");
+  const ind = page.locator("[data-indicador]");
+  await expect(
+    ind
+      .getByText(isMobile ? "sem votações" : "Sem votações registradas em 2026", { exact: true })
+      .filter({ visible: true }),
+  ).toBeVisible();
+  await expect(page.locator("section#gastos").getByText(/^Nenhuma despesa publicada para \d{4}\.$/)).toBeVisible();
+  await expect(page.getByText(/^Não encontramos declarações de bens associadas a este senador/)).toBeVisible();
+});
+
+test("SBENS-02: bens do senador com a nota dos 8 anos", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a explicação dos bens só aparece no desktop, como no perfil do deputado");
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const bens = page.locator("section#bens");
+  await expect(
+    bens.getByText(/Senadores disputam eleição a cada 8 anos, por isso os anos podem ser mais espaçados\./),
+  ).toBeVisible();
+  await expect(bens.getByText("Eleição 2022").filter({ visible: true })).toBeVisible();
+  await expect(bens.getByText(/^R\$\s2,68 mi$/).filter({ visible: true })).toBeVisible();
+});

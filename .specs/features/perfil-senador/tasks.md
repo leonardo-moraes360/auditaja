@@ -408,8 +408,8 @@ T13 → T14 → T15
 
 **Done when**:
 
-- [ ] Mutantes M02 e M12 da verificação nº 1 morrem
-- [ ] Gate full passa
+- [x] Mutantes M02 e M12 da verificação nº 1 morrem
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full

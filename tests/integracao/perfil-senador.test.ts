@@ -196,3 +196,28 @@ describe("lista do Senado inteira (meta: 81 senadores)", () => {
     await semear(db);
   });
 });
+
+describe("lacunas da verificação nº 1", () => {
+  it("SALI-02: orientação em votação secreta não entra no alinhamento nem na lista", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const p = await perfil();
+    // O seed tem orientação "Sim" do PFX na votação secreta SF-seed-3, com voto "Votou".
+    expect(p.votacoes.alinhamento).toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 });
+    expect(p.votacoes.lista.find((v) => v.id === "SF-seed-3")!.orientacao).toBeNull();
+  });
+
+  it("SPRES-04: senador fora de exercício com votos não entra na média", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const afastado = await perfil(SEED.senadorAfastado);
+    expect(afastado.votacoes.presentes).toBe(5);
+    expect(afastado.votacoes.mediaPresenca).toBe(88); // (75 + 100) ÷ 2, sem os 100% do afastado
+  });
+
+  it("SERR-03/04: senadora sem votos nem notas", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const p = await perfil(SEED.senadoraSemRegistro);
+    expect(p.votacoes.denominadorPresenca).toBe(0);
+    expect(p.ceap.documentos).toBe(0);
+    expect(p.ceap.mediaMensal).toBeNull();
+  });
+});

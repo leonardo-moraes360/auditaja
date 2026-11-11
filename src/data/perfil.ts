@@ -345,9 +345,12 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
    * Senado: vale só a orientação da liderança do próprio partido (SALI-01). Ela entra na lista
    * com a sigla do partido como bancada, e o resto das regras de alinhamento é o mesmo da Câmara.
    */
+  const secretas = new Set(plenario.filter((v) => v.secreta).map((v) => v.id));
   const orientacoesDoVoto = (votacaoId: string, siglaPartido: string | null) => {
     const todas = orientPorVotacao.get(votacaoId) ?? [];
     if (!senado) return todas;
+    // Votação secreta: o voto não é público, então nenhuma orientação se aplica (SALI-02, SVOT-06).
+    if (secretas.has(votacaoId)) return [];
     const o = orientacaoDaLideranca(siglaPartido, todas);
     return o && siglaPartido ? [{ siglaBancada: siglaPartido, orientacao: o }] : [];
   };

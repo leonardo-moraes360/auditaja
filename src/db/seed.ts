@@ -12,6 +12,10 @@ export const SEED = {
   /** Senadores fictícios: código do Senado 9001 e 9002 (id = 10.000.000 + código). */
   senador: 10009001,
   senadora: 10009002,
+  /** Fora de exercício, com votos: não entra na média do Senado. */
+  senadorAfastado: 10009003,
+  /** Fora de exercício, sem votos nem notas: estados vazios. */
+  senadoraSemRegistro: 10009004,
 };
 
 export async function semear(db: Kysely<Database>) {
@@ -370,6 +374,34 @@ export async function semear(db: Kysely<Database>) {
           bloco: null,
           source_url: "https://legis.senado.leg.br/dadosabertos/senador/9002",
         },
+        {
+          ...senador,
+          id: SEED.senadorAfastado,
+          em_exercicio: false,
+          nome: "Rui Afastado",
+          nome_civil: "RUI AFASTADO SOUZA",
+          sigla_partido: null,
+          sigla_uf: "RS",
+          data_nascimento: null,
+          sexo: "M",
+          participacao: "Titular",
+          bloco: null,
+          source_url: "https://legis.senado.leg.br/dadosabertos/senador/9003",
+        },
+        {
+          ...senador,
+          id: SEED.senadoraSemRegistro,
+          em_exercicio: false,
+          nome: "Célia Sem Registro",
+          nome_civil: "CÉLIA SEM REGISTRO COSTA",
+          sigla_partido: null,
+          sigla_uf: "PI",
+          data_nascimento: null,
+          sexo: "F",
+          participacao: "2º Suplente",
+          bloco: null,
+          source_url: "https://legis.senado.leg.br/dadosabertos/senador/9004",
+        },
       ])
       .execute();
     await trx
@@ -503,6 +535,10 @@ export async function semear(db: Kysely<Database>) {
         votoSen("SF-seed-3", SEED.senadora, "Votou", "PFY"),
         votoSen("SF-seed-4", SEED.senadora, "Sim", "PFY"),
         votoSen("SF-seed-5", SEED.senadora, "Não", "PFY"),
+        // Fora de exercício: 100% de presença que não pode puxar a média do Senado (SPRES-04).
+        ...["SF-seed-1", "SF-seed-2", "SF-seed-3", "SF-seed-4", "SF-seed-5"].map((v) =>
+          votoSen(v, SEED.senadorAfastado, v === "SF-seed-3" ? "Votou" : "Sim", "PFZ"),
+        ),
       ])
       .execute();
     await trx
@@ -512,6 +548,8 @@ export async function semear(db: Kysely<Database>) {
         { votacao_id: "SF-seed-2", sigla_bancada: "PFX", orientacao: "Sim", coleta_id: cOriSen },
         { votacao_id: "SF-seed-2", sigla_bancada: "Governo", orientacao: "Não", coleta_id: cOriSen },
         { votacao_id: "SF-seed-4", sigla_bancada: "PFX", orientacao: "Liberado", coleta_id: cOriSen },
+        // Orientação numa votação secreta: o voto "Votou" nunca entra no alinhamento (SALI-02).
+        { votacao_id: "SF-seed-3", sigla_bancada: "PFX", orientacao: "Sim", coleta_id: cOriSen },
       ])
       .execute();
     await trx
