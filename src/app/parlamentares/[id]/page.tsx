@@ -11,7 +11,20 @@ import { Indicador, Lateral, SecaoBens, SecaoGastos, SecaoVotacoes } from "@/com
 import { BOTAO_PRIMARIO, BOTAO_SECUNDARIO } from "@/components/perfil/estilos";
 import { brl, brlCompacto, MESES, pct } from "@/lib/format";
 import { variacaoNominal } from "@/lib/metrics";
-import { cargoDeputado, partidoPorExtenso, periodoLegislatura, ufPorExtenso } from "@/lib/rotulos";
+import {
+  cargoParlamentar,
+  partidoPorExtenso,
+  periodoLegislatura,
+  periodoMandato,
+  seloParticipacao,
+  ufPorExtenso,
+} from "@/lib/rotulos";
+
+/** Média mensal curta do celular, como no protótipo: 31.840 → "R$ 31,8 mil". */
+function milPorMes(v: number) {
+  if (v < 1000) return brl(v);
+  return `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mil`;
+}
 
 function idValido(s: string) {
   return /^\d{1,9}$/.test(s) ? Number(s) : null;
@@ -66,10 +79,22 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const ultimoBens = anosBens.at(-1);
   const anteriorBens = anosBens.at(-2);
   const varBens = anteriorBens ? variacaoNominal(totalBens(anteriorBens), totalBens(ultimoBens!)) : null;
-  const presenca = pct(votacoes.presentes, votacoes.totalPlenario);
+  const senado = p.casa === "senado";
+  const presenca = pct(votacoes.presentes, votacoes.denominadorPresenca);
   const alin = pct(votacoes.alinhamento.iguais, votacoes.alinhamento.comparaveis);
   const pctTeto = ceap.tetoAcumulado ? pct(ceap.totalAno, ceap.tetoAcumulado) : null;
-  const periodoLeg = periodoLegislatura(p.id_legislatura);
+  const mandatoSen = senado ? periodoMandato(p.mandato_inicio, p.mandato_fim) : null;
+  const periodoLeg = senado ? (mandatoSen?.anos ?? null) : periodoLegislatura(p.id_legislatura);
+  const participacao = senado ? seloParticipacao(p.participacao) : null;
+  const cargo = cargoParlamentar(p.casa, p.sexo);
+  const casaNome = senado ? "Senado Federal" : "Câmara dos Deputados";
+  const mesesComNotas = ceap.porMes.map((m) => m.mes);
+  const faixaMeses =
+    mesesComNotas.length > 0
+      ? `${MESES[Math.min(...mesesComNotas) - 1].slice(0, 3).toLowerCase()} a ${MESES[Math.max(...mesesComNotas) - 1]
+          .slice(0, 3)
+          .toLowerCase()}`
+      : "";
   const situacao = p.em_exercicio ? "Em exercício" : "Fora de exercício";
   const partido = partidoPorExtenso(p.sigla_partido);
   const cota = perfil.mandato ? "no mandato" : `em ${perfil.ano}`;
@@ -83,8 +108,8 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
           Parlamentares
         </Link>{" "}
         /{" "}
-        <Link href="/parlamentares" className="text-muted-foreground">
-          Câmara dos Deputados
+        <Link href={senado ? "/parlamentares?casa=senado" : "/parlamentares"} className="text-muted-foreground">
+          {casaNome}
         </Link>{" "}
         / <span className="text-foreground">{p.nome}</span>
       </nav>
@@ -101,9 +126,20 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
                 {situacao}
                 {periodoLeg && <span className="sm:hidden"> · {periodoLeg}</span>}
               </span>
-              {p.id_legislatura && (
+              {senado
+                ? mandatoSen && (
+                    <span className="hidden rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-texto-2 sm:inline">
+                      Mandato {mandatoSen.anos} · {mandatoSen.legislaturas}
+                    </span>
+                  )
+                : p.id_legislatura && (
+                    <span className="hidden rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-texto-2 sm:inline">
+                      {p.id_legislatura}ª legislatura{periodoLeg ? ` · ${periodoLeg}` : ""}
+                    </span>
+                  )}
+              {participacao && (
                 <span className="hidden rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-texto-2 sm:inline">
-                  {p.id_legislatura}ª legislatura{periodoLeg ? ` · ${periodoLeg}` : ""}
+                  {participacao}
                 </span>
               )}
             </div>
@@ -114,15 +150,18 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
               {p.nome}
             </h1>
             <p className="text-sm text-texto-2 sm:hidden">
-              {cargoDeputado(p.sexo)} · {p.sigla_uf ?? "UF não informada"}
+              {cargo} · {p.sigla_uf ?? "UF não informada"}
               {p.sigla_partido ? ` · ${p.sigla_partido}` : ""}
             </p>
             <p className="hidden text-base text-texto-2 sm:block">
-              {cargoDeputado(p.sexo)} por {ufPorExtenso(p.sigla_uf)}
+              {cargo} por {ufPorExtenso(p.sigla_uf)}
               {partido ? ` · ${partido}` : ""}
+              {senado && p.bloco ? ` · ${p.bloco}` : ""}
             </p>
             <p className="hidden text-sm text-muted-foreground sm:block">
-              Nome civil, cargo, UF e partido conforme a Câmara dos Deputados.
+              {senado
+                ? "Nome civil, cargo, UF, partido e bloco conforme o Senado Federal."
+                : "Nome civil, cargo, UF e partido conforme a Câmara dos Deputados."}
             </p>
           </div>
           <div className="hidden flex-[1_1_220px] flex-wrap justify-end gap-2.5 sm:flex">
@@ -136,35 +175,62 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(210px,1fr))] sm:gap-3">
-          <Indicador
-            titulo={`Cota parlamentar usada ${cota}`}
-            tituloCurto={perfil.mandato ? "Cota no mandato" : `Cota em ${perfil.ano}`}
-            valor={brl(ceap.totalAno)}
-            valorCurto={brlCompacto(ceap.totalAno)}
-            progresso={pctTeto}
-            detalhe={
-              pctTeto !== null
-                ? `${pctTeto}% do teto acumulado até ${MESES[ceap.ultimoMes - 1].toLowerCase()} (${brl(ceap.tetoAcumulado!)})`
-                : `${docs} · sem teto conferido para ${perfil.mandato ? "o mandato" : perfil.ano}`
-            }
-            detalheCurto={pctTeto !== null ? `${pctTeto}% do teto` : docs}
-          />
+          {senado ? (
+            <Indicador
+              titulo={`Cota do senador (CEAPS) em ${perfil.ano}`}
+              tituloCurto={`Cota em ${perfil.ano}`}
+              valor={brl(ceap.totalAno)}
+              valorCurto={brlCompacto(ceap.totalAno)}
+              detalhe={
+                ceap.mediaMensal !== null
+                  ? `Média de ${brl(ceap.mediaMensal)} por mês, ${faixaMeses}`
+                  : `Nenhuma nota publicada em ${perfil.ano}`
+              }
+              detalheCurto={ceap.mediaMensal !== null ? `${milPorMes(ceap.mediaMensal)}/mês` : "sem notas"}
+            />
+          ) : (
+            <Indicador
+              titulo={`Cota parlamentar usada ${cota}`}
+              tituloCurto={perfil.mandato ? "Cota no mandato" : `Cota em ${perfil.ano}`}
+              valor={brl(ceap.totalAno)}
+              valorCurto={brlCompacto(ceap.totalAno)}
+              progresso={pctTeto}
+              detalhe={
+                pctTeto !== null
+                  ? `${pctTeto}% do teto acumulado até ${MESES[ceap.ultimoMes - 1].toLowerCase()} (${brl(ceap.tetoAcumulado!)})`
+                  : `${docs} · sem teto conferido para ${perfil.mandato ? "o mandato" : perfil.ano}`
+              }
+              detalheCurto={pctTeto !== null ? `${pctTeto}% do teto` : docs}
+            />
+          )}
           <Indicador
             titulo="Presença em votações nominais"
             tituloCurto="Presença"
             valor={presenca === null ? "—" : `${presenca}%`}
-            detalhe={`${votacoes.presentes} de ${votacoes.totalPlenario} em ${votacoes.ano}${
-              votacoes.mediaPresenca !== null ? ` · média da Câmara ${votacoes.mediaPresenca}%` : ""
-            }`}
-            detalheCurto={`${votacoes.presentes} de ${votacoes.totalPlenario}`}
+            detalhe={
+              votacoes.denominadorPresenca === 0
+                ? `Sem votações registradas em ${votacoes.ano}`
+                : `${votacoes.presentes} de ${votacoes.denominadorPresenca} em ${votacoes.ano}${
+                    votacoes.mediaPresenca !== null
+                      ? ` · média ${senado ? "do Senado" : "da Câmara"} ${votacoes.mediaPresenca}%`
+                      : ""
+                  }`
+            }
+            detalheCurto={
+              votacoes.denominadorPresenca === 0
+                ? "sem votações"
+                : `${votacoes.presentes} de ${votacoes.denominadorPresenca}`
+            }
           />
           <Indicador
-            titulo="Votou como o partido orientou"
-            tituloCurto="Seguiu o partido"
+            titulo={senado ? "Votou como a liderança orientou" : "Votou como o partido orientou"}
+            tituloCurto={senado ? "Seguiu a liderança" : "Seguiu o partido"}
             valor={alin === null ? "—" : `${alin}%`}
             detalhe={
               votacoes.alinhamento.comparaveis
-                ? `Divergiu em ${votacoes.alinhamento.divergencias} de ${votacoes.alinhamento.comparaveis} votações`
+                ? `Divergiu em ${votacoes.alinhamento.divergencias} de ${votacoes.alinhamento.comparaveis} votações${
+                    senado ? " abertas" : ""
+                  }`
                 : "Sem votações com orientação comparável"
             }
             detalheCurto={

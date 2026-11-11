@@ -85,3 +85,35 @@ export function periodoLegislatura(id: number | null): string | null {
   const l = id ? LEGISLATURAS[id] : undefined;
   return l ? `${l.inicio.slice(0, 4)}–${l.fim.slice(0, 4)}` : null;
 }
+
+/** "Senadora", "Senador" ou "Senador(a)" quando o Senado não informa. */
+export function cargoSenador(sexo: string | null): string {
+  if (sexo === "F") return "Senadora";
+  if (sexo === "M") return "Senador";
+  return "Senador(a)";
+}
+
+/** Cargo pela Casa: "Deputada federal" ou "Senadora". */
+export function cargoParlamentar(casa: string, sexo: string | null): string {
+  return casa === "senado" ? cargoSenador(sexo) : cargoDeputado(sexo);
+}
+
+/** Legislatura que começa no ano dado (57ª em 2023; uma a cada 4 anos). */
+export function legislaturaDoAno(ano: number): number {
+  return 57 + Math.floor((ano - 2023) / 4);
+}
+
+/** Mandato de senador: "2023–2031" e "57ª e 58ª legislaturas". */
+export function periodoMandato(inicio: string | null, fim: string | null) {
+  if (!inicio || !fim) return null;
+  const a = Number(inicio.slice(0, 4));
+  const b = Number(fim.slice(0, 4));
+  const l1 = legislaturaDoAno(a);
+  return { anos: `${a}–${b}`, legislaturas: `${l1}ª e ${l1 + 1}ª legislaturas` };
+}
+
+/** "Titular" ou "1º Suplente em exercício". */
+export function seloParticipacao(participacao: string | null): string | null {
+  if (!participacao) return null;
+  return /suplente/i.test(participacao) ? `${participacao} em exercício` : participacao;
+}

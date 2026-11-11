@@ -264,8 +264,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] e2e do senador passa e o e2e do deputado não muda
-- [ ] Gate full passa
+- [x] e2e do senador passa e o e2e do deputado não muda
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full
