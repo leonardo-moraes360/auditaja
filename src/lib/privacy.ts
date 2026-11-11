@@ -41,8 +41,8 @@ export function nomeFornecedorPublicavel(nome: string, classe: ClasseTitular): s
   return classe === "terceiro_pf" ? "Prestador pessoa física" : mascararCpfsNoTexto(nome.trim());
 }
 
-/** CPF solto no texto: 11 dígitos, com até dois separadores (ponto, hífen ou espaço) entre os grupos, sem outros dígitos colados. */
-const CPF_NO_TEXTO = /(?<!\d)\d{3}[-.\s]{0,2}\d{3}[-.\s]{0,2}\d{3}[-.\s]{0,2}\d{2}(?!\d)/g;
+/** CPF solto no texto: 11 dígitos, com até três separadores (ponto, hífen, barra ou espaço) entre os grupos, sem outros dígitos colados. Na dúvida, mascara. */
+const CPF_NO_TEXTO = /(?<!\d)\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{2}(?!\d)/g;
 
 /**
  * R3: a razão social de MEI costuma trazer o CPF do dono ("FULANO DE TAL 12345678901").
