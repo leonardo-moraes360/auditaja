@@ -6,8 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Se o Chromium do Playwright não estiver instalado na versão certa, aponte
  * PW_CHROME para um executável do Chrome/Chromium.
  */
-/** PW_PORT: outra porta quando há mais de uma suíte rodando na máquina. */
-const PORTA = process.env.PW_PORT ?? "3212";
+/** Porta do servidor de teste; outra porta permite rodar worktrees em paralelo. */
+const PORTA = process.env.E2E_PORT ?? "3212";
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
 
 export default defineConfig({
