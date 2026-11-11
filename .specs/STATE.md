@@ -26,6 +26,14 @@
 - **Date**: 2026-11-11
 - **Status**: active
 
+### AD-004
+- **Decision**: Arquivos do Portal da Transparência são baixados direto do servidor de arquivos da CGU (`dadosabertos-download.cgu.gov.br`), destino do redirecionamento de `/download-de-dados/...`, e nunca pelo host `portaldatransparencia.gov.br`, que responde com captcha (AWS WAF).
+- **Reason**: R7 proíbe contornar captcha; o servidor de arquivos é o caminho oficial do download e não exige verificação.
+- **Trade-off**: Se a CGU mudar o caminho dos arquivos, a URL fixa quebra e a coleta falha alto (sem fallback para o host com captcha).
+- **Scope**: Coletores de emendas e sanções e qualquer base futura do Portal.
+- **Date**: 2026-11-11
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: `.specs/features/perfil-parlamentar`
