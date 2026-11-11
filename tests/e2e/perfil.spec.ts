@@ -1,4 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/** No celular, menu e busca do topo ficam atrás dos botões de ícone (protótipo, Mobile.dc.html). */
+async function abrirTopo(page: Page, isMobile: boolean, painel: "Menu" | "Buscar") {
+  if (isMobile) await page.getByRole("button", { name: painel }).click();
+}
 
 // Dados fictícios de src/db/seed.ts
 const ID = 900000001; // Maria Exemplo: despesas, votos e bens
@@ -11,51 +16,78 @@ test("BUSCA-03: busca leva ao perfil", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Maria Exemplo" })).toBeVisible();
 });
 
-test("indicadores do perfil", async ({ page }) => {
+test("indicadores do perfil", async ({ page, isMobile }) => {
   await page.goto(`/parlamentares/${ID}`);
-  await expect(page.getByText("Cota parlamentar usada em 2026")).toBeVisible();
-  await expect(page.getByText("R$ 44 mil")).toBeVisible();
-  await expect(page.getByText("2 de 4 em 2026")).toBeVisible(); // VOTO-01: voto vazio não conta
-  await expect(page.getByText("50%")).toHaveCount(2); // VOTO-01 (2 de 4) e VOTO-03 (1 de 2)
-  await expect(page.getByText("Divergiu em 1 de 2 votações")).toBeVisible();
-  await expect(page.getByText("30% do teto acumulado até mar")).toBeVisible(); // CEAP-05
-  await expect(page.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
-});
-
-test("CEAP-05: gráfico mensal mostra a linha do teto mensal da UF", async ({ page }) => {
-  await page.goto(`/parlamentares/${ID}`);
-  const grafico = page.locator("section#gastos figure");
-  await expect(grafico.locator("figcaption")).toContainText("Teto mensal para SP: R$ 48.727");
-  const linha = grafico.locator("[data-teto]");
-  await expect(linha).toHaveCount(1);
-  // Teto (48.727,46) acima do maior mês do seed (30.000): a escala é o teto, linha no topo.
-  await expect(linha).toHaveAttribute("style", /bottom:\s*100%/);
-});
-
-test("PROV-02: cada seção mostra fonte, data de coleta e link para o original", async ({ page }) => {
-  await page.goto(`/parlamentares/${ID}`);
-  for (const secao of ["gastos", "votacoes", "bens"]) {
-    const s = page.locator(`section#${secao}`);
-    await expect(s.getByText(/^Fonte: .+ · coletado em \d{2}\/\d{2}\/\d{4}/)).toBeVisible();
-    await expect(s.getByRole("link", { name: "Ver na fonte" })).toBeVisible();
+  const ind = page.locator("[data-indicador]");
+  await expect(ind.getByText("50%", { exact: true }).filter({ visible: true })).toHaveCount(2); // VOTO-01 (2 de 4) e VOTO-03 (1 de 2)
+  if (isMobile) {
+    // Rótulos curtos do celular (Mobile.dc.html:46-49).
+    await expect(ind.getByText("Cota em 2026")).toBeVisible();
+    await expect(ind.getByText(/^R\$\s44 mil$/)).toBeVisible();
+    await expect(ind.getByText("2 de 4", { exact: true })).toBeVisible();
+    await expect(ind.getByText("1 divergência", { exact: true })).toBeVisible();
+    await expect(ind.getByText("30% do teto", { exact: true })).toBeVisible();
+    await expect(ind.getByText("+18% sobre 2022", { exact: true })).toBeVisible();
+  } else {
+    await expect(ind.getByText("Cota parlamentar usada em 2026")).toBeVisible();
+    await expect(ind.getByText(/^R\$\s44\.\d{3}$/)).toBeVisible(); // valor por extenso no desktop
+    await expect(ind.getByText(/^2 de 4 em 2026 · média da Câmara \d+%$/)).toBeVisible(); // VOTO-01: voto vazio não conta
+    await expect(ind.getByText("Divergiu em 1 de 2 votações")).toBeVisible();
+    await expect(ind.getByText(/^30% do teto acumulado até mar \(R\$\s[\d.]+\)$/)).toBeVisible(); // CEAP-05
+    await expect(ind.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
   }
 });
 
-test("PRIV-01/05: CPF mascarado e responsáveis no rodapé", async ({ page }) => {
+test("CEAP-05: gráfico mensal mostra a linha do teto mensal da UF", async ({ page, isMobile }) => {
   await page.goto(`/parlamentares/${ID}`);
-  await expect(page.getByText("***.456.789-**")).toBeVisible();
-  const rodape = page.locator("footer");
-  await expect(rodape.getByText(/^Controlador: /)).toBeVisible();
-  await expect(rodape.getByText(/^Encarregado \(LGPD\): /)).toBeVisible();
-  // UI-02: rodapé escuro como no protótipo.
-  await expect(rodape).toHaveCSS("background-color", "rgb(21, 24, 30)");
+  const grafico = page.locator("section#gastos figure");
+  if (isMobile) await expect(grafico.getByText("Tracejado: teto mensal de SP")).toBeVisible();
+  else await expect(grafico.locator("figcaption")).toContainText("Linha tracejada: teto mensal para SP (R$ 48.727)");
+  const linha = grafico.locator("[data-teto]");
+  await expect(linha).toHaveCount(1);
+  // Teto (48.727,46) acima do maior mês do seed (30.000): a escala é o teto + 8% de folga.
+  await expect(linha).toHaveAttribute("style", /bottom:\s*92\.59\d*%/);
 });
 
-test("PRIV-06: política de privacidade pelo rodapé, com os mesmos responsáveis", async ({ page }) => {
+test("PROV-02: cada seção mostra fonte, data de coleta e link para o original", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  for (const secao of ["gastos", "votacoes", "bens"]) {
+    const s = page.locator(`section#${secao}`);
+    await expect(s.getByText(/^Fonte: .+ · coletado em \d{2}\/\d{2}\/\d{4}/).filter({ visible: true })).toBeVisible();
+    if (isMobile) {
+      // Celular: linha curta com "ver original" (Mobile.dc.html).
+      await expect(s.getByRole("link", { name: "ver original" })).toBeVisible();
+      continue;
+    }
+    await expect(s.getByRole("link", { name: secao === "bens" ? "Ver na DivulgaCand" : "Ver na fonte" })).toBeVisible();
+  }
+});
+
+test("PRIV-01/05: CPF mascarado e responsáveis no rodapé", async ({ page, isMobile }) => {
+  // No celular a tabela de fornecedores fica no resumo completo ("Ver todas as notas e fornecedores").
+  await page.goto(`/parlamentares/${ID}${isMobile ? "?lista=completa" : ""}`);
+  await expect(page.getByText("***.456.789-**")).toBeVisible();
+  const rodape = page.locator("footer");
+  await expect(rodape.getByText(/^Controlador: /).filter({ visible: true })).toBeVisible();
+  await expect(rodape.getByText(/Encarregado \(LGPD\): /).filter({ visible: true })).toBeVisible();
+  // UI-02: rodapé escuro no desktop; no celular, nota clara no fim do conteúdo, como no protótipo.
+  await expect(rodape).toHaveCSS("background-color", isMobile ? "rgb(246, 246, 243)" : "rgb(21, 24, 30)");
+});
+
+test("PRIV-06: política de privacidade pelo rodapé, com os mesmos responsáveis", async ({ page, isMobile }) => {
+  test.skip(isMobile, "no celular o rodapé junta controlador e encarregado numa linha; o conteúdo é o mesmo");
   await page.goto(`/parlamentares/${ID}`);
   const rodape = page.locator("footer");
-  const controlador = await rodape.getByText(/^Controlador: /).textContent();
-  const encarregado = (await rodape.getByText(/^Encarregado \(LGPD\): /).textContent())?.replace(/^.*?: /, "");
+  const controlador = await rodape
+    .getByText(/^Controlador: /)
+    .filter({ visible: true })
+    .textContent();
+  const encarregado = (
+    await rodape
+      .getByText(/^Encarregado \(LGPD\): /)
+      .filter({ visible: true })
+      .textContent()
+  )?.replace(/^.*?: /, "");
   await rodape.getByRole("link", { name: "Política de privacidade" }).click();
   await expect(page).toHaveURL(/\/privacidade$/);
   await expect(page).toHaveTitle("Política de privacidade · Auditaja");
@@ -73,36 +105,43 @@ test("PRIV-06: política de privacidade pelo rodapé, com os mesmos responsávei
 
 test("VOTO-05: filtro de divergência", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}?votos=divergiu`);
-  await expect(page.getByText("Rejeitada a PEC fictícia 12/2026")).toBeVisible();
-  await expect(page.getByText("Aprovado o PL fictício 1.234/2026")).toHaveCount(0);
-  await expect(page.getByText("Aprovada a MPV fictícia 1.300/2026")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "PEC 12/2026" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "PL 1234/2026" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "MPV 1300/2026" })).toHaveCount(0);
 });
 
 test("VOTO-06/07: votação sem voto mostra 'sem registro' e o filtro de ausências só lista votações sem voto", async ({
   page,
 }) => {
   await page.goto(`/parlamentares/${ID}?votos=ausencias`);
-  await expect(page.getByText("Aprovada a MPV fictícia 1.300/2026")).toBeVisible();
+  await expect(page.getByRole("link", { name: "MPV 1300/2026" })).toBeVisible();
   await expect(page.getByText("Mantido o veto fictício 9/2026")).toBeVisible(); // voto vazio também é ausência
   await expect(page.getByText("Votou: sem registro")).toHaveCount(2);
-  await expect(page.getByText("Rejeitada a PEC fictícia 12/2026")).toHaveCount(0);
-  await expect(page.getByText("Aprovado o PL fictício 1.234/2026")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "PEC 12/2026" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "PL 1234/2026" })).toHaveCount(0);
 });
 
 test("MAND-01: lateral lista só órgãos com cargo atual, com o cargo", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}`);
-  const item = page.getByRole("listitem").filter({ hasText: "Comissão de Finanças e Tributação" });
-  await expect(item).toHaveText("Comissão de Finanças e Tributação · Titular");
+  const mandato = page.locator("section#mandato");
+  await expect(mandato.getByRole("heading", { name: "Comissões como titular" })).toBeVisible();
+  await expect(mandato.getByRole("listitem").filter({ hasText: "Comissão de Finanças e Tributação" })).toHaveText(
+    "Comissão de Finanças e Tributação",
+  );
   await expect(page.getByText("Comissão de Educação")).toHaveCount(0);
 });
 
 for (const [caminho, item, outro] of [
   [`/parlamentares/${ID}`, "Parlamentares", "Metodologia"],
-  ["/parlamentares", "Parlamentares", "Fontes"],
+  ["/parlamentares", "Parlamentares", "Sobre"],
   ["/metodologia", "Metodologia", "Parlamentares"],
 ] as const) {
-  test(`NAV-01: em ${caminho} o item ${item} fica ativo com sublinhado de 2 px na cor da marca`, async ({ page }) => {
+  test(`NAV-01: em ${caminho} o item ${item} fica ativo com sublinhado de 2 px na cor da marca`, async ({
+    page,
+    isMobile,
+  }) => {
     await page.goto(caminho);
+    await abrirTopo(page, isMobile, "Menu");
     const nav = page.getByRole("navigation", { name: "Principal" });
     const ativo = nav.getByRole("link", { name: item });
     await expect(ativo).toHaveAttribute("aria-current", "page");
@@ -112,8 +151,9 @@ for (const [caminho, item, outro] of [
   });
 }
 
-test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page }) => {
+test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page, isMobile }) => {
   await page.goto("/parlamentares");
+  await abrirTopo(page, isMobile, "Buscar");
   await expect(page.getByRole("searchbox", { name: "Buscar parlamentar" })).toHaveAttribute(
     "placeholder",
     "Buscar deputado por nome ou UF",
@@ -121,8 +161,9 @@ test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page }) => {
   await expect(page.getByLabel("Nome ou UF")).toHaveAttribute("placeholder", "Ex.: Maria, Silva ou SP");
 });
 
-test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page }) => {
+test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page, isMobile }) => {
   await page.goto("/metodologia");
+  await abrirTopo(page, isMobile, "Buscar");
   await page.getByRole("searchbox", { name: "Buscar parlamentar" }).fill("rj");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("link", { name: /João Ilustrativo/ })).toBeVisible();
@@ -135,9 +176,17 @@ test("METOD-01: metodologia publica a versão", async ({ page }) => {
   await expect(page.getByText(/^Versão 1\.3\./)).toBeVisible();
 });
 
-test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page }) => {
-  await page.goto(`/parlamentares/${ID}`);
-  await page.locator("section#gastos").getByRole("link", { name: "Contestar" }).click();
+test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page, isMobile }) => {
+  if (isMobile) {
+    // No celular o protótipo só tem o "Contestar dado" do topo.
+    await page.goto(`/parlamentares/${ID}`);
+    await page.getByRole("link", { name: "Contestar dado" }).click();
+    await expect(page.getByLabel("Qual parte do perfil?")).toHaveValue("outro");
+    await page.goto(`/parlamentares/${ID}/contestar?secao=gastos`);
+  } else {
+    await page.goto(`/parlamentares/${ID}`);
+    await page.locator("section#gastos").getByRole("link", { name: "Contestar" }).click();
+  }
   await expect(page.getByLabel("Qual parte do perfil?")).toHaveValue("gastos");
   await page.getByLabel("O que está errado").fill("O valor de janeiro está duplicado segundo a nota original.");
   await page.getByRole("button", { name: "Enviar pedido" }).click();
@@ -148,9 +197,9 @@ test("EDGE-02/03: deputado sem despesas nem bens", async ({ page }) => {
   await page.goto(`/parlamentares/${SEM_DADOS}`);
   await expect(page.getByText(/^Nenhuma despesa publicada para \d{4}\.$/)).toBeVisible();
   await expect(page.getByText(/Não encontramos declarações de bens/)).toBeVisible();
-  const indicadorBens = page.locator("div.rounded-lg").filter({ hasText: "Bens declarados ao TSE" });
-  await expect(indicadorBens.getByText("—", { exact: true })).toBeVisible();
-  await expect(indicadorBens.getByText("nenhuma declaração encontrada")).toBeVisible();
+  const indicadorBens = page.locator("[data-indicador]").filter({ hasText: /Bens (declarados ao TSE|\(TSE\))/ });
+  await expect(indicadorBens.getByText("—", { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(indicadorBens.getByText("nenhuma declaração encontrada").filter({ visible: true })).toBeVisible();
 });
 
 test("EDGE-04: sem rolagem horizontal", async ({ page }) => {
@@ -174,4 +223,62 @@ test("UI-04: botões usam cursor de clique e, desabilitados, cursor de bloqueio"
   await expect(botao).toHaveCSS("cursor", "pointer");
   await botao.evaluate((b) => b.setAttribute("disabled", ""));
   await expect(botao).toHaveCSS("cursor", "not-allowed");
+});
+
+test("Baixar CSV: notas da CEAP do ano, com CPF de terceiro mascarado", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Baixar CSV fica no desktop, como no protótipo");
+  await page.goto(`/parlamentares/${ID}`);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.locator("section#gastos").getByRole("link", { name: "Baixar CSV" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe(`ceap-${ID}-2026.csv`);
+  const corpo = await (await page.request.get(`/parlamentares/${ID}/gastos.csv?ano=2026`)).text();
+  expect(corpo.split("\r\n")[0]).toBe(
+    "\uFEFFano;mes;data_emissao;tipo_despesa;fornecedor;cnpj_cpf;valor_documento;valor_glosa;valor_liquido;url_documento",
+  );
+  expect(corpo).toContain("***.456.789-**");
+  expect(corpo).not.toMatch(/\d{3}\.\d{3}\.\d{3}-\d{2}/);
+});
+
+test("Acompanhar: página explica o feed Atom, que lista votos e meses de gasto", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  await page.getByRole("link", { name: isMobile ? "Acompanhar" : "Acompanhar atualizações", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Acompanhar atualizações" })).toBeVisible();
+  const r = await page.request.get(`/parlamentares/${ID}/feed.xml`);
+  expect(r.headers()["content-type"]).toContain("application/atom+xml");
+  const xml = await r.text();
+  expect(xml).toContain("<title>Votou: Sim · PL 1234/2026</title>");
+  expect(xml).toMatch(/Cota parlamentar em [a-z]{3}\/2026: R\$/);
+});
+
+test("abas de seção levam às seções, inclusive Mandato e Fontes da lateral", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  const abas = page.getByRole("navigation", { name: "Seções do perfil" });
+  await expect(abas.getByRole("link", { name: isMobile ? "Gastos" : "Gastos da cota" })).toHaveAttribute(
+    "aria-current",
+    "location",
+  );
+  await abas.getByRole("link", { name: "Fontes" }).click();
+  await expect(page).toHaveURL(/#fontes$/);
+  await expect(page.getByRole("heading", { name: "De onde vêm os dados" })).toBeInViewport();
+});
+
+test("filtro de período: ano e mandato todo", async ({ page, isMobile }) => {
+  test.skip(isMobile, "o filtro de período só existe no desktop, como no protótipo");
+  await page.goto(`/parlamentares/${ID}`);
+  const filtro = page.getByRole("navigation", { name: "Período dos gastos" });
+  await filtro.getByRole("link", { name: "Mandato todo" }).click();
+  await expect(page).toHaveURL(/ano=mandato/);
+  await expect(filtro.getByRole("link", { name: "Mandato todo" })).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("[data-indicador]").getByText("Cota parlamentar usada no mandato")).toBeVisible();
+});
+
+test("celular: votações resumidas em 3, com link para todas", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "resumo só no celular");
+  await page.goto(`/parlamentares/${ID}`);
+  const s = page.locator("section#votacoes");
+  await expect(s.getByRole("listitem").filter({ visible: true })).toHaveCount(3);
+  await s.getByRole("link", { name: "Ver as 4 votações" }).click();
+  await expect(s.getByRole("listitem").filter({ visible: true })).toHaveCount(4);
 });

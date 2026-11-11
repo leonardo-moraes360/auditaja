@@ -15,7 +15,7 @@ describe("R13: responsáveis exibidos no rodapé e na política de privacidade",
     }
     expect(responsavel()).toEqual({
       controlador: "[NOME DO CONTROLADOR]",
-      doc: "[CNPJ]",
+      doc: "CNPJ [CNPJ]",
       encarregado: "[NOME DO ENCARREGADO]",
       email: "[E-MAIL DO ENCARREGADO]",
     });
@@ -28,7 +28,7 @@ describe("R13: responsáveis exibidos no rodapé e na política de privacidade",
     vi.stubEnv("NEXT_PUBLIC_ENCARREGADO_EMAIL", "dpo@exemplo.invalid");
     expect(responsavel()).toEqual({
       controlador: "Controlador Fictício",
-      doc: "00.000.000/0001-00",
+      doc: "CNPJ 00.000.000/0001-00",
       encarregado: "Encarregado Fictício",
       email: "dpo@exemplo.invalid",
     });

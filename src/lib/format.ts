@@ -32,17 +32,22 @@ export function dataBr(iso: string | null | undefined): string {
   return `${d}/${m}/${y}`;
 }
 
+/** "10/11/2026 08:12" (sem a vírgula que o Intl põe entre data e hora). */
 export function dataHoraBr(d: Date | string): string {
   const dt = typeof d === "string" ? new Date(d) : d;
-  return dt.toLocaleString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return dt
+    .toLocaleString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    .replace(", ", " ");
 }
+
+export const INICIAIS_MESES = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 
 export const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 

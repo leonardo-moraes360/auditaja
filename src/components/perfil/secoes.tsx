@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { Perfil } from "@/data/perfil";
-import { brl, brlCompacto, dataBr, MESES, pct } from "@/lib/format";
-import { variacaoNominal } from "@/lib/metrics";
+import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
+import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
+import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
+import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
 
 /** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
@@ -10,149 +12,215 @@ function fraseCase(s: string) {
   return l.charAt(0).toUpperCase() + l.slice(1);
 }
 
-function Secao({ id, titulo, children }: { id: string; titulo: string; children: React.ReactNode }) {
+/** "k" com uma casa: 31200 → "31,2k". */
+function milhar(v: number) {
+  return `${(v / 1000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`;
+}
+
+/** Texto que muda entre celular e desktop, como nos dois artboards do protótipo. */
+function Dois({ curto, longo }: { curto: React.ReactNode; longo: React.ReactNode }) {
   return (
-    <section
-      id={id}
-      aria-labelledby={`${id}-titulo`}
-      className="scroll-mt-4 space-y-4 rounded-lg border bg-superficie p-5"
-    >
-      <h2 id={`${id}-titulo`} className="font-heading text-xl font-bold">
-        {titulo}
-      </h2>
-      {children}
-    </section>
+    <>
+      <span className="sm:hidden">{curto}</span>
+      <span className="hidden sm:inline">{longo}</span>
+    </>
   );
 }
 
-export function Indicador({ titulo, valor, detalhe }: { titulo: string; valor: string; detalhe: string }) {
+const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
+const H2 = "font-heading text-lg font-bold sm:text-[22px]";
+const H2_LATERAL = "font-heading text-lg font-bold";
+const H3 = "text-[15px] font-bold";
+
+export function Indicador({
+  titulo,
+  tituloCurto,
+  valor,
+  valorCurto,
+  detalhe,
+  detalheCurto,
+  progresso,
+}: {
+  titulo: string;
+  tituloCurto?: string;
+  valor: string;
+  valorCurto?: string;
+  detalhe: string;
+  detalheCurto?: string;
+  progresso?: number | null;
+}) {
   return (
-    <div className="rounded-lg border bg-superficie p-4">
-      <p className="text-sm text-muted-foreground">{titulo}</p>
-      <p className="mt-1 font-heading text-2xl font-bold">{valor}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{detalhe}</p>
+    <div
+      data-indicador
+      className="flex flex-col gap-1 rounded-[10px] bg-background p-3 sm:gap-1.5 sm:rounded-[12px] sm:p-4"
+    >
+      <p className="text-xs text-muted-foreground sm:text-[13px]">
+        <Dois curto={tituloCurto ?? titulo} longo={titulo} />
+      </p>
+      <p className="font-heading text-xl font-bold sm:text-[26px]">
+        <Dois curto={valorCurto ?? valor} longo={valor} />
+      </p>
+      {progresso != null && (
+        <div
+          className="hidden h-2 overflow-hidden rounded bg-border sm:block"
+          role="img"
+          aria-label={`${progresso}% do teto acumulado`}
+        >
+          <div className="h-2 bg-primary" style={{ width: `${Math.min(100, progresso)}%` }} />
+        </div>
+      )}
+      <p className="text-[11px] text-muted-foreground sm:text-xs">
+        <Dois curto={detalheCurto ?? detalhe} longo={detalhe} />
+      </p>
     </div>
   );
 }
 
 // ---------------------------------------------------------------- CEAP
 
-export function SecaoGastos({ perfil }: { perfil: Perfil }) {
-  const { ceap, ano, parlamentar } = perfil;
+export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: boolean }) {
+  const { ceap, ano, parlamentar, mandato } = perfil;
+  const uf = parlamentar.sigla_uf;
   const tetoMensal = ceap.teto?.mensal ?? null;
-  // A escala inclui o teto, para a linha do teto caber no gráfico.
-  const max = Math.max(1, tetoMensal ?? 0, ...ceap.porMes.map((m) => m.total));
-  const meses = Array.from({ length: 12 }, (_, i) => ceap.porMes.find((m) => m.mes === i + 1)?.total ?? null);
-  const maiorTipo = ceap.porTipo[0]?.total ?? 1;
+  const parametroAno = mandato ? "mandato" : String(ano);
+
+  // Barras: meses do ano até o último com dado; no mandato, uma barra por ano.
+  const ultimoMes = Math.max(0, ...ceap.porMes.map((m) => m.mes));
+  const barras = mandato
+    ? ceap.porAno.map((a) => ({ rotulo: String(a.ano), inicial: String(a.ano).slice(2), total: a.total }))
+    : Array.from({ length: ultimoMes }, (_, i) => ({
+        rotulo: MESES[i],
+        inicial: INICIAIS_MESES[i],
+        total: ceap.porMes.find((m) => m.mes === i + 1)?.total ?? 0,
+      }));
+  const linhaTeto = mandato ? null : tetoMensal;
+  // Escala com folga sobre o maior valor (ou o teto), para o rótulo caber acima da barra.
+  const max = Math.max(1, linhaTeto ?? 0, ...barras.map((b) => b.total)) * 1.08;
+
+  // Por tipo: 6 maiores e "Outros" no desktop; 4 maiores no celular.
+  const tipos = ceap.porTipo.slice(0, 6).map((t) => ({ nome: fraseCase(t.tipo), total: t.total }));
+  const resto = ceap.porTipo.slice(6).reduce((s, t) => s + t.total, 0);
+  if (resto > 0) tipos.push({ nome: "Outros", total: resto });
+  const maiorTipo = tipos[0]?.total ?? 1;
+  const href = (q: string) => `/parlamentares/${parlamentar.id}?${q}`;
 
   return (
-    <Secao id="gastos" titulo="Gastos da cota parlamentar (CEAP)">
-      <nav aria-label="Ano dos gastos" className="flex flex-wrap gap-2">
-        {perfil.anosDisponiveis.map((a) => (
+    <section id="gastos" aria-labelledby="gastos-titulo" className={`${CARTAO} gap-3.5 sm:gap-5 sm:p-6`}>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 id="gastos-titulo" className={H2}>
+          <Dois
+            curto={`Gastos da cota (CEAP) · ${mandato ? "mandato" : ano}`}
+            longo="Gastos da cota parlamentar (CEAP)"
+          />
+        </h2>
+        <nav aria-label="Período dos gastos" className="hidden flex-wrap gap-1.5 sm:flex">
+          {perfil.anosDisponiveis.map((a) => (
+            <Link
+              key={a}
+              href={href(`ano=${a}#gastos`)}
+              aria-current={!mandato && a === ano ? "page" : undefined}
+              className={classeFiltro(!mandato && a === ano)}
+            >
+              {a}
+            </Link>
+          ))}
           <Link
-            key={a}
-            href={`/parlamentares/${parlamentar.id}?ano=${a}#gastos`}
-            aria-current={a === ano ? "page" : undefined}
-            className={`rounded-full border px-3 py-1 text-sm no-underline ${
-              a === ano ? "border-primary bg-secondary text-secondary-foreground" : "text-muted-foreground"
-            }`}
+            href={href("ano=mandato#gastos")}
+            aria-current={mandato ? "page" : undefined}
+            className={classeFiltro(mandato)}
           >
-            {a}
+            Mandato todo
           </Link>
-        ))}
-      </nav>
+        </nav>
+      </div>
 
       {ceap.documentos === 0 ? (
         <p className="text-muted-foreground">Nenhuma despesa publicada para {ano}.</p>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">
-            {brl(ceap.totalAno)} em {ceap.documentos.toLocaleString("pt-BR")} documentos em {ano}. Valores líquidos, já
-            descontadas as glosas.
-          </p>
-
-          <figure className="space-y-2">
-            <figcaption className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
-              <span className="font-medium">Gasto mensal em {ano}</span>
-              {tetoMensal !== null && (
-                <span className="flex items-center gap-2 text-muted-foreground">
-                  <span aria-hidden="true" className="inline-block w-5 border-t-2 border-dashed border-aviso" />
-                  Teto mensal para {parlamentar.sigla_uf}: {brl(tetoMensal)}
+          <figure className="flex flex-col gap-2">
+            <figcaption className="hidden flex-wrap justify-between gap-x-4 gap-y-1 text-[13px] text-muted-foreground sm:flex">
+              <span>{mandato ? "Gasto anual no mandato" : `Gasto mensal em ${ano}`}</span>
+              {linhaTeto !== null && (
+                <span>
+                  Linha tracejada: teto mensal para {uf} ({brl(linhaTeto)})
                 </span>
               )}
             </figcaption>
             <div
-              className="relative flex h-44 items-end gap-1 sm:gap-2"
+              className="relative flex h-[140px] items-end gap-1.5 border-b border-linha sm:h-[200px] sm:gap-2.5 sm:pt-2.5"
               role="img"
-              aria-label={`Gasto mensal da cota em ${ano}${
-                tetoMensal !== null ? `, com o teto mensal de ${brl(tetoMensal)}` : ""
+              aria-label={`${mandato ? "Gasto anual da cota no mandato" : `Gasto mensal da cota em ${ano}`}${
+                linhaTeto !== null ? `, com o teto mensal de ${brl(linhaTeto)}` : ""
               }`}
             >
-              {tetoMensal !== null && (
+              {linhaTeto !== null && (
                 <div
                   data-teto
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-dashed border-aviso"
-                  style={{ bottom: `${Math.round((tetoMensal / max) * 100)}%` }}
+                  className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-dashed border-teto"
+                  style={{ bottom: `${(linhaTeto / max) * 100}%` }}
                 />
               )}
-              {meses.map((v, i) => (
-                <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                  {v !== null && (
-                    <span className="hidden text-[10px] text-muted-foreground sm:block">
-                      {(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k
-                    </span>
-                  )}
+              {barras.map((b) => (
+                <div key={b.rotulo} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+                  <span className="hidden text-[11px] text-muted-foreground sm:block">{milhar(b.total)}</span>
                   <div
-                    className={`w-full rounded-t ${v === null ? "bg-muted" : "bg-primary"}`}
-                    style={{ height: `${v === null ? 2 : Math.max(2, Math.round((v / max) * 100))}%` }}
+                    className="w-full rounded-t-[3px] bg-primary sm:max-w-11 sm:rounded-t-[4px]"
+                    style={{ height: `${Math.max(1, (b.total / max) * 100)}%` }}
                   />
                 </div>
               ))}
             </div>
-            <div className="flex gap-1 sm:gap-2" aria-hidden="true">
-              {MESES.map((m) => (
-                <span key={m} className="flex-1 text-center text-[10px] text-muted-foreground sm:text-xs">
-                  {m}
+            <div className="flex gap-1.5 sm:gap-2.5" aria-hidden="true">
+              {barras.map((b) => (
+                <span key={b.rotulo} className="flex-1 text-center text-[11px] text-muted-foreground sm:text-xs">
+                  <Dois curto={b.inicial} longo={b.rotulo} />
                 </span>
               ))}
             </div>
+            {linhaTeto !== null && (
+              <span className="text-xs text-muted-foreground sm:hidden">Tracejado: teto mensal de {uf}</span>
+            )}
             <table className="sr-only">
-              <caption>Gasto mensal em {ano}</caption>
+              <caption>{mandato ? "Gasto anual no mandato" : `Gasto mensal em ${ano}`}</caption>
               <tbody>
-                {ceap.porMes.map((m) => (
-                  <tr key={m.mes}>
-                    <th scope="row">{MESES[m.mes - 1]}</th>
-                    <td>{brl(m.total)}</td>
+                {barras.map((b) => (
+                  <tr key={b.rotulo}>
+                    <th scope="row">{b.rotulo}</th>
+                    <td>{brl(b.total)}</td>
                   </tr>
                 ))}
               </tbody>
-              {tetoMensal !== null && (
+              {linhaTeto !== null && (
                 <tfoot>
                   <tr>
                     <th scope="row">Teto mensal</th>
-                    <td>{brl(tetoMensal)}</td>
+                    <td>{brl(linhaTeto)}</td>
                   </tr>
                 </tfoot>
               )}
             </table>
           </figure>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="min-w-0 space-y-3">
-              <h3 className="font-medium">Por tipo de despesa</h3>
-              <ul className="space-y-2">
-                {ceap.porTipo.slice(0, 8).map((t) => (
-                  <li key={t.tipo} className="space-y-1">
-                    <div className="flex justify-between gap-3 text-sm">
-                      <span className="min-w-0 break-words">{fraseCase(t.tipo)}</span>
-                      <span className="shrink-0 text-muted-foreground">
-                        {brl(t.total)} · {pct(t.total, ceap.totalAno)}%
+          <div className="flex flex-wrap gap-6">
+            <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-2.5 sm:gap-3">
+              <h3 className={`${H3} hidden sm:block`}>Por tipo de despesa</h3>
+              <ul className="flex flex-col gap-2.5 sm:gap-3">
+                {tipos.map((t, i) => (
+                  <li key={t.nome} className={`flex flex-col gap-1 ${i >= 4 && !completo ? "max-sm:hidden" : ""}`}>
+                    <div className="flex justify-between gap-2 text-[13px]">
+                      <span className="min-w-0 break-words">{t.nome}</span>
+                      <span className="shrink-0 whitespace-nowrap text-muted-foreground">
+                        <Dois
+                          curto={`${pct(t.total, ceap.totalAno)}%`}
+                          longo={`${brl(t.total)} · ${pct(t.total, ceap.totalAno)}%`}
+                        />
                       </span>
                     </div>
-                    <div className="h-2 rounded bg-muted">
+                    <div className="h-2 overflow-hidden rounded bg-muted">
                       <div
-                        className="h-2 rounded bg-chart-2"
+                        className="h-2 bg-chart-2"
                         style={{ width: `${Math.max(1, Math.round((t.total / maiorTipo) * 100))}%` }}
                       />
                     </div>
@@ -160,54 +228,86 @@ export function SecaoGastos({ perfil }: { perfil: Perfil }) {
                 ))}
               </ul>
             </div>
-            <div className="min-w-0 space-y-3">
-              <h3 className="font-medium">Maiores fornecedores</h3>
+            <div className={`min-w-0 flex-[1_1_320px] flex-col gap-3 ${completo ? "flex" : "hidden sm:flex"}`}>
+              <h3 className={H3}>Maiores fornecedores</h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full border-collapse text-[13px]">
                   <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th scope="col" className="py-2 pr-2 font-medium">
+                    <tr className="text-left text-muted-foreground">
+                      <th scope="col" className="py-1.5 pr-2 font-semibold">
                         Fornecedor
                       </th>
-                      <th scope="col" className="py-2 pr-2 font-medium">
+                      <th scope="col" className="px-2 py-1.5 font-semibold">
                         CNPJ/CPF
                       </th>
-                      <th scope="col" className="py-2 text-right font-medium">
+                      <th scope="col" className="py-1.5 text-right font-semibold">
                         Total
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {ceap.fornecedores.map((f, i) => (
-                      <tr key={i} className="border-b last:border-0">
-                        <td className="py-2 pr-2">{f.fornecedor_nome}</td>
-                        <td className="py-2 pr-2 font-mono text-xs whitespace-nowrap">{f.fornecedor_doc ?? "—"}</td>
-                        <td className="py-2 text-right whitespace-nowrap">{brl(f.total)}</td>
+                      <tr key={i} className="border-t border-borda-suave">
+                        <td className="py-2 pr-2">
+                          <a
+                            href={`/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}${
+                              f.fornecedor_doc ? `&doc=${encodeURIComponent(f.fornecedor_doc)}` : ""
+                            }`}
+                            download
+                            className="text-foreground"
+                          >
+                            {f.fornecedor_nome}
+                          </a>
+                        </td>
+                        <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                          {f.fornecedor_doc ?? "—"}
+                        </td>
+                        <td className="py-2 text-right whitespace-nowrap tabular-nums">{brl(f.total)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <p className="text-xs text-muted-foreground">
-                CPF de pessoa física aparece mascarado e sem nome, no padrão da Receita Federal.
+                CPF de pessoa física aparece mascarado, como no Portal da Transparência. O nome do fornecedor baixa as
+                notas dele.
               </p>
             </div>
           </div>
+          {!completo && (
+            <Link href={href(`ano=${parametroAno}&lista=completa#gastos`)} className="text-sm font-semibold sm:hidden">
+              Ver todas as notas e fornecedores
+            </Link>
+          )}
         </>
       )}
       <NotaFonte
-        rotulo="Câmara dos Deputados, Dados Abertos (CEAP, arquivo anual)"
+        rotulo="Câmara dos Deputados, Dados Abertos (CEAP)"
+        rotuloCurto="Câmara, CEAP"
         coleta={perfil.coletas.camara_ceap}
+        extras={[
+          {
+            rotulo: "Baixar CSV",
+            href: `/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}`,
+            download: true,
+          },
+        ]}
         parlamentarId={parlamentar.id}
         secao="gastos"
       />
-    </Secao>
+    </section>
   );
 }
 
 // ---------------------------------------------------------------- Votações
 
-const ROTULO_TIPO = { partido: "Partido", federacao: "Federação", bloco: "Bloco" } as const;
+/** Rótulo da orientação: "Partido" quando é do partido; indica bloco ou federação quando é deles. */
+/** De quem veio a orientação seguida pelo partido do deputado (vai no title do rótulo "Partido: X"). */
+const ORIGEM_ORIENTACAO = {
+  partido: "Orientação do partido",
+  federacao: "Orientação da federação do partido",
+  bloco: "Orientação do bloco do partido",
+} as const;
 
 function diverge(voto: string | null, orientacao: string | null) {
   const comparavel = (x: string | null) => x === "Sim" || x === "Não";
@@ -215,84 +315,149 @@ function diverge(voto: string | null, orientacao: string | null) {
 }
 
 function corVoto(voto: string | null, orientacao: string | null) {
-  if (!voto) return "bg-muted text-foreground";
-  if (orientacao && (orientacao === "Sim" || orientacao === "Não") && (voto === "Sim" || voto === "Não")) {
+  const comparavel = (x: string | null) => x === "Sim" || x === "Não";
+  if (comparavel(voto) && comparavel(orientacao)) {
     return voto === orientacao ? "bg-secondary text-secondary-foreground" : "bg-aviso-fundo text-aviso";
   }
-  return "bg-muted text-foreground";
+  if (voto && orientacao === "Liberado") return "bg-secondary text-secondary-foreground";
+  return "bg-muted text-texto-2";
 }
 
-export function SecaoVotacoes({ perfil, filtro }: { perfil: Perfil; filtro: "todas" | "divergiu" | "ausencias" }) {
+/** "Aprovado" / "Rejeitada" a partir do começo da descrição da Câmara; senão pelo campo aprovação. */
+function resultado(descricao: string, aprovacao: number | null) {
+  const m = descricao.match(/\b(Aprovad[oa]s?|Rejeitad[oa]s?|Mantid[oa]s?|Derrubad[oa]s?)\b/i);
+  if (m) return m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
+  if (aprovacao === 1) return "Aprovada";
+  if (aprovacao === 0) return "Rejeitada";
+  return null;
+}
+
+export function SecaoVotacoes({
+  perfil,
+  filtro,
+  completo,
+}: {
+  perfil: Perfil;
+  filtro: "todas" | "divergiu" | "ausencias";
+  completo: boolean;
+}) {
   const { votacoes, parlamentar, ano } = perfil;
   const lista = votacoes.lista.filter((v) => {
     if (filtro === "ausencias") return !v.voto;
-    if (filtro === "divergiu")
-      return (
-        !!v.voto &&
-        (v.voto === "Sim" || v.voto === "Não") &&
-        (v.orientacao === "Sim" || v.orientacao === "Não") &&
-        v.voto !== v.orientacao
-      );
+    if (filtro === "divergiu") return diverge(v.voto, v.orientacao);
     return true;
   });
   const filtros = [
     ["todas", "Todas"],
-    ["divergiu", "Divergiu da orientação"],
-    ["ausencias", "Sem voto registrado"],
+    ["divergiu", "Divergiu do partido"],
+    ["ausencias", "Ausências"],
   ] as const;
+  const visiveis = completo ? lista : lista.slice(0, 5);
+  const verTodas = `/parlamentares/${parlamentar.id}?ano=${ano}&votos=${filtro}&lista=completa#votacoes`;
 
   return (
-    <Secao id="votacoes" titulo={`Votações nominais no Plenário em ${ano}`}>
-      <nav aria-label="Filtrar votações" className="flex flex-wrap gap-2">
-        {filtros.map(([k, r]) => (
-          <Link
-            key={k}
-            href={`/parlamentares/${parlamentar.id}?ano=${ano}&votos=${k}#votacoes`}
-            aria-current={filtro === k ? "page" : undefined}
-            className={`rounded-full border px-3 py-1 text-sm no-underline ${
-              filtro === k ? "border-primary bg-secondary text-secondary-foreground" : "text-muted-foreground"
-            }`}
-          >
-            {r}
-          </Link>
-        ))}
-      </nav>
+    <section id="votacoes" aria-labelledby="votacoes-titulo" className={`${CARTAO} gap-1 sm:gap-4 sm:p-6`}>
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3 sm:mb-0">
+        <h2 id="votacoes-titulo" className={H2}>
+          <Dois curto="Votações recentes" longo="Votações nominais recentes" />
+        </h2>
+        <nav aria-label="Filtrar votações" className="hidden flex-wrap gap-1.5 sm:flex">
+          {filtros.map(([k, r]) => (
+            <Link
+              key={k}
+              href={`/parlamentares/${parlamentar.id}?ano=${ano}&votos=${k}#votacoes`}
+              aria-current={filtro === k ? "page" : undefined}
+              className={classeFiltro(filtro === k, true)}
+            >
+              {r}
+            </Link>
+          ))}
+        </nav>
+      </div>
       {lista.length === 0 ? (
         <p className="text-muted-foreground">Nenhuma votação neste filtro.</p>
       ) : (
-        <ul className="divide-y">
-          {lista.slice(0, 30).map((v) => (
-            <li key={v.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">{dataBr(v.data)}</p>
-                <p className="text-sm">
-                  <a href={v.source_url} target="_blank" rel="noopener noreferrer">
-                    {v.descricao}
-                  </a>
-                </p>
-                {v.proposicao && <p className="line-clamp-2 text-xs text-muted-foreground">{v.proposicao}</p>}
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-2 text-xs">
-                <span className="rounded bg-muted px-2 py-1">
-                  {v.tipoOrientacao ? `${ROTULO_TIPO[v.tipoOrientacao]}: ${v.orientacao}` : "Sem orientação"}
+        <ul className="flex flex-col">
+          {visiveis.map((v, i) => {
+            const res = resultado(v.descricao, v.aprovacao);
+            const titulo = v.proposicao_sigla ?? v.descricao;
+            const ementa = v.proposicao_sigla ? (v.proposicao_ementa ?? v.descricao) : null;
+            const orient = v.tipoOrientacao ? `Partido: ${v.orientacao}` : "Partido: sem orientação";
+            const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
+            const selo = (
+              <span
+                className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-[13px] ${corVoto(v.voto, v.orientacao)}`}
+              >
+                Votou: {v.voto ?? "sem registro"}
+                {diverge(v.voto, v.orientacao) && <span className="sr-only"> (divergiu da orientação)</span>}
+              </span>
+            );
+            return (
+              <li
+                key={v.id}
+                className={`flex flex-col gap-1.5 border-t border-borda-suave py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:py-3.5 ${
+                  i >= 3 && !completo ? "max-sm:hidden" : ""
+                }`}
+              >
+                <span className="hidden w-[84px] text-[13px] text-muted-foreground tabular-nums sm:block">
+                  {dataBr(v.data)}
                 </span>
-                <span className={`rounded px-2 py-1 font-medium ${corVoto(v.voto, v.orientacao)}`}>
-                  Votou: {v.voto ?? "sem registro"}
-                  {diverge(v.voto, v.orientacao) && <span className="sr-only"> (divergiu da orientação)</span>}
-                </span>
-              </div>
-            </li>
-          ))}
+                <div className="flex min-w-0 flex-col gap-1.5 sm:flex-[1_1_260px] sm:gap-0.5">
+                  <div className="flex justify-between gap-2">
+                    <a
+                      href={v.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm font-semibold text-foreground sm:text-[15px] ${v.proposicao_sigla ? "" : "line-clamp-2"}`}
+                    >
+                      {titulo}
+                    </a>
+                    <span className="shrink-0 text-xs text-muted-foreground sm:hidden">
+                      {dataBr(v.data).slice(0, 5)}
+                    </span>
+                  </div>
+                  {(ementa || res) && (
+                    <span className="text-[13px] text-muted-foreground">
+                      {ementa && (ementa.length > 110 ? `${ementa.slice(0, 110).replace(/\s+\S*$/, "")}…` : ementa)}
+                      {ementa && res ? <span className="max-sm:hidden"> · {res}</span> : null}
+                      {!ementa && res}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    title={origem}
+                    className="text-xs text-muted-foreground sm:order-none sm:text-[13px] max-sm:order-2"
+                  >
+                    {orient}
+                    {v.tipoOrientacao && v.tipoOrientacao !== "partido" && (
+                      <span className="sr-only"> ({origem?.toLowerCase()})</span>
+                    )}
+                  </span>
+                  <span className="max-sm:order-1">{selo}</span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
-      {lista.length > 30 && <p className="text-xs text-muted-foreground">Mostrando 30 de {lista.length} votações.</p>}
+      {!completo && lista.length > 3 && (
+        <Link href={verTodas} className="pt-2 text-sm font-semibold sm:hidden">
+          Ver as {lista.length} votações
+        </Link>
+      )}
+      <p className="mt-2 text-xs text-muted-foreground sm:mt-0">
+        A presença conta todas as votações nominais do Plenário no ano, inclusive em períodos de licença.
+      </p>
       <NotaFonte
-        rotulo="Câmara dos Deputados, Dados Abertos (votações, votos e orientações, arquivos anuais)"
+        rotulo="Câmara dos Deputados, Dados Abertos (votações)"
+        rotuloCurto="Câmara, Dados Abertos"
         coleta={perfil.coletas.camara_lote_votos}
+        extras={completo || lista.length <= 5 ? [] : [{ rotulo: `Ver todas as ${lista.length}`, href: verTodas }]}
         parlamentarId={parlamentar.id}
         secao="votacoes"
       />
-    </Secao>
+    </section>
   );
 }
 
@@ -307,18 +472,26 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
     porAno.set(b.ano_eleicao, e);
   }
   const anos = [...porAno.keys()].sort();
-  const [anterior, atual] = anos.slice(-2);
-  const tipos = atual
-    ? [...new Set([...(porAno.get(anterior)?.tipos.keys() ?? []), ...porAno.get(atual)!.tipos.keys()])]
-        .map((t) => ({ t, a: porAno.get(anterior)?.tipos.get(t) ?? 0, b: porAno.get(atual)!.tipos.get(t) ?? 0 }))
-        .sort((x, y) => y.b - x.b)
-    : [];
+  const [anterior, atual] = anos.length >= 2 ? anos.slice(-2) : [undefined, anos[0]];
+  const tipos =
+    atual !== undefined && anterior !== undefined
+      ? [...new Set([...porAno.get(anterior)!.tipos.keys(), ...porAno.get(atual)!.tipos.keys()])]
+          .map((t) => ({ t, a: porAno.get(anterior)!.tipos.get(t) ?? 0, b: porAno.get(atual)!.tipos.get(t) ?? 0 }))
+          .sort((x, y) => y.b - x.b)
+          .slice(0, 6)
+      : [];
+  const maxTipo = Math.max(1, ...tipos.flatMap((r) => [r.a, r.b]));
+  const maxAno = Math.max(1, ...anos.map((a) => porAno.get(a)!.total));
+  const mil = (v: number) => (v >= 10_000 ? `${Math.round(v / 1000).toLocaleString("pt-BR")} mil` : brl(v));
 
   return (
-    <Secao id="bens" titulo="Bens declarados à Justiça Eleitoral">
-      <p className="text-sm text-muted-foreground">
-        Valores informados pelo próprio candidato ao registrar a candidatura. São nominais, sem correção pela inflação,
-        e muitas vezes refletem o preço de compra, não o de mercado.
+    <section id="bens" aria-labelledby="bens-titulo" className={`${CARTAO} gap-3 sm:gap-4 sm:p-6`}>
+      <h2 id="bens-titulo" className={H2}>
+        <Dois curto="Bens declarados ao TSE" longo="Bens declarados à Justiça Eleitoral" />
+      </h2>
+      <p className="hidden text-sm leading-normal text-texto-2 sm:block">
+        Valores informados pelo próprio candidato ao registrar a candidatura. São valores nominais, sem correção pela
+        inflação, e muitas vezes refletem o preço de compra, não o de mercado.
       </p>
       {anos.length === 0 ? (
         <p className="text-muted-foreground">
@@ -326,138 +499,294 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
         </p>
       ) : (
         <>
-          <ul className="grid gap-3 sm:grid-cols-3">
+          {/* Celular: uma barra por eleição (Mobile.dc.html:114-119). */}
+          <ul className="flex flex-col gap-3 sm:hidden">
+            {anos.map((a) => (
+              <li key={a} className="flex flex-col gap-1">
+                <div className="flex justify-between text-[13px]">
+                  <span>Eleição {a}</span>
+                  <strong>{brlCompacto(porAno.get(a)!.total)}</strong>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded bg-muted">
+                  <div
+                    className="h-2.5 bg-primary"
+                    style={{ width: `${Math.max(1, Math.round((porAno.get(a)!.total / maxAno) * 100))}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs leading-normal text-muted-foreground sm:hidden">
+            Valores nominais informados pelo candidato, sem correção pela inflação.
+          </p>
+
+          {/* Desktop: cartões por eleição e comparação por tipo (Main.dc.html:202-226). */}
+          <ul className="hidden grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 sm:grid">
             {anos.map((a, i) => {
               const e = porAno.get(a)!;
               const v = i > 0 ? variacaoNominal(porAno.get(anos[i - 1])!.total, e.total) : null;
               return (
-                <li key={a} className="rounded-lg border p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Eleição {a} · {e.cargo.toLowerCase()}
-                  </p>
-                  <p className="font-heading text-xl font-bold">{brlCompacto(e.total)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {v === null ? "primeira declaração na série" : `${v > 0 ? "+" : ""}${v}% em valor nominal`}
-                  </p>
+                <li key={a} className="flex flex-col gap-1 rounded-[12px] border p-3.5">
+                  <span className="text-[13px] text-muted-foreground">Eleição {a}</span>
+                  <span className="font-heading text-[22px] font-bold">{brlCompacto(e.total)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {v === null
+                      ? feminino(`Candidato a ${e.cargo.toLowerCase()}`, perfil.parlamentar.sexo).replace(/^C/, "c")
+                      : `${v > 0 ? "+" : ""}${v}% sobre ${anos[i - 1]}`}
+                  </span>
                 </li>
               );
             })}
           </ul>
-          {anterior !== undefined && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <caption className="mb-2 text-left font-medium">
-                  Por tipo de bem, {anterior} e {atual}
+          {tipos.length > 0 && (
+            <div className="hidden flex-col gap-3 sm:flex">
+              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-3 rounded-[3px] bg-anterior" />
+                  {anterior}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-3 rounded-[3px] bg-primary" />
+                  {atual}
+                </span>
+              </div>
+              <table className="sr-only">
+                <caption>
+                  Bens por tipo, {anterior} e {atual}
                 </caption>
                 <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th scope="col" className="py-2 pr-2 font-medium">
-                      Tipo
-                    </th>
-                    <th scope="col" className="py-2 pr-2 text-right font-medium">
-                      {anterior}
-                    </th>
-                    <th scope="col" className="py-2 text-right font-medium">
-                      {atual}
-                    </th>
+                  <tr>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">{anterior}</th>
+                    <th scope="col">{atual}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tipos.slice(0, 10).map((r) => (
-                    <tr key={r.t} className="border-b last:border-0">
-                      <td className="py-2 pr-2">{r.t}</td>
-                      <td className="py-2 pr-2 text-right whitespace-nowrap">{brl(r.a)}</td>
-                      <td className="py-2 text-right whitespace-nowrap">{brl(r.b)}</td>
+                  {tipos.map((r) => (
+                    <tr key={r.t}>
+                      <th scope="row">{r.t}</th>
+                      <td>{brl(r.a)}</td>
+                      <td>{brl(r.b)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {tipos.map((r) => (
+                <div key={r.t} aria-hidden="true" className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                  <span className="w-[190px] text-[13px]">{r.t}</span>
+                  <div className="flex flex-[1_1_240px] flex-col gap-[3px]">
+                    <div
+                      className="h-2.5 rounded-[3px] bg-anterior"
+                      style={{ width: `${Math.max(0.5, (r.a / maxTipo) * 100)}%` }}
+                    />
+                    <div
+                      className="h-2.5 rounded-[3px] bg-primary"
+                      style={{ width: `${Math.max(0.5, (r.b / maxTipo) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="w-[150px] text-right text-[13px] text-muted-foreground tabular-nums">
+                    {mil(r.a)} → {mil(r.b)}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
-          <p className="text-xs text-muted-foreground">
-            Mostramos só o tipo e o valor. A descrição livre de cada bem pode conter endereço e fica de fora.
-          </p>
         </>
       )}
       <NotaFonte
-        rotulo="TSE, Portal de Dados Abertos (candidatos e bens declarados), download em lote"
+        rotulo="TSE, Dados Abertos (bens declarados), em lote"
+        rotuloCurto="TSE, dados abertos em lote"
         coleta={perfil.coletas.tse_bem_candidato}
         linkOriginal="https://divulgacandcontas.tse.jus.br/"
+        rotuloOriginal="Ver na DivulgaCand"
         parlamentarId={perfil.parlamentar.id}
         secao="bens"
       />
-    </Secao>
+    </section>
   );
 }
 
 // ---------------------------------------------------------------- Lateral
 
+function feminino(texto: string, sexo: string | null) {
+  if (sexo !== "F") return texto;
+  return texto
+    .replace(/\bdeputado\b/g, "deputada")
+    .replace(/\bsenador\b/g, "senadora")
+    .replace(/\bgovernador\b/g, "governadora")
+    .replace(/\bvereador\b/g, "vereadora")
+    .replace(/\bprefeito\b/g, "prefeita")
+    .replace(/\beleito\b/g, "eleita")
+    .replace(/\bEleito\b/g, "Eleita")
+    .replace(/\bCandidato\b/g, "Candidata");
+}
+
+/** Linha da candidatura no TSE: "Eleita deputada federal (SP), por média · mandato 2027–2031". */
+function marcoCandidatura(c: Perfil["candidaturas"][number], sexo: string | null) {
+  const cargo = c.cargo.toLowerCase();
+  const sit = (c.situacao ?? "").toUpperCase();
+  let texto: string;
+  if (sit.startsWith("ELEITO")) {
+    const via = sit.includes("MÉDIA") ? ", por média" : sit.includes("QP") ? ", por quociente partidário" : "";
+    const mandato = cargo === "deputado federal" ? ` · mandato ${c.ano_eleicao + 1}–${c.ano_eleicao + 5}` : "";
+    texto = `Eleito ${cargo} (${c.sigla_uf})${via}${mandato}`;
+  } else if (sit === "SUPLENTE") {
+    texto = `Suplente de ${cargo} (${c.sigla_uf})`;
+  } else if (sit === "NÃO ELEITO") {
+    texto = `Candidato a ${cargo} (${c.sigla_uf}), não eleito`;
+  } else {
+    texto = `Candidato a ${cargo} (${c.sigla_uf})`;
+  }
+  return feminino(texto, sexo);
+}
+
 export function Lateral({ perfil }: { perfil: Perfil }) {
-  const { parlamentar: p, orgaos, candidaturas } = perfil;
-  const comissoes = orgaos.filter((o) => /titular|presidente|vice/i.test(o.cargo)).slice(0, 12);
+  const { parlamentar: p, orgaos, candidaturas, coletas } = perfil;
+  const comissoes = orgaos
+    .filter((o) => /^comiss/i.test(o.nome_orgao) && /titular|presidente/i.test(o.cargo))
+    .slice(0, 12);
+  const leg = p.id_legislatura ? LEGISLATURAS[p.id_legislatura] : undefined;
+  const marcos = [
+    ...candidaturas.map((c) => ({
+      ano: c.ano_eleicao,
+      texto: marcoCandidatura(c, p.sexo),
+      federal: c.cargo.toUpperCase() === "DEPUTADO FEDERAL",
+    })),
+    ...(leg
+      ? [{ ano: Number(leg.inicio.slice(0, 4)), texto: `Início da ${p.id_legislatura}ª legislatura`, federal: true }]
+      : []),
+  ].sort((a, b) => b.ano - a.ano);
+  const coletadoEm = (k: string) =>
+    coletas[k] ? ` · coletado em ${dataHoraBr(coletas[k].coletado_em).slice(0, 10)}` : "";
+  const fontes = [
+    {
+      nome: "Câmara dos Deputados · API v2",
+      href: p.source_url,
+      det: `Mandato, partido e blocos${coletadoEm("camara_api_deputados")}`,
+    },
+    {
+      nome: "Câmara dos Deputados · CEAP em lote",
+      href: coletas.camara_ceap?.url ?? "https://www.camara.leg.br/cota-parlamentar/",
+      det: `Notas da cota parlamentar${coletadoEm("camara_ceap")}`,
+    },
+    {
+      nome: "Câmara dos Deputados · votações em lote",
+      href: coletas.camara_lote_votos?.url ?? "https://dadosabertos.camara.leg.br/",
+      det: `Votações, votos e orientações${coletadoEm("camara_lote_votos")}`,
+    },
+    {
+      nome: "TSE · Dados Abertos (lote)",
+      href: "https://dadosabertos.tse.jus.br/",
+      det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
+    },
+    { nome: `Metodologia v${METODOLOGIA_VERSAO}`, href: "/metodologia", det: "Regras públicas e versionadas" },
+  ];
+
   return (
-    <aside className="space-y-4">
-      <section aria-labelledby="mandato-titulo" className="space-y-3 rounded-lg border bg-superficie p-5">
-        <h2 id="mandato-titulo" className="font-heading text-lg font-bold">
+    <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[1_1_300px]">
+      <section id="mandato" aria-labelledby="mandato-titulo" className={`${CARTAO} gap-3.5 sm:p-5`}>
+        <h2 id="mandato-titulo" className={H2_LATERAL}>
           Mandato
         </h2>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
           <dt className="text-muted-foreground">Casa</dt>
           <dd>Câmara dos Deputados</dd>
           <dt className="text-muted-foreground">UF</dt>
-          <dd>{p.sigla_uf ?? "—"}</dd>
-          <dt className="text-muted-foreground">Legislatura</dt>
-          <dd>{p.id_legislatura ? `${p.id_legislatura}ª` : "—"}</dd>
+          <dd>{p.sigla_uf ? (NOME_UF[p.sigla_uf] ?? p.sigla_uf) : "—"}</dd>
+          <dt className="text-muted-foreground">Início</dt>
+          <dd>{leg ? dataBr(leg.inicio) : "—"}</dd>
+          <dt className="text-muted-foreground">Fim previsto</dt>
+          <dd>{leg ? dataBr(leg.fim) : "—"}</dd>
           <dt className="text-muted-foreground">Situação</dt>
           <dd>{p.em_exercicio ? "Em exercício" : "Fora de exercício"}</dd>
         </dl>
         {comissoes.length > 0 && (
           <>
-            <h3 className="pt-2 text-sm font-medium">Órgãos e comissões (cargo atual)</h3>
-            <ul className="space-y-1 text-sm">
+            <h3 className="mt-1 text-sm font-bold">Comissões como titular</h3>
+            <ul className="flex list-disc flex-col gap-1 pl-[18px] text-sm">
               {comissoes.map((o) => (
                 <li key={`${o.sigla_orgao}-${o.cargo}`}>
-                  {o.nome_orgao} <span className="text-muted-foreground">· {o.cargo}</span>
+                  {o.nome_orgao}
+                  {/titular/i.test(o.cargo) ? null : <span className="text-muted-foreground"> · {o.cargo}</span>}
                 </li>
               ))}
             </ul>
           </>
         )}
-        {candidaturas.length > 0 && (
+        {marcos.length > 0 && (
           <>
-            <h3 className="pt-2 text-sm font-medium">Candidaturas no TSE</h3>
-            <ul className="space-y-1 text-sm">
-              {candidaturas.map((c) => (
-                <li key={c.sq_candidato}>
-                  {c.ano_eleicao} · {c.cargo.toLowerCase()} ({c.sigla_uf})
-                  {c.situacao ? <span className="text-muted-foreground"> · {c.situacao.toLowerCase()}</span> : null}
+            <h3 className="mt-1 text-sm font-bold">Linha do tempo</h3>
+            <ol className="flex flex-col gap-2.5 text-[13px]">
+              {marcos.map((m, i) => (
+                <li key={i} className="flex gap-2.5">
+                  <span
+                    aria-hidden="true"
+                    className={`mt-1 size-2.5 shrink-0 rounded-full ${m.federal ? "bg-primary" : "bg-anterior"}`}
+                  />
+                  <span>
+                    <strong>{m.ano}</strong> · {m.texto}
+                  </span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </>
         )}
         <p className="text-xs text-muted-foreground">
-          Fonte: Câmara, API v2 e arquivo de órgãos · TSE, candidatos.{" "}
+          Fonte: Câmara, API v2 /deputados/{p.id} e /legislaturas · TSE (candidaturas).{" "}
           <a href={p.source_url} target="_blank" rel="noopener noreferrer">
             Ver na fonte
           </a>
         </p>
       </section>
 
-      <section aria-labelledby="erro-titulo" className="space-y-2 rounded-lg border bg-superficie p-5">
-        <h2 id="erro-titulo" className="font-heading text-lg font-bold">
+      <section id="fontes" aria-labelledby="fontes-titulo" className={`${CARTAO} gap-3 sm:p-5`}>
+        <h2 id="fontes-titulo" className={H2_LATERAL}>
+          De onde vêm os dados
+        </h2>
+        <ul className="flex flex-col gap-2.5">
+          {fontes.map((f) => (
+            <li key={f.nome} className="flex flex-col gap-0.5 border-b border-borda-suave pb-2.5">
+              {f.href.startsWith("/") ? (
+                <Link href={f.href} className="text-sm font-semibold">
+                  {f.nome}
+                </Link>
+              ) : (
+                <a href={f.href} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold">
+                  {f.nome}
+                </a>
+              )}
+              <span className="text-xs text-muted-foreground">{f.det}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs leading-normal text-muted-foreground">
+          Só usamos dados que os órgãos já publicam. Cada registro guarda link e data de coleta.{" "}
+          <Link href="/fontes">Ver todas as coletas</Link>
+        </p>
+      </section>
+
+      <section
+        aria-labelledby="erro-titulo"
+        className="flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5"
+      >
+        <h2 id="erro-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
           Encontrou um erro?
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Parlamentares, assessorias e qualquer pessoa podem pedir correção. Registramos cada pedido e cada alteração.
+        <p className="text-[13px] leading-[1.45] text-texto-2 sm:text-sm sm:leading-normal">
+          <Dois
+            curto="Qualquer pessoa pode pedir correção."
+            longo="Parlamentares, assessorias e qualquer pessoa podem pedir correção. Registramos cada pedido e toda alteração."
+          />
         </p>
         <Link
           href={`/parlamentares/${p.id}/contestar`}
-          className="inline-flex h-10 items-center rounded-md border border-primary px-4 text-sm font-medium no-underline"
+          className={`${BOTAO_PRIMARIO.replace("px-[18px]", "px-4")} self-start`}
         >
           Pedir correção
         </Link>
-        <p className="text-xs text-muted-foreground">Pedidos recebidos para este perfil: {perfil.correcoes}</p>
+        <p className="hidden text-[13px] text-texto-2 sm:block">
+          Pedidos de correção recebidos para este perfil: {perfil.correcoes}
+        </p>
       </section>
     </aside>
   );

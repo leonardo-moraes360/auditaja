@@ -1,0 +1,87 @@
+/** Rótulos por extenso usados no perfil, como no protótipo aprovado. */
+
+export const NOME_UF: Record<string, string> = {
+  AC: "Acre",
+  AL: "Alagoas",
+  AM: "Amazonas",
+  AP: "Amapá",
+  BA: "Bahia",
+  CE: "Ceará",
+  DF: "Distrito Federal",
+  ES: "Espírito Santo",
+  GO: "Goiás",
+  MA: "Maranhão",
+  MG: "Minas Gerais",
+  MS: "Mato Grosso do Sul",
+  MT: "Mato Grosso",
+  PA: "Pará",
+  PB: "Paraíba",
+  PE: "Pernambuco",
+  PI: "Piauí",
+  PR: "Paraná",
+  RJ: "Rio de Janeiro",
+  RN: "Rio Grande do Norte",
+  RO: "Rondônia",
+  RR: "Roraima",
+  RS: "Rio Grande do Sul",
+  SC: "Santa Catarina",
+  SE: "Sergipe",
+  SP: "São Paulo",
+  TO: "Tocantins",
+};
+
+/** Nome dos partidos registrados no TSE (tse.jus.br, "Partidos registrados no TSE"), pela sigla usada pela Câmara. */
+export const NOME_PARTIDO: Record<string, string> = {
+  AVANTE: "Avante",
+  CIDADANIA: "Cidadania",
+  MDB: "Movimento Democrático Brasileiro",
+  MISSÃO: "Partido Missão",
+  NOVO: "Partido Novo",
+  PCdoB: "Partido Comunista do Brasil",
+  PDT: "Partido Democrático Trabalhista",
+  PL: "Partido Liberal",
+  PODE: "Podemos",
+  PP: "Progressistas",
+  PRD: "Partido Renovação Democrática",
+  PSB: "Partido Socialista Brasileiro",
+  PSD: "Partido Social Democrático",
+  PSDB: "Partido da Social Democracia Brasileira",
+  PSOL: "Partido Socialismo e Liberdade",
+  PT: "Partido dos Trabalhadores",
+  PV: "Partido Verde",
+  REDE: "Rede Sustentabilidade",
+  REPUBLICANOS: "Republicanos",
+  SOLIDARIEDADE: "Solidariedade",
+  UNIÃO: "União Brasil",
+};
+
+/** "São Paulo (SP)"; sem nome conhecido, só a sigla. */
+export function ufPorExtenso(uf: string | null): string {
+  if (!uf) return "UF não informada";
+  return NOME_UF[uf] ? `${NOME_UF[uf]} (${uf})` : uf;
+}
+
+/** "Partido dos Trabalhadores (PT)"; sem nome conhecido, só a sigla. */
+export function partidoPorExtenso(sigla: string | null): string | null {
+  if (!sigla) return null;
+  return NOME_PARTIDO[sigla] ? `${NOME_PARTIDO[sigla]} (${sigla})` : sigla;
+}
+
+/** "Deputada federal", "Deputado federal" ou "Deputado(a) federal" quando a Câmara não informa. */
+export function cargoDeputado(sexo: string | null): string {
+  if (sexo === "F") return "Deputada federal";
+  if (sexo === "M") return "Deputado federal";
+  return "Deputado(a) federal";
+}
+
+/** Datas das legislaturas (API v2 da Câmara, /legislaturas). */
+export const LEGISLATURAS: Record<number, { inicio: string; fim: string }> = {
+  56: { inicio: "2019-02-01", fim: "2023-01-31" },
+  57: { inicio: "2023-02-01", fim: "2027-01-31" },
+};
+
+/** "2023–2027" para a legislatura. */
+export function periodoLegislatura(id: number | null): string | null {
+  const l = id ? LEGISLATURAS[id] : undefined;
+  return l ? `${l.inicio.slice(0, 4)}–${l.fim.slice(0, 4)}` : null;
+}

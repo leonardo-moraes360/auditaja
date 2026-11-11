@@ -58,7 +58,7 @@ describe("perfilParlamentar (Postgres)", () => {
     expect(p.ceap.tetoAcumulado).toBeCloseTo(48727.46 * 3, 2);
   });
 
-  it("CEAP-03: no máximo 8 fornecedores, ordenados pelo total", async (ctx) => {
+  it("CEAP-03: no máximo 5 fornecedores, ordenados pelo total", async (ctx) => {
     if (!disponivel) ctx.skip();
     const coleta = (await db.selectFrom("coleta").select("id").executeTakeFirstOrThrow()).id;
     await db
@@ -85,9 +85,9 @@ describe("perfilParlamentar (Postgres)", () => {
       .execute();
     const { perfilParlamentar } = await import("@/data/perfil");
     const p = (await perfilParlamentar(SEED.deputado))!;
-    expect(p.ceap.fornecedores).toHaveLength(8);
+    expect(p.ceap.fornecedores).toHaveLength(5);
     expect(p.ceap.fornecedores[0]).toMatchObject({ fornecedor_nome: "Fornecedor 9", total: 900 });
-    expect(p.ceap.fornecedores.at(-1)).toMatchObject({ fornecedor_nome: "Fornecedor 2", total: 200 });
+    expect(p.ceap.fornecedores.at(-1)).toMatchObject({ fornecedor_nome: "Fornecedor 5", total: 500 });
     await db.deleteFrom("despesa_ceap").where("parlamentar_id", "=", SEED.deputado).execute();
   });
 

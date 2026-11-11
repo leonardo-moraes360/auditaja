@@ -1,18 +1,30 @@
 /* eslint-disable @next/next/no-img-element -- fotos vêm do servidor da Câmara; sem otimização no MVP */
-export function FotoParlamentar({ nome, url, tamanho }: { nome: string; url: string | null; tamanho: number }) {
-  const iniciais = nome
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase();
+
+/**
+ * Foto oficial. Sem `tamanho`: retangular do perfil, 72×88 no celular e 112×136 no desktop (protótipo).
+ * Com `tamanho`: avatar redondo das listas.
+ */
+export function FotoParlamentar({ nome, url, tamanho }: { nome: string; url: string | null; tamanho?: number }) {
+  const caixa = tamanho
+    ? "shrink-0 rounded-full"
+    : "h-[88px] w-[72px] shrink-0 rounded-[10px] sm:h-[136px] sm:w-[112px] sm:rounded-[12px]";
+  const medida = tamanho ? { width: tamanho, height: tamanho } : undefined;
   if (!url) {
+    const iniciais = nome
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0])
+      .join("")
+      .toUpperCase();
     return (
       <span
-        aria-hidden="true"
-        style={{ width: tamanho, height: tamanho }}
-        className="flex shrink-0 items-center justify-center rounded-full bg-secondary font-heading font-bold text-secondary-foreground"
+        role="img"
+        aria-label={`Sem foto oficial de ${nome}`}
+        style={medida}
+        className={`${caixa} flex items-center justify-center bg-secondary font-heading font-bold text-primary ${
+          tamanho ? "" : "text-[26px] sm:text-[40px]"
+        }`}
       >
         {iniciais}
       </span>
@@ -22,11 +34,11 @@ export function FotoParlamentar({ nome, url, tamanho }: { nome: string; url: str
     <img
       src={url}
       alt={`Foto oficial de ${nome}`}
-      width={tamanho}
-      height={tamanho}
-      loading="lazy"
-      className="shrink-0 rounded-full bg-muted object-cover"
-      style={{ width: tamanho, height: tamanho }}
+      width={tamanho ?? 112}
+      height={tamanho ?? 136}
+      loading={tamanho ? "lazy" : undefined}
+      style={medida}
+      className={`${caixa} bg-secondary object-cover`}
     />
   );
 }

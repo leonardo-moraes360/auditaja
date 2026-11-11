@@ -11,6 +11,10 @@ const PAGINAS = [
   "/parlamentares/900000002",
   "/parlamentares/900000001/contestar",
   "/parlamentares/900000001/contestar?enviado=1",
+  "/parlamentares/900000001/acompanhar",
+  "/parlamentares/900000001?ano=mandato",
+  "/parlamentares/900000001?lista=completa",
+  "/sobre",
   "/metodologia",
   "/fontes",
   "/privacidade",
@@ -49,7 +53,7 @@ test("A11Y-02: perfil não rola na horizontal a 320 px (reflow, 1.4.10)", async 
   }
 });
 
-test("A11Y-03: foco visível com contorno sólido de 2 px (2.4.7)", async ({ page }) => {
+test("A11Y-03: foco visível com contorno sólido de 2 px (2.4.7)", async ({ page, isMobile }) => {
   await page.goto("/parlamentares/900000001");
   await page.keyboard.press("Tab"); // pular para o conteúdo
   await page.keyboard.press("Tab"); // logo
@@ -60,7 +64,8 @@ test("A11Y-03: foco visível com contorno sólido de 2 px (2.4.7)", async ({ pag
   await expect(logo).toHaveCSS("outline-color", "rgb(31, 79, 209)");
   const linkRodape = page.locator("footer").getByRole("link", { name: "Metodologia" });
   await linkRodape.focus();
-  await expect(linkRodape).toHaveCSS("outline-color", "rgb(255, 255, 255)");
+  // Rodapé escuro no desktop: contorno branco. No celular o rodapé é claro (protótipo): contorno da marca.
+  await expect(linkRodape).toHaveCSS("outline-color", isMobile ? "rgb(31, 79, 209)" : "rgb(255, 255, 255)");
 });
 
 test("A11Y-04: erro do formulário fica ligado ao campo (3.3.1)", async ({ page }) => {

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const ITENS = [
   { href: "/parlamentares", rotulo: "Parlamentares" },
   { href: "/metodologia", rotulo: "Metodologia" },
-  { href: "/fontes", rotulo: "Fontes" },
+  { href: "/sobre", rotulo: "Sobre" },
 ] as const;
 
 /** Menu principal; a página ativa ganha sublinhado na cor da marca, como no protótipo. */
