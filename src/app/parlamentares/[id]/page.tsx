@@ -90,7 +90,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
           detalhe={
             ceap.tetoAcumulado
               ? `${pct(ceap.totalAno, ceap.tetoAcumulado)}% do teto acumulado até ${MESES[ceap.ultimoMes - 1].toLowerCase()}`
-              : `${ceap.documentos.toLocaleString("pt-BR")} documentos · teto por UF em verificação`
+              : `${ceap.documentos.toLocaleString("pt-BR")} documentos · sem teto conferido para ${perfil.ano}`
           }
         />
         <Indicador

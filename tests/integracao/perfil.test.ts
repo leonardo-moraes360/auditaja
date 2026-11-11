@@ -48,12 +48,14 @@ describe("perfilParlamentar (Postgres)", () => {
     expect(p.anosDisponiveis).toEqual([2026]);
   });
 
-  it("CEAP-05: sem teto verificado para a UF, não há comparação", async (ctx) => {
+  it("CEAP-05: com teto conferido para a UF e o ano, compara com o teto acumulado", async (ctx) => {
     if (!disponivel) ctx.skip();
     const { perfilParlamentar } = await import("@/data/perfil");
     const p = (await perfilParlamentar(SEED.deputada))!;
-    expect(p.ceap.teto).toBeNull();
-    expect(p.ceap.tetoAcumulado).toBeNull();
+    expect(p.ano).toBe(2026);
+    expect(p.ceap.teto).toEqual({ mensal: 48727.46, verificado: true }); // SP
+    expect(p.ceap.ultimoMes).toBe(3);
+    expect(p.ceap.tetoAcumulado).toBeCloseTo(48727.46 * 3, 2);
   });
 
   it("CEAP-03: no máximo 8 fornecedores, ordenados pelo total", async (ctx) => {

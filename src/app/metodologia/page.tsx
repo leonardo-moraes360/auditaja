@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TETO_CEAP_FONTE } from "@/data/teto-ceap";
+import { TETO_CEAP_ANO, TETO_CEAP_ATO, TETO_CEAP_CONFERIDO_EM, TETO_CEAP_FONTE } from "@/data/teto-ceap";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 
 export const metadata: Metadata = { title: "Metodologia" };
@@ -32,12 +32,18 @@ export default function Metodologia() {
           da Câmara. Valores negativos, como compensações de bilhetes, entram na soma como a Câmara os publica.
         </p>
         <p>
-          O teto mensal depende da UF. Ele foi atualizado pelo{" "}
+          O teto mensal depende da UF. Usamos os valores de {TETO_CEAP_ANO} publicados pela Câmara na página{" "}
           <a href={TETO_CEAP_FONTE} target="_blank" rel="noopener noreferrer">
+            Cota Parlamentar
+          </a>{" "}
+          (conferidos em {TETO_CEAP_CONFERIDO_EM}), que refletem o{" "}
+          <a href={TETO_CEAP_ATO} target="_blank" rel="noopener noreferrer">
             Ato da Mesa nº 244/2026
           </a>
-          , mas a tabela de valores não está publicada na página do ato. Só exibimos a comparação com o teto depois de
-          conferir o valor de cada UF no Diário da Câmara.
+          , em vigor desde 20/02/2026. O teto acumulado é o valor mensal vezes o número de meses até o último mês com
+          dados publicados. É uma aproximação: janeiro e o começo de fevereiro de {TETO_CEAP_ANO} ainda seguiam o valor
+          anterior, um pouco menor, então o teto exibido fica um pouco acima do real. Para outros anos, não exibimos a
+          comparação até conferir os valores vigentes.
         </p>
       </section>
 

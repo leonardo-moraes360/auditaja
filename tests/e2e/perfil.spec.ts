@@ -18,7 +18,7 @@ test("indicadores do perfil", async ({ page }) => {
   await expect(page.getByText("2 de 4 em 2026")).toBeVisible(); // VOTO-01: voto vazio não conta
   await expect(page.getByText("50%")).toHaveCount(2); // VOTO-01 (2 de 4) e VOTO-03 (1 de 2)
   await expect(page.getByText("Divergiu em 1 de 2 votações")).toBeVisible();
-  await expect(page.getByText("teto por UF em verificação")).toBeVisible(); // CEAP-05
+  await expect(page.getByText("30% do teto acumulado até mar")).toBeVisible(); // CEAP-05
   await expect(page.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
 });
 
@@ -102,7 +102,7 @@ test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page 
 test("METOD-01: metodologia publica a versão", async ({ page }) => {
   await page.goto("/metodologia");
   await expect(page.getByRole("heading", { level: 1, name: "Metodologia" })).toBeVisible();
-  await expect(page.getByText(/^Versão 1\.0\./)).toBeVisible();
+  await expect(page.getByText(/^Versão 1\.1\./)).toBeVisible();
 });
 
 test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page }) => {
