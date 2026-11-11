@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 28,
+  "next_id": 32,
   "lessons": [
     {
       "id": "L-001",
@@ -492,6 +492,78 @@
       ],
       "created": "2026-11-11T18:00:47Z",
       "last_seen": "2026-11-11T18:00:47Z"
+    },
+    {
+      "id": "L-028",
+      "key": "surviving_mutant::test a masking regex with every separator form it accepts and with two matches in one string so dropping a separator or the global flag fails a test",
+      "text": "Test a masking regex with every separator form it accepts and with two matches in one string, so dropping a separator or the global flag fails a test",
+      "signal": "surviving_mutant",
+      "scope": "privacy",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P06, P07 src/lib/privacy.ts:45 (privacy)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
+    },
+    {
+      "id": "L-029",
+      "key": "surviving_mutant::when a pattern must not match inside a longer digit run test a longer run glued to text on each side so removing either boundary fails a test",
+      "text": "When a pattern must not match inside a longer digit run, test a longer run glued to text on each side so removing either boundary fails a test",
+      "signal": "surviving_mutant",
+      "scope": "privacy",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P03, P04 src/lib/privacy.ts:45 (privacy)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
+    },
+    {
+      "id": "L-030",
+      "key": "surviving_mutant::test date validation with a well formed impossible date such as february 30 on every parameter that uses it not only an out of range month on one",
+      "text": "Test date validation with a well-formed impossible date such as February 30 on every parameter that uses it, not only an out-of-range month on one",
+      "signal": "surviving_mutant",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "D01, D06 src/app/parlamentares/[id]/gastos.csv/route.ts:8 (routes)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
+    },
+    {
+      "id": "L-031",
+      "key": "surviving_mutant::a shared helper applied to a new call site needs a test at that call site in the same branch not one that only arrives with another branch",
+      "text": "A shared helper applied to a new call site needs a test at that call site in the same branch, not one that only arrives with another branch",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P10 src/lib/privacy.ts:41 (tests)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
     }
   ]
 }

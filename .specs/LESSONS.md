@@ -176,6 +176,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: B03 src/lib/emendas.ts:99 (lib)
 - last seen: 2026-11-11T18:00:47Z
 
+### L-028 - Test a masking regex with every separator form it accepts and with two matches in one string, so dropping a separator or the global flag fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `privacy` · harmful: 0
+- features: emendas-transparencia
+- evidence: P06, P07 src/lib/privacy.ts:45 (privacy)
+- last seen: 2026-11-11T19:07:51Z
+
+### L-029 - When a pattern must not match inside a longer digit run, test a longer run glued to text on each side so removing either boundary fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `privacy` · harmful: 0
+- features: emendas-transparencia
+- evidence: P03, P04 src/lib/privacy.ts:45 (privacy)
+- last seen: 2026-11-11T19:07:51Z
+
+### L-030 - Test date validation with a well-formed impossible date such as February 30 on every parameter that uses it, not only an out-of-range month on one
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: emendas-transparencia
+- evidence: D01, D06 src/app/parlamentares/[id]/gastos.csv/route.ts:8 (routes)
+- last seen: 2026-11-11T19:07:51Z
+
+### L-031 - A shared helper applied to a new call site needs a test at that call site in the same branch, not one that only arrives with another branch
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: emendas-transparencia
+- evidence: P10 src/lib/privacy.ts:41 (tests)
+- last seen: 2026-11-11T19:07:51Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
