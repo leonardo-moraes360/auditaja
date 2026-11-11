@@ -156,6 +156,8 @@ describe("C06, C17: formatos da seção", () => {
     expect(brlMi(110_580_000)).toMatch(/^R\$\s110,6 mi$/);
     expect(brlMi(7_000_000)).toMatch(/^R\$\s7,0 mi$/);
     expect(brlMi(399_000)).toMatch(/^R\$\s399 mil$/);
+    expect(brlMi(1_000_000)).toMatch(/^R\$\s1,0 mi$/);
+    expect(brlMi(999_000)).toMatch(/^R\$\s999 mil$/);
   });
   it("lê a data da base guardada na coleta", () => {
     expect(baseDaColeta("base de 10/11/2026")).toBe("10/11/2026");

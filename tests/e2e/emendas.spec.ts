@@ -79,7 +79,7 @@ test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }
   await expect(secao).toContainText(
     "Prefeituras e fundos municipais aparecem pelo nome. CPF de pessoa física aparece mascarado, como no Portal da Transparência.",
   );
-  await expect(secao.locator("figure")).toContainText(
+  await expect(secao.locator("figure > span")).toHaveText(
     "Em 2026 o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.",
   );
   await expect(linhas.first().locator("td").nth(2)).toBeVisible();
@@ -285,4 +285,19 @@ test("C22: CSV de notas filtra pelo período da sanção", async ({ request }) =
   expect(fora.trim().split("\r\n")).toHaveLength(1);
   const ate = await (await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}&ate=2026-02-09`)).text();
   expect(ate.trim().split("\r\n")).toHaveLength(1);
+});
+
+test("C22: limites inclusive de de/ate e data inexistente ignorada", async ({ request }) => {
+  const doc = encodeURIComponent("55.666.777/0001-88");
+  const linhas = async (q: string) =>
+    (await (await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}${q}`)).text()).trim().split("\r\n")
+      .length - 1;
+  // A única nota é de 10/02/2026.
+  expect(await linhas("&de=2026-02-10")).toBe(1);
+  expect(await linhas("&ate=2026-02-10")).toBe(1);
+  expect(await linhas("&de=2026-02-11")).toBe(0);
+  expect(await linhas("&ate=2026-02-09")).toBe(0);
+  const r = await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}&ate=2026-13-99`);
+  expect(r.status()).toBe(200);
+  expect((await r.text()).trim().split("\r\n")).toHaveLength(2);
 });

@@ -1,6 +1,13 @@
 import type { NextRequest } from "next/server";
 import { getDb } from "@/db/client";
 
+/** "AAAA-MM-DD" de uma data que existe; "2026-13-99" não passa. */
+function dataIsoValida(s: string | null): boolean {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+
 /** CSV com ";" e BOM, para abrir direto em planilhas em português. */
 function celula(v: unknown): string {
   const s = v == null ? "" : String(v);
@@ -43,8 +50,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
     .orderBy("data_emissao");
   if (ano && /^\d{4}$/.test(ano)) q = q.where("ano", "=", Number(ano));
   if (doc) q = q.where("fornecedor_doc", "=", doc);
-  if (de && /^\d{4}-\d{2}-\d{2}$/.test(de)) q = q.where("data_emissao", ">=", de);
-  if (ate && /^\d{4}-\d{2}-\d{2}$/.test(ate)) q = q.where("data_emissao", "<=", ate);
+  if (dataIsoValida(de)) q = q.where("data_emissao", ">=", de!);
+  if (dataIsoValida(ate)) q = q.where("data_emissao", "<=", ate!);
   const linhas = await q.execute();
 
   const cabecalho = [

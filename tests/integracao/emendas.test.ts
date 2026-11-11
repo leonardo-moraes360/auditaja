@@ -127,7 +127,8 @@ beforeAll(async () => {
         })
         .execute();
     }
-    zip = await zipar({ "EmendasParlamentares.csv": CSV_BASE, "EmendasParlamentares_PorFavorecido.csv": CSV_FAV });
+    // Favorecidos primeiro: a data da base tem de vir da entrada certa, não da primeira do ZIP.
+    zip = await zipar({ "EmendasParlamentares_PorFavorecido.csv": CSV_FAV, "EmendasParlamentares.csv": CSV_BASE });
   } catch {
     disponivel = false;
   }
