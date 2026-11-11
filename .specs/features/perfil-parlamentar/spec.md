@@ -56,7 +56,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 2. IF o termo contém `%` ou `_` THEN the system SHALL tratá-los como caracteres literais, sem curinga. <!-- BUSCA-02 -->
 3. WHEN o usuário clica num resultado THEN the system SHALL abrir `/parlamentares/{id}` com o nome do deputado no título de nível 1. <!-- BUSCA-03 -->
 4. WHEN o termo buscado é a sigla de uma UF (sem diferenciar caixa) THEN the system SHALL incluir os deputados em exercício dessa UF, além dos que casam pelo nome. <!-- BUSCA-04 -->
-5. The system SHALL exibir no campo de busca do topo o placeholder "Buscar deputado por nome ou UF" e no campo da página de parlamentares o rótulo "Nome ou UF" com placeholder "Ex.: Maria, Silva ou SP". <!-- BUSCA-05 -->
+5. The system SHALL exibir no campo de busca do topo o placeholder "Buscar deputado ou senador por nome ou UF" (texto alterado por SUI-08 do perfil do senador) e no campo da página de parlamentares o rótulo "Nome ou UF" com placeholder "Ex.: Maria, Silva ou SP". <!-- BUSCA-05 -->
 
 **Independent Test**: buscar "joao" no seed fictício e obter só "João Ilustrativo"; clicar em "Maria Exemplo" e ver o perfil.
 

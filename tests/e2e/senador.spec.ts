@@ -142,3 +142,49 @@ test("SUI-10: acompanhar, contestar e CSV funcionam pelo id do senador", async (
   await page.goto(`/parlamentares/${SENADOR}/acompanhar`);
   await expect(page.getByText(/Otávio Modelo/).first()).toBeVisible();
 });
+
+test("SUI-06/07: lista com filtros por Casa e cargo no cartão", async ({ page }) => {
+  await page.goto("/parlamentares");
+  await expect(page.getByRole("heading", { level: 1, name: "Parlamentares federais em exercício" })).toBeVisible();
+  const casas = page.getByRole("navigation", { name: "Casa legislativa" });
+  await expect(casas.getByRole("link", { name: "Todos (4)" })).toHaveAttribute("aria-current", "page");
+  await expect(casas.getByRole("link", { name: "Câmara dos Deputados (2)" })).toBeVisible();
+  await casas.getByRole("link", { name: "Senado Federal (2)" }).click();
+  await expect(page).toHaveURL(/\/parlamentares\?casa=senado$/);
+  await expect(casas.getByRole("link", { name: "Senado Federal (2)" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText("2 resultado(s). Fonte: Senado Federal, Dados Abertos.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Otávio Modelo\s*Senador · PFX · MG/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Lúcia Fictícia\s*Senadora · PFY · AC/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Maria Exemplo/ })).toHaveCount(0);
+  await page.getByRole("link", { name: /Otávio Modelo/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Otávio Modelo" })).toBeVisible();
+});
+
+test("SUI-06: o filtro de Casa vale junto com nome e UF", async ({ page }) => {
+  await page.goto("/parlamentares?casa=camara");
+  await expect(page.getByRole("link", { name: /Deputada federal · PFX · SP/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toHaveCount(0);
+  await page.getByLabel("Nome ou UF").fill("mg");
+  await page.getByRole("button", { name: "Filtrar" }).click();
+  await expect(page).toHaveURL(/casa=camara/);
+  await expect(page.getByText("Nenhum parlamentar encontrado com esses filtros.")).toBeVisible();
+});
+
+test("SUI-09: casa desconhecida vira Todos", async ({ page }) => {
+  await page.goto("/parlamentares?casa=stf");
+  await expect(
+    page.getByRole("navigation", { name: "Casa legislativa" }).getByRole("link", { name: "Todos (4)" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Maria Exemplo/ })).toBeVisible();
+});
+
+test("SUI-08: busca do topo cita deputado e senador e acha senadores", async ({ page, isMobile }) => {
+  await page.goto("/metodologia");
+  if (isMobile) await page.getByRole("button", { name: "Buscar" }).click();
+  const busca = page.getByRole("searchbox", { name: "Buscar parlamentar" });
+  await expect(busca).toHaveAttribute("placeholder", "Buscar deputado ou senador por nome ou UF");
+  await busca.fill("otavio");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
+});

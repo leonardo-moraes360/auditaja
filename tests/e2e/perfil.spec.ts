@@ -156,7 +156,7 @@ test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page, isMobil
   await abrirTopo(page, isMobile, "Buscar");
   await expect(page.getByRole("searchbox", { name: "Buscar parlamentar" })).toHaveAttribute(
     "placeholder",
-    "Buscar deputado por nome ou UF",
+    "Buscar deputado ou senador por nome ou UF", // SUI-08 substitui o texto de BUSCA-05
   );
   await expect(page.getByLabel("Nome ou UF")).toHaveAttribute("placeholder", "Ex.: Maria, Silva ou SP");
 });

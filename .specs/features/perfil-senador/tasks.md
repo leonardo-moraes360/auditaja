@@ -287,8 +287,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] e2e da lista passa
-- [ ] Gate full passa
+- [x] e2e da lista passa
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full
