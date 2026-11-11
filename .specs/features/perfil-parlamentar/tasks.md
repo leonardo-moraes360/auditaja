@@ -710,3 +710,22 @@ Phase 9:  T26
 | T24 | Teste de estrutura de páginas | unit | unit | ✅ OK |
 | T25 | Páginas e estilos | e2e | e2e | ✅ OK |
 | T26 | Página + helper puro | e2e + unit | unit + e2e | ✅ OK |
+
+---
+
+### T29: Paridade com o protótipo aprovado
+
+**What**: Rubrica auditável de paridade (`paridade/rubrica.md`, 93 itens de visual, layout desktop e celular, conteúdo e comportamento) e verificações independentes e adversariais (`paridade/verificacao-N.md`) até ≥ 95%. Tokens do protótipo (bordas, raios, cores de gráfico), cabeçalho do perfil em cartão único com foto retangular e indicadores, abas de seção que acompanham a rolagem, topo do celular com "Buscar" e "Menu", resumo do celular, "Mandato todo", "Baixar CSV", feed Atom para "Acompanhar atualizações", linha do tempo e "De onde vêm os dados" na lateral, página Sobre. Migração 0004: `parlamentar.sexo` (deputados.csv) e proposição principal da votação (votacoesObjetos).
+**Where**: `src/app/parlamentares/[id]/**`, `src/components/perfil/*`, `src/components/topo*.tsx`, `src/components/rodape.tsx`, `src/lib/rotulos.ts`, `src/data/perfil.ts`, `src/ingest/camara.ts`, `src/db/migrations/0004_paridade.ts`, `src/app/sobre/page.tsx`
+**Depends on**: None
+**Requirement**: PAR-01 a PAR-08, CEAP-03
+
+**Done when**:
+
+- [x] Verificador independente mede ≥ 95% na rubrica (verificação 5: 96,8%), com as divergências intencionais listadas à parte
+- [x] Unit: rótulos por extenso, sexo do deputados.csv, proposição principal citada na descrição
+- [x] E2E: Baixar CSV (CPF mascarado), feed Atom, abas até Mandato e Fontes, Mandato todo, resumo do celular, topo do celular
+- [x] Gate full passa (lint, typecheck, 113 unit e integração, build, 90 e2e e 4 pulados por tamanho de tela)
+
+**Tests**: unit, integration, e2e
+**Gate**: full

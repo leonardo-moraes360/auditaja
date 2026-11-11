@@ -72,7 +72,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 
 1. WHEN o perfil abre THEN the system SHALL exibir o total líquido do ano como a soma de `valor_liquido` das despesas do deputado naquele ano. <!-- CEAP-01 -->
 2. WHEN o perfil abre THEN the system SHALL agrupar os gastos por tipo de despesa, em ordem decrescente de valor. <!-- CEAP-02 -->
-3. WHEN o perfil abre THEN the system SHALL listar até 8 maiores fornecedores com documento publicável e total. <!-- CEAP-03 -->
+3. WHEN o perfil abre THEN the system SHALL listar até 5 maiores fornecedores com documento publicável e total, como no protótipo. <!-- CEAP-03 -->
 4. IF o ano pedido em `?ano=` não tem despesas do deputado THEN the system SHALL exibir o ano mais recente que tem. <!-- CEAP-04 -->
 5. WHEN o perfil abre e há teto conferido para a UF e o ano THEN the system SHALL exibir o total do ano como % do teto acumulado (teto mensal × meses até o último mês com dados). <!-- CEAP-05 -->
 6. WHILE não houver teto conferido para a UF e o ano the system SHALL omitir a comparação com o teto. <!-- CEAP-06 -->
@@ -155,6 +155,14 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 4. The system SHALL exibir o rodapé com fundo `#15181E`, como no protótipo. <!-- UI-02 -->
 5. The system SHALL renderizar de forma estática a casca das páginas com dados (o componente da página não é assíncrono) e carregar a parte com dados dentro de `<Suspense>`, para a navegação ser instantânea. <!-- UI-03 -->
 6. The system SHALL exibir `cursor: pointer` em todo botão e `cursor: not-allowed` quando o botão estiver desabilitado. <!-- UI-04 -->
+7. The system SHALL atingir paridade ≥ 95% com o protótipo aprovado (desktop 1440 px e celular 390 px), medida pela rubrica `paridade/rubrica.md` por um verificador independente; divergências intencionais ficam listadas à parte. <!-- PAR-01 -->
+8. The system SHALL exibir o cargo com o gênero informado pela Câmara (`siglaSexo` do deputados.csv), a UF por extenso e o nome do partido com a sigla. <!-- PAR-02 -->
+9. The system SHALL exibir em cada votação a proposição principal (ex.: "PL 1234/2026", de votacoesObjetos) com a ementa e o resultado. <!-- PAR-03 -->
+10. WHEN o usuário escolhe "Mandato todo" THEN the system SHALL somar a CEAP de todos os anos coletados e mostrar uma barra por ano. <!-- PAR-04 -->
+11. The system SHALL oferecer "Baixar CSV" com as notas da CEAP do deputado no período, só com campos já minimizados na coleta (AD-002). <!-- PAR-05 -->
+12. The system SHALL oferecer "Acompanhar atualizações" como feed Atom público por deputado, sem cadastro nem e-mail. <!-- PAR-06 -->
+13. The system SHALL marcar a aba de seção da parte visível do perfil, e as abas Mandato e Fontes levam às seções da lateral. <!-- PAR-07 -->
+14. WHILE a largura é de celular the system SHALL mostrar o topo com botões "Buscar" e "Menu", indicadores 2×2 e o resumo (4 tipos de despesa, 3 votações, links "Ver todas as notas e fornecedores" e "Ver as N votações"). <!-- PAR-08 -->
 
 **Independent Test**: no seed, a lateral mostra "Comissão de Finanças e Tributação"; o item "Parlamentares" fica sublinhado no perfil; `/metodologia` mostra "Versão 1.0.".
 
@@ -267,6 +275,14 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | NAV-01 | P2: Contexto do mandato | Tasks | Verified |
 | UI-02 | P2: Contexto do mandato | Tasks | Verified |
 | UI-04 | P2: Contexto do mandato | Tasks | Verified |
+| PAR-01 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-02 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-03 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-04 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-05 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-06 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-07 | P2: Contexto do mandato | T29 | Implemented |
+| PAR-08 | P2: Contexto do mandato | T29 | Implemented |
 | UI-03 | P2: Contexto do mandato | Tasks | Needs Fix |
 | A11Y-01 | P1: Acessibilidade | Tasks | Implementing |
 | A11Y-02 | P1: Acessibilidade | Tasks | Implementing |
