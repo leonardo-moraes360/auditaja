@@ -103,8 +103,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] Cada sigla de SPRES-01/02 tem caso de teste
-- [ ] Gate quick passa
+- [x] Cada sigla de SPRES-01/02 tem caso de teste
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
