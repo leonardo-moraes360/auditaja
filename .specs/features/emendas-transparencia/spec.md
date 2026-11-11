@@ -51,7 +51,7 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 | Órgão no aviso de sanção | "{categoria} {período}. Órgão sancionador: {órgão}." | O artboard dizia "aplicado pelo"; a concordância muda com a categoria ("Multa", "Impedimento") e com o órgão, e a fonte não traz gênero | n |
 | Link de notas no aviso | "Ver a nota" / "Ver as N notas", com N = notas dentro do período da sanção; baixa `gastos.csv` filtrado por `de`/`ate`; sem nota no período, sem link | Igual ao artboard ("Ver as 4 notas") | n |
 | Filtro da seção | `?emendas=AAAA` ou `?emendas=mandato`; padrão "mandato"; botões para os dois anos mais recentes com emenda | Proposta aprovada destaca "Mandato todo"; parâmetro próprio para não colidir com `?ano=` da cota | n |
-| Versão da metodologia | Sobe de 1.3 para 1.4 | Nova regra pública de cruzamento | n |
+| Versão da metodologia | Sobe para 1.5 (a 1.4 é da frente de presença, PR #6) | Nova regra pública de cruzamento | n |
 
 **Open questions:** none - all resolved or logged above.
 
@@ -137,7 +137,7 @@ O perfil do deputado mostra a cota, as votações e os bens, mas não mostra a p
 
 **Acceptance Criteria**:
 
-1. The system SHALL mostrar `METODOLOGIA_VERSAO` igual a "1.4". <!-- MET-01 -->
+1. The system SHALL mostrar `METODOLOGIA_VERSAO` igual a "1.5". <!-- MET-01 -->
 2. The system SHALL ter na página `/metodologia` uma seção "Emendas parlamentares" com a regra de ligação por nome, o período a partir de 2024 e a definição de pago. <!-- MET-02 -->
 3. The system SHALL ter na página `/metodologia` uma seção "Sanções de fornecedores" com a regra de cruzamento por CNPJ e a de nota dentro do período. <!-- MET-03 -->
 4. The system SHALL listar no bloco "De onde vêm os dados" do perfil as fontes "Portal da Transparência · Emendas (lote)" e "Portal da Transparência · CEIS e CNEP (lote)". <!-- MET-04 -->
