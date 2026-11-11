@@ -100,10 +100,10 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] ZIP de fixture latin1 com homônimo, autor sem casamento, bancada, ano 2023, PF, CNPJ e "Sem informação"
-- [ ] Segunda execução não duplica linhas
-- [ ] 403 não grava nada
-- [ ] Full gate passa
+- [x] ZIP de fixture latin1 com homônimo, autor sem casamento, bancada, ano 2023, PF, CNPJ e "Sem informação"
+- [x] Segunda execução não duplica linhas
+- [x] 403 não grava nada
+- [x] Full gate passa
 
 **Tests**: integration
 **Gate**: full

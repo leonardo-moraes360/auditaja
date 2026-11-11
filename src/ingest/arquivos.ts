@@ -1,3 +1,5 @@
+import type { Readable } from "node:stream";
+import { parse as parseStream } from "csv-parse";
 import { parse } from "csv-parse/sync";
 import iconv from "iconv-lite";
 import yauzl from "yauzl";
@@ -45,6 +47,53 @@ export function extrairDoZip(zip: Buffer, nome: string | ((n: string) => boolean
       z.readEntry();
     });
   });
+}
+
+/** Abre uma entrada de um ZIP em memória como stream, sem descompactá-la inteira. */
+function abrirEntrada(zip: Buffer, casa: (n: string) => boolean): Promise<Readable> {
+  return new Promise((resolve, reject) => {
+    yauzl.fromBuffer(zip, { lazyEntries: true }, (err, z) => {
+      if (err || !z) return reject(err ?? new Error("zip inválido"));
+      let achou = false;
+      z.on("entry", (e: yauzl.Entry) => {
+        if (!casa(e.fileName)) return z.readEntry();
+        achou = true;
+        z.openReadStream(e, (err2, s) => {
+          if (err2 || !s) return reject(err2);
+          s.on("end", () => z.close());
+          resolve(s);
+        });
+      });
+      z.on("end", () => {
+        if (!achou) reject(new Error("entrada não encontrada no zip"));
+      });
+      z.readEntry();
+    });
+  });
+}
+
+/**
+ * Lê um CSV de dentro de um ZIP linha a linha (`;`, aspas, cabeçalho), decodificando em stream.
+ * Serve para arquivos grandes, como os 183 MB de favorecidos de emendas do Portal da Transparência.
+ */
+export async function* linhasCsvDoZip(
+  zip: Buffer,
+  nome: string,
+  encoding: "utf8" | "latin1" = "latin1",
+): AsyncGenerator<Linha> {
+  const entrada = await abrirEntrada(zip, (n) => n === nome);
+  const parser = entrada.pipe(iconv.decodeStream(encoding)).pipe(
+    parseStream({
+      columns: true,
+      delimiter: ";",
+      bom: true,
+      skip_empty_lines: true,
+      relax_quotes: true,
+      relax_column_count: true,
+      trim: true,
+    }),
+  );
+  for await (const linha of parser) yield linha as Linha;
 }
 
 /** Normaliza nomes para casamento entre bases: sem acento, maiúsculo, espaços simples. */
