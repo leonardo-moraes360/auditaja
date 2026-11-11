@@ -26,13 +26,25 @@ describe("orientação aplicável ao partido", () => {
     expect(tipoBancadaParaPartido(bancada, partido)).toBeNull();
   });
 
-  it("partido direto tem precedência sobre federação e bloco", () => {
+  it("partido direto tem precedência sobre bloco", () => {
     const o = orientacaoDoPartido({
       voto: "Sim",
       siglaPartido: "PSD",
       orientacoes: [
         { siglaBancada: "Bl UniPpPsd...", orientacao: "Não" },
         { siglaBancada: "PSD", orientacao: "Sim" },
+      ],
+    });
+    expect(o).toEqual({ orientacao: "Sim", tipo: "partido" });
+  });
+
+  it("partido tem precedência sobre federação, mesmo listada antes", () => {
+    const o = orientacaoDoPartido({
+      voto: "Sim",
+      siglaPartido: "PSDB",
+      orientacoes: [
+        { siglaBancada: "Fdr PSDB-CIDADAN", orientacao: "Não" },
+        { siglaBancada: "PSDB", orientacao: "Sim" },
       ],
     });
     expect(o).toEqual({ orientacao: "Sim", tipo: "partido" });

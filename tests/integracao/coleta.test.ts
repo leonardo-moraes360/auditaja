@@ -37,7 +37,8 @@ function zipar(conteudo: string): Promise<Buffer> {
 }
 
 let zip: Buffer;
-const cliente = () =>
+let zipQuebrado: Buffer;
+const cliente = (servir: () => Buffer = () => zip) =>
   new ClienteEducado({
     intervaloMinMs: 0,
     dormir: async () => {},
@@ -45,7 +46,7 @@ const cliente = () =>
     fetchImpl: (async (input: URL | string) => {
       const url = input.toString();
       if (url.endsWith("/robots.txt")) return new Response("", { status: 404 });
-      if (url === urlCeap(ANO)) return new Response(new Uint8Array(zip), { status: 200 });
+      if (url === urlCeap(ANO)) return new Response(new Uint8Array(servir()), { status: 200 });
       return new Response("", { status: 404 });
     }) as typeof fetch,
   });
@@ -55,6 +56,10 @@ beforeAll(async () => {
     await migrateToLatest(db);
     await semear(db);
     zip = await zipar(CSV);
+    // Segunda linha com mês inválido: o insert falha depois do delete.
+    zipQuebrado = await zipar(
+      [CABECALHO, linha("12.345.678/0001-90", "Aérea", "10", "9").replace(`"3";"${ANO}"`, `"x";"${ANO}"`)].join("\n"),
+    );
   } catch {
     disponivel = false;
   }
@@ -121,5 +126,22 @@ describe("coletarCeap", () => {
       .where("ano", "=", 2026)
       .executeTakeFirstOrThrow();
     expect(Number(outros.n)).toBe(3);
+  });
+
+  it("COLETA-07: se a recoleta falha no meio, a transação desfaz e o ano anterior continua", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    await expect(
+      coletarCeap(
+        db,
+        cliente(() => zipQuebrado),
+        ANO,
+      ),
+    ).rejects.toThrow();
+    const n = await db
+      .selectFrom("despesa_ceap")
+      .select(db.fn.countAll<string>().as("n"))
+      .where("ano", "=", ANO)
+      .executeTakeFirstOrThrow();
+    expect(Number(n.n)).toBe(2);
   });
 });

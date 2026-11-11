@@ -104,15 +104,27 @@ export async function semear(db: Kysely<Database>) {
 
     await trx
       .insertInto("orgao_membro")
-      .values({
-        parlamentar_id: SEED.deputada,
-        sigla_orgao: "CFT",
-        nome_orgao: "Comissão de Finanças e Tributação",
-        cargo: "Titular",
-        data_inicio: "2025-03-01",
-        data_fim: null,
-        coleta_id: cDep,
-      })
+      .values([
+        {
+          parlamentar_id: SEED.deputada,
+          sigla_orgao: "CFT",
+          nome_orgao: "Comissão de Finanças e Tributação",
+          cargo: "Titular",
+          data_inicio: "2025-03-01",
+          data_fim: null,
+          coleta_id: cDep,
+        },
+        {
+          // Encerrado: não deve aparecer no perfil.
+          parlamentar_id: SEED.deputada,
+          sigla_orgao: "CE",
+          nome_orgao: "Comissão de Educação",
+          cargo: "Titular",
+          data_inicio: "2023-03-01",
+          data_fim: "2025-02-28",
+          coleta_id: cDep,
+        },
+      ])
       .execute();
 
     const despesa = (
@@ -211,6 +223,20 @@ export async function semear(db: Kysely<Database>) {
           source_url: "https://dadosabertos.camara.leg.br/api/v2/votacoes/seed-3",
           coleta_id: cVot,
         },
+        {
+          // A Câmara publica linhas de voto vazias: não contam como presença.
+          id: "seed-4",
+          data: "2026-09-01",
+          sigla_orgao: "PLEN",
+          descricao: "Mantido o veto fictício 9/2026",
+          proposicao: null,
+          aprovacao: 1,
+          votos_sim: 300,
+          votos_nao: 100,
+          votos_outros: 0,
+          source_url: "https://dadosabertos.camara.leg.br/api/v2/votacoes/seed-4",
+          coleta_id: cVot,
+        },
       ])
       .execute();
     await trx
@@ -218,6 +244,7 @@ export async function semear(db: Kysely<Database>) {
       .values([
         { votacao_id: "seed-1", parlamentar_id: SEED.deputada, voto: "Não", sigla_partido: "PFX", coleta_id: cVot },
         { votacao_id: "seed-2", parlamentar_id: SEED.deputada, voto: "Sim", sigla_partido: "PFX", coleta_id: cVot },
+        { votacao_id: "seed-4", parlamentar_id: SEED.deputada, voto: "", sigla_partido: "PFX", coleta_id: cVot },
       ])
       .execute();
     await trx

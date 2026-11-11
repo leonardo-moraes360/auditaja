@@ -48,7 +48,8 @@ describe("ClienteEducado (R7)", () => {
     const { cli } = fake({
       "https://h.gov.br/robots.txt": {
         status: 200,
-        body: "<html><body>Disallow: /</body></html>",
+        // Se o HTML fosse lido como robots, estas linhas bloqueariam tudo.
+        body: "User-agent: *\nDisallow: /",
         headers: { "content-type": "text/html; charset=utf-8" },
       },
       "https://h.gov.br/dados": { status: 200 },

@@ -15,9 +15,8 @@ test("indicadores do perfil", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}`);
   await expect(page.getByText("Cota parlamentar usada em 2026")).toBeVisible();
   await expect(page.getByText("R$ 44 mil")).toBeVisible();
-  await expect(page.getByText("67%").first()).toBeVisible(); // VOTO-01: 2 de 3
-  await expect(page.getByText("2 de 3 em 2026")).toBeVisible();
-  await expect(page.getByText("50%").first()).toBeVisible(); // VOTO-03: 1 de 2
+  await expect(page.getByText("2 de 4 em 2026")).toBeVisible(); // VOTO-01: voto vazio não conta
+  await expect(page.getByText("50%")).toHaveCount(2); // VOTO-01 (2 de 4) e VOTO-03 (1 de 2)
   await expect(page.getByText("Divergiu em 1 de 2 votações")).toBeVisible();
   await expect(page.getByText("teto por UF em verificação")).toBeVisible(); // CEAP-05
   await expect(page.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
@@ -49,26 +48,55 @@ test("VOTO-05: filtro de divergência", async ({ page }) => {
   await expect(page.getByText("Aprovada a MPV fictícia 1.300/2026")).toHaveCount(0);
 });
 
-test("VOTO-06/07: votação sem voto mostra 'sem registro' e o filtro de ausências só lista ela", async ({ page }) => {
+test("VOTO-06/07: votação sem voto mostra 'sem registro' e o filtro de ausências só lista votações sem voto", async ({
+  page,
+}) => {
   await page.goto(`/parlamentares/${ID}?votos=ausencias`);
   await expect(page.getByText("Aprovada a MPV fictícia 1.300/2026")).toBeVisible();
-  await expect(page.getByText("Votou: sem registro")).toBeVisible();
+  await expect(page.getByText("Mantido o veto fictício 9/2026")).toBeVisible(); // voto vazio também é ausência
+  await expect(page.getByText("Votou: sem registro")).toHaveCount(2);
   await expect(page.getByText("Rejeitada a PEC fictícia 12/2026")).toHaveCount(0);
   await expect(page.getByText("Aprovado o PL fictício 1.234/2026")).toHaveCount(0);
 });
 
-test("MAND-01: lateral lista órgãos com cargo atual", async ({ page }) => {
+test("MAND-01: lateral lista só órgãos com cargo atual, com o cargo", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}`);
-  await expect(page.getByText("Comissão de Finanças e Tributação")).toBeVisible();
+  const item = page.getByRole("listitem").filter({ hasText: "Comissão de Finanças e Tributação" });
+  await expect(item).toHaveText("Comissão de Finanças e Tributação · Titular");
+  await expect(page.getByText("Comissão de Educação")).toHaveCount(0);
 });
 
-test("NAV-01: item ativo do menu tem aria-current e sublinhado na cor da marca", async ({ page }) => {
-  await page.goto(`/parlamentares/${ID}`);
-  const nav = page.getByRole("navigation", { name: "Principal" });
-  const ativo = nav.getByRole("link", { name: "Parlamentares" });
-  await expect(ativo).toHaveAttribute("aria-current", "page");
-  await expect(ativo).toHaveCSS("border-bottom-color", "rgb(31, 79, 209)");
-  await expect(nav.getByRole("link", { name: "Metodologia" })).not.toHaveAttribute("aria-current", "page");
+for (const [caminho, item, outro] of [
+  [`/parlamentares/${ID}`, "Parlamentares", "Metodologia"],
+  ["/parlamentares", "Parlamentares", "Fontes"],
+  ["/metodologia", "Metodologia", "Parlamentares"],
+] as const) {
+  test(`NAV-01: em ${caminho} o item ${item} fica ativo com sublinhado de 2 px na cor da marca`, async ({ page }) => {
+    await page.goto(caminho);
+    const nav = page.getByRole("navigation", { name: "Principal" });
+    const ativo = nav.getByRole("link", { name: item });
+    await expect(ativo).toHaveAttribute("aria-current", "page");
+    await expect(ativo).toHaveCSS("border-bottom-color", "rgb(31, 79, 209)");
+    await expect(ativo).toHaveCSS("border-bottom-width", "2px");
+    await expect(nav.getByRole("link", { name: outro })).not.toHaveAttribute("aria-current", "page");
+  });
+}
+
+test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page }) => {
+  await page.goto("/parlamentares");
+  await expect(page.getByRole("searchbox", { name: "Buscar parlamentar" })).toHaveAttribute(
+    "placeholder",
+    "Buscar deputado por nome ou UF",
+  );
+  await expect(page.getByLabel("Nome ou UF")).toHaveAttribute("placeholder", "Ex.: Maria, Silva ou SP");
+});
+
+test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page }) => {
+  await page.goto("/metodologia");
+  await page.getByRole("searchbox", { name: "Buscar parlamentar" }).fill("rj");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("link", { name: /João Ilustrativo/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Maria Exemplo/ })).toHaveCount(0);
 });
 
 test("METOD-01: metodologia publica a versão", async ({ page }) => {
@@ -90,7 +118,9 @@ test("EDGE-02/03: deputado sem despesas nem bens", async ({ page }) => {
   await page.goto(`/parlamentares/${SEM_DADOS}`);
   await expect(page.getByText(/^Nenhuma despesa publicada para \d{4}\.$/)).toBeVisible();
   await expect(page.getByText(/Não encontramos declarações de bens/)).toBeVisible();
-  await expect(page.getByText("nenhuma declaração encontrada")).toBeVisible();
+  const indicadorBens = page.locator("div.rounded-lg").filter({ hasText: "Bens declarados ao TSE" });
+  await expect(indicadorBens.getByText("—", { exact: true })).toBeVisible();
+  await expect(indicadorBens.getByText("nenhuma declaração encontrada")).toBeVisible();
 });
 
 test("EDGE-04: sem rolagem horizontal", async ({ page }) => {

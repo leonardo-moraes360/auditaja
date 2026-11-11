@@ -89,14 +89,15 @@ describe("perfilParlamentar (Postgres)", () => {
     await db.deleteFrom("despesa_ceap").where("parlamentar_id", "=", SEED.deputado).execute();
   });
 
-  it("VOTO-01/03: presença 2 de 3 e alinhamento 1 de 2; sem voto vira null", async (ctx) => {
+  it("VOTO-01/03: presença 2 de 4 (voto vazio não conta) e alinhamento 1 de 2; sem voto vira null", async (ctx) => {
     if (!disponivel) ctx.skip();
     const { perfilParlamentar } = await import("@/data/perfil");
     const p = (await perfilParlamentar(SEED.deputada))!;
-    expect(p.votacoes.totalPlenario).toBe(3);
+    expect(p.votacoes.totalPlenario).toBe(4);
     expect(p.votacoes.presentes).toBe(2);
     expect(p.votacoes.alinhamento).toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 });
     expect(p.votacoes.lista[0]).toMatchObject({ id: "seed-3", voto: null, orientacao: "Sim" });
+    expect(p.votacoes.lista.find((v) => v.id === "seed-4")).toMatchObject({ voto: null });
   });
 
   it("BENS-01: total por eleição casada", async (ctx) => {
@@ -140,6 +141,16 @@ describe("buscarParlamentares (Postgres)", () => {
     const { buscarParlamentares } = await import("@/data/perfil");
     expect(await buscarParlamentares({ q: "joana" })).toEqual([]);
     expect((await buscarParlamentares({ q: "joana", todos: true })).map((r) => r.id)).toEqual([SEED.foraDeExercicio]);
+  });
+
+  it("BUSCA-04: sigla de UF também busca pela UF, sem perder o nome", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { buscarParlamentares, ufDaBusca } = await import("@/data/perfil");
+    expect((await buscarParlamentares({ q: "sp" })).map((r) => r.id)).toEqual([SEED.deputada]);
+    expect((await buscarParlamentares({ q: "RJ" })).map((r) => r.id)).toEqual([SEED.deputado]);
+    expect(ufDaBusca(" mg ")).toBe("MG");
+    expect(ufDaBusca("XX")).toBeNull();
+    expect(ufDaBusca("maria")).toBeNull();
   });
 
   it("BUSCA-02: % e _ são literais", async (ctx) => {
