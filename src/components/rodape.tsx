@@ -1,11 +1,9 @@
 import Link from "next/link";
+import { responsavel } from "@/lib/responsavel";
 
 /** R13: identificação pública do controlador e do encarregado (LGPD). */
 export function Rodape() {
-  const controlador = process.env.NEXT_PUBLIC_CONTROLADOR_NOME ?? "[NOME DO CONTROLADOR]";
-  const doc = process.env.NEXT_PUBLIC_CONTROLADOR_DOC ?? "[CNPJ]";
-  const encarregado = process.env.NEXT_PUBLIC_ENCARREGADO_NOME ?? "[NOME DO ENCARREGADO]";
-  const email = process.env.NEXT_PUBLIC_ENCARREGADO_EMAIL ?? "[E-MAIL DO ENCARREGADO]";
+  const { controlador, doc, encarregado, email } = responsavel();
   return (
     <footer className="mt-16 bg-[#15181e] text-[#d5d7dc]">
       <div className="mx-auto grid max-w-6xl gap-4 px-4 py-8 text-sm md:grid-cols-2">
