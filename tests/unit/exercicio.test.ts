@@ -186,6 +186,36 @@ describe("PRES-01: períodos fora do exercício a partir do histórico da Câmar
     ]);
   });
 
+  it("períodos iguais separados por dias de exercício não se juntam (nem com um dia só no meio)", () => {
+    const p = periodosForaDoExercicio(
+      [
+        POSSE,
+        ev("2026-02-01T00:00", "Licença", "Saída - A - Missão"),
+        ev("2026-02-10T08:00", "Exercício"),
+        ev("2026-02-11T00:00", "Licença", "Saída - A - Missão"),
+        ev("2026-02-20T08:00", "Exercício"),
+        ev("2026-02-28T00:00", "Licença", "Saída - A - Missão"),
+      ],
+      INI,
+    );
+    expect(p).toEqual([
+      { inicio: "2026-02-01", fim: "2026-02-09", situacao: "Licença", motivo: "Missão" },
+      { inicio: "2026-02-11", fim: "2026-02-19", situacao: "Licença", motivo: "Missão" },
+      { inicio: "2026-02-28", fim: null, situacao: "Licença", motivo: "Missão" },
+    ]);
+  });
+
+  it("mudança de situação sem prefixo de movimento abre período novo", () => {
+    const p = periodosForaDoExercicio(
+      [POSSE, ev("2026-02-01T00:00", "Licença", "Saída - A - Missão"), ev("2026-03-01T00:00", "VACANCIA", null)],
+      INI,
+    );
+    expect(p).toEqual([
+      { inicio: "2026-02-01", fim: "2026-02-28", situacao: "Licença", motivo: "Missão" },
+      { inicio: "2026-03-01", fim: null, situacao: "VACANCIA", motivo: "VACANCIA" },
+    ]);
+  });
+
   it("período de um dia é mantido e tira a votação daquele dia", () => {
     const p = periodosForaDoExercicio(
       [

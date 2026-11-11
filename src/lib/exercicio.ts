@@ -113,9 +113,9 @@ export function periodosForaDoExercicio(eventos: EventoHistorico[], inicioLegisl
     // Antes da primeira posse, convocação e outros eventos não mudam nada: segue "antes da posse".
     if (aberto.situacao === ANTES_DA_POSSE) continue;
     if (aberto.situacao === e.situacao && aberto.motivo === motivo) continue;
-    // Já fora, só um movimento ("Saída - ..." ou "DIVERSO - ...") muda o motivo; um registro avulso
-    // como "Alteração de partido" não é uma nova saída.
-    if (!movimento(e.descricaoStatus)) continue;
+    // Já fora, na mesma situação, só um movimento ("Saída - ..." ou "DIVERSO - ...") muda o motivo:
+    // um registro avulso como "Alteração de partido" não é uma nova saída. Mudança de situação sempre conta.
+    if (aberto.situacao === e.situacao && !movimento(e.descricaoStatus)) continue;
     // Já fora do exercício: o dia do novo evento é fora de qualquer jeito, então o novo período começa nele.
     const inicio: string = dia > aberto.inicio ? dia : aberto.inicio;
     fechar(somarDias(inicio, -1));
