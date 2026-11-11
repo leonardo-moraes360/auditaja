@@ -297,6 +297,12 @@ test("C22: limites inclusive de de/ate e data inexistente ignorada", async ({ re
   expect(await linhas("&ate=2026-02-10")).toBe(1);
   expect(await linhas("&de=2026-02-11")).toBe(0);
   expect(await linhas("&ate=2026-02-09")).toBe(0);
+  // Datas que não existem ou mal formadas são ignoradas, sem erro 500.
+  for (const q of ["&de=2026-02-30", "&de=abc", "&de=2026-2-1", "&ate=2026-02-30"]) {
+    const x = await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}${q}`);
+    expect(x.status(), q).toBe(200);
+    expect((await x.text()).trim().split("\r\n"), q).toHaveLength(2);
+  }
   const r = await request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&doc=${doc}&ate=2026-13-99`);
   expect(r.status()).toBe(200);
   expect((await r.text()).trim().split("\r\n")).toHaveLength(2);
