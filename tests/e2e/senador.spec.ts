@@ -188,3 +188,18 @@ test("SUI-08: busca do topo cita deputado e senador e acha senadores", async ({ 
   await page.keyboard.press("Enter");
   await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
 });
+
+test("SUI-11: metodologia descreve as regras do Senado e fontes lista o Senado", async ({ page }) => {
+  await page.goto("/metodologia#senado");
+  const s = page.locator("section#senado");
+  await expect(s.getByRole("heading", { level: 2, name: "Senado Federal" })).toBeVisible();
+  await expect(s.getByText(/Licenças e afastamentos saem da conta \(AFO, DJ, EP/)).toBeVisible();
+  await expect(
+    s.getByText(/Orientações de Governo, Maioria, Minoria, Oposição, Bancada Feminina e blocos não contam/),
+  ).toBeVisible();
+  await expect(s.getByText(/contam para a presença, mas nunca para o alinhamento/)).toBeVisible();
+  await expect(s.getByText(/não compara o gasto com um teto e mostra a média mensal/)).toBeVisible();
+  await expect(page.getByText("Versão 1.4. Toda mudança gera nova versão.")).toBeVisible();
+  await page.goto("/fontes");
+  await expect(page.getByText(/^Senado Federal: API de Dados Abertos/)).toBeVisible();
+});

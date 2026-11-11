@@ -310,8 +310,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] e2e confere os textos das regras
-- [ ] Gate full passa
+- [x] e2e confere os textos das regras
+- [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full

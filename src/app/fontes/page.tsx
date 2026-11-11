@@ -16,6 +16,16 @@ export default function Fontes() {
         no máximo uma requisição por segundo. O hash SHA-256 permite conferir que o arquivo é o mesmo publicado pelo
         órgão.
       </p>
+      <ul className="max-w-3xl list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        <li>Câmara dos Deputados: API v2 e arquivos em lote de dadosabertos.camara.leg.br.</li>
+        <li>
+          Senado Federal: API de Dados Abertos (legis.senado.leg.br/dadosabertos) e API de dados administrativos
+          (adm.senado.gov.br), sem cadastro nem chave. Os dois endereços respondem 403 ao pedido do robots.txt; seguimos
+          a RFC 9309, que trata essa resposta como ausência de restrição, e paramos a coleta se qualquer outro endereço
+          responder 401 ou 403.
+        </li>
+        <li>Tribunal Superior Eleitoral: arquivos em lote de cdn.tse.jus.br.</li>
+      </ul>
       <Suspense fallback={<Esqueleto linhas={4} />}>
         <TabelaColetas />
       </Suspense>
