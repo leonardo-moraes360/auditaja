@@ -92,7 +92,8 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 3. The system SHALL contar no alinhamento só votações com orientação "Sim" ou "Não" e voto "Sim" ou "Não", e marcar como divergência quando forem diferentes. <!-- VOTO-03 -->
 4. IF uma sigla de bloco é uma sigla completa de partido (ex.: "Psd") THEN the system SHALL casá-la só por igualdade, nunca como prefixo (PSD não casa PSDB). <!-- VOTO-04 -->
 5. WHEN o usuário escolhe o filtro "Divergiu da orientação" THEN the system SHALL listar só votações em que voto e orientação são Sim/Não e diferentes. <!-- VOTO-05 -->
-6. WHEN uma votação não tem voto do deputado THEN the system SHALL mostrar "sem registro" no lugar do voto. <!-- VOTO-06 -->
+6. WHEN uma votação não tem voto do deputado THEN the system SHALL mostrar "Votou: sem registro" no lugar do voto. <!-- VOTO-06 -->
+7. WHEN o usuário escolhe o filtro "Sem voto registrado" THEN the system SHALL listar só votações sem voto do deputado. <!-- VOTO-07 -->
 
 **Independent Test**: no seed, presença 67% (2 de 3) e alinhamento 50% (1 de 2); o filtro de divergência mostra só a PEC fictícia.
 
@@ -129,9 +130,26 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 4. The system SHALL substituir o nome de fornecedor pessoa física por "Prestador pessoa física". <!-- PRIV-02 -->
 5. The system SHALL descartar o nome de passageiros e o CPF do parlamentar presentes no arquivo da CEAP. <!-- PRIV-03 -->
 6. IF o documento do fornecedor não tem 11 nem 14 dígitos THEN the system SHALL não exibir documento. <!-- PRIV-04 -->
-7. The system SHALL exibir no rodapé o controlador e o encarregado (LGPD). <!-- PRIV-05 -->
+7. The system SHALL exibir no rodapé as linhas "Controlador: …" e "Encarregado (LGPD): …". <!-- PRIV-05 -->
 
 **Independent Test**: no seed, o perfil mostra `***.456.789-**`, a nota de fonte da CEAP e o rodapé com "Encarregado (LGPD)".
+
+---
+
+### P2: Contexto do mandato e fidelidade ao protótipo
+
+**User Story**: As a cidadão, I want ver o mandato, entender a metodologia e navegar como no protótipo aprovado so that eu saiba onde estou e como os números são calculados.
+
+**Why P2**: Completa o perfil aprovado; não bloqueia a auditoria dos dados.
+
+**Acceptance Criteria**:
+
+1. WHEN o perfil abre THEN the system SHALL listar na lateral os órgãos em que o deputado tem cargo sem data de fim, com o cargo. <!-- MAND-01 -->
+2. The system SHALL publicar em `/metodologia` o texto da metodologia com a linha "Versão {METODOLOGIA_VERSAO}.". <!-- METOD-01 -->
+3. WHILE o usuário está em uma página do menu principal (ou abaixo dela) the system SHALL marcar o item com `aria-current="page"` e sublinhado de 2 px na cor da marca `#1F4FD1`. <!-- NAV-01 -->
+4. The system SHALL exibir o rodapé com fundo `#15181E`, como no protótipo. <!-- UI-02 -->
+
+**Independent Test**: no seed, a lateral mostra "Comissão de Finanças e Tributação"; o item "Parlamentares" fica sublinhado no perfil; `/metodologia` mostra "Versão 1.0.".
 
 ---
 
@@ -177,7 +195,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 - IF o id do perfil não é numérico ou não existe THEN the system SHALL mostrar "Página não encontrada" com meta `noindex`. <!-- EDGE-01 -->
 - IF o deputado não tem despesas no ano THEN the system SHALL mostrar "Nenhuma despesa publicada para {ano}.". <!-- EDGE-02 -->
 - IF o deputado não tem bens casados THEN the system SHALL mostrar a mensagem de ausência e "—" no indicador. <!-- EDGE-03 -->
-- WHEN a tela tem 390 px de largura THEN the system SHALL não ter rolagem horizontal na página. <!-- EDGE-04 -->
+- WHEN a tela tem 390 px de largura THEN the system SHALL não ter rolagem horizontal na página (`scrollWidth` ≤ largura da janela). <!-- EDGE-04 -->
 - IF o seed é executado contra banco cujo nome não termina em `_test` THEN the system SHALL recusar e sair com código 1. <!-- EDGE-05 -->
 
 ---
@@ -188,34 +206,39 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | -------------- | ----- | ----- | ------ |
 | BUSCA-01 | P1: Encontrar um deputado | Tasks | Implementing |
 | BUSCA-02 | P1: Encontrar um deputado | Tasks | Implementing |
-| BUSCA-03 | P1: Encontrar um deputado | Tasks | Implementing |
-| CEAP-01 | P1: Ver gastos da cota | Tasks | Implementing |
-| CEAP-02 | P1: Ver gastos da cota | Tasks | Implementing |
+| BUSCA-03 | P1: Encontrar um deputado | Tasks | Verified |
+| CEAP-01 | P1: Ver gastos da cota | Tasks | Verified |
+| CEAP-02 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-03 | P1: Ver gastos da cota | Tasks | Implementing |
 | CEAP-04 | P1: Ver gastos da cota | Tasks | Implementing |
 | CEAP-05 | P1: Ver gastos da cota | Tasks | Implementing |
-| VOTO-01 | P1: Ver votações e alinhamento | Tasks | Implementing |
+| VOTO-01 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-02 | P1: Ver votações e alinhamento | Tasks | Implementing |
-| VOTO-03 | P1: Ver votações e alinhamento | Tasks | Implementing |
-| VOTO-04 | P1: Ver votações e alinhamento | Tasks | Implementing |
-| VOTO-05 | P1: Ver votações e alinhamento | Tasks | Implementing |
+| VOTO-03 | P1: Ver votações e alinhamento | Tasks | Verified |
+| VOTO-04 | P1: Ver votações e alinhamento | Tasks | Verified |
+| VOTO-05 | P1: Ver votações e alinhamento | Tasks | Verified |
+| VOTO-07 | P1: Ver votações e alinhamento | Tasks | Implementing |
 | VOTO-06 | P1: Ver votações e alinhamento | Tasks | Implementing |
 | BENS-01 | P1: Ver bens declarados | Tasks | Implementing |
-| BENS-02 | P1: Ver bens declarados | Tasks | Implementing |
-| BENS-03 | P1: Ver bens declarados | Tasks | Implementing |
-| BENS-04 | P1: Ver bens declarados | Tasks | Implementing |
+| BENS-02 | P1: Ver bens declarados | Tasks | Verified |
+| BENS-03 | P1: Ver bens declarados | Tasks | Verified |
+| BENS-04 | P1: Ver bens declarados | Tasks | Verified |
 | PROV-01 | P1: Proveniência e privacidade | Tasks | Implementing |
 | PROV-02 | P1: Proveniência e privacidade | Tasks | Implementing |
-| PRIV-01 | P1: Proveniência e privacidade | Tasks | Implementing |
-| PRIV-02 | P1: Proveniência e privacidade | Tasks | Implementing |
-| PRIV-03 | P1: Proveniência e privacidade | Tasks | Implementing |
-| PRIV-04 | P1: Proveniência e privacidade | Tasks | Implementing |
+| PRIV-01 | P1: Proveniência e privacidade | Tasks | Verified |
+| PRIV-02 | P1: Proveniência e privacidade | Tasks | Verified |
+| PRIV-03 | P1: Proveniência e privacidade | Tasks | Verified |
+| PRIV-04 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-05 | P1: Proveniência e privacidade | Tasks | Implementing |
+| MAND-01 | P2: Contexto do mandato | Tasks | Implementing |
+| METOD-01 | P2: Contexto do mandato | Tasks | Implementing |
+| NAV-01 | P2: Contexto do mandato | Tasks | Implementing |
+| UI-02 | P2: Contexto do mandato | Tasks | Implementing |
 | CORR-01 | P1: Pedir correção | Tasks | Implementing |
 | CORR-02 | P1: Pedir correção | Tasks | Implementing |
 | CORR-03 | P1: Pedir correção | Tasks | Implementing |
-| COLETA-01 | P1: Coleta não invasiva | Tasks | Implementing |
-| COLETA-02 | P1: Coleta não invasiva | Tasks | Implementing |
+| COLETA-01 | P1: Coleta não invasiva | Tasks | Verified |
+| COLETA-02 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-03 | P1: Coleta não invasiva | Tasks | Implementing |
 | COLETA-04 | P1: Coleta não invasiva | Tasks | Implementing |
 | COLETA-05 | P1: Coleta não invasiva | Tasks | Implementing |
@@ -228,7 +251,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | EDGE-04 | Edge cases | Tasks | Implementing |
 | EDGE-05 | Edge cases | Tasks | Implementing |
 
-**Coverage:** 41 total, 41 mapped to tasks, 0 unmapped.
+**Coverage:** 46 total, 46 mapped to tasks, 0 unmapped.
 
 ---
 

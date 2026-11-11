@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 8,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "gate_fail::run pnpm build after any ui commit because cache components prerender fails on client hooks like usepathname outside suspense",
+      "text": "Run pnpm build after any UI commit because Cache Components prerender fails on client hooks like usePathname outside Suspense",
+      "signal": "gate_fail",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/components/nav-principal.tsx:14 (pnpm build at 34fcdb3) (ui)"
+      ],
+      "created": "2026-11-11T13:18:57Z",
+      "last_seen": "2026-11-11T13:18:57Z"
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::test every status code branch and the exact backoff sequence and retry cap of an http client not only one representative status",
+      "text": "Test every status-code branch and the exact backoff sequence and retry cap of an HTTP client, not only one representative status",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M3 M5 M10 src/ingest/http.ts:20,90,98 (ingest)"
+      ],
+      "created": "2026-11-11T13:18:57Z",
+      "last_seen": "2026-11-11T13:18:57Z"
+    },
+    {
+      "id": "L-003",
+      "key": "surviving_mutant::seed enough rows to exceed every query limit and exercise every fallback parameter in read layer integration tests",
+      "text": "Seed enough rows to exceed every query limit and exercise every fallback parameter in read-layer integration tests",
+      "signal": "surviving_mutant",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M8 M9 src/data/perfil.ts:102,134 (data)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-004",
+      "key": "surviving_mutant::each deduplication rule needs its own fixture with a real duplicate that survives earlier filters",
+      "text": "Each deduplication rule needs its own fixture with a real duplicate that survives earlier filters",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M6 src/ingest/camara.ts:145 (ingest)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::cover error and empty state paths of each route in e2e asserting the exact message the spec defines not only the happy path",
+      "text": "Cover error and empty-state paths of each route in e2e asserting the exact message the spec defines, not only the happy path",
+      "signal": "ac_gap",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CORR-02 CORR-03 EDGE-02 EDGE-03 EDGE-05 (routes)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-006",
+      "key": "ac_gap::do not assert a transformed value that the seed already stores pre transformed test the transformation through the real ingestion path",
+      "text": "Do not assert a transformed value that the seed already stores pre-transformed; test the transformation through the real ingestion path",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tests/integracao/perfil.test.ts:38 (tests)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-007",
+      "key": "spec_precision_gap::assert the exact spec value such as the computed delay or viewport width instead of a loose threshold or a nearby device preset",
+      "text": "Assert the exact spec value such as the computed delay or viewport width instead of a loose threshold or a nearby device preset",
+      "signal": "spec_precision_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "COLETA-04 tests/unit/http.test.ts:61; EDGE-04 viewport 412 (tests)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    }
+  ]
+}
