@@ -8,6 +8,7 @@ import type { Database } from "./types";
 export const SEED = {
   deputada: 900000001,
   deputado: 900000002,
+  foraDeExercicio: 900000003,
 };
 
 export async function semear(db: Kysely<Database>) {
@@ -82,6 +83,20 @@ export async function semear(db: Kysely<Database>) {
           id_legislatura: 57,
           em_exercicio: true,
           source_url: "https://dadosabertos.camara.leg.br/api/v2/deputados/900000002",
+          coleta_id: cDep,
+        },
+        {
+          id: SEED.foraDeExercicio,
+          casa: "camara",
+          nome: "Joana Licenciada",
+          nome_civil: "JOANA LICENCIADA",
+          sigla_partido: "PFX",
+          sigla_uf: "MG",
+          url_foto: null,
+          data_nascimento: null,
+          id_legislatura: 57,
+          em_exercicio: false,
+          source_url: "https://dadosabertos.camara.leg.br/api/v2/deputados/900000003",
           coleta_id: cDep,
         },
       ])
