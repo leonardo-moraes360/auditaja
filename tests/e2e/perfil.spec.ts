@@ -51,6 +51,26 @@ test("PRIV-01/05: CPF mascarado e responsáveis no rodapé", async ({ page }) =>
   await expect(rodape).toHaveCSS("background-color", "rgb(21, 24, 30)");
 });
 
+test("PRIV-06: política de privacidade pelo rodapé, com os mesmos responsáveis", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  const rodape = page.locator("footer");
+  const controlador = await rodape.getByText(/^Controlador: /).textContent();
+  const encarregado = (await rodape.getByText(/^Encarregado \(LGPD\): /).textContent())?.replace(/^.*?: /, "");
+  await rodape.getByRole("link", { name: "Política de privacidade" }).click();
+  await expect(page).toHaveURL(/\/privacidade$/);
+  await expect(page).toHaveTitle("Política de privacidade · Auditaja");
+  await expect(page.getByRole("heading", { level: 1, name: "Política de privacidade" })).toBeVisible();
+  await expect(page.getByText(/^Atualizada em \d{2}\/\d{2}\/\d{4}\./)).toBeVisible();
+  const conteudo = page.locator("main");
+  await expect(conteudo.getByText(controlador!, { exact: true })).toBeVisible();
+  await expect(
+    conteudo.getByText(`Encarregado pelo tratamento de dados pessoais (LGPD): ${encarregado}`),
+  ).toBeVisible();
+  for (const secao of ["Quais dados pessoais tratamos", "Seus direitos e como exercê-los", "Cookies"]) {
+    await expect(page.getByRole("heading", { level: 2, name: secao })).toBeVisible();
+  }
+});
+
 test("VOTO-05: filtro de divergência", async ({ page }) => {
   await page.goto(`/parlamentares/${ID}?votos=divergiu`);
   await expect(page.getByText("Rejeitada a PEC fictícia 12/2026")).toBeVisible();

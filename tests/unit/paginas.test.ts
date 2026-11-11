@@ -14,6 +14,11 @@ const paginas = {
   "/parlamentares/[id]/contestar": () => import("@/app/parlamentares/[id]/contestar/page"),
   "/fontes": () => import("@/app/fontes/page"),
 };
+/** Páginas sem dados de banco: casca toda estática, sem componente assíncrono. */
+const estaticas = {
+  "/metodologia": () => import("@/app/metodologia/page"),
+  "/privacidade": () => import("@/app/privacidade/page"),
+};
 
 /** Conta componentes assíncronos (as partes com dados) dentro e fora de <Suspense>. */
 function contarAsync(no: ReactNode, dentro = false, acc = { dentro: 0, fora: 0 }) {
@@ -41,5 +46,14 @@ describe("UI-03: páginas com dados têm casca estática", () => {
     const n = contarAsync(arvore);
     expect(n.dentro).toBeGreaterThanOrEqual(1);
     expect(n.fora).toBe(0);
+  });
+});
+
+describe("UI-03: páginas sem dados são inteiramente estáticas", () => {
+  it.each(Object.entries(estaticas))("%s não tem componente assíncrono", async (_, carregar) => {
+    const { default: Pagina } = await carregar();
+    expect(Pagina.constructor.name).toBe("Function");
+    const n = contarAsync((Pagina as () => ReactNode)());
+    expect(n).toEqual({ dentro: 0, fora: 0 });
   });
 });
