@@ -46,6 +46,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 | Datas de nascimento | Uma requisição a `/senador/{codigo}` por senador da legislatura, para casar com o TSE | A lista não traz nascimento; 1 req/s fica em ~2 min | n |
 | Comissões | Uma requisição a `/senador/{codigo}/comissoes` por senador em exercício; só participações sem data de fim e só da Casa SF | Mesmo recorte do deputado (órgãos atuais) | n |
 | robots.txt | `legis.senado.leg.br` e `adm.senado.gov.br` respondem 403 ao robots.txt; seguimos a RFC 9309 (4xx = sem restrição), já implementada no `ClienteEducado` | Um 403 em qualquer outra URL encerra a coleta | n |
+| Emendas de SCEAPS-02 (nota sem CNPJ válido) e SVOT-06 ("Votou (secreto)" no celular) | Ratificadas | Feitas durante as correções das verificações; confirmadas pelo usuário na thread em 11/11/2026 às 18:55 | y |
 | Texto da busca do topo | Muda de "Buscar deputado por nome ou UF" para "Buscar deputado ou senador por nome ou UF" | O protótipo aprovado já usa esse texto; altera BUSCA-05 do perfil do deputado | n |
 
 **Open questions:** none - all resolved or logged above.
