@@ -133,6 +133,9 @@ describe("PRES-01: períodos fora do exercício a partir do histórico da Câmar
       "Secretário de Estado",
     );
     expect(motivoDoStatus(null, "Licença")).toBe("Licença");
+    expect(motivoDoStatus("Saída - Afastamento de titular  por Recontagem", "SUPLENCIA")).toBe(
+      "Afastamento de titular por Recontagem",
+    );
     expect(motivoDoStatus("  ", "Afastado")).toBe("Afastado");
   });
 

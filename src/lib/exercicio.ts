@@ -47,7 +47,7 @@ function somarDias(dia: string, n: number): string {
 export function motivoDoStatus(descricao: string | null, situacao: string): string {
   const partes = (descricao ?? "")
     .split(" - ")
-    .map((s) => s.trim())
+    .map((s) => s.replace(/\s+/g, " ").trim())
     .filter(Boolean);
   return partes.at(-1) ?? situacao;
 }
