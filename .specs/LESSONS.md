@@ -89,8 +89,20 @@ Seen once or not yet corroborated. Tracked, not trusted.
 ### L-013 - A test title must not claim a case its fixture does not contain
 - signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
 - features: perfil-parlamentar
-- evidence: tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests)
-- last seen: 2026-11-11T13:31:25Z
+- evidence: tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests) (+1 more)
+- last seen: 2026-11-11T13:41:06Z
+
+### L-014 - For an additive OR filter, test an input that matches both branches with rows that only one branch would return, so replacing the union with either branch fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `data` · harmful: 0
+- features: perfil-parlamentar
+- evidence: U3 src/data/perfil.ts:48-49 (BUSCA-04) (data)
+- last seen: 2026-11-11T13:41:06Z
+
+### L-015 - When a requirement has two structural parts, assert each part separately, since a fallback such as a root loading boundary can keep the build green when one part is removed
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: perfil-parlamentar
+- evidence: U5 U6 src/app/fontes/page.tsx:19-21, src/app/parlamentares/page.tsx (UI-03); tests/unit/paginas.test.ts:18 (ui)
+- last seen: 2026-11-11T13:41:06Z
 
 ## Quarantined (failed when applied - ignore)
 

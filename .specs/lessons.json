@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 14,
+  "next_id": 16,
   "lessons": [
     {
       "id": "L-001",
@@ -235,10 +235,47 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests)"
+        "tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests)",
+        "tests/integracao/perfil.test.ts:146 title 'sem perder o nome' vs fixture (BUSCA-04) (tests)"
       ],
       "created": "2026-11-11T13:31:25Z",
-      "last_seen": "2026-11-11T13:31:25Z"
+      "last_seen": "2026-11-11T13:41:06Z"
+    },
+    {
+      "id": "L-014",
+      "key": "surviving_mutant::for an additive or filter test an input that matches both branches with rows that only one branch would return so replacing the union with either branch fails a test",
+      "text": "For an additive OR filter, test an input that matches both branches with rows that only one branch would return, so replacing the union with either branch fails a test",
+      "signal": "surviving_mutant",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U3 src/data/perfil.ts:48-49 (BUSCA-04) (data)"
+      ],
+      "created": "2026-11-11T13:41:06Z",
+      "last_seen": "2026-11-11T13:41:06Z"
+    },
+    {
+      "id": "L-015",
+      "key": "surviving_mutant::when a requirement has two structural parts assert each part separately since a fallback such as a root loading boundary can keep the build green when one part is removed",
+      "text": "When a requirement has two structural parts, assert each part separately, since a fallback such as a root loading boundary can keep the build green when one part is removed",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U5 U6 src/app/fontes/page.tsx:19-21, src/app/parlamentares/page.tsx (UI-03); tests/unit/paginas.test.ts:18 (ui)"
+      ],
+      "created": "2026-11-11T13:41:06Z",
+      "last_seen": "2026-11-11T13:41:06Z"
     }
   ]
 }

@@ -210,15 +210,15 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | BUSCA-01 | P1: Encontrar um deputado | Tasks | Verified |
 | BUSCA-02 | P1: Encontrar um deputado | Tasks | Verified |
 | BUSCA-03 | P1: Encontrar um deputado | Tasks | Verified |
-| BUSCA-04 | P1: Encontrar um deputado | Tasks | Implementing |
-| BUSCA-05 | P1: Encontrar um deputado | Tasks | Implementing |
+| BUSCA-04 | P1: Encontrar um deputado | Tasks | Needs Fix |
+| BUSCA-05 | P1: Encontrar um deputado | Tasks | Verified |
 | CEAP-01 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-02 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-03 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-04 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-05 | P1: Ver gastos da cota | Tasks | Verified |
-| VOTO-01 | P1: Ver votações e alinhamento | Tasks | Implementing |
-| VOTO-02 | P1: Ver votações e alinhamento | Tasks | Implementing |
+| VOTO-01 | P1: Ver votações e alinhamento | Tasks | Verified |
+| VOTO-02 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-03 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-04 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-05 | P1: Ver votações e alinhamento | Tasks | Verified |
@@ -235,24 +235,25 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | PRIV-03 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-04 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-05 | P1: Proveniência e privacidade | Tasks | Verified |
-| MAND-01 | P2: Contexto do mandato | Tasks | Implementing |
+| MAND-01 | P2: Contexto do mandato | Tasks | Verified |
 | METOD-01 | P2: Contexto do mandato | Tasks | Verified |
-| NAV-01 | P2: Contexto do mandato | Tasks | Implementing |
+| NAV-01 | P2: Contexto do mandato | Tasks | Verified |
 | UI-02 | P2: Contexto do mandato | Tasks | Verified |
+| UI-03 | P2: Contexto do mandato | Tasks | Needs Fix |
 | CORR-01 | P1: Pedir correção | Tasks | Verified |
 | CORR-02 | P1: Pedir correção | Tasks | Verified |
 | CORR-03 | P1: Pedir correção | Tasks | Verified |
 | COLETA-01 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-02 | P1: Coleta não invasiva | Tasks | Verified |
-| COLETA-03 | P1: Coleta não invasiva | Tasks | Implementing |
+| COLETA-03 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-04 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-05 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-06 | P1: Coleta não invasiva | Tasks | Verified |
-| COLETA-07 | P1: Coleta não invasiva | Tasks | Implementing |
+| COLETA-07 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-08 | P1: Coleta não invasiva | Tasks | Verified |
 | EDGE-01 | Edge cases | Tasks | Verified |
 | EDGE-02 | Edge cases | Tasks | Verified |
-| EDGE-03 | Edge cases | Tasks | Implementing |
+| EDGE-03 | Edge cases | Tasks | Verified |
 | EDGE-04 | Edge cases | Tasks | Verified |
 | EDGE-05 | Edge cases | Tasks | Verified |
 
