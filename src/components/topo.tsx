@@ -24,7 +24,12 @@ export function Topo() {
         <Suspense fallback={<NavPrincipalEstatica />}>
           <NavPrincipal />
         </Suspense>
-        <form action="/parlamentares" role="search" className="ml-auto flex w-full gap-2 sm:w-auto">
+        <form
+          action="/parlamentares"
+          role="search"
+          aria-label="Busca rápida"
+          className="ml-auto flex w-full gap-2 sm:w-auto"
+        >
           <label htmlFor="busca-topo" className="sr-only">
             Buscar parlamentar
           </label>

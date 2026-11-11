@@ -28,7 +28,7 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
 
   return (
     <div className="space-y-6">
-      <form className="flex flex-wrap items-end gap-3" role="search">
+      <form className="flex flex-wrap items-end gap-3" role="search" aria-label="Filtrar deputados">
         <div className="flex min-w-60 flex-1 flex-col gap-1">
           <label htmlFor="q" className="text-sm font-medium">
             Nome ou UF

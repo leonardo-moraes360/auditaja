@@ -157,6 +157,25 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 
 ---
 
+### P1: Acessibilidade (WCAG 2.1 AA)
+
+**User Story**: As a pessoa que usa leitor de tela, teclado, zoom ou tela pequena, I want usar todo o Auditaja so that a auditoria pública seja de fato pública.
+
+**Why P1**: Plataforma cívica; acessibilidade é requisito de publicação.
+
+**Acceptance Criteria**:
+
+1. The system SHALL não ter violações axe-core das regras `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa` e `best-practice` em nenhuma página, em desktop e em 390 px. <!-- A11Y-01 -->
+2. WHEN a janela tem 320 px de largura THEN the system SHALL não ter rolagem horizontal (`scrollWidth` ≤ 320) no perfil, na lista, em fontes e no formulário de correção. <!-- A11Y-02 -->
+3. WHEN um elemento recebe foco pelo teclado THEN the system SHALL mostrar contorno sólido de 2 px na cor `#1F4FD1` (branco no rodapé escuro). <!-- A11Y-03 -->
+4. IF o servidor recusa o pedido de correção THEN the system SHALL marcar o campo com `aria-invalid="true"` e ligá-lo à mensagem de erro por `aria-describedby`. <!-- A11Y-04 -->
+5. WHEN o voto diverge da orientação THEN the system SHALL anunciar "(divergiu da orientação)" em texto, além da cor. <!-- A11Y-05 -->
+6. The system SHALL desenhar a borda dos campos de formulário em `#80858E` (contraste ≥ 3:1 com fundo branco e com `#F6F6F3`). <!-- A11Y-06 -->
+
+**Independent Test**: `tests/e2e/a11y.spec.ts` roda o axe em 11 rotas e confere reflow, foco, erro e divergência.
+
+---
+
 ### P1: Pedir correção ⭐ MVP
 
 **User Story**: As a parlamentar, assessoria ou cidadão, I want pedir a correção de um dado so that erros sejam corrigidos (R6).
@@ -242,6 +261,12 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | UI-02 | P2: Contexto do mandato | Tasks | Verified |
 | UI-04 | P2: Contexto do mandato | Tasks | Verified |
 | UI-03 | P2: Contexto do mandato | Tasks | Needs Fix |
+| A11Y-01 | P1: Acessibilidade | Tasks | Implementing |
+| A11Y-02 | P1: Acessibilidade | Tasks | Implementing |
+| A11Y-03 | P1: Acessibilidade | Tasks | Implementing |
+| A11Y-04 | P1: Acessibilidade | Tasks | Implementing |
+| A11Y-05 | P1: Acessibilidade | Tasks | Implementing |
+| A11Y-06 | P1: Acessibilidade | Tasks | Implementing |
 | CORR-01 | P1: Pedir correção | Tasks | Verified |
 | CORR-02 | P1: Pedir correção | Tasks | Verified |
 | CORR-03 | P1: Pedir correção | Tasks | Verified |
@@ -259,7 +284,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | EDGE-04 | Edge cases | Tasks | Verified |
 | EDGE-05 | Edge cases | Tasks | Verified |
 
-**Coverage:** 50 total, 50 mapped to tasks, 0 unmapped.
+**Coverage:** 56 total, 56 mapped to tasks, 0 unmapped.
 
 ---
 

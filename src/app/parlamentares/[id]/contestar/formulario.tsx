@@ -45,7 +45,8 @@ export function FormularioPedido({
           maxLength={4000}
           rows={6}
           className="rounded-md border border-input bg-white p-3"
-          aria-describedby="descricao-ajuda"
+          aria-describedby={estado.erro ? "descricao-ajuda erro-pedido" : "descricao-ajuda"}
+          aria-invalid={estado.erro ? true : undefined}
         />
         <p id="descricao-ajuda" className="text-xs text-muted-foreground">
           Se puder, inclua o link do documento oficial que comprova a correção.
@@ -68,7 +69,7 @@ export function FormularioPedido({
         </p>
       </div>
       {estado.erro && (
-        <p role="alert" className="rounded-md bg-aviso-fundo p-3 text-sm text-aviso">
+        <p id="erro-pedido" role="alert" className="rounded-md bg-aviso-fundo p-3 text-sm text-aviso">
           {estado.erro}
         </p>
       )}

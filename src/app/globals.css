@@ -72,7 +72,7 @@
   --aviso: #7a2e09;
   --aviso-fundo: #fdf0e7;
   --border: #dfe1e5;
-  --input: #c9ccd2;
+  --input: #80858e;
   --ring: #1f4fd1;
   --chart-1: #1f4fd1;
   --chart-2: #a9bef5;
@@ -92,7 +92,16 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  /* Foco visível (WCAG 2.4.7): contorno sólido de 2px na cor da marca, afastado do elemento. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* No rodapé escuro o azul não contrasta: contorno claro. */
+  footer :focus-visible {
+    outline-color: #ffffff;
   }
   body {
     @apply bg-background text-foreground;

@@ -11,7 +11,12 @@ export default function Inicio() {
           Gastos da cota parlamentar, votações nominais e bens declarados à Justiça Eleitoral, reunidos a partir de
           dados que a Câmara e o TSE já publicam. Cada número mostra de onde veio e quando foi coletado.
         </p>
-        <form action="/parlamentares" role="search" className="flex max-w-xl flex-col gap-2 sm:flex-row">
+        <form
+          action="/parlamentares"
+          role="search"
+          aria-label="Buscar deputado"
+          className="flex max-w-xl flex-col gap-2 sm:flex-row"
+        >
           <label htmlFor="busca-inicio" className="sr-only">
             Nome do deputado
           </label>

@@ -120,7 +120,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
         />
       </div>
 
-      <nav aria-label="Seções do perfil" className="flex flex-wrap gap-4 border-b pb-2 text-sm">
+      <nav aria-label="Seções do perfil" className="flex flex-wrap gap-x-4 gap-y-1 border-b pb-2 text-sm [&>a]:py-1">
         <a href="#gastos">Gastos da cota</a>
         <a href="#votacoes">Votações</a>
         <a href="#bens">Bens declarados</a>

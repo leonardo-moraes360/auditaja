@@ -111,13 +111,13 @@ export function SecaoGastos({ perfil }: { perfil: Perfil }) {
           </figure>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               <h3 className="font-medium">Por tipo de despesa</h3>
               <ul className="space-y-2">
                 {ceap.porTipo.slice(0, 8).map((t) => (
                   <li key={t.tipo} className="space-y-1">
                     <div className="flex justify-between gap-3 text-sm">
-                      <span>{fraseCase(t.tipo)}</span>
+                      <span className="min-w-0 break-words">{fraseCase(t.tipo)}</span>
                       <span className="shrink-0 text-muted-foreground">
                         {brl(t.total)} · {pct(t.total, ceap.totalAno)}%
                       </span>
@@ -132,7 +132,7 @@ export function SecaoGastos({ perfil }: { perfil: Perfil }) {
                 ))}
               </ul>
             </div>
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               <h3 className="font-medium">Maiores fornecedores</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -180,6 +180,11 @@ export function SecaoGastos({ perfil }: { perfil: Perfil }) {
 // ---------------------------------------------------------------- Votações
 
 const ROTULO_TIPO = { partido: "Partido", federacao: "Federação", bloco: "Bloco" } as const;
+
+function diverge(voto: string | null, orientacao: string | null) {
+  const comparavel = (x: string | null) => x === "Sim" || x === "Não";
+  return comparavel(voto) && comparavel(orientacao) && voto !== orientacao;
+}
 
 function corVoto(voto: string | null, orientacao: string | null) {
   if (!voto) return "bg-muted text-foreground";
@@ -245,6 +250,7 @@ export function SecaoVotacoes({ perfil, filtro }: { perfil: Perfil; filtro: "tod
                 </span>
                 <span className={`rounded px-2 py-1 font-medium ${corVoto(v.voto, v.orientacao)}`}>
                   Votou: {v.voto ?? "sem registro"}
+                  {diverge(v.voto, v.orientacao) && <span className="sr-only"> (divergiu da orientação)</span>}
                 </span>
               </div>
             </li>

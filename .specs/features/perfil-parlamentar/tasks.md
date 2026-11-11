@@ -86,6 +86,12 @@ T15 → T16 → T17 → T18 → T19
 T20 → T21 → T22 → T23 → T24
 ```
 
+### Phase 8: Acessibilidade
+
+```
+T25
+```
+
 ---
 
 ## Task Breakdown
@@ -511,10 +517,29 @@ T20 → T21 → T22 → T23 → T24
 
 ---
 
+### T25: Ronda de acessibilidade
+
+**What**: Foco visível de 2 px (branco no rodapé), reflow a 320 px no perfil (`min-w-0` nas colunas de gastos), rótulos distintos nas buscas (`landmark-unique`), erro do formulário ligado ao campo, divergência em texto para leitor de tela, `motion-reduce` no esqueleto, alvos maiores no menu de seções; varredura axe permanente.
+**Where**: `tests/e2e/a11y.spec.ts`
+**Depends on**: None
+**Requirement**: A11Y-01, A11Y-02, A11Y-03, A11Y-04, A11Y-05, A11Y-06
+
+**Done when**:
+
+- [x] axe sem violações em 11 rotas, desktop e 390 px; e também com dados reais em 7 rotas
+- [x] Borda dos campos de `#C9CCD2` (1,6:1) para `#80858E` (3,7:1)
+- [x] 70 testes e2e passam
+- [x] Relatório em `.specs/features/perfil-parlamentar/a11y.md`
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
-Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7
+Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8
 
 Phase 1:  T1 ------→ T2
 Phase 2:  T3 ------→ T4 ------→ T5
@@ -523,6 +548,7 @@ Phase 4:  T9 ------→ T10 -----→ T11 -----→ T12
 Phase 5:  T13 -----→ T14
 Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
 Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
+Phase 8:  T25
 ```
 
 ---
@@ -555,6 +581,7 @@ Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
 | T22 | testes em 6 arquivos + seed | ⚠️ Coeso: lista de lacunas de uma verificação |
 | T23 | 1 regra CSS (+ variante do Button) | ✅ Granular |
 | T24 | 1 arquivo de teste | ✅ Granular |
+| T25 | ajustes pequenos em 8 arquivos + 1 suíte | ⚠️ Coeso: achados de uma auditoria |
 
 ## Diagram-Definition Cross-Check
 
@@ -584,6 +611,7 @@ Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
 | T22 | T21 | T21 → T22 | ✅ Match |
 | T23 | T22 | T22 → T23 | ✅ Match |
 | T24 | T23 | T23 → T24 | ✅ Match |
+| T25 | None | - | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -613,3 +641,4 @@ Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
 | T22 | Testes | e2e | e2e + integration + unit | ✅ OK |
 | T23 | Estilo global | e2e | e2e | ✅ OK |
 | T24 | Teste de estrutura de páginas | unit | unit | ✅ OK |
+| T25 | Páginas e estilos | e2e | e2e | ✅ OK |
