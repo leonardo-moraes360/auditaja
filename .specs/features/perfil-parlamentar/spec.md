@@ -211,7 +211,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | BUSCA-01 | P1: Encontrar um deputado | Tasks | Verified |
 | BUSCA-02 | P1: Encontrar um deputado | Tasks | Verified |
 | BUSCA-03 | P1: Encontrar um deputado | Tasks | Verified |
-| BUSCA-04 | P1: Encontrar um deputado | Tasks | Needs Fix |
+| BUSCA-04 | P1: Encontrar um deputado | Tasks | Verified |
 | BUSCA-05 | P1: Encontrar um deputado | Tasks | Verified |
 | CEAP-01 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-02 | P1: Ver gastos da cota | Tasks | Verified |
@@ -240,7 +240,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | METOD-01 | P2: Contexto do mandato | Tasks | Verified |
 | NAV-01 | P2: Contexto do mandato | Tasks | Verified |
 | UI-02 | P2: Contexto do mandato | Tasks | Verified |
-| UI-04 | P2: Contexto do mandato | Tasks | Implementing |
+| UI-04 | P2: Contexto do mandato | Tasks | Verified |
 | UI-03 | P2: Contexto do mandato | Tasks | Needs Fix |
 | CORR-01 | P1: Pedir correção | Tasks | Verified |
 | CORR-02 | P1: Pedir correção | Tasks | Verified |

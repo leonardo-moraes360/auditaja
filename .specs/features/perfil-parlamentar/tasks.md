@@ -83,7 +83,7 @@ T15 → T16 → T17 → T18 → T19
 ### Phase 7: Pedidos da revisão e correções da verificação nº 2
 
 ```
-T20 → T21 → T22 → T23
+T20 → T21 → T22 → T23 → T24
 ```
 
 ---
@@ -486,10 +486,28 @@ T20 → T21 → T22 → T23
 **Done when**:
 
 - [x] E2E confere `cursor` `pointer` e, com `disabled`, `not-allowed`
+- [x] `src/components/ui/button.tsx` também alterado; ainda não tem uso nas telas, então só passa a ser coberto pelo e2e quando algum botão adotar o `Button` (achado cosmético da verificação nº 4, aceito)
 - [x] Gate full passa
 
 **Tests**: e2e
 **Gate**: full
+
+---
+
+### T24: Teste de contenção do Suspense
+
+**What**: O teste de UI-03 passa a exigir que todo componente assíncrono da página esteja dentro de `<Suspense>` e nenhum fora (lacuna da verificação nº 4, mutante V5).
+**Where**: `tests/unit/paginas.test.ts`
+**Depends on**: T23
+**Requirement**: UI-03
+
+**Done when**:
+
+- [x] Mutante V5 (`<Suspense>{null}</Suspense>` com a tabela ao lado) é morto, conferido em worktree temporário
+- [x] Gate quick passa
+
+**Tests**: unit
+**Gate**: quick
 
 ---
 
@@ -504,7 +522,7 @@ Phase 3:  T6 ------→ T7 ------→ T8
 Phase 4:  T9 ------→ T10 -----→ T11 -----→ T12
 Phase 5:  T13 -----→ T14
 Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
-Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23
+Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
 ```
 
 ---
@@ -536,6 +554,7 @@ Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23
 | T21 | 1 função + 2 placeholders | ✅ Granular |
 | T22 | testes em 6 arquivos + seed | ⚠️ Coeso: lista de lacunas de uma verificação |
 | T23 | 1 regra CSS (+ variante do Button) | ✅ Granular |
+| T24 | 1 arquivo de teste | ✅ Granular |
 
 ## Diagram-Definition Cross-Check
 
@@ -564,6 +583,7 @@ Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23
 | T21 | T20 | T20 → T21 | ✅ Match |
 | T22 | T21 | T21 → T22 | ✅ Match |
 | T23 | T22 | T22 → T23 | ✅ Match |
+| T24 | T23 | T23 → T24 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -592,3 +612,4 @@ Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23
 | T21 | Camada de leitura + páginas | integration | integration + e2e | ✅ OK |
 | T22 | Testes | e2e | e2e + integration + unit | ✅ OK |
 | T23 | Estilo global | e2e | e2e | ✅ OK |
+| T24 | Teste de estrutura de páginas | unit | unit | ✅ OK |

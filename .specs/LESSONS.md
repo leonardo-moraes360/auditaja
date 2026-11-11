@@ -104,6 +104,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: U5 U6 src/app/fontes/page.tsx:19-21, src/app/parlamentares/page.tsx (UI-03); tests/unit/paginas.test.ts:18 (ui)
 - last seen: 2026-11-11T13:41:06Z
 
+### L-016 - To prove a containment rule, assert the target is inside the container and none is outside, not just that the container exists
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: perfil-parlamentar
+- evidence: V5 tests/unit/paginas.test.ts:18-23 src/app/fontes/page.tsx:19-21 (ui)
+- last seen: 2026-11-11T13:54:01Z
+
+### L-017 - A change to a shared component with no consumers cannot be verified; apply it where elements render or add a consumer under test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: perfil-parlamentar
+- evidence: V3 src/components/ui/button.tsx:6 (ui)
+- last seen: 2026-11-11T13:54:01Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

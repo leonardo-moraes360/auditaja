@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 16,
+  "next_id": 18,
   "lessons": [
     {
       "id": "L-001",
@@ -276,6 +276,42 @@
       ],
       "created": "2026-11-11T13:41:06Z",
       "last_seen": "2026-11-11T13:41:06Z"
+    },
+    {
+      "id": "L-016",
+      "key": "surviving_mutant::to prove a containment rule assert the target is inside the container and none is outside not just that the container exists",
+      "text": "To prove a containment rule, assert the target is inside the container and none is outside, not just that the container exists",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "V5 tests/unit/paginas.test.ts:18-23 src/app/fontes/page.tsx:19-21 (ui)"
+      ],
+      "created": "2026-11-11T13:54:01Z",
+      "last_seen": "2026-11-11T13:54:01Z"
+    },
+    {
+      "id": "L-017",
+      "key": "surviving_mutant::a change to a shared component with no consumers cannot be verified apply it where elements render or add a consumer under test",
+      "text": "A change to a shared component with no consumers cannot be verified; apply it where elements render or add a consumer under test",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "V3 src/components/ui/button.tsx:6 (ui)"
+      ],
+      "created": "2026-11-11T13:54:01Z",
+      "last_seen": "2026-11-11T13:54:01Z"
     }
   ]
 }
