@@ -18,6 +18,13 @@ describe("mascararCpfsNoTexto", () => {
     expect(mascararCpfsNoTexto("MIDIA LTDA 2000004245")).toBe("MIDIA LTDA 2000004245");
     expect(mascararCpfsNoTexto("A 123.456.789-0")).toBe("A 123.456.789-0");
   });
+  it("só 11 dígitos soltos são CPF: de 8 a 14 dígitos, os outros tamanhos ficam como estão", () => {
+    for (let n = 8; n <= 14; n++) {
+      const numero = "1234567890123".padEnd(n, "4").slice(0, n);
+      const esperado = n === 11 ? "X ***.***.***-**" : `X ${numero}`;
+      expect(mascararCpfsNoTexto(`X ${numero}`), `${n} dígitos`).toBe(esperado);
+    }
+  });
   it("favorecido de emenda com dois CPFs no nome", () => {
     expect(favorecidoPublicavel("Pessoa Jurídica", "11854334000149", "A 12345678901 B 98765432100").nome).toBe(
       "A ***.***.***-** B ***.***.***-**",
