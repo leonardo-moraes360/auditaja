@@ -15,11 +15,18 @@ const paginas = {
   "/fontes": () => import("@/app/fontes/page"),
 };
 
-function temSuspense(no: ReactNode): boolean {
-  if (Array.isArray(no)) return no.some(temSuspense);
-  if (!isValidElement(no)) return false;
-  if (no.type === Suspense) return true;
-  return temSuspense((no.props as { children?: ReactNode }).children);
+/** Conta componentes assíncronos (as partes com dados) dentro e fora de <Suspense>. */
+function contarAsync(no: ReactNode, dentro = false, acc = { dentro: 0, fora: 0 }) {
+  if (Array.isArray(no)) {
+    for (const n of no) contarAsync(n, dentro, acc);
+    return acc;
+  }
+  if (!isValidElement(no)) return acc;
+  if (typeof no.type === "function" && no.type.constructor.name === "AsyncFunction") {
+    acc[dentro ? "dentro" : "fora"]++;
+  }
+  contarAsync((no.props as { children?: ReactNode }).children, dentro || no.type === Suspense, acc);
+  return acc;
 }
 
 describe("UI-03: páginas com dados têm casca estática", () => {
@@ -28,9 +35,11 @@ describe("UI-03: páginas com dados têm casca estática", () => {
     expect(Pagina.constructor.name).toBe("Function");
   });
 
-  it.each(Object.entries(paginas))("%s envolve a parte com dados em <Suspense>", async (_, carregar) => {
+  it.each(Object.entries(paginas))("%s carrega toda parte com dados dentro de <Suspense>", async (_, carregar) => {
     const { default: Pagina } = await carregar();
     const arvore = (Pagina as (p: typeof vazio) => ReactNode)(vazio);
-    expect(temSuspense(arvore)).toBe(true);
+    const n = contarAsync(arvore);
+    expect(n.dentro).toBeGreaterThanOrEqual(1);
+    expect(n.fora).toBe(0);
   });
 });
