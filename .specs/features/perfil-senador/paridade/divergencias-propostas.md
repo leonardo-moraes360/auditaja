@@ -1,8 +1,8 @@
-# Divergências propostas depois da verificação nº 1
+# Divergências aceitas pelo usuário (11/11/2026, 18:53)
 
 Itens da verificação nº 1 que não foram corrigidos porque a página segue uma regra da spec ou o visual já aprovado
-do perfil do deputado. **Ainda não foram aceitos pelo usuário**: a verificação conta cada um como FAIL até a
-aprovação e informa a paridade com e sem eles.
+do perfil do deputado. **Aceitos pelo usuário na thread em 11/11/2026 às 18:53** (resposta "1" à pergunta 1): saem do denominador da
+paridade.
 
 | ID | Item | Divergência | Motivo |
 | --- | --- | --- | --- |
