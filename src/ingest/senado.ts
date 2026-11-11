@@ -1,0 +1,234 @@
+import type { Insertable, Kysely } from "kysely";
+import type { Database, OrgaoMembroTable, ParlamentarTable, SuplenteTable } from "@/db/types";
+import { comoLista, DESLOCAMENTO_SENADO, idSenador, sexoDoSenado } from "@/lib/senado";
+import { inserirEmBlocos, LICENCA_SENADO, registrarColeta } from "./coleta";
+import { sha256De, type ClienteEducado } from "./http";
+
+/**
+ * Senado Federal: API de dados abertos (legislativo) e API administrativa (CEAPS).
+ * Nenhuma das duas pede chave. Toda requisição passa pelo ClienteEducado (R7).
+ */
+export const API_SENADO = "https://legis.senado.leg.br/dadosabertos";
+export const API_ADM_SENADO = "https://adm.senado.gov.br/adm-dadosabertos/api/v1";
+export const LEGISLATURA_SENADO = 57;
+export const urlCeaps = (ano: number) => `${API_ADM_SENADO}/senadores/despesas_ceaps/${ano}`;
+export const urlFotoSenador = (codigo: string | number) =>
+  `https://www.senado.leg.br/senadores/img/fotos-oficiais/senador${codigo}.jpg`;
+
+// ---------- formatos da API (só os campos usados) ----------
+
+type Ref = { DescricaoParticipacao?: string; CodigoParlamentar?: string; NomeParlamentar?: string };
+type Legislatura = { NumeroLegislatura: string; DataInicio: string; DataFim: string };
+export type MandatoApi = {
+  UfParlamentar?: string;
+  PrimeiraLegislaturaDoMandato?: Legislatura;
+  SegundaLegislaturaDoMandato?: Legislatura;
+  DescricaoParticipacao?: string;
+  Suplentes?: { Suplente?: Ref | Ref[] };
+};
+export type SenadorApi = {
+  IdentificacaoParlamentar: {
+    CodigoParlamentar: string;
+    NomeParlamentar: string;
+    NomeCompletoParlamentar?: string;
+    SexoParlamentar?: string;
+    UrlFotoParlamentar?: string;
+    SiglaPartidoParlamentar?: string;
+    UfParlamentar?: string;
+    Bloco?: { NomeBloco?: string };
+  };
+  Mandato?: MandatoApi;
+  Mandatos?: { Mandato?: MandatoApi | MandatoApi[] };
+};
+export type ListaAtualApi = {
+  ListaParlamentarEmExercicio: { Parlamentares?: { Parlamentar?: SenadorApi | SenadorApi[] } };
+};
+export type ListaLegislaturaApi = {
+  ListaParlamentarLegislatura: { Parlamentares?: { Parlamentar?: SenadorApi | SenadorApi[] } };
+};
+export type DetalheApi = {
+  DetalheParlamentar: { Parlamentar: { DadosBasicosParlamentar?: { DataNascimento?: string } } };
+};
+type ComissaoApi = {
+  IdentificacaoComissao: { SiglaComissao: string; NomeComissao: string; SiglaCasaComissao?: string };
+  DescricaoParticipacao: string;
+  DataInicio?: string;
+  DataFim?: string;
+};
+export type ComissoesApi = {
+  MembroComissaoParlamentar: { Parlamentar?: { MembroComissoes?: { Comissao?: ComissaoApi | ComissaoApi[] } } };
+};
+
+// ---------- transformações puras (testadas em tests/unit/senado-ingest.test.ts) ----------
+
+/** Mandato que inclui a legislatura pedida (um ex-senador pode ter mais de um mandato na lista). */
+function mandatoDaLegislatura(s: SenadorApi, legislatura: number): MandatoApi | undefined {
+  const lista = s.Mandato ? [s.Mandato] : comoLista(s.Mandatos?.Mandato);
+  const n = String(legislatura);
+  return (
+    lista.find(
+      (m) =>
+        m.PrimeiraLegislaturaDoMandato?.NumeroLegislatura === n ||
+        m.SegundaLegislaturaDoMandato?.NumeroLegislatura === n,
+    ) ?? lista[0]
+  );
+}
+
+export type DadosSenadores = {
+  parlamentares: Insertable<ParlamentarTable>[];
+  suplentes: Insertable<SuplenteTable>[];
+};
+
+/**
+ * Senadores da legislatura (SCAD-01) com a situação de hoje (SCAD-02).
+ * Partido, bloco, foto e participação vêm da lista atual; quem saiu fica sem partido.
+ */
+export function montarSenadores(
+  legislatura: ListaLegislaturaApi,
+  atual: ListaAtualApi,
+  nascimentos: Map<string, string>,
+  coletaId: number,
+): DadosSenadores {
+  const atuais = new Map(
+    comoLista(atual.ListaParlamentarEmExercicio.Parlamentares?.Parlamentar).map((s) => [
+      s.IdentificacaoParlamentar.CodigoParlamentar,
+      s,
+    ]),
+  );
+  const todos = new Map<string, SenadorApi>();
+  for (const s of comoLista(legislatura.ListaParlamentarLegislatura.Parlamentares?.Parlamentar)) {
+    todos.set(s.IdentificacaoParlamentar.CodigoParlamentar, s);
+  }
+  for (const [cod, s] of atuais) if (!todos.has(cod)) todos.set(cod, s);
+
+  const parlamentares: Insertable<ParlamentarTable>[] = [];
+  const suplentes: Insertable<SuplenteTable>[] = [];
+  for (const [cod, s] of todos) {
+    const hoje = atuais.get(cod);
+    const fonte = hoje ?? s;
+    const ident = fonte.IdentificacaoParlamentar;
+    const mandato =
+      (hoje && mandatoDaLegislatura(hoje, LEGISLATURA_SENADO)) ?? mandatoDaLegislatura(s, LEGISLATURA_SENADO);
+    const id = idSenador(cod);
+    parlamentares.push({
+      id,
+      casa: "senado",
+      nome: ident.NomeParlamentar,
+      nome_civil: ident.NomeCompletoParlamentar || s.IdentificacaoParlamentar.NomeCompletoParlamentar || null,
+      sigla_partido: hoje ? hoje.IdentificacaoParlamentar.SiglaPartidoParlamentar || null : null,
+      sigla_uf: mandato?.UfParlamentar || ident.UfParlamentar || null,
+      url_foto: urlFotoSenador(cod),
+      data_nascimento: nascimentos.get(cod) ?? null,
+      sexo: sexoDoSenado(ident.SexoParlamentar ?? s.IdentificacaoParlamentar.SexoParlamentar),
+      id_legislatura: LEGISLATURA_SENADO,
+      em_exercicio: Boolean(hoje),
+      mandato_inicio: mandato?.PrimeiraLegislaturaDoMandato?.DataInicio ?? null,
+      mandato_fim:
+        mandato?.SegundaLegislaturaDoMandato?.DataFim ?? mandato?.PrimeiraLegislaturaDoMandato?.DataFim ?? null,
+      participacao: mandato?.DescricaoParticipacao?.trim() || null,
+      bloco: hoje?.IdentificacaoParlamentar.Bloco?.NomeBloco || null,
+      source_url: `${API_SENADO}/senador/${cod}`,
+      coleta_id: coletaId,
+    });
+    if (hoje) {
+      comoLista(mandato?.Suplentes?.Suplente).forEach((sup, i) => {
+        if (!sup.NomeParlamentar) return;
+        const ordem = Number(/^(\d+)/.exec(sup.DescricaoParticipacao ?? "")?.[1]) || i + 1;
+        suplentes.push({
+          parlamentar_id: id,
+          ordem,
+          nome: sup.NomeParlamentar,
+          codigo: sup.CodigoParlamentar ? Number(sup.CodigoParlamentar) : null,
+          coleta_id: coletaId,
+        });
+      });
+    }
+  }
+  return { parlamentares, suplentes };
+}
+
+/** Comissões atuais do Senado (sem data de fim, Casa SF). */
+export function montarComissoes(codigo: string, r: ComissoesApi, coletaId: number): Insertable<OrgaoMembroTable>[] {
+  return comoLista(r.MembroComissaoParlamentar.Parlamentar?.MembroComissoes?.Comissao)
+    .filter((c) => !c.DataFim && (c.IdentificacaoComissao.SiglaCasaComissao ?? "SF") === "SF")
+    .map((c) => ({
+      parlamentar_id: idSenador(codigo),
+      sigla_orgao: c.IdentificacaoComissao.SiglaComissao,
+      nome_orgao: c.IdentificacaoComissao.NomeComissao,
+      cargo: c.DescricaoParticipacao,
+      data_inicio: c.DataInicio ?? null,
+      data_fim: null,
+      coleta_id: coletaId,
+    }));
+}
+
+// ---------- carregadores (rede + banco) ----------
+
+const ehSenado = DESLOCAMENTO_SENADO;
+
+/** Baixa JSON e devolve também o texto, para o hash da proveniência (R1). */
+async function baixarJson<T>(cli: ClienteEducado, url: string) {
+  const texto = await (await cli.get(url)).text();
+  return { dado: JSON.parse(texto) as T, sha256: sha256De(texto), bytes: Buffer.byteLength(texto) };
+}
+
+/**
+ * Cadastro: lista da legislatura + lista atual + 1 detalhe e 1 lista de comissões por senador
+ * em exercício (~165 requisições a 1 req/s). Tudo é baixado antes de gravar.
+ */
+export async function coletarSenadores(db: Kysely<Database>, cli: ClienteEducado) {
+  const urlLeg = `${API_SENADO}/senador/lista/legislatura/${LEGISLATURA_SENADO}.json`;
+  const urlAtual = `${API_SENADO}/senador/lista/atual.json`;
+  const leg = await baixarJson<ListaLegislaturaApi>(cli, urlLeg);
+  const atual = await baixarJson<ListaAtualApi>(cli, urlAtual);
+  const codigos = comoLista(atual.dado.ListaParlamentarEmExercicio.Parlamentares?.Parlamentar).map(
+    (s) => s.IdentificacaoParlamentar.CodigoParlamentar,
+  );
+  const nascimentos = new Map<string, string>();
+  const comissoes = new Map<string, ComissoesApi>();
+  const hashes: string[] = [];
+  let bytes = 0;
+  for (const cod of codigos) {
+    const det = await baixarJson<DetalheApi>(cli, `${API_SENADO}/senador/${cod}.json`);
+    const nasc = det.dado.DetalheParlamentar.Parlamentar.DadosBasicosParlamentar?.DataNascimento;
+    if (nasc) nascimentos.set(cod, nasc);
+    const com = await baixarJson<ComissoesApi>(cli, `${API_SENADO}/senador/${cod}/comissoes.json`);
+    comissoes.set(cod, com.dado);
+    hashes.push(det.sha256, com.sha256);
+    bytes += det.bytes + com.bytes;
+  }
+
+  const cCadastro = await registrarColeta(db, {
+    fonte: "senado_api_senadores",
+    url: urlLeg,
+    sha256: sha256De(leg.sha256 + atual.sha256),
+    bytes: leg.bytes + atual.bytes,
+    licenca: LICENCA_SENADO,
+    observacao: `Inclui ${urlAtual} para a situação em exercício`,
+  });
+  const cDetalhes = await registrarColeta(db, {
+    fonte: "senado_api_detalhes",
+    url: `${API_SENADO}/senador/{codigo}`,
+    sha256: sha256De(hashes.join("\n")),
+    bytes,
+    licenca: LICENCA_SENADO,
+    observacao: `Detalhe e comissões de ${codigos.length} senadores em exercício`,
+  });
+  const m = montarSenadores(leg.dado, atual.dado, nascimentos, cCadastro);
+  const orgaos = [...comissoes].flatMap(([cod, r]) => montarComissoes(cod, r, cDetalhes));
+
+  await db.transaction().execute(async (trx) => {
+    for (const r of m.parlamentares) {
+      await trx
+        .insertInto("parlamentar")
+        .values(r)
+        .onConflict((oc) => oc.column("id").doUpdateSet(r))
+        .execute();
+    }
+    await trx.deleteFrom("suplente").where("parlamentar_id", ">", ehSenado).execute();
+    await inserirEmBlocos(trx, "suplente", m.suplentes);
+    await trx.deleteFrom("orgao_membro").where("parlamentar_id", ">", ehSenado).execute();
+    await inserirEmBlocos(trx, "orgao_membro", orgaos);
+  });
+  return { senadores: m.parlamentares.length, suplentes: m.suplentes.length, comissoes: orgaos.length };
+}

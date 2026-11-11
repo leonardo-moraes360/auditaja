@@ -12,6 +12,7 @@ import type {
 } from "@/db/types";
 import { numeroBr } from "@/lib/format";
 import { partidosDoNomeDoBloco } from "@/lib/metrics";
+import { DESLOCAMENTO_SENADO } from "@/lib/senado";
 import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
 import { extrairDoZip, idDaUri, lerCsv, type Linha } from "./arquivos";
 import { inserirEmBlocos, LICENCA_CAMARA, registrarColeta } from "./coleta";
@@ -386,7 +387,8 @@ export async function coletarOrgaos(db: Kysely<Database>, cli: ClienteEducado) {
   });
   const rows = montarOrgaos(lerCsv(arq.buf), await idsParlamentares(db), coletaId);
   await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("orgao_membro").execute();
+    // Só os órgãos de deputados: as comissões dos senadores vêm de outra coleta.
+    await trx.deleteFrom("orgao_membro").where("parlamentar_id", "<", DESLOCAMENTO_SENADO).execute();
     await inserirEmBlocos(trx, "orgao_membro", rows);
   });
   return rows.length;

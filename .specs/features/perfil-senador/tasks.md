@@ -126,8 +126,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] Senador 5672 da resposta gravada vira id 10005672 com 2 suplentes
-- [ ] Gate quick passa
+- [x] Senador 5672 da resposta gravada vira id 10005672 com 2 suplentes
+- [x] Gate quick passa
 
 **Tests**: unit
 **Gate**: quick
