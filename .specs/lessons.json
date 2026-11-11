@@ -1,0 +1,317 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 18,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "gate_fail::run pnpm build after any ui commit because cache components prerender fails on client hooks like usepathname outside suspense",
+      "text": "Run pnpm build after any UI commit because Cache Components prerender fails on client hooks like usePathname outside Suspense",
+      "signal": "gate_fail",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/components/nav-principal.tsx:14 (pnpm build at 34fcdb3) (ui)"
+      ],
+      "created": "2026-11-11T13:18:57Z",
+      "last_seen": "2026-11-11T13:18:57Z"
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::test every status code branch and the exact backoff sequence and retry cap of an http client not only one representative status",
+      "text": "Test every status-code branch and the exact backoff sequence and retry cap of an HTTP client, not only one representative status",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M3 M5 M10 src/ingest/http.ts:20,90,98 (ingest)"
+      ],
+      "created": "2026-11-11T13:18:57Z",
+      "last_seen": "2026-11-11T13:18:57Z"
+    },
+    {
+      "id": "L-003",
+      "key": "surviving_mutant::seed enough rows to exceed every query limit and exercise every fallback parameter in read layer integration tests",
+      "text": "Seed enough rows to exceed every query limit and exercise every fallback parameter in read-layer integration tests",
+      "signal": "surviving_mutant",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M8 M9 src/data/perfil.ts:102,134 (data)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-004",
+      "key": "surviving_mutant::each deduplication rule needs its own fixture with a real duplicate that survives earlier filters",
+      "text": "Each deduplication rule needs its own fixture with a real duplicate that survives earlier filters",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M6 src/ingest/camara.ts:145 (ingest)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::cover error and empty state paths of each route in e2e asserting the exact message the spec defines not only the happy path",
+      "text": "Cover error and empty-state paths of each route in e2e asserting the exact message the spec defines, not only the happy path",
+      "signal": "ac_gap",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CORR-02 CORR-03 EDGE-02 EDGE-03 EDGE-05 (routes)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-006",
+      "key": "ac_gap::do not assert a transformed value that the seed already stores pre transformed test the transformation through the real ingestion path",
+      "text": "Do not assert a transformed value that the seed already stores pre-transformed; test the transformation through the real ingestion path",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tests/integracao/perfil.test.ts:38 (tests)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:18:58Z"
+    },
+    {
+      "id": "L-007",
+      "key": "spec_precision_gap::assert the exact spec value such as the computed delay or viewport width instead of a loose threshold or a nearby device preset",
+      "text": "Assert the exact spec value such as the computed delay or viewport width instead of a loose threshold or a nearby device preset",
+      "signal": "spec_precision_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "COLETA-04 tests/unit/http.test.ts:61; EDGE-04 viewport 412 (tests)",
+        "NAV-01 border width; EDGE-03 indicator dash; MAND-01 cargo (tests)"
+      ],
+      "created": "2026-11-11T13:18:58Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-008",
+      "key": "surviving_mutant::give each disjunct of a boolean condition its own test case so dropping any branch fails a test",
+      "text": "Give each disjunct of a boolean condition its own test case so dropping any branch fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N1 src/components/nav-principal.tsx:26 (ui)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-009",
+      "key": "surviving_mutant::for an ordered precedence list test every adjacent pair with both candidates present so any swap fails a test",
+      "text": "For an ordered precedence list, test every adjacent pair with both candidates present so any swap fails a test",
+      "signal": "surviving_mutant",
+      "scope": "domain",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N3 src/lib/metrics.ts:78 (domain)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-010",
+      "key": "surviving_mutant::each filter rule needs a fixture row that only that filter excludes so removing the filter fails a test",
+      "text": "Each filter rule needs a fixture row that only that filter excludes, so removing the filter fails a test",
+      "signal": "surviving_mutant",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N5 src/data/perfil.ts:192; N9 src/data/perfil.ts:240 (data)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-011",
+      "key": "surviving_mutant::build the fixture for a special case branch so the default branch would produce the opposite result",
+      "text": "Build the fixture for a special-case branch so the default branch would produce the opposite result",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N7 src/ingest/http.ts:65; tests/unit/http.test.ts:47-57 (ingest)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-012",
+      "key": "surviving_mutant::test a transactional replace by forcing a failure mid write and asserting the previous rows survive",
+      "text": "Test a transactional replace by forcing a failure mid-write and asserting the previous rows survive",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N6 src/ingest/camara.ts:236-239 (COLETA-07) (ingest)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-013",
+      "key": "ac_gap::a test title must not claim a case its fixture does not contain",
+      "text": "A test title must not claim a case its fixture does not contain",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests)",
+        "tests/integracao/perfil.test.ts:146 title 'sem perder o nome' vs fixture (BUSCA-04) (tests)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:41:06Z"
+    },
+    {
+      "id": "L-014",
+      "key": "surviving_mutant::for an additive or filter test an input that matches both branches with rows that only one branch would return so replacing the union with either branch fails a test",
+      "text": "For an additive OR filter, test an input that matches both branches with rows that only one branch would return, so replacing the union with either branch fails a test",
+      "signal": "surviving_mutant",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U3 src/data/perfil.ts:48-49 (BUSCA-04) (data)"
+      ],
+      "created": "2026-11-11T13:41:06Z",
+      "last_seen": "2026-11-11T13:41:06Z"
+    },
+    {
+      "id": "L-015",
+      "key": "surviving_mutant::when a requirement has two structural parts assert each part separately since a fallback such as a root loading boundary can keep the build green when one part is removed",
+      "text": "When a requirement has two structural parts, assert each part separately, since a fallback such as a root loading boundary can keep the build green when one part is removed",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U5 U6 src/app/fontes/page.tsx:19-21, src/app/parlamentares/page.tsx (UI-03); tests/unit/paginas.test.ts:18 (ui)"
+      ],
+      "created": "2026-11-11T13:41:06Z",
+      "last_seen": "2026-11-11T13:41:06Z"
+    },
+    {
+      "id": "L-016",
+      "key": "surviving_mutant::to prove a containment rule assert the target is inside the container and none is outside not just that the container exists",
+      "text": "To prove a containment rule, assert the target is inside the container and none is outside, not just that the container exists",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "V5 tests/unit/paginas.test.ts:18-23 src/app/fontes/page.tsx:19-21 (ui)"
+      ],
+      "created": "2026-11-11T13:54:01Z",
+      "last_seen": "2026-11-11T13:54:01Z"
+    },
+    {
+      "id": "L-017",
+      "key": "surviving_mutant::a change to a shared component with no consumers cannot be verified apply it where elements render or add a consumer under test",
+      "text": "A change to a shared component with no consumers cannot be verified; apply it where elements render or add a consumer under test",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "V3 src/components/ui/button.tsx:6 (ui)"
+      ],
+      "created": "2026-11-11T13:54:01Z",
+      "last_seen": "2026-11-11T13:54:01Z"
+    }
+  ]
+}

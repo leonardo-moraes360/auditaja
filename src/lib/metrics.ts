@@ -1,0 +1,122 @@
+/**
+ * Métricas do perfil. Funções puras para facilitar teste e auditoria da metodologia.
+ * A metodologia descrita em /metodologia deve refletir exatamente este arquivo.
+ */
+
+export const METODOLOGIA_VERSAO = "1.0";
+
+/** Órgão cujas votações entram nos indicadores de presença e alinhamento. */
+export const ORGAO_PLENARIO = "PLEN";
+
+const ORIENTACOES_COMPARAVEIS = new Set(["Sim", "Não"]);
+
+function norm(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toUpperCase();
+}
+
+function tokens(s: string): string[] {
+  return norm(s)
+    .replace(/\.+$/, "")
+    .split(/[\s\-/]+/)
+    .filter(Boolean);
+}
+
+/**
+ * Siglas completas de partidos com representação recente. Um pedaço que já é uma
+ * sigla completa só casa por igualdade: "PSD" nunca vira prefixo de "PSDB".
+ */
+const SIGLAS_COMPLETAS = new Set(
+  "PL PT UNIAO PP PSD MDB REPUBLICANOS PSB PDT PSDB PSOL PODE AVANTE SOLIDARIEDADE PCDOB PV CIDADANIA NOVO REDE PRD MISSAO DC PMB AGIR MOBILIZA PRTB".split(
+    " ",
+  ),
+);
+
+/** Casa um pedaço abreviado ("CIDADAN", "Solidaried", "Uni") com a sigla completa. */
+function casaAbreviado(pedaco: string, partido: string, minimo: number): boolean {
+  if (pedaco === partido) return true;
+  if (SIGLAS_COMPLETAS.has(pedaco)) return false;
+  return pedaco.length >= minimo && partido.startsWith(pedaco);
+}
+
+export type TipoOrientacao = "partido" | "federacao" | "bloco";
+
+/**
+ * Diz se a orientação de uma bancada vale para o partido do deputado, e de que tipo.
+ * A Câmara publica bancadas como:
+ * - partido: "PL", "PT", às vezes truncado ("Solidaried");
+ * - federação: "Fdr PSDB-CIDADAN";
+ * - bloco: "Bl UniPpPsd..." (siglas em CamelCase, lista truncada).
+ * "Governo", "Maioria", "Minoria" e "Oposição" não contam.
+ */
+export function tipoBancadaParaPartido(siglaBancada: string, siglaPartido: string): TipoOrientacao | null {
+  const partido = tokens(siglaPartido).join("");
+  if (!partido) return null;
+  const bt = tokens(siglaBancada);
+  if (bt.length === 1 && casaAbreviado(bt[0], partido, 5)) return "partido";
+  if (bt[0] === "FDR" && bt.slice(1).some((t) => casaAbreviado(t, partido, 4))) return "federacao";
+  if (bt[0] === "BL") {
+    const bruto = siglaBancada.replace(/^Bl\s+/i, "").replace(/\.+$/, "");
+    const pedacos = (bruto.match(/[A-ZÀ-Ý][a-zà-ÿ]*/g) ?? []).map(norm);
+    if (pedacos.some((t) => casaAbreviado(t, partido, 3))) return "bloco";
+  }
+  return null;
+}
+
+export function bancadaIncluiPartido(siglaBancada: string, siglaPartido: string): boolean {
+  return tipoBancadaParaPartido(siglaBancada, siglaPartido) !== null;
+}
+
+export type VotoComOrientacoes = {
+  voto: string;
+  siglaPartido: string | null;
+  orientacoes: { siglaBancada: string; orientacao: string }[];
+};
+
+const PRECEDENCIA: TipoOrientacao[] = ["partido", "federacao", "bloco"];
+
+/** Orientação aplicável: a do partido; na falta, a da federação; na falta, a do bloco. */
+export function orientacaoDoPartido(v: VotoComOrientacoes): { orientacao: string; tipo: TipoOrientacao } | null {
+  if (!v.siglaPartido) return null;
+  const candidatas = v.orientacoes
+    .filter((o) => o.orientacao)
+    .map((o) => ({ orientacao: o.orientacao, tipo: tipoBancadaParaPartido(o.siglaBancada, v.siglaPartido!) }))
+    .filter((o): o is { orientacao: string; tipo: TipoOrientacao } => o.tipo !== null);
+  for (const t of PRECEDENCIA) {
+    const achou = candidatas.find((c) => c.tipo === t);
+    if (achou) return achou;
+  }
+  return null;
+}
+
+/**
+ * Alinhamento: entre as votações em que o partido orientou "Sim" ou "Não"
+ * e o deputado votou "Sim" ou "Não", em quantas o voto coincidiu.
+ */
+export function alinhamento(votos: VotoComOrientacoes[]) {
+  let comparaveis = 0;
+  let iguais = 0;
+  for (const v of votos) {
+    const o = orientacaoDoPartido(v)?.orientacao;
+    if (!o || !ORIENTACOES_COMPARAVEIS.has(o) || !ORIENTACOES_COMPARAVEIS.has(v.voto)) continue;
+    comparaveis++;
+    if (o === v.voto) iguais++;
+  }
+  return { comparaveis, iguais, divergencias: comparaveis - iguais };
+}
+
+export type Teto = { mensal: number; verificado: boolean };
+
+/** Teto acumulado da cota até o último mês com dados no ano. */
+export function tetoAcumulado(teto: Teto | null, ultimoMes: number): number | null {
+  if (!teto || ultimoMes < 1) return null;
+  return teto.mensal * ultimoMes;
+}
+
+/** Variação nominal entre duas declarações de bens, em %. */
+export function variacaoNominal(anterior: number, atual: number): number | null {
+  if (anterior <= 0) return null;
+  return Math.round(((atual - anterior) / anterior) * 100);
+}
