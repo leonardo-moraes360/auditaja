@@ -148,7 +148,7 @@ describe("coletarSancoes", () => {
         cadastro: "CEIS",
         codigo: "101",
         cnpj: "55666777000188",
-        nome: "POSTO ILUSTRATIVO LTDA ***.456.789-**", // R3: CPF de MEI no nome sai mascarado
+        nome: "POSTO ILUSTRATIVO LTDA ***.***.***-**", // R3: CPF de MEI no nome sai mascarado
         categoria: "Impedimento/proibição de contratar",
         data_inicio: "2026-02-03",
         data_fim: "2027-02-03",

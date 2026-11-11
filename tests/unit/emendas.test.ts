@@ -91,11 +91,11 @@ describe("EMD-08 e EMD-09: favorecido publicável (R3)", () => {
   });
   it("mascara o CPF que vem dentro do nome de MEI", () => {
     expect(favorecidoPublicavel("Pessoa Jurídica", "11854334000149", "ALCIONE LUIZ SEBOLD 52182290915")).toEqual({
-      nome: "ALCIONE LUIZ SEBOLD ***.822.909-**",
+      nome: "ALCIONE LUIZ SEBOLD ***.***.***-**",
       doc: "11.854.334/0001-49",
     });
     expect(favorecidoPublicavel("Sem informação", "-11", "FULANO 521.822.909-15")).toEqual({
-      nome: "FULANO ***.822.909-**",
+      nome: "FULANO ***.***.***-**",
       doc: null,
     });
     // Raiz de CNPJ (8 dígitos) no nome não é CPF.
