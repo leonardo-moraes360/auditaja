@@ -200,11 +200,46 @@ do escopo.
   do número (".123.456.789-01").
 - **Pronto quando**: M2a, M2c, M5, M6 e M7 morrem.
 
+## Rodada 5, quarta continuação (`4ea932e`)
+
+`git diff d787fd6..HEAD -- src` → 0 linhas. Testes novos em `tests/unit/privacidade-nomes.test.ts:15-18` (CPF colado
+a letra e a ponto) e `:19-25` (três separadores em qualquer intervalo não é CPF). Sensor em worktree temporário,
+`vitest run` inteiro:
+
+| # | Mutação em `src/lib/privacy.ts:45` | Resultado (teste que falhou) |
+| --- | --- | --- |
+| M2a | 1º `{0,2}` → `{0,3}` | ✅ morto: `privacidade-nomes.test.ts:19-25` ("A 123 - 456.789-01") |
+| M2c | 3º `{0,2}` → `{0,3}` | ✅ morto: `:19-25` ("A 123.456.789 - 01") |
+| M5 | `(?<!\d)` → `\b` | ✅ morto: `:15-18` ("FULANO12345678901ME") |
+| M6 | `(?!\d)` → `\b` | ✅ morto: `:15-18` ("FULANO12345678901ME") |
+| M7 | `(?<!\d)` → `(?<![\d.])` | ✅ morto: `:15-18` ("ITEM.12345678901") |
+| M8 (novo) | 2º `{0,2}` → `{0,3}` | ✅ morto: `:19-25` ("A 123.456 - 789-01") |
+| M9 (novo) | `(?!\d)` → `(?![\d.])` | ❌ **sobreviveu** (176/176): CPF seguido de ponto ("FULANO 123.456.789-01.") deixaria de ser mascarado |
+| M10 (novo) | 1º separador ganha `/` (`[-.\s/]{0,2}`) | ❌ **sobreviveu** (176/176): "123/456.789-01" passaria a ser mascarado |
+
+`pnpm test` no worktree real: 18 arquivos, 176 passaram. `git status --porcelain` vazio antes e depois; worktree
+temporário removido.
+
+M9 é o que pesa para a R3: o ponto colado **antes** tem teste (M7 morre), o ponto **depois** não. M10 mascara a mais
+(barra não é separador de CPF; sem teste que diga isso).
+
+**Observação**: `:20` fixa que "A 123 - 456 - 789 - 01" (11 dígitos de CPF com " - " entre os grupos) **não** é
+mascarado. É a regra escolhida pelo autor (limite de dois separadores), mas significa que um CPF escrito assim fica
+inteiro no nome publicado. No banco dev não há nenhum caso (rodada anterior: 0 nomes com separadores repetidos).
+Decisão de produto, registrada para o orquestrador.
+
+**Veredito mantido: FAIL** (Minor, só teste). G05 segue registrado como anterior à feature e fora do escopo.
+
+### Correção 9: ponto depois do CPF e barra como separador — M9, M10
+- **Tarefa**: em `tests/unit/privacidade-nomes.test.ts:15-18`, asserir que "FULANO 12345678901." vira
+  "FULANO ***.***.***-**."; asserir que "A 123/456.789-01" fica inalterado.
+- **Pronto quando**: M9 e M10 morrem.
+
 ## Resumo da rodada 5
 
 **Geral**: ❌ Not Ready por um teste. Código, paridade (100%), gate e banco dev estão OK.
-**Sensor**: N1, N6–N10, N12–N14, M1a–c, M3a–c, M4a, M4c mortos; sobreviventes M2a, M2c, M5, M6, M7 (limites e âncoras de `src/lib/privacy.ts:45`); G05 fora do diff.
-**Gate**: 174 vitest + 132 e2e passaram; typecheck, lint e build ok (`f8a3dde`).
+**Sensor**: N1, N6–N10, N12–N14, M1a–c, M3a–c, M4a, M4c mortos; M2a, M2c, M5–M8 mortos em `4ea932e`; sobreviventes M9 (ponto depois do CPF) e M10 (barra como separador), `src/lib/privacy.ts:45`; G05 fora do diff.
+**Gate**: 174 vitest + 132 e2e passaram; typecheck, lint e build ok (`f8a3dde`); `pnpm test` 176/176 em `4ea932e`.
 
 ---
 
