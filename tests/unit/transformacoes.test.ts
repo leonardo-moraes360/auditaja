@@ -85,6 +85,7 @@ describe("votações", () => {
       ],
       [
         { idVotacao: "a", siglaBancada: "PL", orientacao: "Sim" },
+        { idVotacao: "a", siglaBancada: "PL", orientacao: "Sim" },
         { idVotacao: "b", siglaBancada: "PL", orientacao: "Sim" },
       ],
       { votacoes: 1, votos: 2, orientacoes: 3 },
