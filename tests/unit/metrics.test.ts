@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { alinhamento, orientacaoDoPartido, tipoBancadaParaPartido, variacaoNominal } from "@/lib/metrics";
+import {
+  alinhamento,
+  blocoDaBancada,
+  orientacaoDoPartido,
+  partidosDoNomeDoBloco,
+  tipoBancadaParaPartido,
+  variacaoNominal,
+} from "@/lib/metrics";
 import { numeroBr, dataBr } from "@/lib/format";
 
 describe("orientação aplicável ao partido", () => {
@@ -108,5 +115,90 @@ describe("formatação", () => {
   it("variação nominal", () => {
     expect(variacaoNominal(100, 122)).toBe(22);
     expect(variacaoNominal(0, 10)).toBeNull();
+  });
+});
+
+// Composição publicada pela API v2 da Câmara (/blocos?idLegislatura=57 e /blocos/{id}/partidos), 11/11/2026.
+const BLOCOS_57 = [
+  {
+    nome: "UNIÃO, PP, PSD, REPUBLICANOS, MDB, Federação PSDB CIDADANIA, PODE",
+    partidos: ["PSDB", "CIDADANIA", "UNIÃO", "PP", "REPUBLICANOS", "PSD", "MDB", "PODE"],
+  },
+  // A API devolve /partidos vazio para este bloco: a lista sai do nome.
+  { nome: "AVANTE, SOLIDARIEDADE, PRD", partidos: ["AVANTE", "SOLIDARIEDADE", "PRD"] },
+  { nome: "REPUBLICANOS", partidos: ["REPUBLICANOS"] },
+  { nome: "UNIÃO", partidos: ["UNIÃO"] },
+];
+
+describe("orientação de bloco com a composição da API", () => {
+  it.each([
+    ["Bl UniPpPsd...", "Uni"],
+    ["Bl AvanSolidPrd...", "AVANTE"],
+  ])("identifica o bloco de %s", (bancada, inicio) => {
+    expect(blocoDaBancada(bancada, BLOCOS_57)?.nome.startsWith(inicio.toUpperCase())).toBe(true);
+  });
+
+  it.each(["REPUBLICANOS", "PSDB", "CIDADANIA", "MDB", "PODE", "UNIÃO", "PSD", "PP"])(
+    "Bl UniPpPsd... vale para %s, inclusive fora da abreviação",
+    (partido) => {
+      expect(tipoBancadaParaPartido("Bl UniPpPsd...", partido, BLOCOS_57)).toBe("bloco");
+    },
+  );
+
+  it.each([
+    ["Bl UniPpPsd...", "PL"],
+    ["Bl UniPpPsd...", "AVANTE"],
+    ["Bl AvanSolidPrd...", "PSDB"],
+  ])("%s não vale para %s, que não é do bloco", (bancada, partido) => {
+    expect(tipoBancadaParaPartido(bancada, partido, BLOCOS_57)).toBeNull();
+  });
+
+  it("sem bloco identificado, cai na abreviação", () => {
+    expect(blocoDaBancada("Bl XyzAbc...", BLOCOS_57)).toBeNull();
+    expect(tipoBancadaParaPartido("Bl UniPpPsd...", "REPUBLICANOS")).toBeNull();
+    expect(tipoBancadaParaPartido("Bl UniPpPsd...", "PP")).toBe("bloco");
+  });
+
+  it("dois blocos que casam a mesma abreviação não identificam nenhum", () => {
+    const ambiguos = [
+      { nome: "PP, PSD", partidos: ["PP", "PSD"] },
+      { nome: "PP, PSD, MDB", partidos: ["PP", "PSD", "MDB"] },
+    ];
+    expect(blocoDaBancada("Bl PpPsd...", ambiguos)).toBeNull();
+  });
+
+  it("PSDB e Republicanos passam a ter orientação e alinhamento", () => {
+    const votos = [
+      { voto: "Sim", siglaPartido: "PSDB", orientacoes: [{ siglaBancada: "Bl UniPpPsd...", orientacao: "Sim" }] },
+      {
+        voto: "Sim",
+        siglaPartido: "REPUBLICANOS",
+        orientacoes: [{ siglaBancada: "Bl UniPpPsd...", orientacao: "Não" }],
+      },
+    ];
+    expect(orientacaoDoPartido(votos[0], BLOCOS_57)).toEqual({ orientacao: "Sim", tipo: "bloco" });
+    expect(alinhamento(votos)).toEqual({ comparaveis: 0, iguais: 0, divergencias: 0 });
+    expect(alinhamento(votos, BLOCOS_57)).toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 });
+  });
+
+  it("federação ainda tem precedência sobre o bloco", () => {
+    const o = orientacaoDoPartido(
+      {
+        voto: "Sim",
+        siglaPartido: "PSDB",
+        orientacoes: [
+          { siglaBancada: "Bl UniPpPsd...", orientacao: "Não" },
+          { siglaBancada: "Fdr PSDB-CIDADAN", orientacao: "Sim" },
+        ],
+      },
+      BLOCOS_57,
+    );
+    expect(o).toEqual({ orientacao: "Sim", tipo: "federacao" });
+  });
+
+  it("lê partidos do nome do bloco, abrindo federações", () => {
+    expect(partidosDoNomeDoBloco("AVANTE, SOLIDARIEDADE, PRD")).toEqual(["AVANTE", "SOLIDARIEDADE", "PRD"]);
+    expect(partidosDoNomeDoBloco("MDB, Federação PSDB CIDADANIA")).toEqual(["MDB", "PSDB", "CIDADANIA"]);
+    expect(partidosDoNomeDoBloco("UNIÃO")).toEqual(["UNIÃO"]);
   });
 });
