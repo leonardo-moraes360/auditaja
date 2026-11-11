@@ -2,6 +2,8 @@ import type { Insertable, Kysely } from "kysely";
 import type {
   Database,
   DespesaCeapTable,
+  BlocoPartidoTable,
+  BlocoTable,
   OrgaoMembroTable,
   OrientacaoTable,
   ParlamentarTable,
@@ -9,6 +11,7 @@ import type {
   VotoTable,
 } from "@/db/types";
 import { numeroBr } from "@/lib/format";
+import { partidosDoNomeDoBloco } from "@/lib/metrics";
 import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
 import { extrairDoZip, idDaUri, lerCsv, type Linha } from "./arquivos";
 import { inserirEmBlocos, LICENCA_CAMARA, registrarColeta } from "./coleta";
@@ -27,7 +30,9 @@ type DeputadoApi = {
   siglaUf: string | null;
   urlFoto: string | null;
 };
-type Pagina<T> = { dados: T[]; links: { rel: string; href: string }[] };
+type BlocoApi = { id: string; uri: string; nome: string; idLegislatura: string; federacao: boolean };
+type PartidoDoBlocoApi = { sigla: string };
+type Pagina<T> = { dados: T[]; links?: { rel: string; href: string }[] };
 
 async function todasPaginas<T>(cli: ClienteEducado, url: string) {
   const itens: T[] = [];
@@ -37,7 +42,7 @@ async function todasPaginas<T>(cli: ClienteEducado, url: string) {
     const p: Pagina<T> = await cli.json<Pagina<T>>(prox);
     brutos.push(JSON.stringify(p.dados));
     itens.push(...p.dados);
-    prox = p.links.find((l) => l.rel === "next")?.href;
+    prox = p.links?.find((l) => l.rel === "next")?.href;
   }
   return { itens, sha256: sha256De(brutos.join("\n")), bytes: brutos.join("\n").length };
 }
@@ -150,6 +155,34 @@ export function montarVotacoes(
     });
   }
   return { votacoes: vts, votos: [...vs.values()], orientacoes: [...os.values()] };
+}
+
+/** Partidos de cada bloco: os da API; se a API vier vazia, os do nome do bloco. */
+export function montarBlocos(
+  blocos: BlocoApi[],
+  partidosPorBloco: Map<string, PartidoDoBlocoApi[]>,
+  coletaId: number,
+): { blocos: Insertable<BlocoTable>[]; partidos: Insertable<BlocoPartidoTable>[] } {
+  const bs: Insertable<BlocoTable>[] = [];
+  const ps = new Map<string, Insertable<BlocoPartidoTable>>();
+  for (const b of blocos) {
+    const id = Number(b.id);
+    if (!id || !b.nome) continue;
+    bs.push({
+      id,
+      nome: b.nome,
+      id_legislatura: Number(b.idLegislatura),
+      federacao: !!b.federacao,
+      coleta_id: coletaId,
+    });
+    const daApi = (partidosPorBloco.get(b.id) ?? []).map((p) => p.sigla).filter(Boolean);
+    const origem = daApi.length ? "api" : "nome";
+    const siglas = daApi.length ? daApi : partidosDoNomeDoBloco(b.nome);
+    for (const sigla of siglas) {
+      ps.set(`${id}|${sigla}`, { bloco_id: id, sigla_partido: sigla, origem, coleta_id: coletaId });
+    }
+  }
+  return { blocos: bs, partidos: [...ps.values()] };
 }
 
 export function montarOrgaos(
@@ -296,4 +329,34 @@ export async function coletarOrgaos(db: Kysely<Database>, cli: ClienteEducado) {
     await inserirEmBlocos(trx, "orgao_membro", rows);
   });
   return rows.length;
+}
+
+/** Blocos da legislatura e seus partidos: 1 requisição da lista + 1 por bloco (poucos, ~10). */
+export async function coletarBlocos(db: Kysely<Database>, cli: ClienteEducado) {
+  const urlLista = `${API}/blocos?idLegislatura=${LEGISLATURA_ATUAL}&itens=100`;
+  const lista = await todasPaginas<BlocoApi>(cli, urlLista);
+  const partidos = new Map<string, PartidoDoBlocoApi[]>();
+  const brutos: string[] = [lista.sha256];
+  let bytes = lista.bytes;
+  for (const b of lista.itens) {
+    const r = await todasPaginas<PartidoDoBlocoApi>(cli, `${API}/blocos/${b.id}/partidos`);
+    partidos.set(b.id, r.itens);
+    brutos.push(r.sha256);
+    bytes += r.bytes;
+  }
+  const coletaId = await registrarColeta(db, {
+    fonte: "camara_api_blocos",
+    url: urlLista,
+    sha256: sha256De(brutos.join("\n")),
+    bytes,
+    licenca: LICENCA_CAMARA,
+    observacao: `Inclui ${API}/blocos/{id}/partidos de ${lista.itens.length} blocos`,
+  });
+  const m = montarBlocos(lista.itens, partidos, coletaId);
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("bloco").where("id_legislatura", "=", LEGISLATURA_ATUAL).execute();
+    await inserirEmBlocos(trx, "bloco", m.blocos);
+    await inserirEmBlocos(trx, "bloco_partido", m.partidos);
+  });
+  return { blocos: m.blocos.length, partidos: m.partidos.length };
 }
