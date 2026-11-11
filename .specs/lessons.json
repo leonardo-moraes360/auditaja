@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 8,
+  "next_id": 14,
   "lessons": [
     {
       "id": "L-001",
@@ -126,10 +126,119 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "COLETA-04 tests/unit/http.test.ts:61; EDGE-04 viewport 412 (tests)"
+        "COLETA-04 tests/unit/http.test.ts:61; EDGE-04 viewport 412 (tests)",
+        "NAV-01 border width; EDGE-03 indicator dash; MAND-01 cargo (tests)"
       ],
       "created": "2026-11-11T13:18:58Z",
-      "last_seen": "2026-11-11T13:18:58Z"
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-008",
+      "key": "surviving_mutant::give each disjunct of a boolean condition its own test case so dropping any branch fails a test",
+      "text": "Give each disjunct of a boolean condition its own test case so dropping any branch fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N1 src/components/nav-principal.tsx:26 (ui)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-009",
+      "key": "surviving_mutant::for an ordered precedence list test every adjacent pair with both candidates present so any swap fails a test",
+      "text": "For an ordered precedence list, test every adjacent pair with both candidates present so any swap fails a test",
+      "signal": "surviving_mutant",
+      "scope": "domain",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N3 src/lib/metrics.ts:78 (domain)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-010",
+      "key": "surviving_mutant::each filter rule needs a fixture row that only that filter excludes so removing the filter fails a test",
+      "text": "Each filter rule needs a fixture row that only that filter excludes, so removing the filter fails a test",
+      "signal": "surviving_mutant",
+      "scope": "data",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N5 src/data/perfil.ts:192; N9 src/data/perfil.ts:240 (data)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-011",
+      "key": "surviving_mutant::build the fixture for a special case branch so the default branch would produce the opposite result",
+      "text": "Build the fixture for a special-case branch so the default branch would produce the opposite result",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N7 src/ingest/http.ts:65; tests/unit/http.test.ts:47-57 (ingest)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-012",
+      "key": "surviving_mutant::test a transactional replace by forcing a failure mid write and asserting the previous rows survive",
+      "text": "Test a transactional replace by forcing a failure mid-write and asserting the previous rows survive",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N6 src/ingest/camara.ts:236-239 (COLETA-07) (ingest)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
+    },
+    {
+      "id": "L-013",
+      "key": "ac_gap::a test title must not claim a case its fixture does not contain",
+      "text": "A test title must not claim a case its fixture does not contain",
+      "signal": "ac_gap",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "perfil-parlamentar"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests)"
+      ],
+      "created": "2026-11-11T13:31:25Z",
+      "last_seen": "2026-11-11T13:31:25Z"
     }
   ]
 }

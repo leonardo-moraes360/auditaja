@@ -11,7 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/perfil-parlamentar/design.md`
 **Status**: Done (fases 1–4 retroativas; fases 5–6 após a verificação nº 1)
 
-> **Commits:** fases 1–4 em `c5b06ce` e `01f97cf`; T13 em `ac8b627`; T14 em `34fcdb3` (+ correção do Suspense); fase 6 em commits próprios.
+> **Commits:** fases 1–4 em `c5b06ce` e `01f97cf`; T13 em `ac8b627`; T14 em `34fcdb3` e `399468f`; fases 6 e 7 em commits próprios.
 >
 > **Desvio registrado:** a implementação veio antes das specs. As tarefas abaixo descrevem o trabalho já feito e foram entregues em dois commits (`c5b06ce` scaffold, `01f97cf` feature), mais `ac8b627` (rodapé), não em um commit por tarefa. A verificação independente (`validation.md`) compensa essa falta de granularidade conferindo cada critério contra código e testes.
 
@@ -78,6 +78,12 @@ T13 → T14
 
 ```
 T15 → T16 → T17 → T18 → T19
+```
+
+### Phase 7: Pedidos da revisão e correções da verificação nº 2
+
+```
+T20 → T21 → T22
 ```
 
 ---
@@ -415,10 +421,65 @@ T15 → T16 → T17 → T18 → T19
 
 ---
 
+### T20: Casca estática e Suspense nas páginas com dados
+
+**What**: Páginas de parlamentares, perfil, contestação e fontes passam a ter componente síncrono e a parte com dados em `<Suspense>` com esqueleto (aviso "uncached data during a navigation" do Next).
+**Where**: `src/app/parlamentares/[id]/page.tsx`
+**Depends on**: None
+**Reuses**: `src/components/esqueleto.tsx`
+**Requirement**: UI-03
+
+**Done when**:
+
+- [x] `tests/unit/paginas.test.ts` confere que as 4 páginas exportam componente síncrono
+- [x] Build lista as 4 rotas como ◐ (Partial Prerender) e o aviso some no dev
+- [x] Gate full passa
+
+**Tests**: unit
+**Gate**: full
+
+---
+
+### T21: Busca por nome ou UF
+
+**What**: `ufDaBusca` e filtro por UF na busca; placeholders do topo e da página de parlamentares.
+**Where**: `src/data/perfil.ts`
+**Depends on**: T20
+**Requirement**: BUSCA-04, BUSCA-05
+
+**Done when**:
+
+- [x] Integração: "sp" e "RJ" trazem os deputados da UF; "maria" e "XX" não viram UF
+- [x] E2E: placeholders e busca "rj" pelo topo
+- [x] Gate full passa
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T22: Testes das lacunas da verificação nº 2
+
+**What**: Partido antes de federação listada antes; voto vazio no seed; robots em HTML com `Disallow: /`; menu ativo em `/parlamentares` e `/metodologia` com largura 2 px; órgão encerrado no seed; recoleta que falha no meio; "—" no indicador de bens.
+**Where**: `tests/e2e/perfil.spec.ts`
+**Depends on**: T21
+**Requirement**: VOTO-01, VOTO-02, COLETA-03, NAV-01, MAND-01, COLETA-07, EDGE-03
+
+**Done when**:
+
+- [x] Mutantes N1, N3, N5, N6, N7 e N9 da verificação nº 2 seriam mortos
+- [x] 74 Vitest e 36 e2e passam
+- [x] Gate full passa
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
-Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
+Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7
 
 Phase 1:  T1 ------→ T2
 Phase 2:  T3 ------→ T4 ------→ T5
@@ -426,6 +487,7 @@ Phase 3:  T6 ------→ T7 ------→ T8
 Phase 4:  T9 ------→ T10 -----→ T11 -----→ T12
 Phase 5:  T13 -----→ T14
 Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
+Phase 7:  T20 -----→ T21 -----→ T22
 ```
 
 ---
@@ -453,6 +515,9 @@ Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
 | T17 | 1 arquivo de teste | ✅ Granular |
 | T18 | 1 arquivo de teste (+ guarda do seed) | ⚠️ Coeso |
 | T19 | 1 arquivo de teste (+ viewport no config) | ⚠️ Coeso |
+| T20 | 4 páginas, mesmo padrão | ⚠️ Coeso: mudança mecânica idêntica |
+| T21 | 1 função + 2 placeholders | ✅ Granular |
+| T22 | testes em 6 arquivos + seed | ⚠️ Coeso: lista de lacunas de uma verificação |
 
 ## Diagram-Definition Cross-Check
 
@@ -477,6 +542,9 @@ Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
 | T17 | T16 | T16 → T17 | ✅ Match |
 | T18 | T17 | T17 → T18 | ✅ Match |
 | T19 | T18 | T18 → T19 | ✅ Match |
+| T20 | None | - | ✅ Match |
+| T21 | T20 | T20 → T21 | ✅ Match |
+| T22 | T21 | T21 → T22 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -501,3 +569,6 @@ Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
 | T17 | Testes da camada de leitura | integration | integration | ✅ OK |
 | T18 | Testes de ingestão | integration | integration | ✅ OK |
 | T19 | Testes de páginas | e2e | e2e | ✅ OK |
+| T20 | Páginas | e2e | unit (estrutura) + e2e existentes | ✅ OK |
+| T21 | Camada de leitura + páginas | integration | integration + e2e | ✅ OK |
+| T22 | Testes | e2e | e2e + integration + unit | ✅ OK |

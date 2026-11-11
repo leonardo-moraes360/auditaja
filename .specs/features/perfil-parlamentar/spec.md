@@ -56,6 +56,8 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 1. WHEN o usuário busca um termo THEN the system SHALL listar deputados em exercício cujo nome parlamentar ou nome civil contém o termo, ignorando acentos e caixa. <!-- BUSCA-01 -->
 2. IF o termo contém `%` ou `_` THEN the system SHALL tratá-los como caracteres literais, sem curinga. <!-- BUSCA-02 -->
 3. WHEN o usuário clica num resultado THEN the system SHALL abrir `/parlamentares/{id}` com o nome do deputado no título de nível 1. <!-- BUSCA-03 -->
+4. WHEN o termo buscado é a sigla de uma UF (sem diferenciar caixa) THEN the system SHALL incluir os deputados em exercício dessa UF, além dos que casam pelo nome. <!-- BUSCA-04 -->
+5. The system SHALL exibir no campo de busca do topo o placeholder "Buscar deputado por nome ou UF" e no campo da página de parlamentares o rótulo "Nome ou UF" com placeholder "Ex.: Maria, Silva ou SP". <!-- BUSCA-05 -->
 
 **Independent Test**: buscar "joao" no seed fictício e obter só "João Ilustrativo"; clicar em "Maria Exemplo" e ver o perfil.
 
@@ -87,7 +89,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 
 **Acceptance Criteria**:
 
-1. The system SHALL calcular a presença como votações nominais do Plenário no ano com voto não vazio do deputado, sobre o total de votações nominais do Plenário no ano. <!-- VOTO-01 -->
+1. The system SHALL calcular a presença como votações nominais do Plenário no ano com voto não vazio do deputado, sobre o total de votações nominais do Plenário no ano; linha de voto vazia não conta como presença. <!-- VOTO-01 -->
 2. The system SHALL escolher a orientação aplicável na ordem partido, federação, bloco, ignorando orientação vazia. <!-- VOTO-02 -->
 3. The system SHALL contar no alinhamento só votações com orientação "Sim" ou "Não" e voto "Sim" ou "Não", e marcar como divergência quando forem diferentes. <!-- VOTO-03 -->
 4. IF uma sigla de bloco é uma sigla completa de partido (ex.: "Psd") THEN the system SHALL casá-la só por igualdade, nunca como prefixo (PSD não casa PSDB). <!-- VOTO-04 -->
@@ -148,6 +150,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 2. The system SHALL publicar em `/metodologia` o texto da metodologia com a linha "Versão {METODOLOGIA_VERSAO}.". <!-- METOD-01 -->
 3. WHILE o usuário está em uma página do menu principal (ou abaixo dela) the system SHALL marcar o item com `aria-current="page"` e sublinhado de 2 px na cor da marca `#1F4FD1`. <!-- NAV-01 -->
 4. The system SHALL exibir o rodapé com fundo `#15181E`, como no protótipo. <!-- UI-02 -->
+5. The system SHALL renderizar de forma estática a casca das páginas com dados (o componente da página não é assíncrono) e carregar a parte com dados dentro de `<Suspense>`, para a navegação ser instantânea. <!-- UI-03 -->
 
 **Independent Test**: no seed, a lateral mostra "Comissão de Finanças e Tributação"; o item "Parlamentares" fica sublinhado no perfil; `/metodologia` mostra "Versão 1.0.".
 
@@ -204,54 +207,56 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| BUSCA-01 | P1: Encontrar um deputado | Tasks | Implementing |
-| BUSCA-02 | P1: Encontrar um deputado | Tasks | Implementing |
+| BUSCA-01 | P1: Encontrar um deputado | Tasks | Verified |
+| BUSCA-02 | P1: Encontrar um deputado | Tasks | Verified |
 | BUSCA-03 | P1: Encontrar um deputado | Tasks | Verified |
+| BUSCA-04 | P1: Encontrar um deputado | Tasks | Implementing |
+| BUSCA-05 | P1: Encontrar um deputado | Tasks | Implementing |
 | CEAP-01 | P1: Ver gastos da cota | Tasks | Verified |
 | CEAP-02 | P1: Ver gastos da cota | Tasks | Verified |
-| CEAP-03 | P1: Ver gastos da cota | Tasks | Implementing |
-| CEAP-04 | P1: Ver gastos da cota | Tasks | Implementing |
-| CEAP-05 | P1: Ver gastos da cota | Tasks | Implementing |
-| VOTO-01 | P1: Ver votações e alinhamento | Tasks | Verified |
+| CEAP-03 | P1: Ver gastos da cota | Tasks | Verified |
+| CEAP-04 | P1: Ver gastos da cota | Tasks | Verified |
+| CEAP-05 | P1: Ver gastos da cota | Tasks | Verified |
+| VOTO-01 | P1: Ver votações e alinhamento | Tasks | Implementing |
 | VOTO-02 | P1: Ver votações e alinhamento | Tasks | Implementing |
 | VOTO-03 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-04 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-05 | P1: Ver votações e alinhamento | Tasks | Verified |
-| VOTO-07 | P1: Ver votações e alinhamento | Tasks | Implementing |
-| VOTO-06 | P1: Ver votações e alinhamento | Tasks | Implementing |
-| BENS-01 | P1: Ver bens declarados | Tasks | Implementing |
+| VOTO-07 | P1: Ver votações e alinhamento | Tasks | Verified |
+| VOTO-06 | P1: Ver votações e alinhamento | Tasks | Verified |
+| BENS-01 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-02 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-03 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-04 | P1: Ver bens declarados | Tasks | Verified |
-| PROV-01 | P1: Proveniência e privacidade | Tasks | Implementing |
-| PROV-02 | P1: Proveniência e privacidade | Tasks | Implementing |
+| PROV-01 | P1: Proveniência e privacidade | Tasks | Verified |
+| PROV-02 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-01 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-02 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-03 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-04 | P1: Proveniência e privacidade | Tasks | Verified |
-| PRIV-05 | P1: Proveniência e privacidade | Tasks | Implementing |
+| PRIV-05 | P1: Proveniência e privacidade | Tasks | Verified |
 | MAND-01 | P2: Contexto do mandato | Tasks | Implementing |
-| METOD-01 | P2: Contexto do mandato | Tasks | Implementing |
+| METOD-01 | P2: Contexto do mandato | Tasks | Verified |
 | NAV-01 | P2: Contexto do mandato | Tasks | Implementing |
-| UI-02 | P2: Contexto do mandato | Tasks | Implementing |
-| CORR-01 | P1: Pedir correção | Tasks | Implementing |
-| CORR-02 | P1: Pedir correção | Tasks | Implementing |
-| CORR-03 | P1: Pedir correção | Tasks | Implementing |
+| UI-02 | P2: Contexto do mandato | Tasks | Verified |
+| CORR-01 | P1: Pedir correção | Tasks | Verified |
+| CORR-02 | P1: Pedir correção | Tasks | Verified |
+| CORR-03 | P1: Pedir correção | Tasks | Verified |
 | COLETA-01 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-02 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-03 | P1: Coleta não invasiva | Tasks | Implementing |
-| COLETA-04 | P1: Coleta não invasiva | Tasks | Implementing |
-| COLETA-05 | P1: Coleta não invasiva | Tasks | Implementing |
-| COLETA-06 | P1: Coleta não invasiva | Tasks | Implementing |
+| COLETA-04 | P1: Coleta não invasiva | Tasks | Verified |
+| COLETA-05 | P1: Coleta não invasiva | Tasks | Verified |
+| COLETA-06 | P1: Coleta não invasiva | Tasks | Verified |
 | COLETA-07 | P1: Coleta não invasiva | Tasks | Implementing |
-| COLETA-08 | P1: Coleta não invasiva | Tasks | Implementing |
-| EDGE-01 | Edge cases | Tasks | Implementing |
-| EDGE-02 | Edge cases | Tasks | Implementing |
+| COLETA-08 | P1: Coleta não invasiva | Tasks | Verified |
+| EDGE-01 | Edge cases | Tasks | Verified |
+| EDGE-02 | Edge cases | Tasks | Verified |
 | EDGE-03 | Edge cases | Tasks | Implementing |
-| EDGE-04 | Edge cases | Tasks | Implementing |
-| EDGE-05 | Edge cases | Tasks | Implementing |
+| EDGE-04 | Edge cases | Tasks | Verified |
+| EDGE-05 | Edge cases | Tasks | Verified |
 
-**Coverage:** 46 total, 46 mapped to tasks, 0 unmapped.
+**Coverage:** 49 total, 49 mapped to tasks, 0 unmapped.
 
 ---
 

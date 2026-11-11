@@ -53,8 +53,44 @@ Seen once or not yet corroborated. Tracked, not trusted.
 ### L-007 - Assert the exact spec value such as the computed delay or viewport width instead of a loose threshold or a nearby device preset
 - signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
 - features: perfil-parlamentar
-- evidence: COLETA-04 tests/unit/http.test.ts:61; EDGE-04 viewport 412 (tests)
-- last seen: 2026-11-11T13:18:58Z
+- evidence: COLETA-04 tests/unit/http.test.ts:61; EDGE-04 viewport 412 (tests) (+1 more)
+- last seen: 2026-11-11T13:31:25Z
+
+### L-008 - Give each disjunct of a boolean condition its own test case so dropping any branch fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: perfil-parlamentar
+- evidence: N1 src/components/nav-principal.tsx:26 (ui)
+- last seen: 2026-11-11T13:31:25Z
+
+### L-009 - For an ordered precedence list, test every adjacent pair with both candidates present so any swap fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `domain` · harmful: 0
+- features: perfil-parlamentar
+- evidence: N3 src/lib/metrics.ts:78 (domain)
+- last seen: 2026-11-11T13:31:25Z
+
+### L-010 - Each filter rule needs a fixture row that only that filter excludes, so removing the filter fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `data` · harmful: 0
+- features: perfil-parlamentar
+- evidence: N5 src/data/perfil.ts:192; N9 src/data/perfil.ts:240 (data)
+- last seen: 2026-11-11T13:31:25Z
+
+### L-011 - Build the fixture for a special-case branch so the default branch would produce the opposite result
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ingest` · harmful: 0
+- features: perfil-parlamentar
+- evidence: N7 src/ingest/http.ts:65; tests/unit/http.test.ts:47-57 (ingest)
+- last seen: 2026-11-11T13:31:25Z
+
+### L-012 - Test a transactional replace by forcing a failure mid-write and asserting the previous rows survive
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ingest` · harmful: 0
+- features: perfil-parlamentar
+- evidence: N6 src/ingest/camara.ts:236-239 (COLETA-07) (ingest)
+- last seen: 2026-11-11T13:31:25Z
+
+### L-013 - A test title must not claim a case its fixture does not contain
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: perfil-parlamentar
+- evidence: tests/unit/metrics.test.ts:29 title vs fixture (VOTO-02) (tests)
+- last seen: 2026-11-11T13:31:25Z
 
 ## Quarantined (failed when applied - ignore)
 

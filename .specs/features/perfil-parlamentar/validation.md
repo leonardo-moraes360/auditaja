@@ -1,11 +1,23 @@
-# Validation Report: perfil-parlamentar — FAIL
+# Validation Report: perfil-parlamentar — FAIL (iteração 2 de 3)
 
 **Date**: 2026-11-11
-**Spec**: `.specs/features/perfil-parlamentar/spec.md`
-**Diff range**: `1eeedc4..34fcdb3` (branch `feat/perfil-parlamentar`; HEAD avançou de `1f99e7a` para `34fcdb3` durante a verificação)
-**Verifier**: sub-agente independente (author ≠ verifier)
+**Spec**: `.specs/features/perfil-parlamentar/spec.md` (46 requisitos: os 41 da iteração 1 + VOTO-07, MAND-01, METOD-01, NAV-01, UI-02)
+**Diff range**: `1eeedc4..c76b4d6` (branch `feat/perfil-parlamentar`); correções desde a iteração 1: `34fcdb3..c76b4d6`
+**Verifier**: sub-agente independente, novo (author ≠ verifier). As afirmações do autor em tasks.md não foram aceitas: cada critério foi conferido no código e nos testes, e o sensor foi rodado de novo.
 
-**Verdict**: FAIL — (1) o build de produção falha em HEAD `34fcdb3`; (2) 13 dos 41 critérios não têm evidência `file:line`; (3) 6 de 10 mutantes sobreviveram.
+**Verdict**: FAIL. O gate inteiro passa e todos os 46 critérios têm evidência `file:line` (nenhum ❌). Mas 6 de 15 mutantes sobreviveram e 7 critérios estão só parcialmente provados. Pelas regras do validate.md, mutante sobrevivente vira tarefa de correção antes de fechar a feature.
+
+---
+
+## O que mudou desde a iteração 1
+
+| Iteração 1 | Iteração 2 |
+| ---------- | ---------- |
+| `pnpm build` falhava em HEAD (`usePathname` fora de `<Suspense>`) | ✅ Build passa: `src/components/topo.tsx:24-26` envolve `<NavPrincipal />` em `<Suspense fallback={<NavPrincipalEstatica />}>` |
+| 16 ✅ / 12 ⚠️ / 13 ❌ de 41 | 39 ✅ / 7 ⚠️ / 0 ❌ de 46 |
+| Sensor: 4/10 mortos | Sensor: os 6 sobreviventes (M3, M5, M6, M8, M9, M10) agora morrem; 9 mutações novas, 3 mortas e 6 sobreviventes; total 9/15 |
+| Vitest 43, Playwright 10 | Vitest 67 (8 arquivos), Playwright 28 (14 testes × desktop e 390 px) |
+| Asserções de máscara tautológicas (o seed já gravava mascarado) | Máscara provada pela ingestão real: `tests/integracao/coleta.test.ts:95-105`, a partir de um CPF bruto num zip falso |
 
 ---
 
@@ -13,140 +25,170 @@
 
 | Task | Status | Notes |
 | ---- | ------ | ----- |
-| T1–T12 | ✅ Marcadas como done (retroativo) | As checkboxes de tasks.md foram conferidas contra o código e os testes, não aceitas como verdade. O build quebrado em HEAD vem de `34fcdb3` (fora das tarefas, `src/components/nav-principal.tsx`). |
+| T1–T12 | ✅ Done | Conferidas na iteração 1. Nenhuma regressão no gate. |
+| T13 (rodapé) | ✅ Done | `tests/e2e/perfil.spec.ts:39-42` |
+| T14 (menu com página ativa) | ⚠️ Partial | O build passa. Mas o teste só cobre uma subpágina (`/parlamentares/{id}`); a página exata do menu não é testada (mutante N1 sobreviveu). |
+| T15 (cliente HTTP) | ⚠️ Partial | M3, M5 e M10 morrem. O teste de robots em HTML não discrimina (N7 sobreviveu). |
+| T16 (métricas) | ⚠️ Partial | M6 morre; federação > bloco testado. Partido > federação não testado (N3 sobreviveu). |
+| T17 (integração do perfil) | ✅ Done | M8 e M9 morrem; CORR-01/02 por Server Action com linha gravada. |
+| T18 (coleta de ponta a ponta) | ⚠️ Partial | Lote, `coleta_id`, máscara e recoleta sem duplicar estão provados. A atomicidade ("em uma transação") não é testada (N6 sobreviveu). |
+| T19 (e2e) | ✅ Done | 28 testes passam. Lacunas menores em MAND-01 e EDGE-03 (abaixo). |
 
 ---
 
 ## Gate Check
 
-Rodado num git worktree descartável (com cópia de `node_modules`). O dev server do usuário na porta 3000 não foi tocado. O pnpm 11 recusou o symlink de `node_modules` (verificação de deps), então os binários rodaram direto de `node_modules/.bin`, com os mesmos comandos dos scripts de `package.json`.
+Rodado num git worktree descartável (`git worktree add … HEAD`, cópia de `node_modules` e dos `.env`). O dev server do usuário na porta 3000 não foi tocado; o build e o e2e rodaram só no worktree (porta 3212). O pnpm 11 recusa a cópia de `node_modules` na verificação de dependências (`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`), então os scripts rodaram como `pnpm --config.verify-deps-before-run=false <script>`, sem mudar os comandos.
 
-| Passo | HEAD `34fcdb3` | `1f99e7a` (último commit da spec) |
-| ----- | -------------- | --------------------------------- |
-| `pnpm lint` | ✅ | (mesmo código, exceto a nav) |
-| `pnpm typecheck` | ✅ | — |
-| `pnpm format:check` | ✅ | — |
-| `pnpm db:seed:test` | ✅ "Seed fictício aplicado." | — |
-| `pnpm test` (Vitest) | ✅ 43/43 passaram, 6 arquivos, 0 skip (os 3 testes de integração rodaram de fato, nenhum `ctx.skip`) | ✅ |
-| `pnpm build` | ❌ **FALHA**: `Route "/parlamentares/[id]": usePathname() in a Client Component outside of <Suspense>` em `src/components/nav-principal.tsx:14` (prerender com Cache Components) | ✅ |
-| `pnpm test:e2e` (Playwright, `PW_CHROME`) | não roda (sem build) | ✅ 10/10 (5 testes × desktop + Pixel 7) |
+| Passo | HEAD `c76b4d6` |
+| ----- | -------------- |
+| `pnpm lint` | ✅ |
+| `pnpm typecheck` | ✅ |
+| `pnpm format:check` | ✅ |
+| `pnpm db:seed:test` | ✅ |
+| `pnpm test` (Vitest) | ✅ 67/67 passaram, 8 arquivos, 0 skip (os testes de integração rodaram contra o Postgres; nenhum `ctx.skip`) |
+| `pnpm build` | ✅ Compilou e fez o prerender de todas as rotas (`/parlamentares/[id]` como Partial Prerender) |
+| `pnpm test:e2e` (`PW_CHROME`) | ✅ 28/28 (14 testes × `desktop` e `celular` 390×844) |
 
-- **Contagem antes da feature**: 0 testes (`c5b06ce` não tem testes).
-- **Contagem depois**: 43 Vitest + 5 Playwright (×2 projetos = 10 execuções). Delta +48. Nenhum teste removido ou enfraquecido.
+- **Contagem antes da feature**: 0 testes.
+- **Contagem na iteração 1**: 43 Vitest + 10 execuções Playwright.
+- **Contagem agora**: 67 Vitest + 28 execuções Playwright. Delta desde a iteração 1: +24 Vitest, +18 e2e. Nenhum teste removido; nenhuma asserção enfraquecida (a de `perfil.test.ts:38`, tautológica, foi trocada pela prova na ingestão).
 - **Skipped**: nenhum.
-- **Falhas**: build em HEAD (acima). Como o gate de build falhou em HEAD, o restante da verificação foi feito sobre `1f99e7a`, cujo código da feature é idêntico (a nav só mexe em `src/components/topo.tsx` e `nav-principal.tsx`).
+- **Falhas**: nenhuma.
 
 ---
 
 ## Spec-Anchored Acceptance Criteria
 
-Legenda: ✅ a asserção mira o resultado definido na spec · ⚠️ parcial ou spec-precision gap (só parte do critério é afirmada, ou a asserção é vaga) · ❌ GAP (sem citação `file:line` = não coberto).
+Legenda: ✅ a asserção mira o resultado definido na spec · ⚠️ parcial (parte do critério não é afirmada, ou um mutante na regra sobreviveu) · ❌ sem citação `file:line`.
 
 ### P1: Encontrar um deputado
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| BUSCA-01 | só em exercício; nome parlamentar **ou** civil; sem acento/caixa | `tests/integracao/perfil.test.ts:52` - `expect((await buscarParlamentares({ q: "joao" })).map(r => r.id)).toEqual([SEED.deputado])` | ⚠️ Cobre acento e caixa. O filtro de em exercício (os dois deputados do seed estão em exercício) e o casamento só pelo nome civil não são discriminados. |
-| BUSCA-02 | `%` e `_` literais | `tests/integracao/perfil.test.ts:53` - `expect((await buscarParlamentares({ q: "%" })).length).toBe(0)` | ⚠️ `%` coberto; `_` não testado |
-| BUSCA-03 | abre `/parlamentares/{id}` com o nome no h1 | `tests/e2e/perfil.spec.ts:7-8` - `getByRole("heading", { level: 1, name: "Maria Exemplo" })).toBeVisible()` | ✅ (URL não afirmada; o h1 basta como resultado) |
+| BUSCA-01 | só em exercício; nome parlamentar ou civil; sem acento/caixa | `tests/integracao/perfil.test.ts:134` - `buscarParlamentares({ q: "joao" })…toEqual([SEED.deputado])`; `:135` - `q: "EXEMPLO DA SILVA"` (só o nome civil contém) `toEqual([SEED.deputada])`; `:141` - `q: "joana"` (fora de exercício) `toEqual([])`, `:142` com `todos: true` encontra | ✅ |
+| BUSCA-02 | `%` e `_` literais | `tests/integracao/perfil.test.ts:148-149` - `q: "%"` e `q: "_"` → `toEqual([])` (como curinga, `_` casaria todos) | ✅ |
+| BUSCA-03 | abre `/parlamentares/{id}` com o nome no h1 | `tests/e2e/perfil.spec.ts:10-11` - `toHaveURL(/\/parlamentares\/900000001$/)`, heading level 1 "Maria Exemplo" | ✅ |
 
 ### P1: Ver gastos da cota (CEAP)
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| CEAP-01 | total = soma de `valor_liquido` no ano | `tests/integracao/perfil.test.ts:36` - `expect(p.ceap.totalAno).toBe(44100)` | ✅ |
-| CEAP-02 | por tipo, decrescente | `tests/integracao/perfil.test.ts:37` - `expect(p.ceap.porTipo[0].tipo).toMatch(/DIVULGAÇÃO/)` | ✅ (só o primeiro; a ordem ascendente mudaria o primeiro e seria pega) |
-| CEAP-03 | até 8 fornecedores com documento publicável e total | `tests/integracao/perfil.test.ts:38` só lê o doc do fornecedor PF, que já vem mascarado do seed (tautológico). O limite de 8 e o total não são afirmados. Mutante M9 sobreviveu. | ❌ GAP |
-| CEAP-04 | `?ano=` sem despesas → ano mais recente | nenhuma | ❌ GAP (mutante M8 sobreviveu) |
-| CEAP-05 | sem teto verificado → omitir a comparação | nenhuma | ❌ GAP |
+| CEAP-01 | total = soma de `valor_liquido` no ano | `tests/integracao/perfil.test.ts:38` - `totalAno).toBe(44100)` | ✅ |
+| CEAP-02 | por tipo, decrescente | `tests/integracao/perfil.test.ts:39` - `porTipo.map(t => t.total)).toEqual([30000, 9600, 4500])` | ✅ |
+| CEAP-03 | até 8 maiores fornecedores com total | `tests/integracao/perfil.test.ts:86-88` - 9 fornecedores inseridos → `toHaveLength(8)`, primeiro `{ "Fornecedor 9", total: 900 }`, último `{ "Fornecedor 2", total: 200 }` (M9 morto) | ✅ |
+| CEAP-04 | `?ano=` sem despesas → ano mais recente | `tests/integracao/perfil.test.ts:46-48` - `perfilParlamentar(deputada, 2019)` → `ano).toBe(2026)` (M8 morto) | ✅ |
+| CEAP-05 | sem teto verificado → omitir comparação | `tests/integracao/perfil.test.ts:55-56` - `teto).toBeNull()`, `tetoAcumulado).toBeNull()`; `tests/e2e/perfil.spec.ts:22` - "teto por UF em verificação" | ✅ |
 
 ### P1: Ver votações e alinhamento
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| VOTO-01 | presença = com voto / total do Plenário | `tests/integracao/perfil.test.ts:41-42` - `totalPlenario).toBe(3)`, `presentes).toBe(2)`; `tests/e2e/perfil.spec.ts:14` - `"67%"` | ✅ |
-| VOTO-02 | precedência partido → federação → bloco; ignora vazia | `tests/unit/metrics.test.ts:29-38` - `toEqual({ orientacao: "Sim", tipo: "partido" })` (partido > bloco); `:41-44` - vazia → `toBeNull()` | ⚠️ Federação > bloco e partido > federação não testados |
-| VOTO-03 | só Sim/Não × Sim/Não; diferente = divergência | `tests/unit/metrics.test.ts:51-58` - `toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 })` | ✅ (mutante M7 morto) |
-| VOTO-04 | sigla completa só por igualdade (PSD ≠ PSDB) | `tests/unit/metrics.test.ts:20,26` - `tipoBancadaParaPartido("Bl UniPpPsd...", "PSDB")).toBeNull()` | ✅ (mutante M2 morto) |
-| VOTO-05 | filtro "Divergiu" lista só Sim/Não divergentes | `tests/e2e/perfil.spec.ts:25-26` - PEC `toBeVisible()`, PL `toHaveCount(0)` | ✅ |
-| VOTO-06 | sem voto → texto "sem registro" | `tests/integracao/perfil.test.ts:44` afirma só `voto: null` no dado; nenhum teste afirma o texto "sem registro" (`src/components/perfil/secoes.tsx:247`) | ❌ GAP |
+| VOTO-01 | presença = votações com voto **não vazio** / total do Plenário | `tests/integracao/perfil.test.ts:96-97` - `totalPlenario).toBe(3)`, `presentes).toBe(2)`; `tests/e2e/perfil.spec.ts:18-19` - "67%", "2 de 3 em 2026" | ⚠️ O seed não tem linha de voto com `voto = ""`, então o filtro de voto vazio não é exercitado. Mutante N5 (`votos.filter(v => v.voto !== "").length` → `votos.length`, `src/data/perfil.ts:192`) sobreviveu. |
+| VOTO-02 | precedência partido → federação → bloco; ignora vazia | `tests/unit/metrics.test.ts:41-50` - federação > bloco `toEqual({ orientacao: "Sim", tipo: "federacao" })` (N4 morto); `:53-62` - só bloco → `tipo: "bloco"`; `:29-38` - partido > bloco; `:65-68` - vazia → `toBeNull()` | ⚠️ Partido > federação não é testado: o título de `:29` promete "partido direto tem precedência sobre federação e bloco", mas o fixture só tem bloco e partido. Mutante N3 (`PRECEDENCIA` → `["federacao", "partido", "bloco"]`, `src/lib/metrics.ts:78`) sobreviveu. |
+| VOTO-03 | só Sim/Não × Sim/Não; diferente = divergência | `tests/unit/metrics.test.ts:82` - `toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 })`; `tests/integracao/perfil.test.ts:98` - mesmo valor no banco | ✅ |
+| VOTO-04 | sigla completa só por igualdade (PSD ≠ PSDB) | `tests/unit/metrics.test.ts:20,26` - `tipoBancadaParaPartido("Bl UniPpPsd...", "PSDB")).toBeNull()` | ✅ |
+| VOTO-05 | filtro "Divergiu" lista só Sim/Não divergentes | `tests/e2e/perfil.spec.ts:47-49` - PEC `toBeVisible()`, PL e MPV `toHaveCount(0)` | ✅ |
+| VOTO-06 | sem voto → "Votou: sem registro" | `tests/e2e/perfil.spec.ts:55` - `getByText("Votou: sem registro")).toBeVisible()` | ✅ |
+| VOTO-07 | filtro "Sem voto registrado" lista só votações sem voto | `tests/e2e/perfil.spec.ts:53-57` - `?votos=ausencias`: MPV visível, PEC e PL `toHaveCount(0)` | ✅ |
 
 ### P1: Ver bens declarados ao TSE
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| BENS-01 | total por eleição casada | `tests/integracao/perfil.test.ts:45` - `new Set(p.bens.map(b => b.ano_eleicao))).toEqual(new Set([2022, 2026]))` | ⚠️ Só os anos; o total de cada eleição não é afirmado |
-| BENS-02 | `round((atual-anterior)/anterior*100)`; anterior 0 → nada | `tests/unit/metrics.test.ts:73-74` - `variacaoNominal(100,122)).toBe(22)`, `variacaoNominal(0,10)).toBeNull()` | ✅ (o arredondamento em si não é exercitado) |
-| BENS-03 | só tipo e valor, nunca a descrição | `tests/unit/transformacoes.test.ts:150-151` - `toMatchObject({ tipo: "Casa", valor: 350000 })`, `not.toContain("RUA")` | ✅ |
-| BENS-04 | casamento ambíguo descartado | `tests/unit/transformacoes.test.ts:130-131` - `toHaveLength(1)`, `sq_candidato: "10"` (homônimos RJ descartados) | ✅ |
+| BENS-01 | total por eleição casada | `tests/integracao/perfil.test.ts:107-108` - `total(2022)).toBe(890000)`, `total(2026)).toBe(1050000)` | ✅ |
+| BENS-02 | `round((atual-anterior)/anterior*100)`; anterior 0 → nada | `tests/unit/metrics.test.ts:97-98` - `variacaoNominal(100,122)).toBe(22)`, `variacaoNominal(0,10)).toBeNull()`; `tests/e2e/perfil.spec.ts:23` - "+18% sobre 2022" (17,98% arredondado: o arredondamento é exercitado) | ✅ |
+| BENS-03 | só tipo e valor, nunca a descrição | `tests/unit/transformacoes.test.ts:151-152` - `toMatchObject({ tipo: "Casa", valor: 350000 })`, `not.toContain("RUA")` | ✅ |
+| BENS-04 | casamento ambíguo descartado | `tests/unit/transformacoes.test.ts:131-132` - `toHaveLength(1)`, `sq_candidato: "10"` | ✅ |
 
 ### P1: Proveniência e privacidade
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| PROV-01 | lote com fonte, URL, data, SHA-256, bytes e licença; registros ligados ao lote | só `tests/integracao/perfil.test.ts:46` - `coletas.camara_ceap?.url).toContain("camara.leg.br")`, um valor do seed. `registrarColeta` e o `coleta_id` não são testados. | ❌ GAP |
-| PROV-02 | toda seção: rótulo, data da coleta, "Ver na fonte" | `tests/e2e/perfil.spec.ts:17` - `/Fonte: Câmara dos Deputados, Dados Abertos \(CEAP/` | ⚠️ Só o rótulo da seção CEAP; a data, o link e as outras seções não |
-| PRIV-01 | `***.XXX.XXX-**` | `tests/unit/privacy.test.ts:6-7` - `toBe("***.456.789-**")` | ✅ (mutante M1 morto) |
-| PRIV-02 | PF → "Prestador pessoa física" | `tests/unit/privacy.test.ts:30`; `tests/unit/transformacoes.test.ts:28` | ✅ |
-| PRIV-03 | descarta passageiro e CPF do parlamentar | `tests/unit/transformacoes.test.ts:31-32` - `not.toContain("Passageira")`, `not.toContain("11122233344")` | ✅ |
+| PROV-01 | lote com fonte, URL, data, SHA-256, bytes, licença; registros ligados ao lote | `tests/integracao/coleta.test.ts:77-84` - lote `fonte = "camara_ceap"` `toMatchObject({ url, sha256: sha256De(zip), bytes: zip.length, licenca: LICENCA_CAMARA })`, `coleta_id` das despesas `toEqual([coleta.id, coleta.id])`. A data vem de `coletado_em NOT NULL` (`src/db/migrations/0001_init.ts:10`). | ✅ |
+| PROV-02 | toda seção: rótulo, data da coleta, "Ver na fonte" | `tests/e2e/perfil.spec.ts:28-31` - nas seções gastos, votações e bens: `/^Fonte: .+ · coletado em \d{2}\/\d{2}\/\d{4}/` e link "Ver na fonte" | ✅ |
+| PRIV-01 | `***.XXX.XXX-**` | `tests/unit/privacy.test.ts:6-7`; `tests/integracao/coleta.test.ts:96,102-103` - CPF bruto `123.456.789-01` do zip gravado como `***.456.789-**`, nada de `12345678901` | ✅ |
+| PRIV-02 | PF → "Prestador pessoa física" | `tests/integracao/coleta.test.ts:97` - `fornecedor_nome: "Prestador pessoa física"`; `tests/unit/privacy.test.ts:30` | ✅ |
+| PRIV-03 | descarta passageiro e CPF do parlamentar | `tests/integracao/coleta.test.ts:104-105` - `not.toContain("Passageira")`, `not.toContain("11122233344")` | ✅ |
 | PRIV-04 | nem 11 nem 14 dígitos → sem documento | `tests/unit/privacy.test.ts:25-26` - `toEqual({ doc: null, classe: "desconhecido" })` | ✅ |
-| PRIV-05 | rodapé com controlador **e** encarregado | `tests/e2e/perfil.spec.ts:18` - `/Encarregado \(LGPD\)/` | ⚠️ "Controlador" não afirmado |
+| PRIV-05 | rodapé "Controlador: …" e "Encarregado (LGPD): …" | `tests/e2e/perfil.spec.ts:39-40` - `/^Controlador: /`, `/^Encarregado \(LGPD\): /` | ✅ |
+
+### P2: Contexto do mandato e fidelidade ao protótipo
+
+| ID | Spec-defined outcome | `file:line` + assertion | Result |
+| -- | -------------------- | ----------------------- | ------ |
+| MAND-01 | lateral lista órgãos com cargo **sem data de fim**, **com o cargo** | `tests/e2e/perfil.spec.ts:62` - `getByText("Comissão de Finanças e Tributação")).toBeVisible()` | ⚠️ O cargo ("Titular") não é afirmado, e o seed não tem órgão com `data_fim`. Mutante N9 (remove `.where("data_fim", "is", null)`, `src/data/perfil.ts:240`) sobreviveu ao Vitest e ao e2e. |
+| METOD-01 | `/metodologia` com "Versão {METODOLOGIA_VERSAO}." | `tests/e2e/perfil.spec.ts:76-77` - heading "Metodologia", `/^Versão 1\.0\./` | ✅ |
+| NAV-01 | página do menu **ou abaixo dela** → `aria-current="page"` + sublinhado 2 px `#1F4FD1` | `tests/e2e/perfil.spec.ts:69-71` - em `/parlamentares/{id}`: `toHaveAttribute("aria-current", "page")`, `border-bottom-color` `rgb(31, 79, 209)`, Metodologia sem `aria-current` (N2 morto) | ⚠️ Só a subpágina é testada; na própria `/parlamentares` nada é afirmado. Mutante N1 (remove `pathname === href \|\|`, `src/components/nav-principal.tsx:26`) sobreviveu ao e2e. A largura de 2 px (`border-bottom-width`) também não é afirmada. |
+| UI-02 | rodapé com fundo `#15181E` | `tests/e2e/perfil.spec.ts:42` - `toHaveCSS("background-color", "rgb(21, 24, 30)")` | ✅ |
 
 ### P1: Pedir correção
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| CORR-01 | 20–4000 caracteres → grava com status "recebido" + "Pedido recebido." | `tests/e2e/perfil.spec.ts:33` - `getByText("Pedido recebido.")).toBeVisible()` | ⚠️ Linha gravada e status "recebido" não verificados; limite de 4000 não testado |
-| CORR-02 | < 20 caracteres → não grava + mensagem exata | nenhuma | ❌ GAP |
-| CORR-03 | "Contestar" pré-seleciona a seção | `tests/e2e/perfil.spec.ts:30` só navega com `?secao=gastos`; o valor do `<select>` não é afirmado | ❌ GAP |
+| CORR-01 | 20–4000 caracteres → grava com status "recebido" + "Pedido recebido." | `tests/integracao/perfil.test.ts:176-184` - redireciona para `?enviado=1`, linha `toMatchObject({ parlamentar_id, secao: "gastos", status: "recebido" })`; `:190-191` - 4001 caracteres → `r.erro).toBeTruthy()` (N8 morto); `tests/e2e/perfil.spec.ts:86` - "Pedido recebido." | ✅ (nota: a asserção acima de 4000 só checa que há erro; a spec não define a mensagem) |
+| CORR-02 | < 20 → não grava + mensagem exata | `tests/integracao/perfil.test.ts:166-169` - `toEqual({ erro: "Descreva o erro com pelo menos 20 caracteres." })`, contagem de `pedido_correcao` igual | ✅ |
+| CORR-03 | "Contestar" pré-seleciona a seção | `tests/e2e/perfil.spec.ts:82-83` - clique em Contestar de `section#gastos` → `getByLabel("Qual parte do perfil?")).toHaveValue("gastos")` | ✅ |
 
 ### P1: Coleta não invasiva
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| COLETA-01 | UA `Auditaja/<v> (+<URL>; ...)` em toda requisição | `tests/unit/http.test.ts:35-36` - `chamadas[0].ua).toBe(USER_AGENT)`, `toMatch(/^Auditaja\/.+\(\+https?:\/\//)` | ✅ |
-| COLETA-02 | lê robots na 1ª vez; caminho proibido → `ColetaBloqueada` | `tests/unit/http.test.ts:33-34` - `rejects.toBeInstanceOf(ColetaBloqueada)`, `chamadas).toHaveLength(1)`; parser em `tests/unit/robots.test.ts:9-34` | ✅ |
-| COLETA-03 | 5xx/rede → bloqueia; 4xx/HTML → permite | `tests/unit/http.test.ts:46` (5xx → bloqueia, mutante M4 morto); `:41` (404 → permite) | ⚠️ O robots em HTML (o título do teste diz que cobre, mas a rota não existe) e a falha de rede não são testados |
-| COLETA-04 | espera = max(1 s, Crawl-delay) | `tests/unit/http.test.ts:61` - `esperas.some(ms => ms > 4000)).toBe(true)` | ⚠️ Spec-precision gap: a asserção é vaga (`> 4000` em vez de ≈5000) e o piso de 1 s sem Crawl-delay não é testado |
-| COLETA-05 | 429/5xx: até 4 tentativas; Retry-After ou 2/4/8 s | `tests/unit/http.test.ts:70` - `esperas).toContain(7000)` | ❌ GAP: backoff 2/4/8 s, limite de 4 tentativas e repetição em 5xx não testados (mutantes M5 e M10 sobreviveram) |
-| COLETA-06 | 401/403 → `ColetaBloqueada`, sem nova tentativa | `tests/unit/http.test.ts:71` - só 403 → `rejects.toBeInstanceOf(ColetaBloqueada)` | ❌ GAP: 401 não testado (mutante M3 sobreviveu); o número de chamadas ("sem nova tentativa") não é afirmado |
-| COLETA-07 | recoleta substitui o ano em uma transação | nenhuma (`src/ingest/camara.ts:236-239` sem teste) | ❌ GAP |
-| COLETA-08 | só votações nominais; sem votos ou orientações duplicados | `tests/unit/transformacoes.test.ts:92-94` - `ids).toEqual(["a"])`, `votos).toHaveLength(1)`, `orientacoes).toHaveLength(1)` | ⚠️ Deduplicação de orientações não exercitada (a única duplicata é filtrada por ser não nominal); mutante M6 sobreviveu |
+| COLETA-01 | UA `Auditaja/<v> (+<URL>; ...)` | `tests/unit/http.test.ts:38-39` - `ua).toBe(USER_AGENT)`, `toMatch(/^Auditaja\/.+\(\+https?:\/\//)` | ✅ |
+| COLETA-02 | robots na 1ª vez; caminho proibido → `ColetaBloqueada` | `tests/unit/http.test.ts:36-37` - `rejects.toBeInstanceOf(ColetaBloqueada)`, `chamadas).toHaveLength(1)` | ✅ |
+| COLETA-03 | 5xx/rede → bloqueia; 4xx/HTML → permite | `tests/unit/http.test.ts:61` (503 → bloqueia); `:66-67` (rede → bloqueia, 0 chamadas ao recurso); `:44` (404 → permite); `:56` (HTML → permite) | ⚠️ O teste do HTML não discrimina: o corpo `<html><body>Disallow: /</body></html>` não tem linha `User-agent`, então o parser também permitiria. Mutante N7 (remove a checagem `text/html`, `src/ingest/http.ts:65`) sobreviveu. |
+| COLETA-04 | espera = max(1 s, Crawl-delay) | `tests/unit/http.test.ts:82-84` - maior espera em [4900, 5000] com Crawl-delay 5; `:94-96` - em [900, 1000] sem Crawl-delay | ✅ |
+| COLETA-05 | 429/5xx: até 4 tentativas; Retry-After ou 2/4/8 s | `tests/unit/http.test.ts:105` - `esperas).toEqual([7000])`; `:111-113` - `rejects.toThrow(/HTTP 503/)`, `esperas).toEqual([2000, 4000, 8000])`, `contar(url)).toBe(4)`; `:119-120` - 500 → 200 resolve (M5, M10 mortos) | ✅ |
+| COLETA-06 | 401/403 → `ColetaBloqueada`, sem nova tentativa | `tests/unit/http.test.ts:123-127` - `it.each([401, 403])`: `rejects.toBeInstanceOf(ColetaBloqueada)`, `contar(url)).toBe(1)` (M3 morto) | ✅ |
+| COLETA-07 | recoleta substitui o ano **em uma transação**, sem duplicar | `tests/integracao/coleta.test.ts:110-123` - segunda coleta → `Number(n.n)).toBe(2)` no ano; outro ano continua com 3 | ⚠️ Sem duplicar: provado. Atomicidade: não testada. Mutante N6 (apaga numa transação e insere em outra, `src/ingest/camara.ts:236-239`) sobreviveu. |
+| COLETA-08 | só nominais; sem votos ou orientações duplicados | `tests/unit/transformacoes.test.ts:87-95` - orientação `a\|PL` repetida → `orientacoes).toHaveLength(1)` (M6 morto) | ✅ |
 
 ### Edge Cases
 
 | ID | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| EDGE-01 | id não numérico **ou** inexistente → "Página não encontrada" + `noindex` | `tests/e2e/perfil.spec.ts:38-40` - heading `toBeVisible()`, `meta[name="robots"][content*="noindex"]` count > 0; `tests/integracao/perfil.test.ts:59` - `toBeNull()` | ⚠️ Só id inexistente; id não numérico (`/parlamentares/abc`) não testado |
-| EDGE-02 | "Nenhuma despesa publicada para {ano}." | nenhuma | ❌ GAP |
-| EDGE-03 | mensagem de ausência de bens + "—" | nenhuma (o seed do João Ilustrativo serviria) | ❌ GAP |
-| EDGE-04 | 390 px sem rolagem horizontal | `tests/e2e/perfil.spec.ts:19-20` - `scrollWidth <= viewportSize().width`, rodando em Pixel 7 (412 px) e desktop | ⚠️ Spec-precision gap: a largura testada não é 390 px |
-| EDGE-05 | seed fora de `_test` → recusa, exit 1 | nenhum teste automatizado. Conferido à mão: `scripts/seed.ts:7-9` com `DATABASE_URL=…/naoexiste` imprimiu "Seed recusado…" e saiu com 1 | ❌ GAP (evidence-or-zero) |
+| EDGE-01 | id não numérico ou inexistente → "Página não encontrada" + `noindex` | `tests/e2e/perfil.spec.ts:102-108` - `/parlamentares/1` e `/parlamentares/abc`: heading visível, `meta[name="robots"][content*="noindex"]` count > 0 | ✅ |
+| EDGE-02 | "Nenhuma despesa publicada para {ano}." | `tests/e2e/perfil.spec.ts:91` - `/^Nenhuma despesa publicada para \d{4}\.$/` | ✅ |
+| EDGE-03 | mensagem de ausência **e "—" no indicador** | `tests/e2e/perfil.spec.ts:92` - `/Não encontramos declarações de bens/`; `:93` - subtítulo "nenhuma declaração encontrada" | ⚠️ O valor "—" do indicador (`src/app/parlamentares/[id]/page.tsx:96`) não é afirmado. |
+| EDGE-04 | 390 px sem rolagem horizontal | `playwright.config.ts:22` - projeto `celular` com `viewport: { width: 390, height: 844 }`; `tests/e2e/perfil.spec.ts:98-99` - `scrollWidth <= viewportSize().width` | ✅ |
+| EDGE-05 | seed fora de `_test` → recusa, exit 1 | `tests/unit/seed-guard.test.ts:14-15` - `r.status).toBe(1)`, `stderr).toContain("Seed recusado")` | ✅ |
 
-**Status**: ❌ Gaps presentes. 16 ✅, 12 ⚠️, 13 ❌, de 41.
+**Status**: ⚠️ 39 ✅, 7 ⚠️, 0 ❌, de 46.
 
 ---
 
 ## Discrimination Sensor
 
-Worktree descartável em `1f99e7a` (código da feature idêntico ao de HEAD). Uma mutação por vez, Vitest completo (unit + integração no Postgres) e depois `git checkout -- <arquivo>`. O e2e não foi rodado contra os mutantes: nenhum teste e2e usa `?ano=` ou passa de 8 fornecedores, então ele também não mataria M8 e M9.
+Worktree descartável em HEAD `c76b4d6`. Uma mutação por vez, aplicada por substituição exata de texto (o script confere que o trecho original aparece uma única vez), seguida de `pnpm test` completo (unit + integração no Postgres) e `git checkout -- <arquivo>`. Para a camada de UI (N1, N2, N9): `pnpm build` e `pnpm test:e2e` completos depois do Vitest.
+
+### Os 6 sobreviventes da iteração 1
 
 | Mutation | File:line | Description | Killed? |
 | -------- | --------- | ----------- | ------- |
-| M1 | `src/lib/privacy.ts:13` | máscara expõe os 2 últimos dígitos (`-**` → `-${d.slice(9)}`) | ✅ Killed (privacy, transformacoes) |
-| M2 | `src/lib/metrics.ts:40` | remove a guarda `SIGLAS_COMPLETAS` em `casaAbreviado` | ✅ Killed (`metrics.test.ts:20`) |
-| M3 | `src/ingest/http.ts:90` | `401 \|\| 403` → só `403` | ❌ Survived |
-| M4 | `src/ingest/http.ts:68` | robots 5xx → `PERMITE_TUDO` | ✅ Killed (`http.test.ts:44`) |
-| M5 | `src/ingest/http.ts:98` | backoff `2000 * 2 ** (t-1)` → `1000` fixo | ❌ Survived |
-| M6 | `src/ingest/camara.ts:145` | chave de orientação única por linha (sem deduplicação) | ❌ Survived |
-| M7 | `src/lib/metrics.ts:103` | alinhamento deixa de exigir voto Sim/Não | ✅ Killed (`metrics.test.ts:49`) |
-| M8 | `src/data/perfil.ts:102` | `?ano=` sem despesas é aceito no lugar de cair no ano mais recente | ❌ Survived |
-| M9 | `src/data/perfil.ts:134` | `.limit(8)` → `.limit(80)` | ❌ Survived |
-| M10 | `src/ingest/http.ts:20` | `MAX_TENTATIVAS` 4 → 9 | ❌ Survived |
+| M3 | `src/ingest/http.ts:90` | `401 \|\| 403` → só `403` | ✅ Killed (`http.test.ts:123`, caso 401) |
+| M5 | `src/ingest/http.ts:98` | backoff `2000 * 2 ** (t-1)` → `1000` fixo | ✅ Killed (`http.test.ts:108`) |
+| M6 | `src/ingest/camara.ts:145` | chave de orientação única por linha (sem deduplicação) | ✅ Killed (`transformacoes.test.ts`, "guarda só votações nominais e deduplica") |
+| M8 | `src/data/perfil.ts:102` | `?ano=` sem despesas aceito | ✅ Killed (`perfil.test.ts:43`) |
+| M9 | `src/data/perfil.ts:134` | `.limit(8)` → `.limit(80)` | ✅ Killed (`perfil.test.ts:59`) |
+| M10 | `src/ingest/http.ts:20` | `MAX_TENTATIVAS` 4 → 9 | ✅ Killed (`http.test.ts:108`) |
 
-**Sensor depth**: lightweight ampliado (10 mutações; coleta e privacidade são caminhos de conformidade legal)
-**Sensor outcome**: 4/10 mortos, 6 sobreviveram → os testes não discriminam esses comportamentos
-**Isolation**: `git status --porcelain` do repositório real estava vazio antes e depois (iguais); worktree removido com `git worktree remove --force`.
+### Mutações novas (código e testes adicionados desde a iteração 1)
+
+| Mutation | File:line | Description | Killed? |
+| -------- | --------- | ----------- | ------- |
+| N1 | `src/components/nav-principal.tsx:26` | remove `pathname === href \|\|` (a página exata do menu deixa de ficar ativa) | ❌ Survived (Vitest 67/67, e2e 28/28) |
+| N2 | `src/components/nav-principal.tsx:26` | remove `\|\| pathname.startsWith(\`${href}/\`)` | ✅ Killed (`perfil.spec.ts:65`, desktop e celular) |
+| N3 | `src/lib/metrics.ts:78` | precedência `["federacao", "partido", "bloco"]` | ❌ Survived |
+| N4 | `src/lib/metrics.ts:78` | precedência `["partido", "bloco", "federacao"]` | ✅ Killed (`metrics.test.ts:41`) |
+| N5 | `src/data/perfil.ts:192` | presença conta toda linha de voto, inclusive `voto = ""` | ❌ Survived |
+| N6 | `src/ingest/camara.ts:236-239` | apagar e inserir em transações separadas | ❌ Survived |
+| N7 | `src/ingest/http.ts:65` | robots servido como `text/html` é lido pelo parser | ❌ Survived |
+| N8 | `src/app/parlamentares/[id]/contestar/actions.ts:11` | `.max(4000)` → `.max(40000)` | ✅ Killed (`perfil.test.ts:187`) |
+| N9 | `src/data/perfil.ts:240` | remove `.where("data_fim", "is", null)` dos órgãos | ❌ Survived (Vitest 67/67, e2e 28/28) |
+
+**Sensor depth**: lightweight ampliado (15 mutações; coleta e privacidade são caminhos de conformidade legal)
+**Sensor outcome**: 9/15 mortos. Os 6 sobreviventes da iteração 1 agora morrem; 6 das 9 novas sobreviveram → FAIL
+**Isolation**: `git status --porcelain` do repositório real estava vazio antes e depois (comparados com `diff`, iguais). Worktree removido com `git worktree remove --force`; `git worktree list` mostra só o checkout principal. Nenhum `git stash`.
 
 ---
 
@@ -154,66 +196,52 @@ Worktree descartável em `1f99e7a` (código da feature idêntico ao de HEAD). Um
 
 | Principle | Status |
 | --------- | ------ |
-| Minimum code | ✅ |
-| Surgical changes | ⚠️ `34fcdb3` (nav com página ativa) entrou depois da spec, fora das tarefas, e quebrou o build |
-| No scope creep | ⚠️ filtro "Sem voto registrado" (`secoes.tsx:195`), órgãos/comissões e `/metodologia` existem sem AC na spec |
+| Minimum code | ✅ A correção do build é um `<Suspense>` com fallback estático (`topo.tsx:24-26`, `nav-principal.tsx:18-20`) |
+| Surgical changes | ✅ Desde a iteração 1, o código de produção só mudou em `nav-principal.tsx`, `topo.tsx` e no seed (deputada fora de exercício, para BUSCA-01). O resto são testes e `playwright.config.ts`. |
+| No scope creep | ✅ O filtro de ausências, os órgãos, `/metodologia`, o menu e o rodapé, que não tinham critério na iteração 1, agora têm (VOTO-07, MAND-01, METOD-01, NAV-01, UI-02) |
 | Matches patterns | ✅ |
-| Spec-anchored outcome check | ❌ 13 sem evidência, 12 parciais |
-| Per-layer Coverage Expectation met | ❌ A matriz exige "todos os ramos" em http (401, backoff, limite de tentativas faltam) e "feliz + edge + erro" nas rotas (CORR-02, EDGE-02/03, id não numérico faltam) |
-| Every test maps to a spec requirement | ✅ (testes de `numeroBr`/`dataBr` e de `montarParlamentares` apoiam BUSCA e BENS indiretamente) |
-| Documented guidelines followed: `AGENTS.md`, tasks.md Test Coverage Matrix | ⚠️ ver acima |
+| Spec-anchored outcome check | ⚠️ 7 parciais (acima) |
+| Per-layer Coverage Expectation met | ⚠️ Cliente HTTP: o ramo HTML não discrimina. Camada de leitura: os filtros de voto vazio e de `data_fim` não são exercitados. |
+| Every test maps to a spec requirement | ✅ Cada teste novo cita o ID do requisito no título |
+| Documented guidelines followed: `AGENTS.md`, Test Coverage Matrix de tasks.md | ⚠️ ver acima |
 
 Notas:
-- `tests/integracao/perfil.test.ts:38` e `tests/e2e/perfil.spec.ts:16` afirmam `***.456.789-**`, mas o seed (`src/db/seed.ts`, despesa do mês 3) já grava o valor mascarado. Esses testes não provam o mascaramento da ingestão; só os testes unitários provam.
-- O título de `tests/unit/http.test.ts:39` promete "página HTML no lugar do robots também", mas a rota HTML não existe no teste.
+- `yazl` e `@types/yazl` entraram como devDependencies só para gerar o zip falso de `coleta.test.ts`. É aceitável, e não vão para o bundle.
+- `tests/integracao/perfil.test.ts:89` apaga todas as despesas do `SEED.deputado` no fim do teste. O `afterAll` volta ao seed, mas se o teste falhar antes da linha 89 as linhas inseridas ficam até o `afterAll`. Não causa erro hoje; vale saber.
 
 ---
 
 ## Fix Plans
 
-### Fix 1 (Blocker): build de produção quebrado em HEAD
-- **Root cause**: `NavPrincipal` (`src/components/nav-principal.tsx:14`) usa `usePathname()` fora de `<Suspense>`; com Cache Components isso bloqueia o prerender de `/parlamentares/[id]`.
-- **Fix task**: em `src/components/topo.tsx`, envolver `<NavPrincipal />` em `<Suspense fallback={<nav … sem item ativo/>}>`.
-- **Done when**: `pnpm build && pnpm test:e2e` passam em HEAD.
+### Fix 1 (Major): VOTO-02, partido antes de federação (N3)
+- **Root cause**: nenhum teste tem orientação de partido e de federação juntas.
+- **Fix task**: em `tests/unit/metrics.test.ts`, `orientacaoDoPartido({ voto: "Sim", siglaPartido: "PSDB", orientacoes: [{ siglaBancada: "Fdr PSDB-CIDADAN", orientacao: "Não" }, { siglaBancada: "PSDB", orientacao: "Sim" }] })` → `toEqual({ orientacao: "Sim", tipo: "partido" })`. Ponha a federação primeiro no array, para a ordem de entrada não decidir o resultado.
+- **Done when**: N3 morre.
 
-### Fix 2 (Major): COLETA-05/06, cliente HTTP (M3, M5, M10)
-- Em `tests/unit/http.test.ts`:
-  - 401 → `rejects.toBeInstanceOf(ColetaBloqueada)` e `chamadas.filter(c => c.url.endsWith("/b")).length === 1`.
-  - 503 ×4 sem Retry-After → `rejects.toThrow(/HTTP 503/)`, `esperas` contém `[2000, 4000, 8000]` em ordem e exatamente 4 chamadas à URL.
-  - 503 → 200 → resolve.
+### Fix 2 (Major): VOTO-01, voto vazio não conta como presença (N5)
+- **Root cause**: o seed não tem linha de voto com `voto = ""`, o caso que o filtro existe para tratar.
+- **Fix task**: em `tests/integracao/perfil.test.ts`, inserir uma votação de Plenário em 2026 com voto `""` da deputada (ou acrescentar ao seed, ajustando os números esperados) e afirmar `totalPlenario` +1 e `presentes` igual. Se for no seed, ajustar "67%" e "2 de 3" no e2e.
+- **Done when**: N5 morre.
 
-### Fix 3 (Major): CEAP-03/04/05 (M8, M9)
-- Em `tests/integracao/perfil.test.ts`:
-  - `perfilParlamentar(SEED.deputada, 2019)` → `ano).toBe(2026)`.
-  - Seed (ou fixture local do teste) com 9 fornecedores → `fornecedores).toHaveLength(8)` e `fornecedores[0].total` igual ao maior.
-  - `ceap.teto).toBeNull()` e `tetoAcumulado).toBeNull()`.
-  - No e2e, afirmar `"teto por UF em verificação"` e a ausência de "% do teto".
+### Fix 3 (Major): COLETA-03, robots em HTML (N7)
+- **Root cause**: o corpo HTML do teste não teria efeito mesmo se fosse lido como robots.txt.
+- **Fix task**: em `tests/unit/http.test.ts:51`, usar o corpo `"User-agent: *\nDisallow: /"` com `content-type: text/html` e manter a asserção de que resolve. Lido como robots, esse corpo bloquearia tudo.
+- **Done when**: N7 morre.
 
-### Fix 4 (Major): CORR-02/03 e CORR-01 (status)
-- Em `tests/e2e/perfil.spec.ts`:
-  - `expect(page.getByLabel("Qual parte do perfil?")).toHaveValue("gastos")`.
-  - Descrição curta enviada pela Server Action (remover `minLength` via `evaluate` ou chamar `enviarPedido` num teste de integração) → `"Descreva o erro com pelo menos 20 caracteres."` e nenhuma linha nova em `pedido_correcao`.
-- No teste de integração, depois do envio, `pedido_correcao.status === "recebido"`.
+### Fix 4 (Major): NAV-01, página exata do menu (N1)
+- **Fix task**: em `tests/e2e/perfil.spec.ts`, ir a `/parlamentares` (e a `/metodologia`) e afirmar `aria-current="page"` no item correspondente. Acrescentar `toHaveCSS("border-bottom-width", "2px")` no item ativo.
+- **Done when**: N1 morre.
 
-### Fix 5 (Major): COLETA-07 / PROV-01, ingestão no Postgres
-- Novo teste de integração: `coletarCeap` com `ClienteEducado` sobre `fetch` falso servindo um zip pequeno, rodado duas vezes no mesmo ano → contagem de `despesa_ceap` do ano igual nas duas vezes. Afirmar também que a linha de `coleta` tem `sha256`, `bytes`, `licenca` e `url`, e que as despesas têm `coleta_id` igual ao da coleta.
+### Fix 5 (Minor): MAND-01, órgão encerrado e cargo (N9)
+- **Fix task**: no seed, acrescentar à deputada um `orgao_membro` com `data_fim` preenchida (ex.: "Comissão Encerrada Fictícia"). No e2e, afirmar que ele tem `toHaveCount(0)` e que "Titular" aparece junto da Comissão de Finanças e Tributação.
+- **Done when**: N9 morre.
 
-### Fix 6 (Minor): edge cases e UI
-- e2e:
-  - João Ilustrativo (sem despesas e sem bens) → `"Nenhuma despesa publicada para"` e a mensagem "Não encontramos declarações de bens" (EDGE-02/03).
-  - `/parlamentares/abc` → "Página não encontrada" (EDGE-01).
-  - Projeto Playwright com viewport 390×844 (EDGE-04).
-  - `getByText("sem registro")` no perfil (VOTO-06).
-  - `Controlador:` no rodapé (PRIV-05).
-  - `getByRole("link", { name: "Ver na fonte" })` e "coletado em" em cada seção (PROV-02).
-- unit:
-  - orientações duplicadas `a|PL` ×2 → length 1 (COLETA-08, M6).
-  - federação vence bloco (VOTO-02).
-  - `q: "_"` → 0 resultados (BUSCA-02).
-  - deputado fora de exercício não aparece (BUSCA-01).
-  - `http.test.ts` com robots `text/html` e `fetch` que lança erro (COLETA-03).
-  - Crawl-delay: `Math.max(...esperas)` entre 4900 e 5000; sem Crawl-delay, espera ≤ 1000 (COLETA-04).
-- EDGE-05: teste que roda `tsx scripts/seed.ts` com `DATABASE_URL=postgres://x@127.0.0.1:1/prod` via `execa` e espera exit 1.
+### Fix 6 (Minor): COLETA-07, atomicidade (N6)
+- **Fix task**: em `tests/integracao/coleta.test.ts`, depois da primeira coleta, rodar `coletarCeap` com um zip cuja linha quebre uma restrição na inserção (ex.: `ideCadastro` válido e `vlrLiquido` que estoure o tipo, ou um `fetchImpl` que entregue um CSV que faz `inserirEmBlocos` lançar erro). Afirmar `rejects` e que as 2 despesas do ano continuam no banco.
+- **Done when**: N6 morre.
+
+### Fix 7 (Cosmetic): EDGE-03, "—" no indicador
+- **Fix task**: em `tests/e2e/perfil.spec.ts:93`, localizar o indicador de bens e afirmar que o valor é "—".
 
 ---
 
@@ -221,21 +249,24 @@ Notas:
 
 | Requirement | Previous | New |
 | ----------- | -------- | --- |
-| BUSCA-03, CEAP-01, CEAP-02, VOTO-01, VOTO-03, VOTO-04, VOTO-05, BENS-02, BENS-03, BENS-04, PRIV-01, PRIV-02, PRIV-03, PRIV-04, COLETA-01, COLETA-02 | Implementing | ✅ Verified |
-| BUSCA-01, BUSCA-02, CEAP-03, CEAP-04, CEAP-05, VOTO-02, VOTO-06, BENS-01, PROV-01, PROV-02, PRIV-05, CORR-01, CORR-02, CORR-03, COLETA-03, COLETA-04, COLETA-05, COLETA-06, COLETA-07, COLETA-08, EDGE-01, EDGE-02, EDGE-03, EDGE-04, EDGE-05 | Implementing | ❌ Needs Fix |
+| BUSCA-01, BUSCA-02, CEAP-03, CEAP-04, CEAP-05, VOTO-06, VOTO-07, BENS-01, PROV-01, PROV-02, PRIV-05, METOD-01, UI-02, CORR-01, CORR-02, CORR-03, COLETA-04, COLETA-05, COLETA-06, COLETA-08, EDGE-01, EDGE-02, EDGE-04, EDGE-05 | Implementing | ✅ Verified |
+| BUSCA-03, CEAP-01, CEAP-02, VOTO-03, VOTO-04, VOTO-05, BENS-02, BENS-03, BENS-04, PRIV-01, PRIV-02, PRIV-03, PRIV-04, COLETA-01, COLETA-02 | Verified | ✅ Verified (mantido) |
+| VOTO-01 | Verified | ❌ Needs Fix (N5) |
+| VOTO-02, COLETA-03, COLETA-07, EDGE-03 | Implementing | ❌ Needs Fix |
+| MAND-01, NAV-01 | Implementing | ❌ Needs Fix |
 
 ---
 
 ## Summary
 
-**Overall**: ❌ Not Ready
+**Overall**: ❌ Not Ready (iteração 2 de 3; resta uma rodada de correção e re-verificação antes de escalar ao usuário)
 
-**Spec-anchored check**: 16/41 batem com a spec; 12 parciais ou com spec-precision gap; 13 sem evidência
-**Sensor**: 4/10 mutações mortas
-**Gate**: Vitest 43 passaram, 0 falharam; Playwright 10/10 em `1f99e7a`; `pnpm build` falha em HEAD `34fcdb3`
+**Spec-anchored check**: 39/46 batem com a spec; 7 parciais; 0 sem evidência
+**Sensor**: 9/15 mortos (6/6 da iteração 1 agora morrem; 3/9 das novas)
+**Gate**: lint, typecheck, format, seed ✅; Vitest 67 passaram, 0 falharam, 0 pulados; build ✅; Playwright 28/28
 
-**What works**: regras puras de privacidade (máscara, PF, descarte de passageiro e CPF), precedência e casamento de siglas, alinhamento, robots e bloqueio por 5xx, agregações principais do perfil, fluxo feliz de busca, perfil, filtro e correção.
+**What works**: build de produção com Cache Components; cliente HTTP (401/403, backoff 2/4/8 s, 4 tentativas, Retry-After, Crawl-delay, rede); ingestão da CEAP de ponta a ponta com proveniência, máscara e recoleta sem duplicar; leitura do perfil (fallback de ano, limite de 8, teto nulo, totais de bens); busca (nome civil, em exercício, `%` e `_`); pedido de correção (curto, válido com status, acima de 4000); todos os edge cases menos o "—".
 
-**Issues found**: build quebrado pela nav nova; cliente HTTP sem testes de 401, backoff e limite de tentativas; ano de fallback, limite de fornecedores e omissão do teto sem teste; correção sem caminho de erro nem pré-seleção; recoleta e proveniência sem teste de integração; edge cases 02/03/05 sem teste.
+**Issues found**: 6 mutantes novos sobreviveram (N1, N3, N5, N6, N7, N9; Fixes 1–6); "—" do EDGE-03 não afirmado (Fix 7).
 
-**Next steps**: Fix 1 (blocker) → Fixes 2–5 → Fix 6 → re-verificação (iteração 1 de 3).
+**Next steps**: Fixes 1–4 (Major) → Fixes 5–7 → re-verificação (iteração 3 de 3).
