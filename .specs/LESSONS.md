@@ -146,6 +146,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: C22 paridade/verificacao-2.md; src/components/perfil/sancao.tsx:88 (spec)
 - last seen: 2026-11-11T17:44:47Z
 
+### L-023 - When a rule picks one entry by name, put a decoy entry before the target so a pick-first implementation fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ingest` · harmful: 0
+- features: emendas-transparencia
+- evidence: N09 src/ingest/arquivos.ts:106 (ingest)
+- last seen: 2026-11-11T18:00:46Z
+
+### L-024 - When two counts could fill a label, seed a case where they differ so using the wrong count fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U30 src/components/perfil/sancao.tsx:94 (ui)
+- last seen: 2026-11-11T18:00:46Z
+
+### L-025 - Test an inclusive date range filter with a row dated exactly on each bound
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: emendas-transparencia
+- evidence: G01 G02 src/app/parlamentares/[id]/gastos.csv/route.ts:46-47 (routes)
+- last seen: 2026-11-11T18:00:46Z
+
+### L-026 - Assert parity text with an exact match on its element, since a substring match accepts added text
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U22 src/components/perfil/secao-emendas.tsx:251 (ui)
+- last seen: 2026-11-11T18:00:47Z
+
+### L-027 - Test a unit-switch threshold at the exact boundary value
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `lib` · harmful: 0
+- features: emendas-transparencia
+- evidence: B03 src/lib/emendas.ts:99 (lib)
+- last seen: 2026-11-11T18:00:47Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

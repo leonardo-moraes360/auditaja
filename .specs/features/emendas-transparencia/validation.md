@@ -1,9 +1,9 @@
 # Validation: emendas-transparencia — FAIL ❌
 
-**Data**: 2026-11-11 (rodada 2)
-**Spec**: `.specs/features/emendas-transparencia/spec.md` (43 critérios)
-**Faixa do diff**: `e4e563d..f8e8a5a` (branch `feat/emendas-transparencia`, 13 commits, 32 arquivos, +3786/−12); a
-correção da rodada 1 é `597974a..f8e8a5a` (13 arquivos, +260/−53)
+**Data**: 2026-11-11 (rodada 3, última antes de escalar ao usuário)
+**Spec**: `.specs/features/emendas-transparencia/spec.md` (43 critérios + 22 Assumptions)
+**Faixa do diff**: `e4e563d..888d019` (branch `feat/emendas-transparencia`, 36 arquivos, +4084/−13); a correção da
+rodada 2 é `9b04266..888d019` (8 arquivos, +79/−22)
 **Verificador**: sub-agente independente (autor ≠ verificador), só leitura no worktree real; mutações em worktree
 temporário
 
@@ -11,38 +11,40 @@ temporário
 
 ## Veredito
 
-**FAIL.** As seis lacunas da rodada 1 foram fechadas de verdade: EDGE-04 tem teste e os mutantes U03, M09, M10, M12,
-M13 e M14 agora morrem. Os 43 critérios têm evidência `arquivo:linha` com o valor da spec. Mas o sensor, refeito com
-29 mutantes novos sobre o que a correção acrescentou, achou **7 sobreviventes**; 3 deles em regra que a spec define:
+**FAIL.** A paridade chegou a **100%** (65 PASS, 0 FAIL, 9 INTENCIONAL; `paridade/verificacao-3.md`), o gate passa e
+os 43 critérios têm evidência `arquivo:linha` com o valor da spec. Mas o sensor (30 mutantes) achou **8
+sobreviventes**; 4 deles em regra que a spec define:
 
-1. **N05 e N09**: a data da base das emendas (EMDUI-12 e Assumption "Data da base": "data da entrada
-   `EmendasParlamentares.csv` no ZIP") não é discriminada. A fixture dá a mesma `mtime` a todas as entradas
-   (`tests/integracao/emendas.test.ts:70`), então ler a entrada errada (`PorFavorecido`) ou a primeira entrada
-   qualquer passa.
-2. **U15**: o cabeçalho "Tipo" pode sumir no celular com as células visíveis (tabela desalinhada) sem falhar teste;
-   `tests/e2e/emendas.spec.ts:76-77` só confere a célula (EMDUI-11).
+1. **N09** (Assumption "Data da base", EMDUI-12): o commit `888d019` diz que mata N09, e não mata. A fixture agora dá
+   datas diferentes às entradas (`tests/integracao/emendas.test.ts:71-73`), mas a entrada certa
+   (`EmendasParlamentares.csv`) é a **primeira** do ZIP (`:130`). Um `dataDaEntrada` que ignora o nome e devolve a
+   primeira entrada (`src/ingest/arquivos.ts:106`) passa. N05 (ler a entrada errada pelo nome) agora morre.
+2. **U30** (Assumption "Link de notas no aviso", SAN-05/C22): voltar o rótulo para o total do fornecedor
+   (`rotuloNotas(f.documentos)` em `src/components/perfil/sancao.tsx:94`) passa no e2e, porque no seed o único
+   fornecedor com link tem N = M = 1. É exatamente o defeito da rodada 2; hoje está certo só porque o código está
+   certo (conferido em dados reais, 152605: "3 das 9" e "Ver as 3 notas").
+3. **G01 e G02** (Assumptions "Nota dentro do período", que diz "inclusive", e "Link de notas", em que o link baixa o
+   `gastos.csv` filtrado por `de`/`ate`): trocar `>=` por `>` ou `<=` por `<` em
+   `src/app/parlamentares/[id]/gastos.csv/route.ts:46-47` passa. O teste C22 (`tests/e2e/emendas.spec.ts:275-288`)
+   só usa datas longe dos limites (nota em 10/02; limites 01/02, 11/02 e 09/02). Com o mutante, uma nota emitida no
+   primeiro ou no último dia da sanção conta em N mas some do CSV: "Ver a nota" baixaria um CSV vazio.
 
-Os outros 4 (U20–U23) são textos que só o artboard define (paridade) e o plural de "Ver as N notas", sem teste. A
-paridade ficou em **95,4%** (62 PASS, 3 FAIL, 8 INTENCIONAL), na meta e sem folga; ver `paridade/verificacao-2.md`.
+Os outros 4 são menores: U22 (paridade C09 com `toContainText`), B03 (limite exato de R$ 1 mi), G05 (filtro `ano`
+do `gastos.csv`, anterior à feature) e G07 (validação do formato de `de`, equivalente para entradas válidas).
 
-## Mudanças na spec (registro honesto ou afrouxamento?)
+## Mudanças na spec desde a rodada 2 (registro honesto ou afrouxamento?)
 
-| Mudança (`f8e8a5a`) | Leitura |
+| Mudança (`888d019`, `spec.md:51-52`) | Leitura |
 | --- | --- |
-| EDGE-04 passa a dizer "—" no detalhe, sem barra, e "— do empenhado" nas especiais | Aperta a regra (mais precisa); testada |
-| EMDUI-12 ganha "· base de DD/MM/AAAA" no desktop e o rodapé curto no celular | Base: requisito novo, vindo do artboard. Celular: exceção que a rodada 1 pediu para registrar; tira "Baixar CSV" e "Contestar" do celular, mas segue o padrão aprovado do protótipo de celular. Aceito |
-| EMDUI-15 "uma linha por emenda **e local**" | Registra o que a fonte publica e o que a rodada 1 apontou; não muda o código. Aceito |
-| Assumptions: data da base, natureza jurídica, "estados e municípios", "Como ligamos" sem conferência manual | Todas com motivo verificável (fonte sem as categorias do artboard; CF art. 166-A; não existe conferência manual). Nenhuma esconde dado da fonte. Aceitas como INTENCIONAL na paridade |
-
-Nenhuma mudança afrouxa um critério testável para passar. A spec ainda não diz qual número aparece em "Ver as N
-notas" nem o que o link baixa (ver C22 na paridade).
+| "Órgão no aviso de sanção": "{categoria} {período}. Órgão sancionador: {órgão}." | Registro honesto. "aplicado pelo" do artboard só concorda com categoria e órgão masculinos; nos dados há "Multa", "Prefeitura Municipal de Fernandópolis (SP)", "CONSELHO REGIONAL DE MEDICINA SP", e a fonte não traz gênero. A forma neutra mostra o mesmo dado, e SAN-05 só exige "órgão sancionador". Aceito como INTENCIONAL I9 |
+| "Link de notas no aviso": N = notas dentro da sanção; baixa `gastos.csv` com `de`/`ate`; sem nota, sem link | Aperta a regra (fecha a lacuna de precisão C22 da rodada 2). Não afrouxa nada: o caso N = 0 não aparece no artboard. Aceito. É a regra que U30, G01 e G02 mostram sem teste que a discrimine |
 
 ---
 
 ## Conclusão das tarefas
 
-`tasks.md` T1–T8 com "Done when" marcados; nenhuma tarefa parcial ou bloqueada. A correção da rodada 1 veio num
-commit só (`f8e8a5a`), sem tarefa nova em `tasks.md`.
+`tasks.md` T1–T8 com "Done when" marcados; nenhuma parcial ou bloqueada. As correções das rodadas 1 e 2 vieram em
+commits de correção (`f8e8a5a`, `888d019`), sem tarefa nova em `tasks.md`.
 
 ---
 
@@ -52,134 +54,129 @@ commit só (`f8e8a5a`), sem tarefa nova em `tasks.md`.
 
 | Critério | Resultado definido na spec | `arquivo:linha` + asserção | Resultado |
 | --- | --- | --- | --- |
-| EMD-01 | ZIP baixado 1 vez, pelo `ClienteEducado`, do servidor de arquivos | `tests/integracao/emendas.test.ts:145` `pedidos.filter((u) => u === URL_EMENDAS)).toHaveLength(1)`; `:146` todos começam com `https://dadosabertos-download.cgu.gov.br/` | ✅ PASS |
-| EMD-02 | `coleta` com `cgu_emendas`, URL, SHA-256, bytes, licença | `tests/integracao/emendas.test.ts:158-164` `toMatchObject({ url, sha256: sha256De(zip), bytes: zip.length, licenca: LICENCA_CGU, observacao: "base de 10/11/2026" })` | ✅ PASS |
-| EMD-03 | Só ano ≥ 2024 e tipo "Emenda Individual…" | `tests/integracao/emendas.test.ts:172` `toEqual(["202400010002", "202500010001"])`; `tests/unit/emendas.test.ts:57-68` | ✅ PASS |
-| EMD-04 | Autor casa com 1 deputado → `parlamentar_id` dele | `tests/integracao/emendas.test.ts:173`; `tests/unit/emendas.test.ts:45-46` | ✅ PASS |
-| EMD-05 | 0 ou >1 → descarta e conta no resumo | `tests/integracao/emendas.test.ts:147` `toEqual({ emendas: 2, favorecidos: 4, autoresDescartados: 2 })`; `tests/unit/emendas.test.ts:49`, `:52` | ✅ PASS |
-| EMD-06 | "1.234,56" → 1234.56 nos 4 campos | `tests/unit/emendas.test.ts:21`; `tests/integracao/emendas.test.ts:174-183` | ✅ PASS |
-| EMD-07 | Favorecido com tipo, UF, município, ano/mês, valor | `tests/integracao/emendas.test.ts:197-212` | ✅ PASS |
-| EMD-08 | PF → "Beneficiário pessoa física"; doc `***.ddd.ddd-**` ou nulo | `tests/integracao/emendas.test.ts:197-201`, `:215-217`; `tests/unit/emendas.test.ts:73-83` | ✅ PASS |
-| EMD-09 | 14 dígitos → CNPJ formatado | `tests/integracao/emendas.test.ts:197-201`; `tests/unit/emendas.test.ts:85-89` | ✅ PASS |
-| EMD-10 | Nova coleta substitui, sem duplicar | `tests/integracao/emendas.test.ts:223-224` `contar("emenda") === 2`, `contar("emenda_favorecido") === 4` | ✅ PASS |
-| EMD-11 | Streaming latin1 `;` | `tests/integracao/emendas.test.ts:238` iterador assíncrono; `:240` `"ACÁCIA GONÇALVES"` | ✅ PASS |
+| EMD-01 | ZIP baixado 1 vez, pelo `ClienteEducado`, do servidor de arquivos | `tests/integracao/emendas.test.ts:148` `pedidos.filter((u) => u === URL_EMENDAS)).toHaveLength(1)`; `:149` todos começam com `https://dadosabertos-download.cgu.gov.br/` | ✅ PASS |
+| EMD-02 | `coleta` com `cgu_emendas`, URL, SHA-256, bytes, licença | `tests/integracao/emendas.test.ts:161-167` `toMatchObject({ url, sha256: sha256De(zip), bytes: zip.length, licenca: LICENCA_CGU, observacao: "base de 10/11/2026" })` | ✅ PASS |
+| EMD-03 | Só ano ≥ 2024 e tipo "Emenda Individual…" | `tests/integracao/emendas.test.ts:175` `toEqual(["202400010002", "202500010001"])`; `tests/unit/emendas.test.ts:58-69` | ✅ PASS |
+| EMD-04 | Autor casa com 1 deputado → `parlamentar_id` dele | `tests/integracao/emendas.test.ts:176`; `tests/unit/emendas.test.ts:46-47` | ✅ PASS |
+| EMD-05 | 0 ou >1 → descarta e conta no resumo | `tests/integracao/emendas.test.ts:150` `toEqual({ emendas: 2, favorecidos: 4, autoresDescartados: 2 })` | ✅ PASS |
+| EMD-06 | "1.234,56" → 1234.56 nos 4 campos | `tests/unit/emendas.test.ts:22` `toBe("1234.56")`; `tests/integracao/emendas.test.ts:177-186` | ✅ PASS |
+| EMD-07 | Favorecido com tipo, UF, município, ano/mês, valor | `tests/integracao/emendas.test.ts:200-215` | ✅ PASS |
+| EMD-08 | PF → "Beneficiário pessoa física"; doc `***.ddd.ddd-**` ou nulo | `tests/integracao/emendas.test.ts:200-204`, `:218` `not.toContain("ACÁCIA")`; `tests/unit/emendas.test.ts:74-84` | ✅ PASS |
+| EMD-09 | 14 dígitos → CNPJ formatado | `tests/integracao/emendas.test.ts:203` `"11.854.334/0001-49"`; `tests/unit/emendas.test.ts:86-90` | ✅ PASS |
+| EMD-10 | Nova coleta substitui, sem duplicar | `tests/integracao/emendas.test.ts:226-227` `contar("emenda") === 2`, `contar("emenda_favorecido") === 4` | ✅ PASS |
+| EMD-11 | Streaming latin1 `;` | `tests/integracao/emendas.test.ts:241-243` iterador assíncrono, `"ACÁCIA GONÇALVES"` | ✅ PASS |
 
 ### P1: Ver as emendas no perfil
 
 | Critério | Resultado definido na spec | `arquivo:linha` + asserção | Resultado |
 | --- | --- | --- | --- |
-| EMDUI-01 | Aba "Emendas" entre "Gastos da cota" e "Votações", `#emendas` | `tests/e2e/emendas.spec.ts:13` `toEqual(["#gastos", "#emendas", "#votacoes"])`; `:14` | ✅ PASS |
-| EMDUI-02 | h2 "Emendas parlamentares individuais" entre gastos e votações | `tests/e2e/emendas.spec.ts:20`, `:24` | ✅ PASS |
-| EMDUI-03 | Mandato soma tudo; "Mandato todo" com `aria-current="page"` | `tests/e2e/emendas.spec.ts:32`; `tests/integracao/emendas-leitura.test.ts:37-43` (11,1 mi / 7 mi / 2 mi / 9) | ✅ PASS |
-| EMDUI-04 | `?emendas=AAAA#emendas`, soma do ano | `tests/e2e/emendas.spec.ts:84`, `:88`; `tests/integracao/emendas-leitura.test.ts:125` | ✅ PASS |
+| EMDUI-01 | Aba "Emendas" entre "Gastos da cota" e "Votações", `#emendas` | `tests/e2e/emendas.spec.ts:13` `toEqual(["#gastos", "#emendas", "#votacoes"])` | ✅ PASS |
+| EMDUI-02 | h2 "Emendas parlamentares individuais" entre gastos e votações | `tests/e2e/emendas.spec.ts:17-25` | ✅ PASS |
+| EMDUI-03 | Mandato soma tudo; "Mandato todo" com `aria-current="page"` | `tests/e2e/emendas.spec.ts:32`; `tests/integracao/emendas-leitura.test.ts:37-43` | ✅ PASS |
+| EMDUI-04 | `?emendas=AAAA#emendas`, soma do ano | `tests/e2e/emendas.spec.ts:93` `aria-current`; `:96-98` `R$ 4,0 mi`, "3 emendas do orçamento de 2025", "75%"; `tests/integracao/emendas-leitura.test.ts:125` | ✅ PASS |
 | EMDUI-05 | "Empenhado" compacto + nº de códigos distintos | `tests/e2e/emendas.spec.ts:35-36` `R$ 11,1 mi`, "9 emendas, orçamentos de 2024 a 2026" | ✅ PASS |
-| EMDUI-06 | "Pago até agora" = pago + restos; % arredondado | `tests/e2e/emendas.spec.ts:38-40` `R$ 7 mi`, "63% do empenhado, incluindo restos a pagar"; `:90` "75%" | ✅ PASS |
-| EMDUI-07 | "Transferências especiais (“emendas Pix”)" + % | `tests/e2e/emendas.spec.ts:41-43` | ✅ PASS |
-| EMDUI-08 | Barras por ano só no mandato, rótulo com os anos | `tests/e2e/emendas.spec.ts:44-52`, `:91`; `tests/integracao/emendas-leitura.test.ts:50` | ✅ PASS |
-| EMDUI-09 | 5 áreas, valor e % | `tests/integracao/emendas-leitura.test.ts:61`; `tests/e2e/emendas.spec.ts:59-60` | ✅ PASS |
-| EMDUI-10 | 5 locais sem "MÚLTIPLO", rótulo, frase do Múltiplo | `tests/integracao/emendas-leitura.test.ts:68`; `tests/e2e/emendas.spec.ts:62-69` | ✅ PASS |
-| EMDUI-11 | Até 5 favorecidos: nome, documento, tipo, município, valor | `tests/integracao/emendas-leitura.test.ts:81` (tipo = natureza jurídica, Assumption); `tests/e2e/emendas.spec.ts:71-77` (célula Tipo `toHaveText("Município")` e `toBeVisible()` nos dois projetos) | ⚠️ PASS com mutante vivo: **U15** (cabeçalho "Tipo" oculto no celular, células visíveis) |
-| EMDUI-12 | Desktop: "…download em lote · base de DD/MM/AAAA" + coleta + 3 links; celular: rodapé curto | `tests/e2e/emendas.spec.ts:101-115` texto com "base de 09/11/2026 · coletado em 10/11/2026 05:12" e os 3 hrefs; `:98` celular; `tests/integracao/emendas.test.ts:158-164` `observacao: "base de 10/11/2026"` | ❌ GAP: **N05/N09** sobrevivem (a regra "entrada `EmendasParlamentares.csv`" não é discriminada). ⚠️ `:98` não confere "ver original" do rodapé curto |
-| EMDUI-13 | Frase de vazio exata; sem indicadores, gráfico, listas | `tests/e2e/emendas.spec.ts:121-126`; `tests/integracao/emendas-leitura.test.ts:155` | ✅ PASS |
-| EMDUI-14 | Valor inválido → "mandato" | `tests/unit/emendas.test.ts:119-123`; `tests/e2e/emendas.spec.ts:130-135` | ✅ PASS |
-| EMDUI-15 | `text/csv`, uma linha por emenda e local do período, 9 colunas | `tests/e2e/emendas.spec.ts:209` `text/csv; charset=utf-8`; `:212` cabeçalho; `:213-218` 4 linhas de 2025 (código `202590000003` em 2 locais); `:220` mandato `1 + 10` | ✅ PASS (o texto da spec agora bate com o comportamento) |
+| EMDUI-06 | "Pago até agora" = pago + restos; % arredondado | `tests/e2e/emendas.spec.ts:38-40` `R$ 7,0 mi`, "63% do empenhado, incluindo restos a pagar" | ✅ PASS |
+| EMDUI-07 | "Transferências especiais (“emendas Pix”)" + % | `tests/e2e/emendas.spec.ts:41-43` `R$ 2,0 mi`, "18% do empenhado" | ✅ PASS |
+| EMDUI-08 | Barras por ano só no mandato, rótulo com os anos | `tests/e2e/emendas.spec.ts:44-52`; `:99` `toHaveCount(0)` no ano | ✅ PASS |
+| EMDUI-09 | 5 áreas, valor e % | `tests/e2e/emendas.spec.ts:59-60` `toHaveCount(5)`, `Saúde R$ 6,0 mi · 54%`; `tests/integracao/emendas-leitura.test.ts:61` | ✅ PASS |
+| EMDUI-10 | 5 locais sem "MÚLTIPLO", rótulo, frase do Múltiplo | `tests/e2e/emendas.spec.ts:62-69`; `tests/integracao/emendas-leitura.test.ts:68` | ✅ PASS |
+| EMDUI-11 | Até 5 favorecidos: nome, documento, tipo, município, valor | `tests/e2e/emendas.spec.ts:71-77`, `:85`: célula Tipo `toHaveText("Município")` e `columnheader "Tipo"` `toBeVisible()` nos dois projetos | ✅ PASS (U15 morre) |
+| EMDUI-12 | Desktop: "…download em lote · base de DD/MM/AAAA" + coleta + 3 links; celular: rodapé curto | `tests/e2e/emendas.spec.ts:109-123`; `:106` celular; `tests/integracao/emendas.test.ts:166` `observacao: "base de 10/11/2026"` | ❌ GAP: **N09** sobrevive (a regra "entrada `EmendasParlamentares.csv`" não é discriminada contra "primeira entrada"). ⚠️ `:106` segue sem "ver original" |
+| EMDUI-13 | Frase de vazio exata; sem indicadores, gráfico, listas | `tests/e2e/emendas.spec.ts:129-134` | ✅ PASS |
+| EMDUI-14 | Valor inválido → "mandato" | `tests/unit/emendas.test.ts:120-124`; `tests/e2e/emendas.spec.ts:137-144` | ✅ PASS |
+| EMDUI-15 | `text/csv`, uma linha por emenda e local do período, 9 colunas | `tests/e2e/emendas.spec.ts:219` `text/csv; charset=utf-8`; `:222` cabeçalho; `:223-228` 4 linhas; `:230` `1 + 10` | ✅ PASS |
 
 ### P2: Marcar fornecedor da cota com sanção
 
 | Critério | Resultado definido na spec | `arquivo:linha` + asserção | Resultado |
 | --- | --- | --- | --- |
-| SAN-01 | CEIS e CNEP mais recentes (até 7 dias), `coleta` `cgu_ceis`/`cgu_cnep`; só 404 recua | `tests/integracao/sancoes.test.ts:113` sequência de URLs; `:125-138` coletas com `observacao: "base de 10/11/2026"` e `"base de 11/11/2026"`; `:195-196` 403 → `ColetaBloqueada` e um único pedido | ✅ PASS (M09 morre) |
-| SAN-02 | Só tipo "J" com CNPJ na cota | `tests/integracao/sancoes.test.ts:144` lista exata (a linha "104", tipo F com CNPJ da cota, `:48`, fica fora); `:170` | ✅ PASS (M10 morre) |
+| SAN-01 | CEIS e CNEP mais recentes (até 7 dias), `coleta` `cgu_ceis`/`cgu_cnep` | `tests/integracao/sancoes.test.ts:113`, `:125-138`, `:195-196` | ✅ PASS |
+| SAN-02 | Só tipo "J" com CNPJ na cota | `tests/integracao/sancoes.test.ts:144`, `:170` | ✅ PASS |
 | SAN-03 | Nova coleta substitui cada cadastro | `tests/integracao/sancoes.test.ts:176` | ✅ PASS |
-| SAN-04 | Selo "Sanção no CEIS"/"no CNEP" | `tests/e2e/emendas.spec.ts:163-165` | ✅ PASS |
-| SAN-05 | Título, categoria, período, órgão, nº de notas dentro da sanção (limites inclusive, fim nulo sem prazo) | `tests/e2e/emendas.spec.ts:173-185`; `tests/integracao/emendas-leitura.test.ts:168-173`; `:230-233` `[["CEIS", 2], ["CNEP", 2]]` com notas em 09/03, 10/03, 20/06, 21/06, 31/12 | ✅ PASS (M12, M13, M14 morrem) |
-| SAN-06 | Frase "O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar." | `tests/e2e/emendas.spec.ts:186-190` (frase + complemento do artboard) | ✅ PASS |
-| SAN-07 | "sem data final" | `tests/unit/emendas.test.ts:130`; `tests/e2e/emendas.spec.ts:183-185` | ✅ PASS |
+| SAN-04 | Selo "Sanção no CEIS"/"no CNEP" | `tests/e2e/emendas.spec.ts:171-172` | ✅ PASS |
+| SAN-05 | Título, categoria, período, órgão sancionador, nº de notas dentro da sanção; link conforme a Assumption "Link de notas" | `tests/e2e/emendas.spec.ts:184-192` texto com "Órgão sancionador: …" e a contagem; `:199-202` `href` com `&de=2026-02-01&ate=2027-02-01`; `:204` sem link quando N = 0; `:275-288` CSV filtrado; `tests/integracao/emendas-leitura.test.ts:230-233`; `tests/unit/emendas.test.ts:174-175` `rotuloNotas` | ⚠️ PASS com mutantes vivos: **U30** (rótulo com o total M), **G01/G02** (limites do CSV não inclusivos) |
+| SAN-06 | Frase "O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar." | `tests/e2e/emendas.spec.ts:194-197` | ✅ PASS |
+| SAN-07 | "sem data final" | `tests/unit/emendas.test.ts:131`; `tests/e2e/emendas.spec.ts:192` | ✅ PASS |
 
 ### P2: Metodologia e fontes
 
 | Critério | Resultado definido na spec | `arquivo:linha` + asserção | Resultado |
 | --- | --- | --- | --- |
-| MET-01 | "1.4" | `tests/e2e/emendas.spec.ts:225`; `tests/e2e/perfil.spec.ts:176` | ✅ PASS |
-| MET-02 | Seção "Emendas parlamentares" | `tests/e2e/emendas.spec.ts:226-230` | ✅ PASS |
-| MET-03 | Seção "Sanções de fornecedores" | `tests/e2e/emendas.spec.ts:231-234` | ✅ PASS |
-| MET-04 | Duas fontes do Portal na lateral | `tests/e2e/emendas.spec.ts:240-241` | ✅ PASS |
-| MET-05 | "Como ligamos…" com a regra de homônimos | `tests/e2e/emendas.spec.ts:244` "…a emenda fica de fora." | ✅ PASS |
+| MET-01 | "1.4" | `tests/e2e/emendas.spec.ts:235` "Versão 1.4. …" | ✅ PASS |
+| MET-02 | Seção "Emendas parlamentares" | `tests/e2e/emendas.spec.ts:236-240` | ✅ PASS |
+| MET-03 | Seção "Sanções de fornecedores" | `tests/e2e/emendas.spec.ts:241-244` | ✅ PASS |
+| MET-04 | Duas fontes do Portal na lateral | `tests/e2e/emendas.spec.ts:250-251` | ✅ PASS |
+| MET-05 | "Como ligamos…" com a regra de homônimos | `tests/e2e/emendas.spec.ts:254` | ✅ PASS |
 
 ### Edge cases
 
 | Critério | Resultado definido na spec | `arquivo:linha` + asserção | Resultado |
 | --- | --- | --- | --- |
-| EDGE-01 | 401/403 → `ColetaBloqueada`, nada gravado | `tests/integracao/emendas.test.ts:230-232` | ✅ PASS (só 403 exercitado) |
+| EDGE-01 | 401/403 → `ColetaBloqueada`, nada gravado | `tests/integracao/emendas.test.ts:230-235` | ✅ PASS (só 403 exercitado) |
 | EDGE-02 | Sem arquivo em 7 dias → erro, mantém sanções | `tests/integracao/sancoes.test.ts:206-208` | ✅ PASS |
-| EDGE-03 | Vazio → 0 | `tests/unit/emendas.test.ts:28-30`; `tests/integracao/emendas.test.ts:184-191` | ✅ PASS |
-| EDGE-04 | Empenhado 0: "—" no detalhe de "Pago até agora", sem barra, "— do empenhado" nas especiais | `tests/e2e/emendas.spec.ts:251` `toHaveText("—")`; `:252` `getByRole("img")).toHaveCount(0)`; `:253-255` "— do empenhado · vão direto ao caixa de estados e municípios, sem objeto definido" (seed 900000003, `src/db/seed.ts:245`) | ✅ PASS (U03, U12, U29 morrem) |
-| EDGE-05 | 320 px sem rolagem; tabela rola na caixa | `tests/e2e/emendas.spec.ts:142`, `:144` | ✅ PASS |
+| EDGE-03 | Vazio → 0 | `tests/unit/emendas.test.ts:29-31` | ✅ PASS |
+| EDGE-04 | Empenhado 0: "—", sem barra, "— do empenhado" | `tests/e2e/emendas.spec.ts:261-265` | ✅ PASS |
+| EDGE-05 | 320 px sem rolagem; tabela rola na caixa | `tests/e2e/emendas.spec.ts:150` `scrollWidth <= 320` | ✅ PASS |
 
-**Situação**: 43/43 com evidência; 41 sem ressalva; EMDUI-12 com lacuna (N05/N09) e EMDUI-11 com mutante vivo
-(U15); 1 lacuna de precisão menor (rodapé curto do celular sem "ver original" asserido).
+**Situação**: 43/43 com evidência; 41 sem ressalva; EMDUI-12 com lacuna (N09) e SAN-05 com mutantes vivos (U30,
+G01, G02); 1 lacuna de precisão menor (rodapé curto do celular sem "ver original").
 
 ---
 
 ## Sensor de discriminação
 
 Worktree temporário (`git worktree add --detach <scratchpad>/mut HEAD`), `pnpm install --frozen-lockfile --offline`,
-`.env` e `.env.local` copiados, banco `auditaja_emendas_test`, um mutante por vez, arquivo restaurado com
-`git checkout --` depois de cada um. M*/N*: `pnpm test` (vitest). U*: `pnpm build` + `playwright test
-tests/e2e/emendas.spec.ts` (desktop e celular, porta 3282). Linha de base no worktree temporário: 162/162 vitest,
-build ok, 38/38 e2e de emendas.
+`.env*` copiados, banco `auditaja_emendas_test`, um mutante por vez, troca de texto exata (uma ocorrência) e
+`git checkout --` depois de cada um. Mutantes de lógica: `pnpm test`. Mutantes de UI e de rota: `pnpm build` +
+`playwright test tests/e2e/emendas.spec.ts tests/e2e/perfil.spec.ts` (desktop e celular, porta 3282).
 
-### Sobreviventes da rodada 1, refeitos
-
-| # | `arquivo:linha` | Mutação | Resultado |
-| --- | --- | --- | --- |
-| M09 | `src/ingest/transparencia.ts:129` | recua em qualquer erro (`throw e` → ignora) | ✅ morto (`sancoes.test.ts:179`) |
-| M10 | `src/ingest/transparencia.ts:164` | remove `l["TIPO DE PESSOA"] !== "J"` | ✅ morto (`sancoes.test.ts:141`) |
-| M12 | `src/data/emendas.ts:157` | `data_emissao >= data_inicio` → `>` | ✅ morto (`emendas-leitura.test.ts:182`) |
-| M13 | `src/data/emendas.ts:158` | `<= coalesce(…)` → `<` | ✅ morto (`emendas-leitura.test.ts:182`) |
-| M14 | `src/data/emendas.ts:158` | fim nulo `'infinity'` → `'-infinity'` | ✅ morto (`emendas-leitura.test.ts:182`) |
-| U03 | `src/components/perfil/secao-emendas.tsx:174` | empenhado 0 mostra "0% do empenhado…" | ✅ morto (`emendas.spec.ts:247`) |
-
-### Mutantes novos (partes novas e vizinhas)
+### Sobreviventes da rodada 2, refeitos
 
 | # | `arquivo:linha` | Mutação | Resultado |
 | --- | --- | --- | --- |
-| N01 | `src/lib/emendas.ts:100` | `brlMi` com 2 casas | ✅ morto |
-| N02 | `src/lib/emendas.ts:102` | `brlMi` abaixo de 1 mi sem `brlCompacto` | ✅ morto |
-| N03 | `src/lib/emendas.ts:107` | `baseDaColeta` devolve o casamento inteiro (`[0]`) | ✅ morto |
-| N04 | `src/lib/emendas.ts:113` | `dataLocalBr` com mês −1 | ✅ morto |
-| N05 | `src/ingest/transparencia.ts:41` | data da base lida de `EmendasParlamentares_PorFavorecido.csv` | ❌ **sobreviveu** |
-| N06 | `src/ingest/transparencia.ts:159` | base das sanções com dia e mês trocados | ✅ morto |
-| N07 | `src/ingest/transparencia.ts:127` | base das sanções sempre a data de hoje, mesmo após recuo | ✅ morto |
-| N08 | `src/data/emendas.ts:166` | `base: null` nas sanções | ✅ morto |
-| N09 | `src/ingest/arquivos.ts:106` | `dataDaEntrada` ignora o nome e devolve a primeira entrada | ❌ **sobreviveu** |
-| U11 | `src/components/perfil/secao-emendas.tsx:38` | barra com `progresso !== undefined` (mostra com `null`) | ✅ morto pelo typecheck do `pnpm build` (não por teste) |
-| U29 | `src/components/perfil/secao-emendas.tsx:173` | `progresso={pctPago ?? 0}` (barra com empenhado 0) | ✅ morto (`emendas.spec.ts:252`) |
-| U12 | `src/components/perfil/secao-emendas.tsx:179` | especiais com empenhado 0 mostram "0%" | ✅ morto |
-| U13 | `src/components/perfil/secao-emendas.tsx:179` | volta "caixa do município" | ✅ morto |
-| U14 | `src/components/perfil/secao-emendas.tsx:315` | célula Tipo oculta no celular | ✅ morto |
-| U15 | `src/components/perfil/secao-emendas.tsx:299` | cabeçalho Tipo oculto no celular (células visíveis) | ❌ **sobreviveu** |
-| U16 | `src/components/perfil/secao-emendas.tsx:120` | rodapé sem "· base de" | ✅ morto |
-| U17 | `src/components/perfil/secao-emendas.tsx:163` | "Empenhado" com `brl` | ✅ morto |
-| U18 | `src/components/perfil/secao-emendas.tsx:172` | "Pago" sem formato | ✅ morto |
-| U19 | `src/components/perfil/secao-emendas.tsx:262` | áreas com `brl` | ✅ morto |
-| U27 | `src/components/perfil/secao-emendas.tsx:274` | frase do Múltiplo com `brl` | ✅ morto |
-| U28 | `src/components/perfil/secao-emendas.tsx:317` | "Recebido" com `brl` | ✅ morto |
-| U20 | `src/components/perfil/secao-emendas.tsx:279` | volta "“(UF)” e “Nacional” … definido." | ❌ **sobreviveu** (só paridade) |
-| U21 | `src/components/perfil/secao-emendas.tsx:325` | remove "Prefeituras e fundos municipais aparecem pelo nome." | ❌ **sobreviveu** (só paridade) |
-| U22 | `src/components/perfil/secao-emendas.tsx:251` | volta "Valores em milhões de reais." | ❌ **sobreviveu** (só paridade) |
-| U23 | `src/components/perfil/sancao.tsx:88` | "Ver as N notas" com N+1 (plural) | ❌ **sobreviveu** (o seed só tem fornecedor sancionado com 1 nota) |
-| U24 | `src/components/perfil/sancao.tsx:88` | sempre o plural ("Ver as 1 notas") | ✅ morto |
-| U25 | `src/components/perfil/sancao.tsx:76` | ressalva sem "a cota é reembolso…" | ✅ morto |
-| U26 | `src/components/perfil/sancao.tsx:100` | nota do cruzamento sem "· base de" | ✅ morto |
+| N05 | `src/ingest/transparencia.ts:41` | data da base lida de `EmendasParlamentares_PorFavorecido.csv` | ✅ morto (`emendas.test.ts` EMD-02) |
+| N09 | `src/ingest/arquivos.ts:106` | `dataDaEntrada` ignora o nome e devolve a primeira entrada | ❌ **sobreviveu** (a entrada certa é a primeira do ZIP, `emendas.test.ts:130`) |
+| N09b | `src/ingest/arquivos.ts:106` | filtro do nome invertido (devolve a primeira entrada que **não** é a pedida) | ✅ morto |
+| U15 | `src/components/perfil/secao-emendas.tsx:299` | cabeçalho Tipo oculto no celular | ✅ morto (`emendas.spec.ts:77`) |
+| U20 | `src/components/perfil/secao-emendas.tsx:279` | volta "“(UF)” e “Nacional” … definido." | ✅ morto (`:78`) |
+| U21 | `src/components/perfil/secao-emendas.tsx:325` | remove "Prefeituras e fundos municipais aparecem pelo nome." | ✅ morto (`:79-81`) |
+| U22 | `src/components/perfil/secao-emendas.tsx:251` | volta "Valores em milhões de reais." antes da frase | ❌ **sobreviveu** (`:82-84` usa `toContainText`) |
+| U23 | `src/components/perfil/sancao.tsx:94` | `rotuloNotas(s.notas + 1)` | ✅ morto (`:199`) |
 
-**Profundidade**: ampliada (35 mutações: 6 refeitas e 29 novas; caminho crítico de dados pessoais e cruzamento de
+### Mutantes novos
+
+| # | `arquivo:linha` | Mutação | Resultado |
+| --- | --- | --- | --- |
+| R01 | `src/lib/emendas.ts:118` | `rotuloNotas` plural com N+1 | ✅ morto (`unit/emendas.test.ts:175`) |
+| R02 | `src/lib/emendas.ts:118` | singular só para `n === 2` | ✅ morto |
+| B01 | `src/lib/emendas.ts:100` | `brlMi` sem `minimumFractionDigits` (volta "R$ 7 mi") | ✅ morto |
+| B02 | `src/lib/emendas.ts:100` | `brlMi` com duas casas | ✅ morto |
+| B03 | `src/lib/emendas.ts:99` | `>= 1_000_000` → `> 1_000_000` | ❌ **sobreviveu** (sem caso no limite) |
+| S01 | `src/data/emendas.ts:155` | contagem sem o filtro do período exibido (`ano in anosCeap`) | ✅ morto |
+| S02 | `src/lib/emendas.ts:89` | concordância `n >= 1 ? "têm"` | ✅ morto |
+| U30 | `src/components/perfil/sancao.tsx:94` | `rotuloNotas(f.documentos)` (total M, o defeito da rodada 2) | ❌ **sobreviveu** (seed com N = M = 1) |
+| U31 | `src/components/perfil/sancao.tsx:88` | condição `f.documentos > 0` no lugar de `s.notas > 0` | ✅ morto (`emendas.spec.ts:204`) |
+| U32 | `src/components/perfil/sancao.tsx:88` | `s.notas >= 0` | ✅ morto (`:204`) |
+| U33 | `src/components/perfil/secoes.tsx:296` | `href` sem `&ate=` | ✅ morto (`:199-202`) |
+| U34 | `src/components/perfil/sancao.tsx:90` | `de` e `ate` trocados no `href` | ✅ morto |
+| U35 | `src/components/perfil/sancao.tsx:75` | volta "…, aplicada por {órgão}." | ✅ morto (`:185`, `:192`) |
+| U36 | `src/components/perfil/sancao.tsx:75` | "Órgão sancionador: {cadastro}" | ✅ morto |
+| U37 | `src/components/perfil/sancao.tsx:75` | "Órgão: {órgão}" no lugar de "Órgão sancionador:" | ✅ morto |
+| G01 | `src/app/parlamentares/[id]/gastos.csv/route.ts:46` | `>= de` → `> de` | ❌ **sobreviveu** |
+| G02 | `src/app/parlamentares/[id]/gastos.csv/route.ts:47` | `<= ate` → `< ate` | ❌ **sobreviveu** |
+| G03 | `…/gastos.csv/route.ts:46` | remove o filtro `de` | ✅ morto (`emendas.spec.ts:282-285`) |
+| G04 | `…/gastos.csv/route.ts:47` | remove o filtro `ate` | ✅ morto (`:286-287`) |
+| G05 | `…/gastos.csv/route.ts:44` | remove o filtro `ano` (anterior à feature) | ❌ sobreviveu (fora do diff: o seed só tem notas de 2026; `perfil.spec.ts:236` não confere linhas) |
+| G06 | `…/gastos.csv/route.ts:45` | remove o filtro `doc` (anterior à feature) | ✅ morto (`emendas.spec.ts:279-280`) |
+| G07 | `…/gastos.csv/route.ts:46` | `de` sem validar o formato | ❌ sobreviveu (equivalente para entradas válidas; a spec não define entrada inválida) |
+
+**Profundidade**: ampliada (30 mutações: 8 refeitas e 22 novas; caminho de dados pessoais e de cruzamento de
 sanções).
-**Resultado**: 28/35 mortos, 7 sobreviventes (3 em regra da spec: N05, N09, U15). FAIL ❌
+**Resultado**: 22/30 mortos, 8 sobreviventes (4 em regra da spec: N09, U30, G01, G02). FAIL ❌
 
 **Isolamento**: `git status --porcelain` do worktree real vazio antes; depois, igual, exceto os relatórios desta
 verificação. Worktree temporário removido com `git worktree remove --force` e `git worktree prune`. Nenhum
-`git stash`.
+`git stash`. Servidores das portas 3282 e 3292 (deste worktree, conferido por `readlink /proc/PID/cwd`) parados.
 
 ---
 
@@ -187,16 +184,19 @@ verificação. Worktree temporário removido com `git worktree remove --force` e
 
 | Comando | Resultado |
 | --- | --- |
-| `TEST_DATABASE_URL=…/auditaja_emendas_test pnpm test` | 16 arquivos, 162 passaram, 0 falharam |
+| `TEST_DATABASE_URL=…/auditaja_emendas_test pnpm test` | 16 arquivos, 163 passaram, 0 falharam |
 | `pnpm typecheck`, `pnpm lint`, `pnpm build` | exit 0 |
-| `pnpm test:e2e` (`E2E_PORT=3272`, Chromium 1228) | 128 passaram, 4 pulados, 0 falharam |
+| `pnpm test:e2e` (`E2E_PORT=3272`, Chromium 1228) | 130 passaram, 4 pulados, 0 falharam |
 
-- **Testes antes da feature** (vitest): 113; **rodada 1**: 157; **agora**: 162 (+5: limites da sanção, 404/403,
-  `brlMi`, `baseDaColeta`, `dataLocalBr`).
-- **e2e**: 124 → 128 (2 testes novos × 2 projetos: EDGE-04 e C24).
-- **Pulados**: os mesmos 4 de `tests/e2e/perfil.spec.ts` (`:77`, `:228`, `:267`, `:277`), anteriores à feature.
-- **Integridade**: nenhum teste removido. Três asserções mudaram de valor junto com o texto do artboard
-  (`emendas.spec.ts:102`, `:187`, `:191`); `:76-77` ficou mais forte (antes pulava a coluna Tipo no celular).
+- **Testes antes da feature** (vitest): 113; rodada 2: 162; **agora**: 163 (+1: `rotuloNotas`).
+- **e2e**: 128 → 130 (C22 do CSV × 2 projetos).
+- **Pulados**: os mesmos 4 de `tests/e2e/perfil.spec.ts`, anteriores à feature.
+- **Integridade**: nenhum teste removido. As asserções que mudaram de valor acompanham mudanças registradas
+  ("R$ 7 mi" → "R$ 7,0 mi", C27; "aplicada por" → "Órgão sancionador:", I9; `href` com `de`/`ate`, Assumption "Link
+  de notas"). Nenhuma ficou mais fraca.
+- **Rota `gastos.csv` existente**: sem `de`/`ate` a consulta é a mesma de `e4e563d` (as duas linhas novas só
+  acrescentam `where`). Conferido em dados reais (152605): `?ano=2026` 71 linhas, `?ano=2026&doc=…` 10, nome do
+  arquivo igual; `perfil.spec.ts:228-241` passa. Nada do comportamento anterior quebrou.
 
 ---
 
@@ -205,79 +205,73 @@ verificação. Worktree temporário removido com `git worktree remove --force` e
 | Princípio | Situação |
 | --- | --- |
 | Código mínimo / sem escopo extra | ✅ |
-| Mudanças cirúrgicas | ✅ (o `innerJoin` com `coleta` em `sancoesDosFornecedores` é o mínimo para a base) |
+| Mudanças cirúrgicas | ✅ (a rota existente ganhou só dois filtros opcionais) |
 | Segue os padrões do projeto | ✅ |
-| Resultado asserido bate com a spec | ⚠️ data da base das emendas sem fixture que separe as entradas do ZIP |
-| Cobertura por camada | ⚠️ "Ver as N notas" só tem o caso singular; rota `emendas.csv` segue sem teste de id inválido (apontado na rodada 1) |
-| Todo teste mapeia um critério | ✅ (`emendas.spec.ts:258` "C24" e `tests/unit/emendas.test.ts:152` "C06, C17" mapeiam EMDUI-12/Assumptions e itens de paridade) |
+| Resultado asserido bate com a spec | ⚠️ data da base (N09) e limites inclusivos do CSV (G01/G02) sem caso que discrimine |
+| Cobertura por camada | ⚠️ link de notas sem caso N ≠ M; rota `gastos.csv` sem caso de data inválida |
+| Todo teste mapeia um critério | ✅ (`emendas.spec.ts:275` "C22" e `unit/emendas.test.ts:172` mapeiam a Assumption "Link de notas") |
 | Guias documentados | `AGENTS.md` (Next.js 16); nenhum desvio achado |
 
 ---
 
 ## Achados fora dos critérios
 
-1. `src/components/perfil/sancao.tsx:88`: o link mostra o total de notas do fornecedor no período (M), não o N dentro
-   da sanção como no artboard. Em `/parlamentares/74383`: "Nenhuma das 3 notas … tem data dentro desse período" e,
-   logo abaixo, "Ver as 3 notas" (paridade C22).
-2. `src/components/perfil/sancao.tsx:100`: a nota do cruzamento usa só a base da primeira sanção (`itens[0]`). Quando
-   CEIS e CNEP têm bases diferentes (a própria fixture tem 10/11 e 11/11, `sancoes.test.ts:125-138`), uma das datas
-   some.
-3. `src/lib/emendas.ts:98-103`: valores entre R$ 999.500 e R$ 1 mi saem como "R$ 1.000 mil" (`brlCompacto` arredonda
-   para mil antes de trocar de unidade); milhões redondos saem sem ",0" ("R$ 5 mi"), ao contrário dos rótulos das
-   barras ("37,0") e do artboard (paridade C27).
-4. `src/components/perfil/secao-emendas.tsx:249-252`: sem o ano corrente na série, o `<span>` da nota fica vazio no
-   DOM.
-5. Os dois achados da rodada 1 (Telefônica partida em 6 grafias; `getFullYear()` sem fuso de Brasília em
-   `secao-emendas.tsx:155`) continuam.
+1. `src/app/parlamentares/[id]/gastos.csv/route.ts:46-47`: uma data com o formato certo e valor inválido
+   (`?ate=2026-13-99`, `?de=2026-02-30`) passa no regex e faz o Postgres falhar: **500** (conferido em 3292). Sem
+   `de`/`ate` nada muda, e o link gerado pela página sempre traz datas válidas. Sugestão: validar a data ou ignorar
+   o parâmetro inválido, como já se faz com `ano`.
+2. `src/data/emendas.ts:156` × `src/components/perfil/secoes.tsx:294`: N casa o fornecedor pelos dígitos do CNPJ;
+   o CSV, pelo texto exato de `fornecedor_doc`. Hoje não diverge (0 CNPJs com mais de uma grafia no banco dev), mas
+   uma grafia diferente faria o CSV ter menos linhas que N.
+3. Seguem da rodada 2: a nota do cruzamento usa só a base da primeira sanção (`sancao.tsx:107`); valores entre
+   R$ 999.500 e R$ 1 mi saem "R$ 1.000 mil"; `<span>` vazio sob o gráfico sem o ano corrente; `getFullYear()` sem
+   fuso de Brasília em `secao-emendas.tsx`.
 
 ---
 
 ## Planos de correção
 
-### Correção 1: data da base das emendas (Major, EMDUI-12/Assumptions) — N05, N09
-- **Tarefa**: em `tests/integracao/emendas.test.ts`, gerar o ZIP com `mtime` diferente por entrada (por exemplo
-  `EmendasParlamentares.csv` em 10/11/2026 e `…_PorFavorecido.csv` em 09/11/2026, com a de favorecidos primeiro no
-  ZIP) e manter `observacao: "base de 10/11/2026"`.
-- **Pronto quando**: N05 e N09 morrem.
+### Correção 1: data da base pela entrada certa (Major, EMDUI-12/Assumption "Data da base") — N09
+- **Tarefa**: em `tests/integracao/emendas.test.ts:130`, montar o ZIP com `EmendasParlamentares_PorFavorecido.csv`
+  **antes** de `EmendasParlamentares.csv` (as datas por entrada já estão em `:71-73`).
+- **Pronto quando**: N09 morre e N05 continua morto.
 
-### Correção 2: cabeçalho Tipo no celular (Minor, EMDUI-11) — U15
-- **Tarefa**: em `tests/e2e/emendas.spec.ts:70-77`, asserir os 5 cabeçalhos visíveis
-  (`["Favorecido", "CNPJ/CPF", "Tipo", "Município", "Recebido"]`) nos dois projetos.
-- **Pronto quando**: U15 morre.
+### Correção 2: link de notas com N ≠ M (Major, SAN-05/Assumption "Link de notas") — U30
+- **Tarefa**: no seed, dar ao fornecedor sancionado com link ao menos 3 notas no período exibido, só parte delas
+  dentro da sanção (por exemplo, 2 de 3); asserir "2 das 3 notas …" e o link "Ver as 2 notas".
+- **Pronto quando**: U30 e U23 morrem.
 
-### Correção 3: "Ver as N notas" (Minor, SAN-05/paridade C22) — U23
-- **Tarefa**: decidir o N (artboard: notas dentro da sanção) e registrar na spec; semear um fornecedor sancionado com
-  2+ notas e asserir o texto do link e o CSV que ele baixa.
-- **Pronto quando**: U23 morre e C22 vira PASS ou INTENCIONAL.
+### Correção 3: limites inclusivos do CSV (Major, Assumptions "Nota dentro do período" e "Link de notas") — G01, G02
+- **Tarefa**: em `tests/e2e/emendas.spec.ts:275-288`, pedir o CSV com `de` e `ate` iguais à data da nota
+  (`de=2026-02-10&ate=2026-02-10`) e asserir cabeçalho + 1 linha.
+- **Pronto quando**: G01 e G02 morrem.
 
-### Correção 4: textos só de paridade (Cosmetic) — U20, U21, U22
-- **Tarefa**: asserir em `emendas.spec.ts` as três notas do artboard (Emd:94, 115, 131).
-
-### Correção 5: paridade C27 e C28 (Cosmetic)
-- C27: `brlMi` com `minimumFractionDigits: 1`, como o artboard (`toFixed(1)`) e os rótulos das barras.
-- C28: registrar na spec a forma "aplicada por {órgão}" (o artigo do artboard depende do gênero do órgão) ou seguir
-  o artboard.
+### Correção 4 (Minor/Cosmetic) — U22, B03
+- U22: asserir o `<span>` da nota do gráfico com `toHaveText` exato.
+- B03: `expect(brlMi(1_000_000)).toMatch(/^R\$\s1,0 mi$/)`.
 
 ---
 
 ## Atualização da rastreabilidade
 
-| Requisito | Antes (rodada 1) | Depois (rodada 2) |
+| Requisito | Antes (rodada 2) | Depois (rodada 3) |
 | --- | --- | --- |
-| EMD-01..11, EMDUI-01..10, EMDUI-13..15, SAN-01..07, MET-01..05, EDGE-01..05 | Verified / Needs Fix (SAN-01, SAN-02, SAN-05, EDGE-04) | ✅ Verified |
-| EMDUI-11 | Verified (⚠️) | ⚠️ Needs Fix (U15) |
-| EMDUI-12 | Verified (⚠️) | ❌ Needs Fix (N05, N09) |
+| EMD-01..11, EMDUI-01..11, EMDUI-13..15, SAN-01..04, SAN-06, SAN-07, MET-01..05, EDGE-01..05 | Verified (EMDUI-11 Needs Fix) | ✅ Verified |
+| EMDUI-12 | ❌ Needs Fix (N05, N09) | ❌ Needs Fix (N09) |
+| SAN-05 | Verified | ⚠️ Needs Fix (U30, G01, G02) |
 
 ---
 
 ## Resumo
 
-**Geral**: ❌ Not Ready (perto: 3 mutantes de teste e 3 itens de texto)
+**Geral**: ❌ Not Ready. Faltam 3 correções, todas só de teste (fixture, seed e uma asserção de limite); o código de
+produção está certo nos casos conferidos em dados reais.
 
-**Checagem ancorada na spec**: 43/43 com evidência; 41 sem ressalva; EMDUI-12 (N05/N09) e EMDUI-11 (U15) com mutante
-vivo; 1 lacuna de precisão menor
-**Sensor**: 28/35 mortos (rodada 1: 25/31); os 6 sobreviventes da rodada 1 agora morrem
-**Gate**: 162 vitest + 128 e2e passaram; typecheck, lint e build ok
-**Paridade**: 95,4% (62 PASS, 3 FAIL, 8 INTENCIONAL), meta atingida; ver `paridade/verificacao-2.md`
+**Checagem ancorada na spec**: 43/43 com evidência; 41 sem ressalva; EMDUI-12 (N09) e SAN-05 (U30, G01, G02) com
+mutante vivo; 1 lacuna de precisão menor
+**Sensor**: 22/30 mortos; dos 7 sobreviventes da rodada 2, 5 morrem agora (N05, U15, U20, U21, U23); N09 e U22
+continuam vivos
+**Gate**: 163 vitest + 130 e2e passaram; typecheck, lint e build ok
+**Paridade**: 100% (65 PASS, 0 FAIL, 9 INTENCIONAL); ver `paridade/verificacao-3.md`
 
-**Próximos passos**: correções 1 e 2 (só testes) fecham o veredito; 3 a 5 deixam a paridade com folga.
+**Próximos passos**: esta é a 3ª rodada; pelo limite de 3 iterações, escalar ao usuário com as correções 1 a 3.

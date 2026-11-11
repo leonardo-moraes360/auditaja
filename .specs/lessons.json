@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 23,
+  "next_id": 28,
   "lessons": [
     {
       "id": "L-001",
@@ -402,6 +402,96 @@
       ],
       "created": "2026-11-11T17:44:47Z",
       "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-023",
+      "key": "surviving_mutant::when a rule picks one entry by name put a decoy entry before the target so a pick first implementation fails a test",
+      "text": "When a rule picks one entry by name, put a decoy entry before the target so a pick-first implementation fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N09 src/ingest/arquivos.ts:106 (ingest)"
+      ],
+      "created": "2026-11-11T18:00:46Z",
+      "last_seen": "2026-11-11T18:00:46Z"
+    },
+    {
+      "id": "L-024",
+      "key": "surviving_mutant::when two counts could fill a label seed a case where they differ so using the wrong count fails a test",
+      "text": "When two counts could fill a label, seed a case where they differ so using the wrong count fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U30 src/components/perfil/sancao.tsx:94 (ui)"
+      ],
+      "created": "2026-11-11T18:00:46Z",
+      "last_seen": "2026-11-11T18:00:46Z"
+    },
+    {
+      "id": "L-025",
+      "key": "surviving_mutant::test an inclusive date range filter with a row dated exactly on each bound",
+      "text": "Test an inclusive date range filter with a row dated exactly on each bound",
+      "signal": "surviving_mutant",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "G01 G02 src/app/parlamentares/[id]/gastos.csv/route.ts:46-47 (routes)"
+      ],
+      "created": "2026-11-11T18:00:46Z",
+      "last_seen": "2026-11-11T18:00:46Z"
+    },
+    {
+      "id": "L-026",
+      "key": "surviving_mutant::assert parity text with an exact match on its element since a substring match accepts added text",
+      "text": "Assert parity text with an exact match on its element, since a substring match accepts added text",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U22 src/components/perfil/secao-emendas.tsx:251 (ui)"
+      ],
+      "created": "2026-11-11T18:00:47Z",
+      "last_seen": "2026-11-11T18:00:47Z"
+    },
+    {
+      "id": "L-027",
+      "key": "surviving_mutant::test a unit switch threshold at the exact boundary value",
+      "text": "Test a unit-switch threshold at the exact boundary value",
+      "signal": "surviving_mutant",
+      "scope": "lib",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "B03 src/lib/emendas.ts:99 (lib)"
+      ],
+      "created": "2026-11-11T18:00:47Z",
+      "last_seen": "2026-11-11T18:00:47Z"
     }
   ]
 }
