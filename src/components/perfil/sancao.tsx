@@ -31,10 +31,13 @@ export function AvisoSancao({
   fornecedores,
   sancoes,
   periodo,
+  hrefNotas,
 }: {
   fornecedores: { fornecedor_nome: string; fornecedor_doc: string | null; documentos: number }[];
   sancoes: SancaoFornecedor[];
   periodo: string;
+  /** CSV das notas de um fornecedor no período exibido (rota gastos.csv). */
+  hrefNotas: (doc: string) => string;
 }) {
   const itens = fornecedores.flatMap((f) => doFornecedor(f.fornecedor_doc, sancoes).map((s) => ({ f, s })));
   if (!itens.length) return null;
@@ -80,6 +83,9 @@ export function AvisoSancao({
                   target="_blank"
                 >
                   Ver a base do {s.cadastro} no Portal
+                </a>
+                <a href={hrefNotas(f.fornecedor_doc!)} download className="inline-flex min-h-6 items-center text-teto">
+                  Baixar as notas
                 </a>
                 <Link href="/metodologia#sancoes" className="inline-flex min-h-6 items-center text-teto">
                   Como cruzamos (metodologia)

@@ -290,6 +290,9 @@ export function SecaoGastos({
             fornecedores={ceap.fornecedores}
             sancoes={sancoes}
             periodo={mandato ? "no mandato" : `em ${ano}`}
+            hrefNotas={(doc) =>
+              `/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}&doc=${encodeURIComponent(doc)}`
+            }
           />
           {!completo && (
             <Link href={href(`ano=${parametroAno}&lista=completa#gastos`)} className="text-sm font-semibold sm:hidden">

@@ -187,6 +187,10 @@ test("SAN-05..07: aviso factual com período, órgão, notas e ressalva", async 
       "O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar.",
     );
   }
+  await expect(posto.getByRole("link", { name: "Baixar as notas" })).toHaveAttribute(
+    "href",
+    `/parlamentares/${ID}/gastos.csv?ano=2026&doc=${encodeURIComponent("55.666.777/0001-88")}`,
+  );
   await expect(posto.getByRole("link", { name: "Ver a base do CEIS no Portal" })).toHaveAttribute(
     "href",
     "https://portaldatransparencia.gov.br/download-de-dados/ceis",
