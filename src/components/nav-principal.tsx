@@ -11,7 +11,15 @@ const ITENS = [
 
 /** Menu principal; a página ativa ganha sublinhado na cor da marca, como no protótipo. */
 export function NavPrincipal() {
-  const pathname = usePathname();
+  return <Itens pathname={usePathname()} />;
+}
+
+/** Fallback do prerender: mesmos links, sem item ativo. */
+export function NavPrincipalEstatica() {
+  return <Itens pathname="" />;
+}
+
+function Itens({ pathname }: { pathname: string }) {
   return (
     <nav aria-label="Principal" className="flex flex-wrap gap-x-5 gap-y-1 text-[15px] font-medium">
       {ITENS.map(({ href, rotulo }) => {

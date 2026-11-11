@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { NavPrincipal } from "./nav-principal";
+import { Suspense } from "react";
+import { NavPrincipal, NavPrincipalEstatica } from "./nav-principal";
 
 export function Topo() {
   return (
@@ -19,7 +20,10 @@ export function Topo() {
           </svg>
           <span className="font-heading text-[22px] font-bold tracking-tight">Auditaja</span>
         </Link>
-        <NavPrincipal />
+        {/* usePathname é dado de request: com Cache Components precisa de Suspense. */}
+        <Suspense fallback={<NavPrincipalEstatica />}>
+          <NavPrincipal />
+        </Suspense>
         <form action="/parlamentares" role="search" className="ml-auto flex w-full gap-2 sm:w-auto">
           <label htmlFor="busca-topo" className="sr-only">
             Buscar parlamentar
