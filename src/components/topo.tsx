@@ -32,8 +32,8 @@ export function Topo() {
             id="busca-topo"
             name="q"
             type="search"
-            placeholder="Buscar parlamentar"
-            className="h-9 w-full rounded-md border border-input bg-white px-3 text-sm sm:w-64"
+            placeholder="Buscar deputado por nome ou UF"
+            className="h-9 w-full rounded-md border border-input bg-white px-3 text-sm sm:w-72"
           />
         </form>
       </div>

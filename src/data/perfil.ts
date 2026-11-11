@@ -19,6 +19,14 @@ export type ResultadoBusca = {
   em_exercicio: boolean;
 };
 
+const UFS = new Set("AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO".split(" "));
+
+/** "sp" ou "SP" na busca também filtra pela UF; nomes continuam valendo. */
+export function ufDaBusca(q: string | undefined): string | null {
+  const t = (q ?? "").trim().toUpperCase();
+  return UFS.has(t) ? t : null;
+}
+
 export async function buscarParlamentares(opts: {
   q?: string;
   uf?: string;
@@ -36,8 +44,10 @@ export async function buscarParlamentares(opts: {
   const q = opts.q?.trim();
   if (q) {
     const padrao = `%${q.replace(/[%_\\]/g, "\\$&")}%`;
+    const ufBuscada = ufDaBusca(q);
     query = query.where(({ or, eb }) =>
       or([
+        ...(ufBuscada ? [eb("sigla_uf", "=", ufBuscada)] : []),
         eb(sql`unaccent(lower(nome))`, "like", sql`unaccent(lower(${padrao}))`),
         eb(sql`unaccent(lower(coalesce(nome_civil, '')))`, "like", sql`unaccent(lower(${padrao}))`),
       ]),
