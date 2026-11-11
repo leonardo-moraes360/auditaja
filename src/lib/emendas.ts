@@ -1,6 +1,6 @@
 import { normalizarNome } from "@/ingest/arquivos";
 import { brlCompacto, dataBr } from "@/lib/format";
-import { formatarCnpj, soDigitos } from "@/lib/privacy";
+import { formatarCnpj, mascararCpfsNoTexto, soDigitos } from "@/lib/privacy";
 
 /** Emendas ao orçamento de 2023 foram apresentadas em 2022, pela legislatura anterior. */
 export const ANO_INICIAL_EMENDAS = 2024;
@@ -48,7 +48,8 @@ export function favorecidoPublicavel(tipo: string, codigo: string, nome: string)
     return { nome: "Beneficiário pessoa física", doc: CPF_MASCARADO.test(c) ? c : null };
   }
   const d = soDigitos(codigo);
-  return { nome: nome.trim(), doc: d.length === 14 ? formatarCnpj(d) : null };
+  // MEI: a razão social traz o CPF do dono ("FULANO 12345678901"); sai mascarado (R3).
+  return { nome: mascararCpfsNoTexto(nome.trim()), doc: d.length === 14 ? formatarCnpj(d) : null };
 }
 
 const MINUSCULAS = new Set(["de", "da", "do", "das", "dos", "e"]);

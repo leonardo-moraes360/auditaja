@@ -11,7 +11,7 @@ import {
 } from "@/lib/emendas";
 import { dataBrParaIso, dataDaEntrada, linhasCsvDoZip } from "./arquivos";
 import { inserirEmBlocos, registrarColeta } from "./coleta";
-import { soDigitos } from "@/lib/privacy";
+import { mascararCpfsNoTexto, soDigitos } from "@/lib/privacy";
 import type { ClienteEducado } from "./http";
 
 /**
@@ -166,7 +166,7 @@ export async function coletarSancoes(db: Kysely<Database>, cli: ClienteEducado, 
         cadastro,
         codigo: l["CÓDIGO DA SANÇÃO"] ?? "",
         cnpj,
-        nome: (l["NOME DO SANCIONADO"] ?? "").trim(),
+        nome: mascararCpfsNoTexto((l["NOME DO SANCIONADO"] ?? "").trim()),
         categoria: (l["CATEGORIA DA SANÇÃO"] ?? "").trim(),
         data_inicio: dataBrParaIso(l["DATA INÍCIO SANÇÃO"]),
         data_fim: dataBrParaIso(l["DATA FINAL SANÇÃO"]),
