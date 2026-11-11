@@ -24,14 +24,15 @@ test("indicadores do perfil", async ({ page, isMobile }) => {
     // Rótulos curtos do celular (Mobile.dc.html:46-49).
     await expect(ind.getByText("Cota em 2026")).toBeVisible();
     await expect(ind.getByText(/^R\$\s44 mil$/)).toBeVisible();
-    await expect(ind.getByText("2 de 4", { exact: true })).toBeVisible();
+    await expect(ind.getByText("2 de 4 em exercício", { exact: true })).toBeVisible(); // PRES-02
     await expect(ind.getByText("1 divergência", { exact: true })).toBeVisible();
     await expect(ind.getByText("30% do teto", { exact: true })).toBeVisible();
     await expect(ind.getByText("+18% sobre 2022", { exact: true })).toBeVisible();
   } else {
     await expect(ind.getByText("Cota parlamentar usada em 2026")).toBeVisible();
     await expect(ind.getByText(/^R\$\s44\.\d{3}$/)).toBeVisible(); // valor por extenso no desktop
-    await expect(ind.getByText(/^2 de 4 em 2026 · média da Câmara \d+%$/)).toBeVisible(); // VOTO-01: voto vazio não conta
+    await expect(ind.getByText("2 de 4 em exercício em 2026 · média da Câmara 50%")).toBeVisible(); // VOTO-01, PRES-02
+    await expect(ind.getByText("1 votação em licença não conta · ver períodos")).toBeVisible(); // PRES-04
     await expect(ind.getByText("Divergiu em 1 de 2 votações")).toBeVisible();
     await expect(ind.getByText(/^30% do teto acumulado até mar \(R\$\s[\d.]+\)$/)).toBeVisible(); // CEAP-05
     await expect(ind.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
@@ -117,6 +118,7 @@ test("VOTO-06/07: votação sem voto mostra 'sem registro' e o filtro de ausênc
   await expect(page.getByRole("link", { name: "MPV 1300/2026" })).toBeVisible();
   await expect(page.getByText("Mantido o veto fictício 9/2026")).toBeVisible(); // voto vazio também é ausência
   await expect(page.getByText("Votou: sem registro")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "PLP 45/2026" })).toHaveCount(0); // PRES-03: licença não é ausência
   await expect(page.getByRole("link", { name: "PEC 12/2026" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "PL 1234/2026" })).toHaveCount(0);
 });
@@ -173,7 +175,7 @@ test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page,
 test("METOD-01: metodologia publica a versão", async ({ page }) => {
   await page.goto("/metodologia");
   await expect(page.getByRole("heading", { level: 1, name: "Metodologia" })).toBeVisible();
-  await expect(page.getByText(/^Versão 1\.3\./)).toBeVisible();
+  await expect(page.getByText(/^Versão 1\.4\./)).toBeVisible();
 });
 
 test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page, isMobile }) => {
@@ -278,7 +280,44 @@ test("celular: votações resumidas em 3, com link para todas", async ({ page, i
   test.skip(!isMobile, "resumo só no celular");
   await page.goto(`/parlamentares/${ID}`);
   const s = page.locator("section#votacoes");
-  await expect(s.getByRole("listitem").filter({ visible: true })).toHaveCount(3);
-  await s.getByRole("link", { name: "Ver as 4 votações" }).click();
-  await expect(s.getByRole("listitem").filter({ visible: true })).toHaveCount(4);
+  await expect(
+    s
+      .getByRole("listitem")
+      .filter({ visible: true })
+      .filter({ has: page.getByRole("link") }),
+  ).toHaveCount(3);
+  await s.getByRole("link", { name: "Ver as 5 votações" }).click();
+  await expect(
+    s
+      .getByRole("listitem")
+      .filter({ visible: true })
+      .filter({ has: page.getByRole("link") }),
+  ).toHaveCount(5);
+});
+
+test("PRES-03/04: votação em licença marcada, fora das ausências, e quadro dos períodos do ano", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto(`/parlamentares/${ID}?lista=completa#votacoes`);
+  const s = page.locator("section#votacoes");
+  const linha = s.getByRole("listitem").filter({ has: page.getByRole("link", { name: "PLP 45/2026" }) });
+  await expect(linha.getByText("Em licença · não conta")).toBeVisible();
+  await expect(linha.getByText(/Votou:/)).toHaveCount(0);
+  const quadro = s.locator("#periodos");
+  await expect(
+    quadro.getByRole("heading", {
+      name: isMobile ? "Fora do exercício em 2026" : "Períodos fora do exercício em 2026",
+    }),
+  ).toBeVisible();
+  await expect(quadro.getByText("01/07 a 31/07")).toBeVisible();
+  await expect(quadro.getByText("Licença para Tratamento de Saúde · 1 votação")).toBeVisible();
+  await expect(quadro.getByRole("link", { name: "Como calculamos" })).toHaveAttribute("href", "/metodologia#presenca");
+});
+
+test("PRES-05: sem histórico coletado, a presença avisa que pode incluir licenças", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SEM_DADOS}`);
+  await expect(page.locator("section#votacoes").getByText(/ainda pode incluir períodos de licença/)).toBeVisible();
+  if (!isMobile)
+    await expect(page.locator("[data-indicador]").getByText("Pode incluir períodos de licença")).toBeVisible();
 });

@@ -142,11 +142,83 @@ describe("perfilParlamentar (Postgres)", () => {
     if (!disponivel) ctx.skip();
     const { perfilParlamentar } = await import("@/data/perfil");
     const p = (await perfilParlamentar(SEED.deputada))!;
-    expect(p.votacoes.totalPlenario).toBe(4);
+    expect(p.votacoes.totalPlenario).toBe(5);
     expect(p.votacoes.presentes).toBe(2);
+    expect(p.votacoes.elegiveis).toBe(4); // seed-5 cai na licença de julho
     expect(p.votacoes.alinhamento).toEqual({ comparaveis: 2, iguais: 1, divergencias: 1 });
     expect(p.votacoes.lista[0]).toMatchObject({ id: "seed-3", voto: null, orientacao: "Sim" });
     expect(p.votacoes.lista.find((v) => v.id === "seed-4")).toMatchObject({ voto: null });
+  });
+
+  it("PRES-02: votação em licença sai da presença, aparece marcada e entra nos períodos do ano", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { perfilParlamentar } = await import("@/data/perfil");
+    const p = (await perfilParlamentar(SEED.deputada))!;
+    expect(p.votacoes).toMatchObject({
+      historicoDisponivel: true,
+      foraDoExercicio: 1,
+      tipoFora: "licenca",
+      mediaPresenca: 50, // só a deputada tem votos no seed: 2 de 4
+    });
+    expect(p.votacoes.lista.find((v) => v.id === "seed-5")).toMatchObject({ voto: null, foraDoExercicio: "licenca" });
+    expect(p.votacoes.lista.find((v) => v.id === "seed-3")).toMatchObject({ foraDoExercicio: null });
+    expect(p.votacoes.periodosFora).toEqual([
+      {
+        inicio: "2026-07-01",
+        fim: "2026-07-31",
+        situacao: "Licença",
+        motivo: "Licença para Tratamento de Saúde",
+        tipo: "licenca",
+        votacoes: 1,
+      },
+    ]);
+  });
+
+  it("PRES-02: voto registrado dentro da licença conta; média da Câmara usa a mesma regra", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { perfilParlamentar } = await import("@/data/perfil");
+    const cVot = (
+      await db.selectFrom("coleta").select("id").where("fonte", "=", "camara_lote_votos").executeTakeFirstOrThrow()
+    ).id;
+    // Deputado sem histórico coletado: tudo conta, como antes (1 de 5 = 20%).
+    await db
+      .insertInto("voto")
+      .values({
+        votacao_id: "seed-5",
+        parlamentar_id: SEED.deputado,
+        voto: "Sim",
+        sigla_partido: "PFY",
+        coleta_id: cVot,
+      })
+      .execute();
+    try {
+      const joao = (await perfilParlamentar(SEED.deputado))!;
+      expect(joao.votacoes).toMatchObject({
+        historicoDisponivel: false,
+        presentes: 1,
+        elegiveis: 5,
+        foraDoExercicio: 0,
+      });
+      expect(joao.votacoes.periodosFora).toEqual([]);
+      expect(joao.votacoes.mediaPresenca).toBe(35); // (50% + 20%) / 2
+
+      await db
+        .insertInto("voto")
+        .values({
+          votacao_id: "seed-5",
+          parlamentar_id: SEED.deputada,
+          voto: "Sim",
+          sigla_partido: "PFX",
+          coleta_id: cVot,
+        })
+        .execute();
+      const maria = (await perfilParlamentar(SEED.deputada))!;
+      expect(maria.votacoes).toMatchObject({ presentes: 3, elegiveis: 5, foraDoExercicio: 0, tipoFora: null });
+      expect(maria.votacoes.periodosFora[0].votacoes).toBe(0);
+      expect(maria.votacoes.mediaPresenca).toBe(40); // (60% + 20%) / 2
+    } finally {
+      await db.deleteFrom("voto").where("votacao_id", "=", "seed-5").execute();
+    }
   });
 
   it("BENS-01: total por eleição casada", async (ctx) => {
@@ -164,6 +236,7 @@ describe("perfilParlamentar (Postgres)", () => {
     const p = (await perfilParlamentar(SEED.deputada))!;
     expect(Object.keys(p.coletas).sort()).toEqual([
       "camara_api_deputados",
+      "camara_api_historico",
       "camara_ceap",
       "camara_lote_votos",
       "tse_bem_candidato",

@@ -47,12 +47,18 @@ export default function Metodologia() {
         </p>
       </section>
 
-      <section className="space-y-2">
+      <section id="presenca" className="scroll-mt-4 space-y-2">
         <h2 className="font-heading text-xl font-bold">Presença em votações</h2>
         <p>
-          Contamos as votações nominais do Plenário no ano e quantas delas têm voto registrado do deputado (Sim, Não,
-          Abstenção, Obstrução ou Artigo 17). O número inclui períodos de licença ou de suplência, então um deputado
-          licenciado aparece com presença menor. Votações simbólicas não entram, porque não registram voto individual.
+          Contamos as votações nominais do Plenário no ano em que o deputado estava em exercício e quantas delas têm
+          voto registrado (Sim, Não, Abstenção, Obstrução ou Artigo 17). Usamos o histórico de situação publicado pela
+          Câmara: dias de licença, afastamento, suplência ou antes da posse ficam fora da conta. Se a situação muda no
+          dia da votação, ela conta quando o deputado esteve em exercício em algum momento daquele dia, e um voto
+          registrado sempre conta. Votações simbólicas não entram, porque não registram voto individual.
+        </p>
+        <p>
+          A média da Câmara é a média simples da presença dos deputados em exercício, calculada do mesmo jeito. Enquanto
+          o histórico de um deputado não foi coletado, a conta dele usa todas as votações do ano, e o perfil avisa.
         </p>
       </section>
 
