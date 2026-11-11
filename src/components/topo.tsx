@@ -1,23 +1,25 @@
 import Link from "next/link";
+import { NavPrincipal } from "./nav-principal";
 
 export function Topo() {
   return (
     <header className="border-b bg-superficie">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-3">
-        <Link href="/" className="font-heading text-xl font-bold tracking-tight text-foreground no-underline">
-          Auditaja
+        <Link href="/" className="flex items-center gap-2.5 text-foreground no-underline">
+          <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+            <rect x="1" y="1" width="26" height="26" rx="7" className="fill-primary" />
+            <path
+              d="M8 15l4 4 8-9"
+              stroke="#fff"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="font-heading text-[22px] font-bold tracking-tight">Auditaja</span>
         </Link>
-        <nav aria-label="Principal" className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-          <Link className="text-muted-foreground hover:text-foreground" href="/parlamentares">
-            Parlamentares
-          </Link>
-          <Link className="text-muted-foreground hover:text-foreground" href="/metodologia">
-            Metodologia
-          </Link>
-          <Link className="text-muted-foreground hover:text-foreground" href="/fontes">
-            Fontes
-          </Link>
-        </nav>
+        <NavPrincipal />
         <form action="/parlamentares" role="search" className="ml-auto flex w-full gap-2 sm:w-auto">
           <label htmlFor="busca-topo" className="sr-only">
             Buscar parlamentar
