@@ -176,8 +176,8 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] e2e: selo, título, período (com e sem data final), contagem de notas, frase de ressalva
-- [ ] Full gate passa
+- [x] e2e: selo, título, período (com e sem data final), contagem de notas, frase de ressalva
+- [x] Full gate passa
 
 **Tests**: e2e
 **Gate**: full

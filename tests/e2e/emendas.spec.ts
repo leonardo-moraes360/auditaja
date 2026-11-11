@@ -155,3 +155,45 @@ for (const caminho of [`/parlamentares/${ID}?emendas=2025`, `/parlamentares/${SE
     expect(r.violations.map((v) => v.id)).toEqual([]);
   });
 }
+
+test("SAN-04: selo de sanção ao lado do fornecedor na tabela", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}?lista=completa`);
+  const linhas = page.locator("section#gastos table tbody tr");
+  await expect(linhas.filter({ hasText: "Posto Ilustrativo Ltda" })).toContainText("Sanção no CEIS");
+  await expect(linhas.filter({ hasText: "Gráfica Exemplo Ltda" })).toContainText("Sanção no CNEP");
+  await expect(linhas.filter({ hasText: "Prestador pessoa física" })).not.toContainText("Sanção");
+});
+
+test("SAN-05..07: aviso factual com período, órgão, notas e ressalva", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  const avisos = page.locator("section#gastos [data-sancao]");
+  await expect(avisos).toHaveCount(2);
+  const posto = avisos.filter({ hasText: "Posto Ilustrativo Ltda" });
+  await expect(posto.getByRole("heading", { level: 3 })).toHaveText(
+    "Posto Ilustrativo Ltda tem sanção registrada no CEIS",
+  );
+  await expect(posto).toContainText(
+    "Impedimento/proibição de contratar com prazo determinado de 01/02/2026 a 01/02/2027, aplicada por Ministério Exemplo. A única nota paga a essa empresa em 2026 tem data dentro desse período.",
+  );
+  const grafica = avisos.filter({ hasText: "Gráfica Exemplo Ltda" });
+  await expect(grafica.getByRole("heading", { level: 3 })).toHaveText(
+    "Gráfica Exemplo Ltda tem sanção registrada no CNEP",
+  );
+  await expect(grafica).toContainText(
+    "Multa desde 01/05/2026, sem data final, aplicada por Controladoria Exemplo. A única nota paga a essa empresa em 2026 não tem data dentro desse período.",
+  );
+  for (const a of [posto, grafica]) {
+    await expect(a).toContainText(
+      "O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar.",
+    );
+  }
+  await expect(posto.getByRole("link", { name: "Ver a base do CEIS no Portal" })).toHaveAttribute(
+    "href",
+    "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+  );
+});
+
+test("SAN-05: deputado sem fornecedor sancionado não vê aviso", async ({ page }) => {
+  await page.goto(`/parlamentares/${SEM_EMENDAS}`);
+  await expect(page.locator("[data-sancao]")).toHaveCount(0);
+});

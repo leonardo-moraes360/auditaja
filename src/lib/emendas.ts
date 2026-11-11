@@ -1,4 +1,5 @@
 import { normalizarNome } from "@/ingest/arquivos";
+import { dataBr } from "@/lib/format";
 import { formatarCnpj, soDigitos } from "@/lib/privacy";
 
 /** Emendas ao orçamento de 2023 foram apresentadas em 2022, pela legislatura anterior. */
@@ -78,4 +79,17 @@ export function periodoEmendas(param: string | string[] | undefined, anos: numbe
   if (typeof param !== "string" || !/^\d{4}$/.test(param)) return "mandato";
   const ano = Number(param);
   return anos.includes(ano) ? ano : "mandato";
+}
+
+/** Quantas notas do período exibido caem dentro do período da sanção, com concordância. */
+export function frasesNotas(n: number, docs: number, periodo: string) {
+  if (docs === 1)
+    return `A única nota paga a essa empresa ${periodo} ${n ? "tem" : "não tem"} data dentro desse período.`;
+  const quantas = n === 0 ? "Nenhuma" : String(n);
+  return `${quantas} das ${docs} notas pagas a essa empresa ${periodo} ${n > 1 ? "têm" : "tem"} data dentro desse período.`;
+}
+
+export function periodoDaSancao(s: { data_inicio: string | null; data_fim: string | null }) {
+  const inicio = s.data_inicio ? dataBr(s.data_inicio) : "data não informada";
+  return s.data_fim ? `de ${inicio} a ${dataBr(s.data_fim)}` : `desde ${inicio}, sem data final`;
 }

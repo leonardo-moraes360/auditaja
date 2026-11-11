@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   ANO_INICIAL_EMENDAS,
+  frasesNotas,
+  periodoDaSancao,
   autorDoNome,
   ehEmendaIndividual,
   ehTransferenciaEspecial,
@@ -116,5 +118,30 @@ describe("EMDUI-14: período da seção", () => {
     expect(periodoEmendas(["2025", "2026"], anos)).toBe("mandato");
     expect(periodoEmendas(undefined, anos)).toBe("mandato");
     expect(periodoEmendas("mandato", anos)).toBe("mandato");
+  });
+});
+
+describe("SAN-05, SAN-07: textos do aviso de sanção", () => {
+  it("período com e sem data final", () => {
+    expect(periodoDaSancao({ data_inicio: "2026-02-01", data_fim: "2027-02-01" })).toBe("de 01/02/2026 a 01/02/2027");
+    expect(periodoDaSancao({ data_inicio: "2026-05-01", data_fim: null })).toBe("desde 01/05/2026, sem data final");
+    expect(periodoDaSancao({ data_inicio: null, data_fim: null })).toBe("desde data não informada, sem data final");
+  });
+  it("contagem de notas com concordância", () => {
+    expect(frasesNotas(1, 1, "em 2026")).toBe(
+      "A única nota paga a essa empresa em 2026 tem data dentro desse período.",
+    );
+    expect(frasesNotas(0, 1, "em 2026")).toBe(
+      "A única nota paga a essa empresa em 2026 não tem data dentro desse período.",
+    );
+    expect(frasesNotas(0, 9, "no mandato")).toBe(
+      "Nenhuma das 9 notas pagas a essa empresa no mandato tem data dentro desse período.",
+    );
+    expect(frasesNotas(1, 9, "no mandato")).toBe(
+      "1 das 9 notas pagas a essa empresa no mandato tem data dentro desse período.",
+    );
+    expect(frasesNotas(4, 9, "no mandato")).toBe(
+      "4 das 9 notas pagas a essa empresa no mandato têm data dentro desse período.",
+    );
   });
 });

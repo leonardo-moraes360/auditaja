@@ -1,10 +1,12 @@
 import Link from "next/link";
+import type { SancaoFornecedor } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
 import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
+import { AvisoSancao, SeloSancao } from "./sancao";
 
 /** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
 function fraseCase(s: string) {
@@ -78,7 +80,15 @@ export function Indicador({
 
 // ---------------------------------------------------------------- CEAP
 
-export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: boolean }) {
+export function SecaoGastos({
+  perfil,
+  completo,
+  sancoes = [],
+}: {
+  perfil: Perfil;
+  completo: boolean;
+  sancoes?: SancaoFornecedor[];
+}) {
   const { ceap, ano, parlamentar, mandato } = perfil;
   const uf = parlamentar.sigla_uf;
   const tetoMensal = ceap.teto?.mensal ?? null;
@@ -258,6 +268,7 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
                           >
                             {f.fornecedor_nome}
                           </a>
+                          <SeloSancao doc={f.fornecedor_doc} sancoes={sancoes} />
                         </td>
                         <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
                           {f.fornecedor_doc ?? "—"}
@@ -274,6 +285,11 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
               </p>
             </div>
           </div>
+          <AvisoSancao
+            fornecedores={ceap.fornecedores}
+            sancoes={sancoes}
+            periodo={mandato ? "no mandato" : `em ${ano}`}
+          />
           {!completo && (
             <Link href={href(`ano=${parametroAno}&lista=completa#gastos`)} className="text-sm font-semibold sm:hidden">
               Ver todas as notas e fornecedores
