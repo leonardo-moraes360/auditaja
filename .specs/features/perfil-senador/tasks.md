@@ -218,8 +218,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] Testes do deputado seguem passando sem mudança
-- [ ] Gate full passa
+- [x] Testes do deputado seguem passando sem mudança
+- [x] Gate full passa
 
 **Tests**: integration
 **Gate**: full
