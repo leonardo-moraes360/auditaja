@@ -4,9 +4,11 @@
  * O acesso a cada variável fica literal para o Next.js embutir o valor no build.
  */
 export function responsavel() {
+  const doc = process.env.NEXT_PUBLIC_CONTROLADOR_DOC ?? "[CNPJ]";
   return {
     controlador: process.env.NEXT_PUBLIC_CONTROLADOR_NOME ?? "[NOME DO CONTROLADOR]",
-    doc: process.env.NEXT_PUBLIC_CONTROLADOR_DOC ?? "[CNPJ]",
+    // Com o rótulo, como no protótipo: "CNPJ 00.000.000/0001-00".
+    doc: /^(CNPJ|CPF)\b/i.test(doc) ? doc : `CNPJ ${doc}`,
     encarregado: process.env.NEXT_PUBLIC_ENCARREGADO_NOME ?? "[NOME DO ENCARREGADO]",
     email: process.env.NEXT_PUBLIC_ENCARREGADO_EMAIL ?? "[E-MAIL DO ENCARREGADO]",
   };

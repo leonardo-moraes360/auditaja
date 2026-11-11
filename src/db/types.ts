@@ -34,6 +34,8 @@ export interface ParlamentarTable {
   url_foto: string | null;
   /** Uso interno: casamento com o TSE. Não é exibido (R2). */
   data_nascimento: DateCol | null;
+  /** "F" ou "M", do deputados.csv da Câmara; null se não informado. */
+  sexo: string | null;
   id_legislatura: number | null;
   em_exercicio: boolean;
   source_url: string;
@@ -76,6 +78,9 @@ export interface VotacaoTable {
   sigla_orgao: string;
   descricao: string;
   proposicao: string | null;
+  /** Proposição principal votada, ex.: "PL 1234/2026" (votacoesObjetos). */
+  proposicao_sigla: string | null;
+  proposicao_ementa: string | null;
   aprovacao: number | null;
   votos_sim: number;
   votos_nao: number;

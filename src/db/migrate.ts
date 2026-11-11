@@ -3,11 +3,12 @@ import { Migrator, type Migration, type MigrationProvider } from "kysely/migrati
 import * as m0001 from "./migrations/0001_init";
 import * as m0002 from "./migrations/0002_busca";
 import * as m0003 from "./migrations/0003_blocos";
+import * as m0004 from "./migrations/0004_paridade";
 
 /** Lista explícita: funciona igual em scripts, testes e build. */
 const provider: MigrationProvider = {
   async getMigrations(): Promise<Record<string, Migration>> {
-    return { "0001_init": m0001, "0002_busca": m0002, "0003_blocos": m0003 };
+    return { "0001_init": m0001, "0002_busca": m0002, "0003_blocos": m0003, "0004_paridade": m0004 };
   },
 };
 

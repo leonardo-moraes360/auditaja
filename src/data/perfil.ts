@@ -69,16 +69,29 @@ export async function ufsDisponiveis(): Promise<string[]> {
   return rows.map((r) => r.sigla_uf!);
 }
 
-/** Última coleta de cada fonte, para a proveniência exibida (R1). */
-async function coletasRecentes() {
-  const rows = await getDb()
+/**
+ * Última coleta de cada fonte, para a proveniência exibida (R1). A CEAP sai em um arquivo por ano:
+ * a coleta exibida é a do arquivo do ano mostrado (`anoCeap`), não a do último arquivo baixado.
+ */
+async function coletasRecentes(anoCeap: number) {
+  const db = getDb();
+  const rows = await db
     .selectFrom("coleta")
     .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
     .distinctOn("fonte")
     .orderBy("fonte")
     .orderBy("coletado_em", "desc")
     .execute();
-  return Object.fromEntries(rows.map((r) => [r.fonte, r]));
+  const porFonte = Object.fromEntries(rows.map((r) => [r.fonte, r]));
+  const ceapDoAno = await db
+    .selectFrom("coleta")
+    .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
+    .where("fonte", "=", "camara_ceap")
+    .where("url", "like", `%/Ano-${anoCeap}.csv.zip`)
+    .orderBy("coletado_em", "desc")
+    .executeTakeFirst();
+  if (ceapDoAno) porFonte.camara_ceap = ceapDoAno;
+  return porFonte;
 }
 
 /** Blocos (não federações) da legislatura com a composição completa, para orientações de bloco. */
@@ -102,7 +115,32 @@ async function blocosDaLegislatura(idLegislatura: number | null): Promise<BlocoP
 
 export type Coleta = Awaited<ReturnType<typeof coletasRecentes>>[string];
 
-export async function perfilParlamentar(id: number, anoPedido?: number) {
+/** `"mandato"`: soma de todos os anos da CEAP coletados na legislatura atual. */
+export type PeriodoCeap = number | "mandato";
+
+/**
+ * Presença média dos deputados em exercício nas votações nominais do Plenário do ano:
+ * média simples da presença de cada um (votos não vazios ÷ votações do ano), em %.
+ */
+async function presencaMediaDaCamara(ano: number): Promise<number | null> {
+  const r = await getDb()
+    .selectFrom("voto")
+    .innerJoin("votacao", "votacao.id", "voto.votacao_id")
+    .innerJoin("parlamentar", "parlamentar.id", "voto.parlamentar_id")
+    .select(sql<string>`count(*) filter (where voto.voto <> '')`.as("presentes"))
+    .select(sql<string>`count(distinct voto.parlamentar_id)`.as("deputados"))
+    .select(sql<string>`count(distinct voto.votacao_id)`.as("votacoes"))
+    .where("votacao.sigla_orgao", "=", ORGAO_PLENARIO)
+    .where("votacao.data", ">=", `${ano}-01-01`)
+    .where("votacao.data", "<=", `${ano}-12-31`)
+    .where("parlamentar.em_exercicio", "=", true)
+    .executeTakeFirst();
+  const dep = Number(r?.deputados ?? 0);
+  const vot = Number(r?.votacoes ?? 0);
+  return dep && vot ? Math.round((Number(r!.presentes) / (dep * vot)) * 100) : null;
+}
+
+export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
   const db = getDb();
   const p = await db
     .selectFrom("parlamentar")
@@ -114,6 +152,7 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
       "sigla_uf",
       "url_foto",
       "em_exercicio",
+      "sexo",
       "id_legislatura",
       "source_url",
     ])
@@ -129,45 +168,54 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
     .orderBy("ano", "desc")
     .execute();
   const anoMaisRecente = anos[0]?.ano ?? new Date().getFullYear();
-  const ano = anoPedido && anos.some((a) => a.ano === anoPedido) ? anoPedido : anoMaisRecente;
+  const mandato = anoPedido === "mandato" && anos.length > 0;
+  const ano = typeof anoPedido === "number" && anos.some((a) => a.ano === anoPedido) ? anoPedido : anoMaisRecente;
+  const anosCeap = mandato ? anos.map((a) => a.ano) : [ano];
 
   const [porMes, porTipo, fornecedores, totalDocs, ultimoMesGeral] = await Promise.all([
     db
       .selectFrom("despesa_ceap")
-      .select(["mes", sql<string>`sum(valor_liquido)`.as("total")])
+      .select(["ano", "mes", sql<string>`sum(valor_liquido)`.as("total")])
       .where("parlamentar_id", "=", id)
-      .where("ano", "=", ano)
-      .groupBy("mes")
+      .where("ano", "in", anosCeap)
+      .groupBy(["ano", "mes"])
+      .orderBy("ano")
       .orderBy("mes")
       .execute(),
     db
       .selectFrom("despesa_ceap")
       .select(["tipo_despesa", sql<string>`sum(valor_liquido)`.as("total")])
       .where("parlamentar_id", "=", id)
-      .where("ano", "=", ano)
+      .where("ano", "in", anosCeap)
       .groupBy("tipo_despesa")
       .orderBy(sql`sum(valor_liquido)`, "desc")
       .execute(),
     db
       .selectFrom("despesa_ceap")
+      // Mesmo CNPJ com grafias diferentes ("VED Imóveis" e "VED IMOVEIS") é um fornecedor só: agrupa pelo
+      // documento e mostra o nome mais frequente. Pessoa física (CPF mascarado) segue por nome + documento.
       .select([
-        "fornecedor_nome",
+        sql<string>`mode() within group (order by fornecedor_nome)`.as("fornecedor_nome"),
         "fornecedor_doc",
         "fornecedor_classe",
         sql<string>`sum(valor_liquido)`.as("total"),
         sql<string>`count(*)`.as("documentos"),
       ])
       .where("parlamentar_id", "=", id)
-      .where("ano", "=", ano)
-      .groupBy(["fornecedor_nome", "fornecedor_doc", "fornecedor_classe"])
+      .where("ano", "in", anosCeap)
+      .groupBy([
+        sql`case when fornecedor_classe = 'pessoa_juridica' and fornecedor_doc is not null then fornecedor_doc else fornecedor_nome || '|' || coalesce(fornecedor_doc, '') end`,
+        "fornecedor_doc",
+        "fornecedor_classe",
+      ])
       .orderBy(sql`sum(valor_liquido)`, "desc")
-      .limit(8)
+      .limit(5)
       .execute(),
     db
       .selectFrom("despesa_ceap")
       .select(sql<string>`count(*)`.as("n"))
       .where("parlamentar_id", "=", id)
-      .where("ano", "=", ano)
+      .where("ano", "in", anosCeap)
       .executeTakeFirstOrThrow(),
     // Último mês publicado na base inteira: base do teto acumulado.
     db
@@ -178,16 +226,32 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
   ]);
 
   const totalAno = porMes.reduce((a, m) => a + Number(m.total), 0);
-  const teto = tetoDaUf(p.sigla_uf, ano);
+  const teto = mandato ? null : tetoDaUf(p.sigla_uf, ano);
   const ultimoMes = ultimoMesGeral?.mes ?? 0;
 
-  // Votações nominais do Plenário no ano (presença e alinhamento).
+  // Votações nominais do Plenário (presença e alinhamento) do ano mais recente com votações:
+  // o filtro de ano é só dos gastos, como no protótipo.
+  const ultimaVotacao = await db
+    .selectFrom("votacao")
+    .select(sql<number>`max(extract(year from data))::int`.as("ano"))
+    .where("sigla_orgao", "=", ORGAO_PLENARIO)
+    .executeTakeFirst();
+  const anoVotos = ultimaVotacao?.ano ?? ano;
   const plenario = await db
     .selectFrom("votacao")
-    .select(["id", "data", "descricao", "proposicao", "aprovacao", "source_url"])
+    .select([
+      "id",
+      "data",
+      "descricao",
+      "proposicao",
+      "proposicao_sigla",
+      "proposicao_ementa",
+      "aprovacao",
+      "source_url",
+    ])
     .where("sigla_orgao", "=", ORGAO_PLENARIO)
-    .where("data", ">=", `${ano}-01-01`)
-    .where("data", "<=", `${ano}-12-31`)
+    .where("data", ">=", `${anoVotos}-01-01`)
+    .where("data", "<=", `${anoVotos}-12-31`)
     .orderBy("data", "desc")
     .orderBy("id", "desc")
     .execute();
@@ -281,14 +345,20 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
     .where("parlamentar_id", "=", id)
     .executeTakeFirstOrThrow();
 
+  const mediaPresenca = await presencaMediaDaCamara(anoVotos);
+
   return {
     parlamentar: p,
     ano,
+    mandato,
     anosDisponiveis: anos.map((a) => a.ano),
     ceap: {
       totalAno,
       documentos: Number(totalDocs.n),
-      porMes: porMes.map((m) => ({ mes: m.mes, total: Number(m.total) })),
+      porMes: porMes.filter((m) => m.ano === ano).map((m) => ({ mes: m.mes, total: Number(m.total) })),
+      porAno: anosCeap
+        .toSorted((x, y) => x - y)
+        .map((a) => ({ ano: a, total: porMes.filter((m) => m.ano === a).reduce((t, m) => t + Number(m.total), 0) })),
       porTipo: porTipo.map((t) => ({ tipo: t.tipo_despesa, total: Number(t.total) })),
       fornecedores: fornecedores.map((f) => ({ ...f, total: Number(f.total), documentos: Number(f.documentos) })),
       teto,
@@ -296,7 +366,9 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
       ultimoMes,
     },
     votacoes: {
+      ano: anoVotos,
       totalPlenario: plenario.length,
+      mediaPresenca,
       presentes,
       alinhamento: alin,
       lista: listaVotacoes,
@@ -305,7 +377,7 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
     candidaturas,
     orgaos,
     correcoes: Number(correcoes.n),
-    coletas: await coletasRecentes(),
+    coletas: await coletasRecentes(ano),
   };
 }
 
