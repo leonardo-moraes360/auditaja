@@ -178,7 +178,7 @@ export async function perfilParlamentar(id: number, anoPedido?: number) {
   ]);
 
   const totalAno = porMes.reduce((a, m) => a + Number(m.total), 0);
-  const teto = tetoDaUf(p.sigla_uf);
+  const teto = tetoDaUf(p.sigla_uf, ano);
   const ultimoMes = ultimoMesGeral?.mes ?? 0;
 
   // Votações nominais do Plenário no ano (presença e alinhamento).

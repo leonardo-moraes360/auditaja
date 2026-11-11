@@ -18,8 +18,18 @@ test("indicadores do perfil", async ({ page }) => {
   await expect(page.getByText("2 de 4 em 2026")).toBeVisible(); // VOTO-01: voto vazio não conta
   await expect(page.getByText("50%")).toHaveCount(2); // VOTO-01 (2 de 4) e VOTO-03 (1 de 2)
   await expect(page.getByText("Divergiu em 1 de 2 votações")).toBeVisible();
-  await expect(page.getByText("teto por UF em verificação")).toBeVisible(); // CEAP-05
+  await expect(page.getByText("30% do teto acumulado até mar")).toBeVisible(); // CEAP-05
   await expect(page.getByText("+18% sobre 2022, em valor nominal")).toBeVisible(); // BENS-02
+});
+
+test("CEAP-05: gráfico mensal mostra a linha do teto mensal da UF", async ({ page }) => {
+  await page.goto(`/parlamentares/${ID}`);
+  const grafico = page.locator("section#gastos figure");
+  await expect(grafico.locator("figcaption")).toContainText("Teto mensal para SP: R$ 48.727");
+  const linha = grafico.locator("[data-teto]");
+  await expect(linha).toHaveCount(1);
+  // Teto (48.727,46) acima do maior mês do seed (30.000): a escala é o teto, linha no topo.
+  await expect(linha).toHaveAttribute("style", /bottom:\s*100%/);
 });
 
 test("PROV-02: cada seção mostra fonte, data de coleta e link para o original", async ({ page }) => {
@@ -122,7 +132,7 @@ test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page 
 test("METOD-01: metodologia publica a versão", async ({ page }) => {
   await page.goto("/metodologia");
   await expect(page.getByRole("heading", { level: 1, name: "Metodologia" })).toBeVisible();
-  await expect(page.getByText(/^Versão 1\.2\./)).toBeVisible();
+  await expect(page.getByText(/^Versão 1\.3\./)).toBeVisible();
 });
 
 test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page }) => {

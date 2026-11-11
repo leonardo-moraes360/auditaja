@@ -581,6 +581,25 @@ T26
 
 ---
 
+### T27: Teto da CEAP por UF
+
+**What**: Liga a comparação do gasto com o teto acumulado usando os 27 valores mensais de 2026 publicados na página oficial "Cota Parlamentar" da Câmara (reajuste do Ato da Mesa nº 244/2026). Teto só vale para 2026; outros anos ficam sem comparação.
+**Where**: `src/data/teto-ceap.ts`, `src/data/perfil.ts`, `src/app/parlamentares/[id]/page.tsx`, `src/app/metodologia/page.tsx`
+**Depends on**: None
+**Requirement**: CEAP-05, CEAP-06
+
+**Done when**:
+
+- [x] 27 UFs com valor conferido; DF R$ 41.612,55 e RR R$ 58.474,70 batem com os valores de 2026 noticiados
+- [x] Metodologia 1.3 cita a fonte, o ato, a data de conferência e a aproximação de jan–fev
+- [x] Perfil do seed (SP, até março) mostra "30% do teto acumulado até mar"
+- [x] Gate full passa
+
+**Tests**: unit, integration, e2e
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
