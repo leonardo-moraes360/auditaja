@@ -43,7 +43,7 @@ Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `
 - **R6 contestação:** formulário por perfil grava em `pedido_correcao`.
 - **R7 coleta não invasiva:** ver acima.
 - **R10:** partido só de parlamentares; nada de listas de filiados.
-- **R13:** rodapé com controlador e encarregado (variáveis `NEXT_PUBLIC_*`, hoje placeholders).
+- **R13:** rodapé e política de privacidade (`/privacidade`) com controlador e encarregado (variáveis `NEXT_PUBLIC_*`, hoje placeholders).
 
 ## Verificação
 

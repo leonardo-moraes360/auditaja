@@ -11,7 +11,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Design**: `.specs/features/perfil-parlamentar/design.md`
 **Status**: Done (fases 1–4 retroativas; fases 5–6 após a verificação nº 1)
 
-> **Commits:** fases 1–4 em `c5b06ce` e `01f97cf`; T13 em `ac8b627`; T14 em `34fcdb3` e `399468f`; fases 6 e 7 em commits próprios.
+> **Commits:** fases 1–4 em `c5b06ce` e `01f97cf`; T13 em `ac8b627`; T14 em `34fcdb3` e `399468f`; fases 6 e 7 em commits próprios; T26 em `e615cb0`, `61872c5` e `8573b87`.
 >
 > **Desvio registrado:** a implementação veio antes das specs. As tarefas abaixo descrevem o trabalho já feito e foram entregues em dois commits (`c5b06ce` scaffold, `01f97cf` feature), mais `ac8b627` (rodapé), não em um commit por tarefa. A verificação independente (`validation.md`) compensa essa falta de granularidade conferindo cada critério contra código e testes.
 
@@ -90,6 +90,12 @@ T20 → T21 → T22 → T23 → T24
 
 ```
 T25
+```
+
+### Phase 9: Política de privacidade
+
+```
+T26
 ```
 
 ---
@@ -536,10 +542,29 @@ T25
 
 ---
 
+### T26: Política de privacidade
+
+**What**: Página `/privacidade` (LGPD) estática no estilo de `/metodologia`: controlador e encarregado, dados tratados (deputados, terceiros minimizados na gravação conforme AD-002, quem pede correção), finalidades e bases legais (art. 7º, IX, §§ 3º e 4º; art. 5º, II e art. 11), compartilhamento, retenção, direitos do art. 18, cookies (nenhum), segurança e data de atualização. Responsáveis extraídos para `responsavel()` e usados pelo rodapé e pela página; link "Política de privacidade" no rodapé, como no protótipo.
+**Where**: `src/app/privacidade/page.tsx`, `src/lib/responsavel.ts`, `src/components/rodape.tsx`
+**Depends on**: None
+**Requirement**: PRIV-06, PRIV-07, A11Y-01, A11Y-02, UI-03
+
+**Done when**:
+
+- [x] E2E segue o link do rodapé até `/privacidade` e confere título, data de atualização, os mesmos controlador e encarregado e as seções de dados, direitos e cookies
+- [x] Unit: `responsavel()` devolve placeholders sem variáveis e os valores quando definidas; `/metodologia` e `/privacidade` não têm componente assíncrono
+- [x] axe sem violações em `/privacidade` (desktop e 390 px) e sem rolagem horizontal a 320 px; espaço vertical entre os links do rodapé quando quebram linha (`target-size`)
+- [x] Gate full passa (74 testes e2e)
+
+**Tests**: unit + e2e
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
-Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8
+Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9
 
 Phase 1:  T1 ------→ T2
 Phase 2:  T3 ------→ T4 ------→ T5
@@ -549,6 +574,7 @@ Phase 5:  T13 -----→ T14
 Phase 6:  T15 -----→ T16 -----→ T17 -----→ T18 -----→ T19
 Phase 7:  T20 -----→ T21 -----→ T22 -----→ T23 -----→ T24
 Phase 8:  T25
+Phase 9:  T26
 ```
 
 ---
@@ -582,6 +608,7 @@ Phase 8:  T25
 | T23 | 1 regra CSS (+ variante do Button) | ✅ Granular |
 | T24 | 1 arquivo de teste | ✅ Granular |
 | T25 | ajustes pequenos em 8 arquivos + 1 suíte | ⚠️ Coeso: achados de uma auditoria |
+| T26 | 1 página + 1 helper (+ link no rodapé) | ⚠️ Coeso: página e link no mesmo fluxo |
 
 ## Diagram-Definition Cross-Check
 
@@ -612,6 +639,7 @@ Phase 8:  T25
 | T23 | T22 | T22 → T23 | ✅ Match |
 | T24 | T23 | T23 → T24 | ✅ Match |
 | T25 | None | - | ✅ Match |
+| T26 | None | - | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -642,3 +670,4 @@ Phase 8:  T25
 | T23 | Estilo global | e2e | e2e | ✅ OK |
 | T24 | Teste de estrutura de páginas | unit | unit | ✅ OK |
 | T25 | Páginas e estilos | e2e | e2e | ✅ OK |
+| T26 | Página + helper puro | e2e + unit | unit + e2e | ✅ OK |

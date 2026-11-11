@@ -133,8 +133,10 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 5. The system SHALL descartar o nome de passageiros e o CPF do parlamentar presentes no arquivo da CEAP. <!-- PRIV-03 -->
 6. IF o documento do fornecedor não tem 11 nem 14 dígitos THEN the system SHALL não exibir documento. <!-- PRIV-04 -->
 7. The system SHALL exibir no rodapé as linhas "Controlador: …" e "Encarregado (LGPD): …". <!-- PRIV-05 -->
+8. The system SHALL publicar em `/privacidade` a política de privacidade com data de atualização, controlador e encarregado lidos das mesmas variáveis do rodapé, dados tratados, finalidades e bases legais, compartilhamento, retenção, direitos do titular (art. 18), cookies e segurança, afirmando só o que o código faz. <!-- PRIV-06 -->
+9. The system SHALL exibir no rodapé o link "Política de privacidade", entre "Metodologia" e "Fontes e licenças", como no protótipo. <!-- PRIV-07 -->
 
-**Independent Test**: no seed, o perfil mostra `***.456.789-**`, a nota de fonte da CEAP e o rodapé com "Encarregado (LGPD)".
+**Independent Test**: no seed, o perfil mostra `***.456.789-**`, a nota de fonte da CEAP e o rodapé com "Encarregado (LGPD)"; o link "Política de privacidade" do rodapé abre `/privacidade` com os mesmos responsáveis.
 
 ---
 
@@ -172,7 +174,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 5. WHEN o voto diverge da orientação THEN the system SHALL anunciar "(divergiu da orientação)" em texto, além da cor. <!-- A11Y-05 -->
 6. The system SHALL desenhar a borda dos campos de formulário em `#80858E` (contraste ≥ 3:1 com fundo branco e com `#F6F6F3`). <!-- A11Y-06 -->
 
-**Independent Test**: `tests/e2e/a11y.spec.ts` roda o axe em 11 rotas e confere reflow, foco, erro e divergência.
+**Independent Test**: `tests/e2e/a11y.spec.ts` roda o axe em 12 rotas e confere reflow, foco, erro e divergência.
 
 ---
 
@@ -255,6 +257,8 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | PRIV-03 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-04 | P1: Proveniência e privacidade | Tasks | Verified |
 | PRIV-05 | P1: Proveniência e privacidade | Tasks | Verified |
+| PRIV-06 | P1: Proveniência e privacidade | Tasks | Implementing |
+| PRIV-07 | P1: Proveniência e privacidade | Tasks | Implementing |
 | MAND-01 | P2: Contexto do mandato | Tasks | Verified |
 | METOD-01 | P2: Contexto do mandato | Tasks | Verified |
 | NAV-01 | P2: Contexto do mandato | Tasks | Verified |
@@ -284,7 +288,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | EDGE-04 | Edge cases | Tasks | Verified |
 | EDGE-05 | Edge cases | Tasks | Verified |
 
-**Coverage:** 56 total, 56 mapped to tasks, 0 unmapped.
+**Coverage:** 58 total, 58 mapped to tasks, 0 unmapped.
 
 ---
 
