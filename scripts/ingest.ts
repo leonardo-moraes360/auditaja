@@ -7,12 +7,19 @@
  *   pnpm ingest votacoes 2026
  *   pnpm ingest bens 2022
  *   pnpm ingest tudo 2026   (deputados, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
+ *   pnpm ingest senadores
+ *   pnpm ingest ceaps 2026
+ *   pnpm ingest votacoes-senado 2026
+ *   pnpm ingest senado 2026  (senadores, CEAPS e votações do ano; ~170 requisições a 1 req/s)
+ *
+ * Rode `senadores` (ou `senado`) antes de `bens` para o TSE casar também os senadores.
  *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
  */
 import { createDb } from "../src/db/client";
 import { coletarBlocos, coletarCeap, coletarDeputados, coletarOrgaos, coletarVotacoes } from "../src/ingest/camara";
 import { ClienteEducado } from "../src/ingest/http";
+import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "../src/ingest/senado";
 import { coletarBens } from "../src/ingest/tse";
 
 const [cmd, anoArg] = process.argv.slice(2);
@@ -40,6 +47,20 @@ async function main() {
         break;
       case "bens":
         console.log(`bens ${ano}:`, await coletarBens(db, cli, ano));
+        break;
+      case "senadores":
+        console.log("senadores:", await coletarSenadores(db, cli));
+        break;
+      case "ceaps":
+        console.log(`CEAPS ${ano}:`, await coletarCeaps(db, cli, ano));
+        break;
+      case "votacoes-senado":
+        console.log(`votações do Senado ${ano}:`, await coletarVotacoesSenado(db, cli, ano));
+        break;
+      case "senado":
+        console.log("senadores:", await coletarSenadores(db, cli));
+        console.log(`CEAPS ${ano}:`, await coletarCeaps(db, cli, ano));
+        console.log(`votações do Senado ${ano}:`, await coletarVotacoesSenado(db, cli, ano));
         break;
       case "tudo":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);

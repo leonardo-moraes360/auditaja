@@ -119,11 +119,12 @@ describe("coletarCeap", () => {
       .where("ano", "=", ANO)
       .executeTakeFirstOrThrow();
     expect(Number(n.n)).toBe(2);
-    // Outros anos não são tocados.
+    // Outros anos não são tocados (só as notas de deputados do seed; o seed também tem senadores).
     const outros = await db
       .selectFrom("despesa_ceap")
       .select(db.fn.countAll<string>().as("n"))
       .where("ano", "=", 2026)
+      .where("parlamentar_id", "not in", [SEED.senador, SEED.senadora])
       .executeTakeFirstOrThrow();
     expect(Number(outros.n)).toBe(3);
   });

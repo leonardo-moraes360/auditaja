@@ -195,8 +195,8 @@ T9 → T10 → T11 → T12
 
 **Done when**:
 
-- [ ] Coleta rodada duas vezes no banco de teste mantém as contagens e não altera deputados
-- [ ] Gate full passa
+- [x] Coleta rodada duas vezes no banco de teste mantém as contagens e não altera deputados
+- [x] Gate full passa
 
 **Tests**: integration
 **Gate**: full

@@ -9,6 +9,9 @@ export const SEED = {
   deputada: 900000001,
   deputado: 900000002,
   foraDeExercicio: 900000003,
+  /** Senadores fictícios: código do Senado 9001 e 9002 (id = 10.000.000 + código). */
+  senador: 10009001,
+  senadora: 10009002,
 };
 
 export async function semear(db: Kysely<Database>) {
@@ -22,6 +25,7 @@ export async function semear(db: Kysely<Database>) {
       "votacao",
       "despesa_ceap",
       "orgao_membro",
+      "suplente",
       "bloco_partido",
       "bloco",
       "parlamentar",
@@ -311,5 +315,240 @@ export async function semear(db: Kysely<Database>) {
         )
         .execute();
     }
+    // ---------- Senado (fictício) ----------
+    const cSen = await coleta(
+      "senado_api_senadores",
+      "https://legis.senado.leg.br/dadosabertos/senador/lista/legislatura/57.json",
+    );
+    const cCeaps = await coleta(
+      "senado_ceaps",
+      "https://adm.senado.gov.br/adm-dadosabertos/api/v1/senadores/despesas_ceaps/2026",
+    );
+    const cVotSen = await coleta(
+      "senado_votacoes",
+      "https://legis.senado.leg.br/dadosabertos/votacao?dataInicio=2026-01-01&dataFim=2026-12-31",
+    );
+    const cOriSen = await coleta(
+      "senado_orientacoes",
+      "https://legis.senado.leg.br/dadosabertos/plenario/votacao/orientacaoBancada/20260101/20261231.json",
+    );
+    const senador = {
+      casa: "senado" as const,
+      url_foto: null,
+      id_legislatura: 57,
+      em_exercicio: true,
+      mandato_inicio: "2023-02-01",
+      mandato_fim: "2031-01-31",
+      coleta_id: cSen,
+    };
+    await trx
+      .insertInto("parlamentar")
+      .values([
+        {
+          ...senador,
+          id: SEED.senador,
+          nome: "Otávio Modelo",
+          nome_civil: "OTÁVIO MODELO PEREIRA",
+          sigla_partido: "PFX",
+          sigla_uf: "MG",
+          data_nascimento: "1968-02-03",
+          sexo: "M",
+          participacao: "Titular",
+          bloco: "Bloco Parlamentar Exemplo",
+          source_url: "https://legis.senado.leg.br/dadosabertos/senador/9001",
+        },
+        {
+          ...senador,
+          id: SEED.senadora,
+          nome: "Lúcia Fictícia",
+          nome_civil: "LÚCIA FICTÍCIA ROCHA",
+          sigla_partido: "PFY",
+          sigla_uf: "AC",
+          data_nascimento: "1980-07-15",
+          sexo: "F",
+          participacao: "1º Suplente",
+          bloco: null,
+          source_url: "https://legis.senado.leg.br/dadosabertos/senador/9002",
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("suplente")
+      .values([
+        { parlamentar_id: SEED.senador, ordem: 1, nome: "Beatriz Suplente Fictícia", codigo: null, coleta_id: cSen },
+        { parlamentar_id: SEED.senador, ordem: 2, nome: "Carlos Suplente Fictício", codigo: null, coleta_id: cSen },
+      ])
+      .execute();
+    await trx
+      .insertInto("orgao_membro")
+      .values({
+        parlamentar_id: SEED.senador,
+        sigla_orgao: "CAE",
+        nome_orgao: "Comissão de Assuntos Econômicos",
+        cargo: "Titular",
+        data_inicio: "2025-03-01",
+        data_fim: null,
+        coleta_id: cSen,
+      })
+      .execute();
+    const nota = (
+      mes: number,
+      tipo: string,
+      nome: string,
+      doc: string | null,
+      classe: "pessoa_juridica" | "terceiro_pf",
+      valor: number,
+      ide: string,
+    ) => ({
+      parlamentar_id: SEED.senador,
+      ano: 2026,
+      mes,
+      tipo_despesa: tipo,
+      fornecedor_nome: nome,
+      fornecedor_doc: doc,
+      fornecedor_classe: classe,
+      data_emissao: `2026-0${mes}-10`,
+      valor_documento: valor,
+      valor_glosa: 0,
+      valor_liquido: valor,
+      valor_restituicao: 0,
+      url_documento: null,
+      ide_documento: ide,
+      coleta_id: cCeaps,
+    });
+    await trx
+      .insertInto("despesa_ceap")
+      .values([
+        nota(
+          1,
+          "Passagens aéreas, aquáticas e terrestres nacionais",
+          "Aérea Fictícia S.A.",
+          "11.222.333/0001-44",
+          "pessoa_juridica",
+          4000,
+          "sen-1",
+        ),
+        nota(
+          2,
+          "Aluguel de imóveis para escritório político, compreendendo despesas concernentes a eles.",
+          "Imobiliária Exemplo Ltda",
+          "12.345.678/0001-90",
+          "pessoa_juridica",
+          5000,
+          "sen-2",
+        ),
+        nota(
+          4,
+          "Aluguel de imóveis para escritório político, compreendendo despesas concernentes a eles.",
+          "Imobiliária Exemplo Ltda",
+          "12.345.678/0001-90",
+          "pessoa_juridica",
+          5000,
+          "sen-3",
+        ),
+        nota(
+          4,
+          "Locomoção, hospedagem, alimentação, combustíveis e lubrificantes",
+          "Prestador pessoa física",
+          null,
+          "terceiro_pf",
+          1000,
+          "sen-4",
+        ),
+      ])
+      .execute();
+    const votacaoSen = (id: string, data: string, sigla: string, ementa: string, secreta: boolean) => ({
+      id,
+      data,
+      sigla_orgao: "PLEN-SF",
+      descricao: `Votação nominal fictícia ${sigla}`,
+      proposicao: sigla,
+      proposicao_sigla: sigla,
+      proposicao_ementa: ementa,
+      aprovacao: 1,
+      votos_sim: 50,
+      votos_nao: 20,
+      votos_outros: 1,
+      secreta,
+      source_url: "https://www25.senado.leg.br/web/atividade/materias/-/materia/1",
+      coleta_id: cVotSen,
+    });
+    await trx
+      .insertInto("votacao")
+      .values([
+        votacaoSen("SF-seed-1", "2026-10-01", "PL 2468/2026", "Política fictícia de saneamento rural", false),
+        votacaoSen("SF-seed-2", "2026-10-08", "PEC 8/2026", "Regras fiscais fictícias para estados", false),
+        votacaoSen("SF-seed-3", "2026-10-15", "MSF 41/2026", "Indicação fictícia de embaixador", true),
+        votacaoSen("SF-seed-4", "2026-10-22", "PLP 77/2026", "Transparência fictícia de emendas", false),
+        votacaoSen("SF-seed-5", "2026-10-29", "PL 1357/2026", "Taxas cartoriais fictícias", false),
+      ])
+      .execute();
+    const votoSen = (votacao_id: string, parlamentar_id: number, voto: string, sigla_partido: string) => ({
+      votacao_id,
+      parlamentar_id,
+      voto,
+      sigla_partido,
+      coleta_id: cVotSen,
+    });
+    await trx
+      .insertInto("voto")
+      .values([
+        votoSen("SF-seed-1", SEED.senador, "Sim", "PFX"),
+        votoSen("SF-seed-2", SEED.senador, "Não", "PFX"),
+        votoSen("SF-seed-3", SEED.senador, "Votou", "PFX"),
+        votoSen("SF-seed-4", SEED.senador, "MIS", "PFX"),
+        votoSen("SF-seed-5", SEED.senador, "LS", "PFX"),
+        votoSen("SF-seed-1", SEED.senadora, "Sim", "PFY"),
+        votoSen("SF-seed-2", SEED.senadora, "Sim", "PFY"),
+        votoSen("SF-seed-3", SEED.senadora, "Votou", "PFY"),
+        votoSen("SF-seed-4", SEED.senadora, "Sim", "PFY"),
+        votoSen("SF-seed-5", SEED.senadora, "Não", "PFY"),
+      ])
+      .execute();
+    await trx
+      .insertInto("orientacao")
+      .values([
+        { votacao_id: "SF-seed-1", sigla_bancada: "PFX", orientacao: "Sim", coleta_id: cOriSen },
+        { votacao_id: "SF-seed-2", sigla_bancada: "PFX", orientacao: "Sim", coleta_id: cOriSen },
+        { votacao_id: "SF-seed-2", sigla_bancada: "Governo", orientacao: "Não", coleta_id: cOriSen },
+        { votacao_id: "SF-seed-4", sigla_bancada: "PFX", orientacao: "Liberado", coleta_id: cOriSen },
+      ])
+      .execute();
+    await trx
+      .insertInto("candidatura")
+      .values({
+        ano_eleicao: 2022,
+        sq_candidato: "seed-sen-22",
+        parlamentar_id: SEED.senador,
+        cargo: "SENADOR",
+        sigla_uf: "MG",
+        sigla_partido: "PFX",
+        situacao: "ELEITO",
+        coleta_id: cTse,
+      })
+      .execute();
+    await trx
+      .insertInto("bem_declarado")
+      .values([
+        {
+          ano_eleicao: 2022,
+          sq_candidato: "seed-sen-22",
+          parlamentar_id: SEED.senador,
+          ordem: 1,
+          tipo: "Apartamento",
+          valor: 1900000,
+          coleta_id: cTse,
+        },
+        {
+          ano_eleicao: 2022,
+          sq_candidato: "seed-sen-22",
+          parlamentar_id: SEED.senador,
+          ordem: 2,
+          tipo: "Aplicação de renda fixa (CDB, RDB e outros)",
+          valor: 780000,
+          coleta_id: cTse,
+        },
+      ])
+      .execute();
   });
 }

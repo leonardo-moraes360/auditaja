@@ -73,11 +73,14 @@ export async function ufsDisponiveis(): Promise<string[]> {
  * Última coleta de cada fonte, para a proveniência exibida (R1). A CEAP sai em um arquivo por ano:
  * a coleta exibida é a do arquivo do ano mostrado (`anoCeap`), não a do último arquivo baixado.
  */
-async function coletasRecentes(anoCeap: number) {
+async function coletasRecentes(anoCeap: number, casa: "camara" | "senado" = "camara") {
   const db = getDb();
+  // Cada perfil mostra as fontes da própria Casa e as do TSE.
+  const prefixo = casa === "senado" ? "senado_%" : "camara_%";
   const rows = await db
     .selectFrom("coleta")
     .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
+    .where((eb) => eb.or([eb("fonte", "like", prefixo), eb("fonte", "like", "tse_%")]))
     .distinctOn("fonte")
     .orderBy("fonte")
     .orderBy("coletado_em", "desc")
@@ -146,6 +149,7 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     .selectFrom("parlamentar")
     .select([
       "id",
+      "casa",
       "nome",
       "nome_civil",
       "sigla_partido",
@@ -217,11 +221,12 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       .where("parlamentar_id", "=", id)
       .where("ano", "in", anosCeap)
       .executeTakeFirstOrThrow(),
-    // Último mês publicado na base inteira: base do teto acumulado.
+    // Último mês publicado na base da mesma Casa: base do teto acumulado.
     db
       .selectFrom("despesa_ceap")
       .select(sql<number>`max(mes)`.as("mes"))
       .where("ano", "=", ano)
+      .where("parlamentar_id", "in", db.selectFrom("parlamentar").select("id").where("casa", "=", p.casa))
       .executeTakeFirst(),
   ]);
 
@@ -377,7 +382,7 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     candidaturas,
     orgaos,
     correcoes: Number(correcoes.n),
-    coletas: await coletasRecentes(ano),
+    coletas: await coletasRecentes(ano, p.casa),
   };
 }
 
