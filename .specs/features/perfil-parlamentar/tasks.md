@@ -536,6 +536,26 @@ T25
 
 ---
 
+### T28: Orientação de bloco pela composição da API
+
+**What**: Coletor `pnpm ingest blocos` (API v2 `/blocos?idLegislatura=57` e `/blocos/{id}/partidos`, pelo `ClienteEducado`), tabelas `bloco` e `bloco_partido` (migração 0003) e identificação do bloco da orientação truncada pelo nome. PSDB, Cidadania, Republicanos, MDB e Podemos passam a receber a orientação do "Bl UniPpPsd...".
+**Where**: `src/db/migrations/0003_blocos.ts`, `src/ingest/camara.ts`, `scripts/ingest.ts`, `src/lib/metrics.ts`, `src/data/perfil.ts`, `src/app/metodologia/page.tsx`
+**Depends on**: None
+**Requirement**: VOTO-02, VOTO-04, VOTO-08
+
+**Done when**:
+
+- [x] "Bl UniPpPsd..." vale para os 8 partidos do bloco 589 e não para PL ou Avante
+- [x] Bloco 590 (API sem partidos) usa a lista do nome
+- [x] Abreviação ambígua ou sem bloco cai na regra antiga
+- [x] Metodologia 1.2 descreve a regra e o limite da composição atual
+- [x] Gate full passa
+
+**Tests**: unit, integration, e2e
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
