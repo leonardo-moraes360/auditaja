@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 18,
+  "next_id": 23,
   "lessons": [
     {
       "id": "L-001",
@@ -312,6 +312,96 @@
       ],
       "created": "2026-11-11T13:54:01Z",
       "last_seen": "2026-11-11T13:54:01Z"
+    },
+    {
+      "id": "L-018",
+      "key": "surviving_mutant::when a rule picks one item among siblings such as one entry of an archive give each sibling a distinct value in the fixture so reading the wrong one fails a test",
+      "text": "When a rule picks one item among siblings, such as one entry of an archive, give each sibling a distinct value in the fixture so reading the wrong one fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N05 N09 src/ingest/transparencia.ts:41 src/ingest/arquivos.ts:106; fixture tests/integracao/emendas.test.ts:70 (ingest)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-019",
+      "key": "surviving_mutant::when a table column must show on a viewport assert the header and the cells visible there not only the cell text",
+      "text": "When a table column must show on a viewport, assert the header and the cells visible there, not only the cell text",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U15 src/components/perfil/secao-emendas.tsx:299; tests/e2e/emendas.spec.ts:76 (ui)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-020",
+      "key": "surviving_mutant::seed a case for each branch of a singular and plural label so the plural count is asserted not only the singular",
+      "text": "Seed a case for each branch of a singular and plural label so the plural count is asserted, not only the singular",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U23 src/components/perfil/sancao.tsx:88 (ui)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-021",
+      "key": "surviving_mutant::text adopted to reach visual parity with an approved artboard needs an assertion or a later edit silently undoes the parity",
+      "text": "Text adopted to reach visual parity with an approved artboard needs an assertion, or a later edit silently undoes the parity",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U20 U21 U22 src/components/perfil/secao-emendas.tsx:251,279,325 (ui)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-022",
+      "key": "spec_precision_gap::when a label shows a count the spec must say which count it is and what the link returns",
+      "text": "When a label shows a count, the spec must say which count it is and what the link returns",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C22 paridade/verificacao-2.md; src/components/perfil/sancao.tsx:88 (spec)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
     }
   ]
 }

@@ -116,6 +116,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: V3 src/components/ui/button.tsx:6 (ui)
 - last seen: 2026-11-11T13:54:01Z
 
+### L-018 - When a rule picks one item among siblings, such as one entry of an archive, give each sibling a distinct value in the fixture so reading the wrong one fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ingest` · harmful: 0
+- features: emendas-transparencia
+- evidence: N05 N09 src/ingest/transparencia.ts:41 src/ingest/arquivos.ts:106; fixture tests/integracao/emendas.test.ts:70 (ingest)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-019 - When a table column must show on a viewport, assert the header and the cells visible there, not only the cell text
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U15 src/components/perfil/secao-emendas.tsx:299; tests/e2e/emendas.spec.ts:76 (ui)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-020 - Seed a case for each branch of a singular and plural label so the plural count is asserted, not only the singular
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U23 src/components/perfil/sancao.tsx:88 (ui)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-021 - Text adopted to reach visual parity with an approved artboard needs an assertion, or a later edit silently undoes the parity
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U20 U21 U22 src/components/perfil/secao-emendas.tsx:251,279,325 (ui)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-022 - When a label shows a count, the spec must say which count it is and what the link returns
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: emendas-transparencia
+- evidence: C22 paridade/verificacao-2.md; src/components/perfil/sancao.tsx:88 (spec)
+- last seen: 2026-11-11T17:44:47Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
