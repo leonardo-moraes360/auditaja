@@ -73,6 +73,7 @@ export function montarParlamentares(
       sigla_uf: d.siglaUf,
       url_foto: d.urlFoto,
       data_nascimento: extra?.dataNascimento || null,
+      sexo: extra?.siglaSexo === "F" || extra?.siglaSexo === "M" ? extra.siglaSexo : null,
       id_legislatura: LEGISLATURA_ATUAL,
       em_exercicio: emExercicio.has(d.id),
       source_url: `${API}/deputados/${d.id}`,
@@ -109,28 +110,84 @@ export function linhaCeap(l: Linha, idsValidos: Set<number>, coletaId: number): 
   };
 }
 
+const TIPOS_PRINCIPAIS = new Set(["PL", "PLP", "PEC", "MPV", "PDL", "PRC", "PLV", "PLN"]);
+
+/**
+ * Proposição principal de uma votação, a partir das linhas de votacoesObjetos e da descrição.
+ * Cada linha traz um objeto votado (requerimento, emenda, parecer...) e um título como
+ * "EMP 1 => PLP 281/2019": o alvo depois de "=>" é a proposição de fato. Escolhemos, nesta ordem:
+ * o alvo cujo número e ano aparecem na descrição ("nº 281, de 2019"); o alvo de tipo principal mais
+ * frequente; o primeiro alvo. A ementa vem da linha da própria proposição ou, sem ela, de uma linha
+ * acessória de emenda ou parecer sobre ela (que repete a ementa), nunca de requerimento.
+ */
+export function proposicaoPrincipal(objetos: Linha[], descricao = ""): { sigla: string; ementa: string | null } | null {
+  if (objetos.length === 0) return null;
+  const propria = (o: Linha) =>
+    o.proposicao_siglaTipo && o.proposicao_numero && o.proposicao_ano
+      ? `${o.proposicao_siglaTipo} ${o.proposicao_numero}/${o.proposicao_ano}`
+      : null;
+  const alvo = (o: Linha) => {
+    const t = o.proposicao_titulo ?? "";
+    const i = t.indexOf("=>");
+    return i >= 0 ? t.slice(i + 2).trim() : propria(o);
+  };
+  const alvos = objetos.map(alvo).filter((x): x is string => !!x);
+  if (alvos.length === 0) return null;
+  const tipo = (sigla: string) => sigla.split(" ")[0];
+  const citada = [...descricao.matchAll(/n[º°o.]\s*([\d.]+),?\s*de\s*(\d{4})/gi)].map(
+    (m) => `${m[1].replace(/\./g, "")}/${m[2]}`,
+  );
+  const freq = new Map<string, number>();
+  for (const x of alvos) freq.set(x, (freq.get(x) ?? 0) + 1);
+  const sigla =
+    alvos.find((x) => TIPOS_PRINCIPAIS.has(tipo(x)) && citada.includes(x.split(" ")[1])) ??
+    [...freq.entries()].filter(([x]) => TIPOS_PRINCIPAIS.has(tipo(x))).sort((p, q) => q[1] - p[1])[0]?.[0] ??
+    alvos[0];
+  const ementaUtil = (o: Linha) =>
+    !!o.proposicao_ementa && !/^\W*requer|requerimento|^\W*parecer/i.test(o.proposicao_ementa.trim());
+  const dona =
+    objetos.find((o) => propria(o) === sigla && ementaUtil(o)) ??
+    objetos.find(
+      (o) => alvo(o) === sigla && o.proposicao_siglaTipo !== "REQ" && o.proposicao_siglaTipo !== "PAR" && ementaUtil(o),
+    );
+  const ementa = dona?.proposicao_ementa?.trim().replace(/^[“"]|[”"]$/g, "") || null;
+  return { sigla, ementa };
+}
+
 export function montarVotacoes(
   votacoes: Linha[],
   votos: Linha[],
   orientacoes: Linha[],
   coletas: { votacoes: number; votos: number; orientacoes: number },
+  objetos: Linha[] = [],
 ) {
+  const objetosPorVotacao = new Map<string, Linha[]>();
+  for (const o of objetos) {
+    const l = objetosPorVotacao.get(o.idVotacao) ?? [];
+    l.push(o);
+    objetosPorVotacao.set(o.idVotacao, l);
+  }
   const nominais = new Set(votos.map((v) => v.idVotacao));
   const vts: Insertable<VotacaoTable>[] = votacoes
     .filter((v) => nominais.has(v.id))
-    .map((v) => ({
-      id: v.id,
-      data: v.data,
-      sigla_orgao: v.siglaOrgao,
-      descricao: v.descricao,
-      proposicao: v.ultimaApresentacaoProposicao_descricao || null,
-      aprovacao: v.aprovacao === "" ? null : Number(v.aprovacao),
-      votos_sim: Number(v.votosSim) || 0,
-      votos_nao: Number(v.votosNao) || 0,
-      votos_outros: Number(v.votosOutros) || 0,
-      source_url: v.uri,
-      coleta_id: coletas.votacoes,
-    }));
+    .map((v) => {
+      const principal = proposicaoPrincipal(objetosPorVotacao.get(v.id) ?? [], v.descricao);
+      return {
+        id: v.id,
+        data: v.data,
+        sigla_orgao: v.siglaOrgao,
+        descricao: v.descricao,
+        proposicao: v.ultimaApresentacaoProposicao_descricao || null,
+        proposicao_sigla: principal?.sigla ?? null,
+        proposicao_ementa: principal?.ementa ?? null,
+        aprovacao: v.aprovacao === "" ? null : Number(v.aprovacao),
+        votos_sim: Number(v.votosSim) || 0,
+        votos_nao: Number(v.votosNao) || 0,
+        votos_outros: Number(v.votosOutros) || 0,
+        source_url: v.uri,
+        coleta_id: coletas.votacoes,
+      };
+    });
   const ids = new Set(vts.map((v) => v.id));
   const vs = new Map<string, Insertable<VotoTable>>();
   for (const v of votos) {
@@ -278,18 +335,21 @@ export async function coletarVotacoes(db: Kysely<Database>, cli: ClienteEducado,
     votacoes: `${ARQUIVOS}/votacoes/csv/votacoes-${ano}.csv`,
     votos: `${ARQUIVOS}/votacoesVotos/csv/votacoesVotos-${ano}.csv`,
     orientacoes: `${ARQUIVOS}/votacoesOrientacoes/csv/votacoesOrientacoes-${ano}.csv`,
+    objetos: `${ARQUIVOS}/votacoesObjetos/csv/votacoesObjetos-${ano}.csv`,
   };
   const arquivos = {
     votacoes: await cli.baixar(urls.votacoes, ".cache/ingest"),
     votos: await cli.baixar(urls.votos, ".cache/ingest"),
     orientacoes: await cli.baixar(urls.orientacoes, ".cache/ingest"),
+    objetos: await cli.baixar(urls.objetos, ".cache/ingest"),
   };
   const coletas = {
     votacoes: 0,
     votos: 0,
     orientacoes: 0,
+    objetos: 0,
   };
-  for (const k of ["votacoes", "votos", "orientacoes"] as const) {
+  for (const k of ["votacoes", "votos", "orientacoes", "objetos"] as const) {
     coletas[k] = await registrarColeta(db, {
       fonte: `camara_lote_${k}`,
       url: urls[k],
@@ -303,6 +363,7 @@ export async function coletarVotacoes(db: Kysely<Database>, cli: ClienteEducado,
     lerCsv(arquivos.votos.buf),
     lerCsv(arquivos.orientacoes.buf),
     coletas,
+    lerCsv(arquivos.objetos.buf),
   );
   await db.transaction().execute(async (trx) => {
     await trx.deleteFrom("votacao").where("data", ">=", `${ano}-01-01`).where("data", "<=", `${ano}-12-31`).execute();

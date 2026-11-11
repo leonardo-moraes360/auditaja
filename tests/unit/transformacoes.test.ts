@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linhaCeap, montarBlocos, montarParlamentares, montarVotacoes } from "@/ingest/camara";
+import { linhaCeap, montarBlocos, montarParlamentares, montarVotacoes, proposicaoPrincipal } from "@/ingest/camara";
 import { casarCandidaturas, montarBens } from "@/ingest/tse";
 import { normalizarNome } from "@/ingest/arquivos";
 
@@ -43,12 +43,21 @@ describe("deputados", () => {
         { id: 2, uri: "", nome: "Beltrano", siglaPartido: "CCC", siglaUf: "RJ", urlFoto: null },
       ],
       new Set([1]),
-      [{ uri: "https://x/api/v2/deputados/1", nomeCivil: "FULANA DE TAL", dataNascimento: "1980-01-02" }],
+      [
+        {
+          uri: "https://x/api/v2/deputados/1",
+          nomeCivil: "FULANA DE TAL",
+          dataNascimento: "1980-01-02",
+          siglaSexo: "F",
+        },
+        { uri: "https://x/api/v2/deputados/2", siglaSexo: "X" },
+      ],
       9,
     );
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ id: 1, sigla_partido: "BBB", em_exercicio: true, nome_civil: "FULANA DE TAL" });
-    expect(rows[1]).toMatchObject({ id: 2, em_exercicio: false, nome_civil: null });
+    expect(rows[0].sexo).toBe("F");
+    expect(rows[1]).toMatchObject({ id: 2, em_exercicio: false, nome_civil: null, sexo: null });
   });
 });
 
@@ -179,5 +188,40 @@ describe("TSE", () => {
     );
     expect(b[0]).toMatchObject({ tipo: "Casa", valor: 350000, parlamentar_id: 1 });
     expect(JSON.stringify(b)).not.toContain("RUA");
+  });
+});
+
+describe("proposição principal da votação", () => {
+  const obj = (siglaTipo: string, numero: string, ano: string, titulo: string, ementa: string) => ({
+    proposicao_siglaTipo: siglaTipo,
+    proposicao_numero: numero,
+    proposicao_ano: ano,
+    proposicao_titulo: titulo,
+    proposicao_ementa: ementa,
+  });
+
+  it("prefere o alvo citado na descrição, não o primeiro requerimento", () => {
+    const r = proposicaoPrincipal(
+      [
+        obj("REQ", "411", "2020", "REQ 411/2020 => PL 1/2020", "Requer a criação de comissão"),
+        obj("EMP", "1", "", "EMP 1 => PLP 281/2019", "Dispõe sobre regimes de resolução."),
+        obj("EMP", "2", "", "EMP 2 => PLP 281/2019", "Dispõe sobre regimes de resolução."),
+      ],
+      "Rejeitada a Subemenda Substitutiva ao Projeto de Lei Complementar nº 281, de 2019.",
+    );
+    expect(r).toEqual({ sigla: "PLP 281/2019", ementa: "Dispõe sobre regimes de resolução." });
+  });
+
+  it("usa a ementa da própria proposição e ignora a de requerimento e parecer", () => {
+    const r = proposicaoPrincipal([
+      obj("PAR", "25", "2025", "PAR 25/2025 => MPV 1312/2025", "Parecer da comissão mista"),
+      obj("REQ", "9", "2026", "REQ 9/2026 => MPV 1312/2025", "Requerimento de retirada de pauta"),
+      obj("MPV", "1312", "2025", "MPV 1312/2025", "Abre crédito extraordinário."),
+    ]);
+    expect(r).toEqual({ sigla: "MPV 1312/2025", ementa: "Abre crédito extraordinário." });
+  });
+
+  it("sem objetos, não inventa proposição", () => {
+    expect(proposicaoPrincipal([], "Aprovado o requerimento.")).toBeNull();
   });
 });
