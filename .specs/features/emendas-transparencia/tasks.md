@@ -82,8 +82,8 @@ T5 → T6 → T7 → T8
 
 **Done when**:
 
-- [ ] Um teste por AC citado, com valor exato da spec
-- [ ] Quick gate passa
+- [x] Um teste por AC citado, com valor exato da spec
+- [x] Quick gate passa
 
 **Tests**: unit
 **Gate**: quick

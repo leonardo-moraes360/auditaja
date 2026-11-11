@@ -1,0 +1,81 @@
+import { normalizarNome } from "@/ingest/arquivos";
+import { formatarCnpj, soDigitos } from "@/lib/privacy";
+
+/** Emendas ao orçamento de 2023 foram apresentadas em 2022, pela legislatura anterior. */
+export const ANO_INICIAL_EMENDAS = 2024;
+
+export const TIPO_TRANSFERENCIA_ESPECIAL = "Emenda Individual - Transferências Especiais";
+
+/** "1.234,56" → "1234.56"; vazio → "0". Mantém string para não perder centavos. */
+export function valorBr(s: string | null | undefined): string {
+  const t = (s ?? "").trim();
+  if (!t) return "0";
+  return t.replace(/\./g, "").replace(",", ".");
+}
+
+export function ehEmendaIndividual(tipo: string): boolean {
+  return tipo.startsWith("Emenda Individual");
+}
+
+export function ehTransferenciaEspecial(tipo: string): boolean {
+  return tipo === TIPO_TRANSFERENCIA_ESPECIAL;
+}
+
+/** Nome parlamentar normalizado → id do deputado; `null` marca homônimo. */
+export function indiceDeAutores(parlamentares: { id: number; nome: string }[]): Map<string, number | null> {
+  const m = new Map<string, number | null>();
+  for (const p of parlamentares) {
+    const k = normalizarNome(p.nome);
+    m.set(k, m.has(k) ? null : p.id);
+  }
+  return m;
+}
+
+export function autorDoNome(indice: Map<string, number | null>, nome: string): number | null {
+  return indice.get(normalizarNome(nome)) ?? null;
+}
+
+const CPF_MASCARADO = /^\*{3}\.\d{3}\.\d{3}-\*{2}$/;
+
+/**
+ * R3 e AD-002: favorecido PF vira rótulo genérico e só guarda o CPF se já vier mascarado.
+ * CNPJ de 14 dígitos é formatado; qualquer outro documento é descartado.
+ */
+export function favorecidoPublicavel(tipo: string, codigo: string, nome: string): { nome: string; doc: string | null } {
+  if (tipo === "Pessoa Fisica") {
+    const c = codigo.trim();
+    return { nome: "Beneficiário pessoa física", doc: CPF_MASCARADO.test(c) ? c : null };
+  }
+  const d = soDigitos(codigo);
+  return { nome: nome.trim(), doc: d.length === 14 ? formatarCnpj(d) : null };
+}
+
+const MINUSCULAS = new Set(["de", "da", "do", "das", "dos", "e"]);
+
+function caixaDeTitulo(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((p, i) => (i > 0 && MINUSCULAS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(" ");
+}
+
+/** "FRANCISCO SANTOS - PI" → "Francisco Santos (PI)"; "SÃO PAULO (UF)" → "São Paulo (UF)". */
+export function rotuloLocalidade(s: string): string {
+  const t = s.trim();
+  const mun = /^(.*\S)\s+-\s+([A-Z]{2})$/.exec(t);
+  if (mun) return `${caixaDeTitulo(mun[1])} (${mun[2]})`;
+  const uf = /^(.*\S)\s+\(UF\)$/.exec(t);
+  if (uf) return `${caixaDeTitulo(uf[1])} (UF)`;
+  return caixaDeTitulo(t);
+}
+
+export type PeriodoEmendas = number | "mandato";
+
+/** `?emendas=` válido só se for um ano com emenda do deputado; senão, o mandato todo. */
+export function periodoEmendas(param: string | string[] | undefined, anos: number[]): PeriodoEmendas {
+  if (typeof param !== "string" || !/^\d{4}$/.test(param)) return "mandato";
+  const ano = Number(param);
+  return anos.includes(ano) ? ano : "mandato";
+}
