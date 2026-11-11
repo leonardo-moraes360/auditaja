@@ -7,6 +7,11 @@ describe("mascararCpfsNoTexto", () => {
   it("mascara todos os CPFs do texto, não só o primeiro", () => {
     expect(mascararCpfsNoTexto("A 12345678901 E B 987.654.321-00")).toBe("A ***.***.***-** E B ***.***.***-**");
   });
+  it("mascara CPF com hífens ou separadores duplos entre os grupos", () => {
+    expect(mascararCpfsNoTexto("FULANO 123-456-789-01")).toBe("FULANO ***.***.***-**");
+    expect(mascararCpfsNoTexto("FULANO 123  456.789-01")).toBe("FULANO ***.***.***-**");
+    expect(mascararCpfsNoTexto("FULANO 123. 456. 789 -01")).toBe("FULANO ***.***.***-**");
+  });
   it("mascara CPF escrito com espaços", () => {
     expect(mascararCpfsNoTexto("FULANO 123 456 789 01")).toBe("FULANO ***.***.***-**");
   });
