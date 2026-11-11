@@ -124,10 +124,40 @@ temporário removido.
 - **Tarefa**: em `tests/unit/privacidade-nomes.test.ts:13`, asserir que "X 123456789012" sai inalterado.
 - **Pronto quando**: N7 morre; N1 e N6 seguem mortos.
 
+## Rodada 5, segunda continuação (`c81b6b5`)
+
+`c81b6b5` acrescenta `tests/unit/privacidade-nomes.test.ts:21-27` (tabela de 8 a 14 dígitos soltos; só 11 viram
+`***.***.***-**`). `git diff 819217a..HEAD -- src` → 0 linhas. Sensor em worktree temporário novo, `vitest run` inteiro:
+
+| # | Mutação em `src/lib/privacy.ts:45` | Resultado (teste que falhou) |
+| --- | --- | --- |
+| N7 | último grupo `\d{2}` → `\d{2,3}` | ✅ morto: `privacidade-nomes.test.ts:21-27` ("12 dígitos: expected 'X ***.***.***-**'") |
+| N8 | segundo grupo `\d{3}` → `\d{3,4}` | ✅ morto: `:21-27` (12 dígitos) |
+| N12 | último separador obrigatório (`[-.\s]` sem `?`) | ✅ morto: `:21-27` (11 dígitos), `:7-8`, `:28-30`; `unit/privacy.test.ts:36`; `unit/emendas.test.ts:93`; `integracao/sancoes.test.ts:151` |
+| N13 | primeiro grupo `\d{3}` → `\d{3,}` | ✅ morto: `:13-19`, `:21-27`; `unit/privacy.test.ts:45` |
+| N14 | terceiro grupo `\d{3}` → `\d{2,3}` | ✅ morto: `:13-19`, `:21-27` |
+| N9 | primeiro separador `[.\s]?` → `[.\s]*` (aceita vários separadores, ex. "123  456 789 01") | ❌ **sobreviveu** (173/173) |
+| N10 | primeiro separador `[.\s]?` → `[-.\s]?` (aceita hífen, ex. "123-456-789-01") | ❌ **sobreviveu** (173/173) |
+
+Os quantificadores ficaram todos cobertos; os separadores, não. N9 e N10 **mascaram a mais** do que o código real, e
+isso mostra que o código real deixa inteiro um CPF escrito como "123-456-789-01" ou "123  456.789-01". Nenhum teste
+afirma o comportamento nesses formatos, nem para mascarar nem para não mascarar. No banco dev não há nenhum nome nesses
+formatos (0 em `despesa_ceap`, `emenda_favorecido` e `sancao`, conferido com regex de separadores repetidos ou com
+hífen), então hoje não há vazamento. `pnpm test` no worktree real: 18 arquivos, 173 passaram. `git status
+--porcelain` vazio antes e depois; worktree temporário removido.
+
+**Veredito mantido: FAIL** (Minor). G05 segue registrado como anterior à feature e fora do escopo.
+
+### Correção 7: separadores do CPF no nome — N9, N10
+- **Tarefa**: decidir a regra para "123-456-789-01" e para separador repetido (decisão de produto: com a R3, o
+  natural é mascarar, e aí é mudança de código); depois asserir o comportamento escolhido em
+  `tests/unit/privacidade-nomes.test.ts`.
+- **Pronto quando**: N9 e N10 morrem (ou ficam equivalentes ao código corrigido).
+
 ## Resumo da rodada 5
 
 **Geral**: ❌ Not Ready por um teste. Código, paridade (100%), gate e banco dev estão OK.
-**Sensor**: N1 morto em `fd59ce8`; N6 morto; sobrevivente N7 (`src/lib/privacy.ts:45`, 12 dígitos); G05 fora do diff.
+**Sensor**: N1, N6, N7, N8, N12, N13, N14 mortos; sobreviventes N9 e N10 (separadores em `src/lib/privacy.ts:45`); G05 fora do diff.
 **Gate**: 172 vitest + 132 e2e passaram; typecheck, lint e build ok.
 
 ---
