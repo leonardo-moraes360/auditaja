@@ -5,7 +5,7 @@ import { createDb } from "@/db/client";
 import { migrateToLatest } from "@/db/migrate";
 import { semear } from "@/db/seed";
 import { ClienteEducado, ColetaBloqueada } from "@/ingest/http";
-import { coletarSancoes, dataDoArquivo, LICENCA_CGU, urlSancoes } from "@/ingest/transparencia";
+import { arquivoNaoPublicado, coletarSancoes, dataDoArquivo, LICENCA_CGU, urlSancoes } from "@/ingest/transparencia";
 
 /** SAN-01..03 e EDGE-02: ZIPs CEIS/CNEP falsos → banco real. */
 const URL_TESTE = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
@@ -63,8 +63,19 @@ function zipar(nome: string, conteudo: string): Promise<Buffer> {
   });
 }
 
+/** Como o S3 da CGU responde a uma chave que ainda não existe (verificado em 12/11/2026). */
+const naoPublicadoS3 = () =>
+  new Response(
+    '<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>',
+    {
+      status: 403,
+      headers: { "content-type": "application/xml", server: "AmazonS3" },
+    },
+  );
+
 const pedidos: string[] = [];
 let arquivos: Record<string, Buffer> = {};
+let ausente: () => Response = naoPublicadoS3;
 const cliente = () =>
   new ClienteEducado({
     intervaloMinMs: 0,
@@ -75,7 +86,7 @@ const cliente = () =>
       pedidos.push(url);
       if (url.endsWith("/robots.txt")) return new Response("<Error/>", { status: 403 });
       const buf = arquivos[url];
-      return buf ? new Response(new Uint8Array(buf), { status: 200 }) : new Response("", { status: 404 });
+      return buf ? new Response(new Uint8Array(buf), { status: 200 }) : ausente();
     }) as typeof fetch,
   });
 
@@ -105,7 +116,7 @@ describe("coletarSancoes", () => {
     expect(dataDoArquivo(HOJE, 7)).toBe("20261104");
   });
 
-  it("SAN-01: baixa o arquivo mais recente de cada cadastro, recuando só no 404", async (ctx) => {
+  it("SAN-01: baixa o arquivo mais recente de cada cadastro, recuando no 403 AccessDenied do S3", async (ctx) => {
     if (!disponivel) ctx.skip();
     pedidos.length = 0;
     expect(await coletarSancoes(db, cliente(), HOJE)).toEqual({ CEIS: 1, CNEP: 1 });
@@ -176,9 +187,46 @@ describe("coletarSancoes", () => {
     expect((await sancoes()).map((r) => r.codigo)).toEqual(["101", "201"]);
   });
 
-  it("SAN-01: só o 404 recua um dia; 403 encerra sem tentar a data anterior", async (ctx) => {
+  it("SAN-01: 404 também recua um dia", async (ctx) => {
     if (!disponivel) ctx.skip();
-    const salvos = arquivos;
+    ausente = () => new Response("", { status: 404 });
+    pedidos.length = 0;
+    try {
+      expect(await coletarSancoes(db, cliente(), HOJE)).toEqual({ CEIS: 1, CNEP: 1 });
+    } finally {
+      ausente = naoPublicadoS3;
+    }
+    expect(pedidos.filter((u) => u.endsWith(".zip"))).toEqual([
+      urlSancoes("CEIS", "20261111"),
+      urlSancoes("CEIS", "20261110"),
+      urlSancoes("CNEP", "20261111"),
+    ]);
+  });
+
+  it.for<[string, () => Response]>([
+    ["sem corpo", () => new Response("", { status: 403 })],
+    [
+      "AccessDenied truncado além de 2 KB",
+      () =>
+        new Response(`<Error>${" ".repeat(3000)}<Code>AccessDenied</Code></Error>`, {
+          status: 403,
+          headers: { "content-type": "application/xml" },
+        }),
+    ],
+    [
+      "página HTML de WAF",
+      () => new Response("<html>captcha</html>", { status: 403, headers: { "content-type": "text/html" } }),
+    ],
+    [
+      "XML com outro código",
+      () =>
+        new Response("<Error><Code>RequestTimeTooSkewed</Code></Error>", {
+          status: 403,
+          headers: { "content-type": "application/xml" },
+        }),
+    ],
+  ])("SAN-01: 403 %s é bloqueio e encerra sem tentar a data anterior", async ([, bloqueio], ctx) => {
+    if (!disponivel) ctx.skip();
     pedidos.length = 0;
     const cli = new ClienteEducado({
       intervaloMinMs: 0,
@@ -188,14 +236,13 @@ describe("coletarSancoes", () => {
         const url = input.toString();
         pedidos.push(url);
         if (url.endsWith("/robots.txt")) return new Response("<Error/>", { status: 403 });
-        if (url === urlSancoes("CEIS", "20261111")) return new Response("", { status: 403 });
-        return new Response("", { status: 404 });
+        if (url === urlSancoes("CEIS", "20261111")) return bloqueio();
+        return naoPublicadoS3();
       }) as typeof fetch,
     });
     await expect(coletarSancoes(db, cli, HOJE)).rejects.toBeInstanceOf(ColetaBloqueada);
     expect(pedidos.filter((u) => u.endsWith(".zip"))).toEqual([urlSancoes("CEIS", "20261111")]);
     expect((await sancoes()).map((r) => r.codigo)).toEqual(["101", "201"]);
-    arquivos = salvos;
   });
 
   it("EDGE-02: sem arquivo nos últimos 7 dias, falha e mantém as sanções anteriores", async (ctx) => {
@@ -203,9 +250,31 @@ describe("coletarSancoes", () => {
     const salvos = arquivos;
     arquivos = {};
     pedidos.length = 0;
-    await expect(coletarSancoes(db, cliente(), HOJE)).rejects.toThrow("nenhum arquivo do CEIS nos últimos 7 dias");
-    expect(pedidos.filter((u) => u.endsWith(".zip"))).toHaveLength(8);
-    expect((await sancoes()).map((r) => r.codigo)).toEqual(["101", "201"]);
-    arquivos = salvos;
+    try {
+      await expect(coletarSancoes(db, cliente(), HOJE)).rejects.toThrow(
+        "nenhum arquivo do CEIS nos últimos 7 dias (403 AccessDenied em todos os dias: pode ser bloqueio)",
+      );
+      // Hoje e mais 7 dias: o recuo pára no limite mesmo que o S3 siga respondendo 403.
+      expect(pedidos.filter((u) => u.endsWith(".zip"))).toHaveLength(8);
+      expect((await sancoes()).map((r) => r.codigo)).toEqual(["101", "201"]);
+    } finally {
+      arquivos = salvos;
+    }
+  });
+});
+
+describe("arquivoNaoPublicado", () => {
+  const bloq = (contentType: string, corpo: string, status = 403) =>
+    new ColetaBloqueada("x", { status, contentType, corpo });
+  it("aceita só 403 AccessDenied em XML e o 404 genérico", () => {
+    expect(arquivoNaoPublicado(bloq("application/xml", "<Error><Code>AccessDenied</Code></Error>"))).toBe(true);
+    expect(arquivoNaoPublicado(new Error("GET https://x/y.zip falhou: HTTP 404"))).toBe(true);
+    expect(arquivoNaoPublicado(bloq("text/html", "<Code>AccessDenied</Code>"))).toBe(false);
+    expect(arquivoNaoPublicado(bloq("application/xml", "<Error><Code>SignatureDoesNotMatch</Code></Error>"))).toBe(
+      false,
+    );
+    expect(arquivoNaoPublicado(bloq("application/xml", "<Error><Code>AccessDenied</Code></Error>", 401))).toBe(false);
+    expect(arquivoNaoPublicado(new ColetaBloqueada("robots.txt de x não permite /y"))).toBe(false);
+    expect(arquivoNaoPublicado(new Error("GET https://x/y.zip falhou: HTTP 500"))).toBe(false);
   });
 });
