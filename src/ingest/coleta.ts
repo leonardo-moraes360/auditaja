@@ -2,6 +2,7 @@ import type { Kysely } from "kysely";
 import type { Database } from "@/db/types";
 
 export const LICENCA_CAMARA = "Dados abertos da Câmara dos Deputados; licença não declarada pela fonte";
+export const LICENCA_SENADO = "Dados abertos do Senado Federal; uso com atribuição da fonte";
 export const LICENCA_TSE = "Portal de Dados Abertos do TSE; licença não declarada pela fonte";
 
 /** R1: registra a origem de um lote coletado e devolve o id para os registros. */

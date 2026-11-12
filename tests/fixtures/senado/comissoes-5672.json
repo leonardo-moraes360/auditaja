@@ -1,0 +1,60 @@
+{
+  "MembroComissaoParlamentar": {
+    "noNamespaceSchemaLocation": "https://legis.senado.leg.br/dadosabertos/dados/MembroComissaoParlamentarv5.xsd",
+    "Metadados": {
+      "Versao": "11/11/2026 13:31:40",
+      "VersaoServico": "5",
+      "DataVersaoServico": "2021-09-09",
+      "DescricaoDataSet": "Retorna a relação das Comissões das quais um Senador é membro."
+    },
+    "Parlamentar": {
+      "Codigo": "5672",
+      "Nome": "Alan Rick",
+      "MembroComissoes": {
+        "Comissao": [
+          {
+            "IdentificacaoComissao": {
+              "CodigoComissao": "38",
+              "SiglaComissao": "CAE",
+              "NomeComissao": "Comissão de Assuntos Econômicos",
+              "SiglaCasaComissao": "SF"
+            },
+            "DescricaoParticipacao": "Titular",
+            "DataInicio": "2025-11-26"
+          },
+          {
+            "IdentificacaoComissao": {
+              "CodigoComissao": "47",
+              "SiglaComissao": "CE",
+              "NomeComissao": "Comissão de Educação e Cultura",
+              "SiglaCasaComissao": "SF"
+            },
+            "DescricaoParticipacao": "Titular",
+            "DataInicio": "2026-03-17"
+          },
+          {
+            "IdentificacaoComissao": {
+              "CodigoComissao": "2437",
+              "SiglaComissao": "GPBOLIVIA",
+              "NomeComissao": "Grupo Parlamentar Brasil - Bolívia",
+              "SiglaCasaComissao": "CN"
+            },
+            "DescricaoParticipacao": "Titular",
+            "DataInicio": "2021-03-24",
+            "DataFim": "2023-01-31"
+          },
+          {
+            "IdentificacaoComissao": {
+              "CodigoComissao": "2040",
+              "SiglaComissao": "GPARGENTINA",
+              "NomeComissao": "Grupo Parlamentar Brasil - Argentina",
+              "SiglaCasaComissao": "CN"
+            },
+            "DescricaoParticipacao": "Titular",
+            "DataInicio": "2026-03-17"
+          }
+        ]
+      }
+    }
+  }
+}

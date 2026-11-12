@@ -4,9 +4,20 @@
  * Foto oficial. Sem `tamanho`: retangular do perfil, 72×88 no celular e 112×136 no desktop (protótipo).
  * Com `tamanho`: avatar redondo das listas.
  */
-export function FotoParlamentar({ nome, url, tamanho }: { nome: string; url: string | null; tamanho?: number }) {
+export function FotoParlamentar({
+  nome,
+  url,
+  tamanho,
+  raio = "rounded-full",
+}: {
+  nome: string;
+  url: string | null;
+  tamanho?: number;
+  /** Arredondamento do avatar das listas; a lista de parlamentares usa 8 px, como no artboard. */
+  raio?: string;
+}) {
   const caixa = tamanho
-    ? "shrink-0 rounded-full"
+    ? `shrink-0 ${raio}`
     : "h-[88px] w-[72px] shrink-0 rounded-[10px] sm:h-[136px] sm:w-[112px] sm:rounded-[12px]";
   const medida = tamanho ? { width: tamanho, height: tamanho } : undefined;
   if (!url) {

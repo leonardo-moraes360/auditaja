@@ -48,7 +48,13 @@ export async function coletarHistorico(
   cli: ClienteEducado,
   { soFaltantes = false, log = console.log }: { soFaltantes?: boolean; log?: (m: string) => void } = {},
 ) {
-  let q = db.selectFrom("parlamentar").select("id").where("id_legislatura", "=", LEGISLATURA_ATUAL).orderBy("id");
+  // Só deputados: o histórico vem da API da Câmara e não existe para ids do Senado.
+  let q = db
+    .selectFrom("parlamentar")
+    .select("id")
+    .where("casa", "=", "camara")
+    .where("id_legislatura", "=", LEGISLATURA_ATUAL)
+    .orderBy("id");
   if (soFaltantes) q = q.where("historico_coleta_id", "is", null);
   const ids = (await q.execute()).map((r) => r.id);
   let comHistorico = 0;

@@ -225,3 +225,14 @@ describe("proposição principal da votação", () => {
     expect(proposicaoPrincipal([], "Aprovado o requerimento.")).toBeNull();
   });
 });
+
+describe("CEAP da Câmara: CPF dentro da razão social (R3)", () => {
+  it("mascara o CPF do dono de MEI no nome do fornecedor", () => {
+    const r = linhaCeap(
+      { ...ceapBase, txtCNPJCPF: "12.345.678/0001-90", txtFornecedor: "FULANO DE TAL 12345678901" },
+      new Set([100]),
+      1,
+    )!;
+    expect(r.fornecedor_nome).toBe("FULANO DE TAL ***.***.***-**");
+  });
+});

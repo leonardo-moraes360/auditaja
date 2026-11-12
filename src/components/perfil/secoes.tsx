@@ -4,6 +4,7 @@ import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
 import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
+import { classificarVotoSenado, codigoSenado, rotuloVotoSenado } from "@/lib/senado";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
 import { AvisoSancao, SeloSancao } from "./sancao";
@@ -95,6 +96,7 @@ export function SecaoGastos({
   sancoes?: SancaoFornecedor[];
 }) {
   const { ceap, ano, parlamentar, mandato } = perfil;
+  const senado = parlamentar.casa === "senado";
   const uf = parlamentar.sigla_uf;
   const tetoMensal = ceap.teto?.mensal ?? null;
   const parametroAno = mandato ? "mandato" : String(ano);
@@ -124,8 +126,8 @@ export function SecaoGastos({
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 id="gastos-titulo" className={H2}>
           <Dois
-            curto={`Gastos da cota (CEAP) · ${mandato ? "mandato" : ano}`}
-            longo="Gastos da cota parlamentar (CEAP)"
+            curto={`Gastos da cota (${senado ? "CEAPS" : "CEAP"}) · ${mandato ? "mandato" : ano}`}
+            longo={senado ? "Gastos da cota do senador (CEAPS)" : "Gastos da cota parlamentar (CEAP)"}
           />
         </h2>
         <nav aria-label="Período dos gastos" className="hidden flex-wrap gap-1.5 sm:flex">
@@ -139,16 +141,39 @@ export function SecaoGastos({
               {a}
             </Link>
           ))}
-          <Link
-            href={href("ano=mandato#gastos")}
-            aria-current={mandato ? "page" : undefined}
-            className={classeFiltro(mandato)}
-          >
-            Mandato todo
-          </Link>
+          {!senado && (
+            <Link
+              href={href("ano=mandato#gastos")}
+              aria-current={mandato ? "page" : undefined}
+              className={classeFiltro(mandato)}
+            >
+              Mandato todo
+            </Link>
+          )}
         </nav>
       </div>
 
+      {senado && (
+        <p className="flex items-start gap-3 rounded-[10px] bg-muted p-3 text-[13px] leading-[1.45] text-texto-2 sm:rounded-[12px] sm:px-[18px] sm:py-3.5 sm:text-sm sm:leading-normal">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="mt-px hidden size-5 shrink-0 sm:block"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 11v6" />
+            <path d="M12 7h.01" />
+          </svg>
+          <Dois
+            curto="Valor reembolsado pelo Senado. Sem teto por estado publicado em formato aberto, não há linha de teto."
+            longo="O Senado publica o valor reembolsado de cada nota, sem glosa, e não divulga em formato aberto o teto da cota por estado. Por isso este bloco não compara o gasto com um teto."
+          />
+        </p>
+      )}
       {ceap.documentos === 0 ? (
         <p className="text-muted-foreground">Nenhuma despesa publicada para {ano}.</p>
       ) : (
@@ -161,9 +186,10 @@ export function SecaoGastos({
                   Linha tracejada: teto mensal para {uf} ({brl(linhaTeto)})
                 </span>
               )}
+              {senado && <span>Valor reembolsado pelo Senado</span>}
             </figcaption>
             <div
-              className="relative flex h-[140px] items-end gap-1.5 border-b border-linha sm:h-[200px] sm:gap-2.5 sm:pt-2.5"
+              className="relative flex h-[140px] items-end gap-1.5 border-b border-linha sm:h-[211px] sm:gap-2.5 sm:pt-2.5"
               role="img"
               aria-label={`${mandato ? "Gasto anual da cota no mandato" : `Gasto mensal da cota em ${ano}`}${
                 linhaTeto !== null ? `, com o teto mensal de ${brl(linhaTeto)}` : ""
@@ -308,9 +334,13 @@ export function SecaoGastos({
         </>
       )}
       <NotaFonte
-        rotulo="Câmara dos Deputados, Dados Abertos (CEAP)"
-        rotuloCurto="Câmara, CEAP"
-        coleta={perfil.coletas.camara_ceap}
+        rotulo={
+          senado
+            ? "Senado Federal, Dados Abertos administrativos (CEAPS)"
+            : "Câmara dos Deputados, Dados Abertos (CEAP)"
+        }
+        rotuloCurto={senado ? "Senado, CEAPS" : "Câmara, CEAP"}
+        coleta={senado ? perfil.coletas.senado_ceaps : perfil.coletas.camara_ceap}
         extras={[
           {
             rotulo: "Baixar CSV",
@@ -418,24 +448,30 @@ export function SecaoVotacoes({
   completo: boolean;
 }) {
   const { votacoes, parlamentar, ano } = perfil;
+  const senado = parlamentar.casa === "senado";
+  const ausente = (voto: string | null) => (senado ? !voto || classificarVotoSenado(voto) === "ausente" : !voto);
   const lista = votacoes.lista.filter((v) => {
-    if (filtro === "ausencias") return !v.voto && !v.foraDoExercicio;
+    if (filtro === "ausencias") return senado ? ausente(v.voto) : !v.voto && !v.foraDoExercicio;
     if (filtro === "divergiu") return diverge(v.voto, v.orientacao);
     return true;
   });
   const filtros = [
     ["todas", "Todas"],
-    ["divergiu", "Divergiu do partido"],
+    ["divergiu", senado ? "Divergiu da liderança" : "Divergiu do partido"],
     ["ausencias", "Ausências"],
   ] as const;
-  const visiveis = completo ? lista : lista.slice(0, 5);
+  // Resumo: 5 votações no perfil do deputado e 6 no do senador, como nos artboards.
+  const visiveis = completo ? lista : lista.slice(0, senado ? 6 : 5);
   const verTodas = `/parlamentares/${parlamentar.id}?ano=${ano}&votos=${filtro}&lista=completa#votacoes`;
 
   return (
     <section id="votacoes" aria-labelledby="votacoes-titulo" className={`${CARTAO} gap-1 sm:gap-4 sm:p-6`}>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3 sm:mb-0">
         <h2 id="votacoes-titulo" className={H2}>
-          <Dois curto="Votações recentes" longo="Votações nominais recentes" />
+          <Dois
+            curto="Votações recentes"
+            longo={senado ? "Votações nominais no Plenário" : "Votações nominais recentes"}
+          />
         </h2>
         <nav aria-label="Filtrar votações" className="hidden flex-wrap gap-1.5 sm:flex">
           {filtros.map(([k, r]) => (
@@ -450,6 +486,14 @@ export function SecaoVotacoes({
           ))}
         </nav>
       </div>
+      {senado && (
+        <p className="pb-2 text-xs leading-[1.45] text-muted-foreground sm:pb-0 sm:text-[13px] sm:leading-normal">
+          <Dois
+            curto="Em votação secreta o Senado registra só que o senador votou."
+            longo="Em votação secreta, como a escolha de autoridades, o Senado registra só que o senador votou. Essas votações contam para a presença, mas não para o alinhamento com a liderança."
+          />
+        </p>
+      )}
       {lista.length === 0 ? (
         <p className="text-muted-foreground">Nenhuma votação neste filtro.</p>
       ) : (
@@ -458,7 +502,23 @@ export function SecaoVotacoes({
             const res = resultado(v.descricao, v.aprovacao);
             const titulo = v.proposicao_sigla ?? v.descricao;
             const ementa = v.proposicao_sigla ? (v.proposicao_ementa ?? v.descricao) : null;
-            const orient = v.tipoOrientacao ? `Partido: ${v.orientacao}` : "Partido: sem orientação";
+            const partidoDoDia = v.partidoNoVoto ?? parlamentar.sigla_partido;
+            const orient = senado ? (
+              v.secreta ? (
+                "Orientação: não se aplica"
+              ) : v.orientacao ? (
+                <Dois
+                  curto={`Liderança: ${v.orientacao}`}
+                  longo={`Liderança${partidoDoDia ? ` do ${partidoDoDia}` : ""}: ${v.orientacao}`}
+                />
+              ) : (
+                "Liderança: sem orientação"
+              )
+            ) : v.tipoOrientacao ? (
+              `Partido: ${v.orientacao}`
+            ) : (
+              "Partido: sem orientação"
+            );
             const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
             const selo = v.foraDoExercicio ? (
               <span className="rounded-[6px] border border-dashed border-input bg-superficie px-[9px] py-[3px] text-xs font-bold text-texto-2 sm:rounded-[8px] sm:px-[11px] sm:py-[5px] sm:text-[13px]">
@@ -468,7 +528,15 @@ export function SecaoVotacoes({
               <span
                 className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-[13px] ${corVoto(v.voto, v.orientacao)}`}
               >
-                Votou: {v.voto ?? "sem registro"}
+                {senado ? (
+                  v.secreta && v.voto === "Votou" ? (
+                    <Dois curto="Votou (secreto)" longo="Votou (voto secreto)" />
+                  ) : (
+                    rotuloVotoSenado(v.voto, v.secreta)
+                  )
+                ) : (
+                  `Votou: ${v.voto ?? "sem registro"}`
+                )}
                 {diverge(v.voto, v.orientacao) && <span className="sr-only"> (divergiu da orientação)</span>}
               </span>
             );
@@ -527,10 +595,19 @@ export function SecaoVotacoes({
           Ver as {lista.length} votações
         </Link>
       )}
+      {senado && (
+        <p className="mt-2 text-xs text-muted-foreground sm:mt-0">
+          A presença não conta as votações em que o senador estava de licença ou afastado.
+        </p>
+      )}
       <NotaFonte
-        rotulo="Câmara dos Deputados, Dados Abertos (votações e histórico de situação dos deputados)"
-        rotuloCurto="Câmara, Dados Abertos"
-        coleta={perfil.coletas.camara_lote_votos}
+        rotulo={
+          senado
+            ? "Senado Federal, Dados Abertos (/votacao e orientação de bancada)"
+            : "Câmara dos Deputados, Dados Abertos (votações e histórico de situação dos deputados)"
+        }
+        rotuloCurto={senado ? "Senado, Dados Abertos" : "Câmara, Dados Abertos"}
+        coleta={senado ? perfil.coletas.senado_votacoes : perfil.coletas.camara_lote_votos}
         extras={completo || lista.length <= 5 ? [] : [{ rotulo: `Ver todas as ${lista.length}`, href: verTodas }]}
         parlamentarId={parlamentar.id}
         secao="votacoes"
@@ -570,10 +647,13 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
       <p className="hidden text-sm leading-normal text-texto-2 sm:block">
         Valores informados pelo próprio candidato ao registrar a candidatura. São valores nominais, sem correção pela
         inflação, e muitas vezes refletem o preço de compra, não o de mercado.
+        {perfil.parlamentar.casa === "senado" &&
+          " Senadores disputam eleição a cada 8 anos, por isso os anos podem ser mais espaçados."}
       </p>
       {anos.length === 0 ? (
         <p className="text-muted-foreground">
-          Não encontramos declarações de bens associadas a este deputado nas eleições de 2018, 2022 e 2026.
+          Não encontramos declarações de bens associadas a este{" "}
+          {perfil.parlamentar.casa === "senado" ? "senador" : "deputado"} nas eleições de 2018, 2022 e 2026.
         </p>
       ) : (
         <>
@@ -704,6 +784,13 @@ function marcoCandidatura(c: Perfil["candidaturas"][number], sexo: string | null
   const cargo = c.cargo.toLowerCase();
   const sit = (c.situacao ?? "").toUpperCase();
   let texto: string;
+  // Senado: "Eleito senador por MG" e "Eleita 1ª suplente de senador por MA" (artboard do senador).
+  const suplenteSenado = /^(\d)º suplente$/.exec(cargo);
+  if (sit.startsWith("ELEITO") && suplenteSenado) {
+    const ordinal = `${suplenteSenado[1]}${sexo === "F" ? "ª" : "º"}`;
+    return `${sexo === "F" ? "Eleita" : "Eleito"} ${ordinal} suplente de senador por ${c.sigla_uf}`;
+  }
+  if (sit.startsWith("ELEITO") && cargo === "senador") return feminino(`Eleito senador por ${c.sigla_uf}`, sexo);
   if (sit.startsWith("ELEITO")) {
     const via = sit.includes("MÉDIA") ? ", por média" : sit.includes("QP") ? ", por quociente partidário" : "";
     const mandato = cargo === "deputado federal" ? ` · mandato ${c.ano_eleicao + 1}–${c.ano_eleicao + 5}` : "";
@@ -719,24 +806,62 @@ function marcoCandidatura(c: Perfil["candidaturas"][number], sexo: string | null
 }
 
 export function Lateral({ perfil }: { perfil: Perfil }) {
-  const { parlamentar: p, orgaos, candidaturas, coletas } = perfil;
+  const { parlamentar: p, orgaos, candidaturas, coletas, suplentes } = perfil;
+  const senado = p.casa === "senado";
   const comissoes = orgaos
     .filter((o) => /^comiss/i.test(o.nome_orgao) && /titular|presidente/i.test(o.cargo))
     .slice(0, 12);
-  const leg = p.id_legislatura ? LEGISLATURAS[p.id_legislatura] : undefined;
+  const leg = senado
+    ? p.mandato_inicio && p.mandato_fim
+      ? { inicio: p.mandato_inicio, fim: p.mandato_fim }
+      : undefined
+    : p.id_legislatura
+      ? LEGISLATURAS[p.id_legislatura]
+      : undefined;
+  const cargoFederal = senado ? "SENADOR" : "DEPUTADO FEDERAL";
   const marcos = [
     ...candidaturas.map((c) => ({
       ano: c.ano_eleicao,
       texto: marcoCandidatura(c, p.sexo),
-      federal: c.cargo.toUpperCase() === "DEPUTADO FEDERAL",
+      federal: c.cargo.toUpperCase() === cargoFederal,
     })),
     ...(leg
-      ? [{ ano: Number(leg.inicio.slice(0, 4)), texto: `Início da ${p.id_legislatura}ª legislatura`, federal: true }]
+      ? [
+          {
+            ano: Number(leg.inicio.slice(0, 4)),
+            texto: senado
+              ? `Posse para o mandato ${leg.inicio.slice(0, 4)}–${leg.fim.slice(0, 4)}`
+              : `Início da ${p.id_legislatura}ª legislatura`,
+            federal: true,
+          },
+        ]
       : []),
   ].sort((a, b) => b.ano - a.ano);
   const coletadoEm = (k: string) =>
     coletas[k] ? ` · coletado em ${dataHoraBr(coletas[k].coletado_em).slice(0, 10)}` : "";
-  const fontes = [
+  const fontesSenado = [
+    {
+      nome: "Senado Federal · Dados Abertos",
+      href: p.source_url,
+      det: `Mandato, suplentes, comissões, votações e orientações${coletadoEm("senado_api_senadores")}`,
+    },
+    {
+      nome: "Senado Federal · CEAPS (dados administrativos)",
+      href: coletas.senado_ceaps?.url ?? "https://adm.senado.gov.br/adm-dadosabertos/",
+      det: `Notas da cota do senador${coletadoEm("senado_ceaps")}`,
+    },
+    {
+      nome: "TSE · Dados Abertos (lote)",
+      href: "https://dadosabertos.tse.jus.br/",
+      det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
+    },
+    {
+      nome: `Metodologia v${METODOLOGIA_VERSAO}`,
+      href: "/metodologia#senado",
+      det: "Regras públicas e versionadas, com as diferenças do Senado",
+    },
+  ];
+  const fontesCamara = [
     {
       nome: "Câmara dos Deputados · API v2",
       href: p.source_url,
@@ -769,16 +894,43 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
     },
     { nome: `Metodologia v${METODOLOGIA_VERSAO}`, href: "/metodologia", det: "Regras públicas e versionadas" },
   ];
+  const fontes = senado ? fontesSenado : fontesCamara;
+  const situacao = p.em_exercicio ? "em exercício" : "fora de exercício";
 
   return (
-    <aside className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[1_1_300px]">
-      <section id="mandato" aria-labelledby="mandato-titulo" className={`${CARTAO} gap-3.5 sm:p-5`}>
+    <aside className={`flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[1_1_300px]`}>
+      <section
+        id="mandato"
+        aria-labelledby="mandato-titulo"
+        className={`${CARTAO} sm:gap-3.5 sm:p-5 ${senado ? "gap-2.5" : "gap-3.5"}`}
+      >
         <h2 id="mandato-titulo" className={H2_LATERAL}>
           Mandato
         </h2>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
+        {senado && (
+          // Celular: versão compacta do artboard SenadorMobile (Período, Situação, Bloco, Suplentes).
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm sm:hidden">
+            <dt className="text-muted-foreground">Período</dt>
+            <dd>{leg ? `${dataBr(leg.inicio)} a ${dataBr(leg.fim)}` : "—"}</dd>
+            <dt className="text-muted-foreground">Situação</dt>
+            <dd>{p.participacao ? `${p.participacao}, ${situacao}` : situacao}</dd>
+            {p.bloco && (
+              <>
+                <dt className="text-muted-foreground">Bloco</dt>
+                <dd>{p.bloco}</dd>
+              </>
+            )}
+            {suplentes.length > 0 && (
+              <>
+                <dt className="text-muted-foreground">Suplentes</dt>
+                <dd>{suplentes.map((s) => `${s.nome} (${s.ordem}${s.sexo === "F" ? "ª" : "º"})`).join(" · ")}</dd>
+              </>
+            )}
+          </dl>
+        )}
+        <dl className={`grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm ${senado ? "max-sm:hidden" : ""}`}>
           <dt className="text-muted-foreground">Casa</dt>
-          <dd>Câmara dos Deputados</dd>
+          <dd>{senado ? "Senado Federal" : "Câmara dos Deputados"}</dd>
           <dt className="text-muted-foreground">UF</dt>
           <dd>{p.sigla_uf ? (NOME_UF[p.sigla_uf] ?? p.sigla_uf) : "—"}</dd>
           <dt className="text-muted-foreground">Início</dt>
@@ -786,23 +938,57 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
           <dt className="text-muted-foreground">Fim previsto</dt>
           <dd>{leg ? dataBr(leg.fim) : "—"}</dd>
           <dt className="text-muted-foreground">Situação</dt>
-          <dd>{p.em_exercicio ? "Em exercício" : "Fora de exercício"}</dd>
+          <dd>
+            {senado && p.participacao
+              ? `${p.participacao}, ${situacao}`
+              : p.em_exercicio
+                ? "Em exercício"
+                : "Fora de exercício"}
+          </dd>
+          {senado && p.bloco && (
+            <>
+              <dt className="text-muted-foreground">Bloco</dt>
+              <dd>{p.bloco}</dd>
+            </>
+          )}
         </dl>
+        {senado && suplentes.length > 0 && (
+          <div className="flex flex-col gap-3.5 max-sm:hidden">
+            <h3 className="mt-1 text-sm font-bold">Suplentes</h3>
+            <ul className="flex flex-col gap-1.5 text-sm">
+              {suplentes.map((s) => (
+                <li key={s.ordem} className="flex justify-between gap-2">
+                  <span>{s.nome}</span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {s.ordem}
+                    {s.sexo === "F" ? "ª" : "º"} suplente
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs leading-normal text-muted-foreground">
+              Quando um suplente assume, ele ganha perfil próprio e os gastos e votos ficam no nome de quem estava em
+              exercício.
+            </p>
+          </div>
+        )}
         {comissoes.length > 0 && (
-          <>
+          <div className={`flex flex-col gap-3.5 ${senado ? "max-sm:hidden" : ""}`}>
             <h3 className="mt-1 text-sm font-bold">Comissões como titular</h3>
             <ul className="flex list-disc flex-col gap-1 pl-[18px] text-sm">
               {comissoes.map((o) => (
                 <li key={`${o.sigla_orgao}-${o.cargo}`}>
-                  {o.nome_orgao}
+                  {senado
+                    ? `${o.nome_orgao.replace(/^Comiss[ãa]o (de |da |do |das |dos )?/i, "")} (${o.sigla_orgao})`
+                    : o.nome_orgao}
                   {/titular/i.test(o.cargo) ? null : <span className="text-muted-foreground"> · {o.cargo}</span>}
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         )}
         {marcos.length > 0 && (
-          <>
+          <div className={`flex flex-col gap-3.5 ${senado ? "max-sm:hidden" : ""}`}>
             <h3 className="mt-1 text-sm font-bold">Linha do tempo</h3>
             <ol className="flex flex-col gap-2.5 text-[13px]">
               {marcos.map((m, i) => (
@@ -817,10 +1003,12 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
                 </li>
               ))}
             </ol>
-          </>
+          </div>
         )}
-        <p className="text-xs text-muted-foreground">
-          Fonte: Câmara, API v2 /deputados/{p.id} e /legislaturas · TSE (candidaturas).{" "}
+        <p className={`text-xs text-muted-foreground ${senado ? "max-sm:hidden" : ""}`}>
+          {senado
+            ? `Fonte: Senado, Dados Abertos /senador/${codigoSenado(p.id)} · TSE (candidaturas). `
+            : `Fonte: Câmara, API v2 /deputados/${p.id} e /legislaturas · TSE (candidaturas). `}
           <a href={p.source_url} target="_blank" rel="noopener noreferrer">
             Ver na fonte
           </a>
@@ -857,15 +1045,23 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
 
       <section
         aria-labelledby="erro-titulo"
-        className="flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5"
+        className={`flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5`}
       >
         <h2 id="erro-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
           Encontrou um erro?
         </h2>
         <p className="text-[13px] leading-[1.45] text-texto-2 sm:text-sm sm:leading-normal">
           <Dois
-            curto="Qualquer pessoa pode pedir correção."
-            longo="Parlamentares, assessorias e qualquer pessoa podem pedir correção. Registramos cada pedido e toda alteração."
+            curto={
+              senado
+                ? "Qualquer pessoa pode pedir correção de um dado deste perfil."
+                : "Qualquer pessoa pode pedir correção."
+            }
+            longo={
+              senado
+                ? "Senadores, assessorias e qualquer pessoa podem pedir correção de um dado deste perfil."
+                : "Parlamentares, assessorias e qualquer pessoa podem pedir correção. Registramos cada pedido e toda alteração."
+            }
           />
         </p>
         <Link

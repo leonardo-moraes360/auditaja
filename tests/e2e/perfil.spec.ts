@@ -158,7 +158,7 @@ test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page, isMobil
   await abrirTopo(page, isMobile, "Buscar");
   await expect(page.getByRole("searchbox", { name: "Buscar parlamentar" })).toHaveAttribute(
     "placeholder",
-    "Buscar deputado por nome ou UF",
+    "Buscar deputado ou senador por nome ou UF", // SUI-08 substitui o texto de BUSCA-05
   );
   await expect(page.getByLabel("Nome ou UF")).toHaveAttribute("placeholder", "Ex.: Maria, Silva ou SP");
 });
@@ -175,7 +175,7 @@ test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page,
 test("METOD-01: metodologia publica a versão", async ({ page }) => {
   await page.goto("/metodologia");
   await expect(page.getByRole("heading", { level: 1, name: "Metodologia" })).toBeVisible();
-  await expect(page.getByText(/^Versão 1\.6\./)).toBeVisible();
+  await expect(page.getByText(/^Versão 1\.7\./)).toBeVisible();
 });
 
 test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page, isMobile }) => {

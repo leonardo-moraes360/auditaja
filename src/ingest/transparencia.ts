@@ -40,7 +40,10 @@ export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado):
     licenca: LICENCA_CGU,
     observacao: `base de ${dataLocalBr(await dataDaEntrada(zip.buf, "EmendasParlamentares.csv"))}`,
   });
-  const indice = indiceDeAutores(await db.selectFrom("parlamentar").select(["id", "nome"]).execute());
+  // Só deputados: as emendas de senadores ficam fora do escopo atual (perfil do senador não as mostra).
+  const indice = indiceDeAutores(
+    await db.selectFrom("parlamentar").select(["id", "nome"]).where("casa", "=", "camara").execute(),
+  );
 
   const emendas: Insertable<EmendaTable>[] = [];
   const descartados = new Set<string>();

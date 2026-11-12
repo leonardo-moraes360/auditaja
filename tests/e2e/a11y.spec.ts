@@ -19,6 +19,12 @@ const PAGINAS = [
   "/fontes",
   "/privacidade",
   "/parlamentares/abc",
+  // Senado (perfil do senador): senador titular, suplente em exercício, filtros e lista por Casa.
+  "/parlamentares?casa=senado",
+  "/parlamentares/10009001",
+  "/parlamentares/10009001?votos=ausencias",
+  "/parlamentares/10009001?lista=completa",
+  "/parlamentares/10009002",
 ];
 
 for (const caminho of PAGINAS) {
@@ -46,6 +52,8 @@ test("A11Y-02: perfil não rola na horizontal a 320 px (reflow, 1.4.10)", async 
     "/fontes",
     "/privacidade",
     "/parlamentares/900000001/contestar",
+    "/parlamentares/10009001",
+    "/parlamentares?casa=senado",
   ]) {
     await page.goto(caminho);
     await page.waitForLoadState("networkidle");

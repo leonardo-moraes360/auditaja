@@ -1,0 +1,279 @@
+import { expect, test } from "@playwright/test";
+
+// Senador fictício de src/db/seed.ts: Otávio Modelo, MG, PFX, código 9001.
+const SENADOR = 10009001;
+
+test("SUI-01: trilha leva ao Senado Federal", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a trilha só aparece no desktop, como no protótipo");
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const trilha = page.getByRole("navigation", { name: "Trilha" });
+  await expect(trilha).toContainText("Parlamentares / Senado Federal / Otávio Modelo");
+  await expect(trilha.getByRole("link", { name: "Senado Federal" })).toHaveAttribute(
+    "href",
+    "/parlamentares?casa=senado",
+  );
+});
+
+test("SUI-02/03: cabeçalho com cargo, UF, partido, bloco, mandato e participação", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Otávio Modelo" })).toBeVisible();
+  if (isMobile) {
+    await expect(page.getByText("Senador · MG · PFX", { exact: true })).toBeVisible();
+    await expect(page.getByText("Em exercício · 2023–2031")).toBeVisible();
+  } else {
+    await expect(page.getByText("Senador por Minas Gerais (MG) · PFX · Bloco Parlamentar Exemplo")).toBeVisible();
+    await expect(page.getByText("Mandato 2023–2031 · 57ª e 58ª legislaturas")).toBeVisible();
+    await expect(page.getByText("Titular", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Nome civil, cargo, UF, partido e bloco conforme o Senado Federal.")).toBeVisible();
+  }
+});
+
+test("SUI-03: suplente em exercício e senadora", async ({ page, isMobile }) => {
+  test.skip(isMobile, "o selo de participação só aparece no desktop");
+  await page.goto(`/parlamentares/10009002`);
+  await expect(page.getByText("1º Suplente em exercício", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Senadora por Acre \(AC\)/)).toBeVisible();
+});
+
+test("indicadores do senador (SCEAPS-05, SPRES-03/04, SALI-02)", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const ind = page.locator("[data-indicador]");
+  if (isMobile) {
+    await expect(ind.getByText("Cota em 2026")).toBeVisible();
+    await expect(ind.getByText(/^R\$\s5 mil\/mês$/)).toBeVisible();
+    await expect(ind.getByText("3 de 4", { exact: true })).toBeVisible();
+    await expect(ind.getByText("Seguiu a liderança")).toBeVisible();
+    await expect(ind.getByText("1 divergência", { exact: true })).toBeVisible();
+  } else {
+    await expect(ind.getByText("Cota do senador (CEAPS) em 2026")).toBeVisible();
+    await expect(ind.getByText(/^R\$\s15\.000$/)).toBeVisible();
+    await expect(ind.getByText(/^Média de R\$\s5\.000 por mês, jan a abr$/)).toBeVisible();
+    await expect(ind.getByText("3 de 4 em 2026 · média do Senado 88%")).toBeVisible();
+    await expect(ind.getByText("Votou como a liderança orientou")).toBeVisible();
+    await expect(ind.getByText("Divergiu em 1 de 2 votações abertas")).toBeVisible();
+  }
+  await expect(ind.getByText("75%", { exact: true }).filter({ visible: true })).toBeVisible();
+  await expect(ind.getByText("50%", { exact: true }).filter({ visible: true })).toBeVisible();
+  // SCEAPS-06: nenhuma barra de teto.
+  await expect(page.locator("[data-indicador] [role=img]")).toHaveCount(0);
+});
+
+test("SCEAPS-06: gastos sem teto e com o aviso do Senado", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const gastos = page.locator("section#gastos");
+  await expect(
+    gastos
+      .getByRole("heading", { level: 2 })
+      .getByText(isMobile ? "Gastos da cota (CEAPS) · 2026" : "Gastos da cota do senador (CEAPS)", { exact: true }),
+  ).toBeVisible();
+  await expect(gastos.locator("[data-teto]")).toHaveCount(0);
+  await expect(
+    gastos.getByText(isMobile ? /^Valor reembolsado pelo Senado\. Sem teto/ : /^O Senado publica o valor reembolsado/),
+  ).toBeVisible();
+  await expect(gastos.getByText(/teto mensal/)).toHaveCount(0);
+  if (!isMobile) {
+    await expect(gastos.getByRole("link", { name: "Mandato todo" })).toHaveCount(0);
+    await expect(
+      gastos.getByText(/^Fonte: Senado Federal, Dados Abertos administrativos \(CEAPS\) · coletado em/),
+    ).toBeVisible();
+  }
+});
+
+test("SVOT-06/07/08: voto secreto, ausência com motivo e filtro de divergência", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}?lista=completa`);
+  const vot = page.locator("section#votacoes");
+  await expect(
+    vot.getByText(isMobile ? "Votou (secreto)" : "Votou (voto secreto)", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(vot.getByText("Orientação: não se aplica")).toBeVisible();
+  await expect(vot.getByText("Ausente: missão oficial")).toBeVisible();
+  await expect(vot.getByText("Em licença ou afastado")).toBeVisible();
+  await expect(
+    vot
+      .getByText(isMobile ? "Liderança: Sim" : "Liderança do PFX: Sim", { exact: true })
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+  if (!isMobile) {
+    // Partido do dia do voto (PFW), não o atual (PFX).
+    await expect(
+      vot.locator("li", { hasText: "PL 2468/2026" }).getByText("Liderança do PFW: Sim", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      vot.getByRole("heading", { level: 2 }).getByText("Votações nominais no Plenário", { exact: true }),
+    ).toBeVisible();
+    await vot.getByRole("link", { name: "Divergiu da liderança" }).click();
+    await expect(page).toHaveURL(/votos=divergiu/);
+    await expect(page.locator("section#votacoes li")).toHaveCount(1);
+    await expect(page.locator("section#votacoes li")).toContainText("PEC 8/2026");
+    await page.locator("section#votacoes").getByRole("link", { name: "Ausências" }).click();
+    await expect(page.locator("section#votacoes li")).toHaveCount(1);
+    await expect(page.locator("section#votacoes li")).toContainText("Ausente: missão oficial");
+  }
+});
+
+test("SUI-04: bloco Mandato com Casa, período, situação, bloco e suplentes", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const m = page.locator("section#mandato");
+  const ver = (t: string | RegExp) => m.getByText(t, { exact: true }).filter({ visible: true });
+  if (isMobile) {
+    // Versão compacta do artboard SenadorMobile.
+    await expect(ver("01/02/2023 a 31/01/2031")).toBeVisible();
+    await expect(ver("Titular, em exercício")).toBeVisible();
+    await expect(ver("Bloco Parlamentar Exemplo")).toBeVisible();
+    await expect(ver("Beatriz Suplente Fictícia (1ª) · Carlos Suplente Fictício (2º)")).toBeVisible();
+    await expect(m.getByText("Linha do tempo")).toBeHidden();
+  } else {
+    await expect(ver("Senado Federal")).toBeVisible();
+    await expect(ver("Minas Gerais")).toBeVisible();
+    await expect(ver("01/02/2023")).toBeVisible();
+    await expect(ver("31/01/2031")).toBeVisible();
+    await expect(ver("Titular, em exercício")).toBeVisible();
+    await expect(ver("Bloco Parlamentar Exemplo")).toBeVisible();
+    await expect(ver("Beatriz Suplente Fictícia")).toBeVisible();
+    await expect(ver("1ª suplente")).toBeVisible(); // suplente cadastrada como F no Senado
+    await expect(ver("2º suplente")).toBeVisible();
+    await expect(m.getByText("Assuntos Econômicos (CAE)")).toBeVisible();
+    await expect(m.getByText("Posse para o mandato 2023–2031")).toBeVisible();
+    await expect(m.getByText("Eleito senador por MG")).toBeVisible();
+    await expect(m.getByText("Fonte: Senado, Dados Abertos /senador/9001 · TSE (candidaturas).")).toBeVisible();
+  }
+});
+
+test("textos de correção do senador", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  await expect(
+    page
+      .getByText(
+        isMobile
+          ? "Qualquer pessoa pode pedir correção de um dado deste perfil."
+          : "Senadores, assessorias e qualquer pessoa podem pedir correção de um dado deste perfil.",
+        { exact: true },
+      )
+      .filter({ visible: true }),
+  ).toBeVisible();
+});
+
+test("SUI-05: fontes do Senado, sem as da Câmara", async ({ page, isMobile }) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const f = page.locator("section#fontes");
+  await expect(f.getByRole("link", { name: "Senado Federal · Dados Abertos" })).toBeVisible();
+  await expect(f.getByRole("link", { name: "Senado Federal · CEAPS (dados administrativos)" })).toBeVisible();
+  await expect(f.getByText(/Câmara/)).toHaveCount(0);
+  for (const secao of ["gastos", "votacoes"]) {
+    const s = page.locator(`section#${secao}`);
+    await expect(
+      s.getByText(/^Fonte: Senado.+ · coletado em \d{2}\/\d{2}\/\d{4}/).filter({ visible: true }),
+    ).toBeVisible();
+    await expect(s.getByRole("link", { name: isMobile ? "ver original" : "Ver na fonte" })).toBeVisible();
+  }
+});
+
+test("SUI-10: acompanhar, contestar e CSV funcionam pelo id do senador", async ({ page, request }) => {
+  const feed = await request.get(`/parlamentares/${SENADOR}/feed.xml`);
+  expect(feed.ok()).toBe(true);
+  expect(await feed.text()).toContain("Otávio Modelo");
+  const csv = await request.get(`/parlamentares/${SENADOR}/gastos.csv?ano=2026`);
+  expect(csv.ok()).toBe(true);
+  expect(await csv.text()).toContain("Imobiliária Exemplo Ltda");
+  await page.goto(`/parlamentares/${SENADOR}/contestar`);
+  await expect(page.getByText(/Otávio Modelo/).first()).toBeVisible();
+  await page.goto(`/parlamentares/${SENADOR}/acompanhar`);
+  await expect(page.getByText(/Otávio Modelo/).first()).toBeVisible();
+});
+
+test("SUI-06/07: lista com filtros por Casa e cargo no cartão", async ({ page }) => {
+  await page.goto("/parlamentares");
+  await expect(page.getByRole("heading", { level: 1, name: "Parlamentares federais em exercício" })).toBeVisible();
+  const casas = page.getByRole("navigation", { name: "Casa legislativa" });
+  await expect(casas.getByRole("link", { name: "Todos (4)" })).toHaveAttribute("aria-current", "page");
+  await expect(casas.getByRole("link", { name: "Câmara dos Deputados (2)" })).toBeVisible();
+  await casas.getByRole("link", { name: "Senado Federal (2)" }).click();
+  await expect(page).toHaveURL(/\/parlamentares\?casa=senado$/);
+  await expect(casas.getByRole("link", { name: "Senado Federal (2)" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText("2 resultado(s). Fonte: Senado Federal, Dados Abertos.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Otávio Modelo\s*Senador · PFX · MG/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Lúcia Fictícia\s*Senadora · PFY · AC/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Maria Exemplo/ })).toHaveCount(0);
+  await page.getByRole("link", { name: /Otávio Modelo/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Otávio Modelo" })).toBeVisible();
+});
+
+test("SUI-06: o filtro de Casa vale junto com nome e UF", async ({ page }) => {
+  await page.goto("/parlamentares?casa=camara");
+  await expect(page.getByRole("link", { name: /Deputada federal · PFX · SP/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toHaveCount(0);
+  await page.getByLabel("Nome ou UF").fill("mg");
+  await page.getByRole("button", { name: "Filtrar" }).click();
+  await expect(page).toHaveURL(/casa=camara/);
+  await expect(page.getByText("Nenhum parlamentar encontrado com esses filtros.")).toBeVisible();
+});
+
+test("SUI-09: casa desconhecida vira Todos", async ({ page }) => {
+  await page.goto("/parlamentares?casa=stf");
+  await expect(
+    page.getByRole("navigation", { name: "Casa legislativa" }).getByRole("link", { name: "Todos (4)" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Maria Exemplo/ })).toBeVisible();
+});
+
+test("SUI-08: busca do topo cita deputado e senador e acha senadores", async ({ page, isMobile }) => {
+  await page.goto("/metodologia");
+  if (isMobile) await page.getByRole("button", { name: "Buscar" }).click();
+  const busca = page.getByRole("searchbox", { name: "Buscar parlamentar" });
+  await expect(busca).toHaveAttribute("placeholder", "Buscar deputado ou senador por nome ou UF");
+  await busca.fill("otavio");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
+});
+
+test("SUI-11: metodologia descreve as regras do Senado e fontes lista o Senado", async ({ page }) => {
+  await page.goto("/metodologia#senado");
+  const s = page.locator("section#senado");
+  await expect(s.getByRole("heading", { level: 2, name: "Senado Federal" })).toBeVisible();
+  await expect(s.getByText(/Licenças e afastamentos saem da conta \(AFO, DJ, EP/)).toBeVisible();
+  await expect(
+    s.getByText(/Orientações de Governo, Maioria, Minoria, Oposição, Bancada Feminina e blocos não contam/),
+  ).toBeVisible();
+  await expect(s.getByText(/contam para a presença, mas nunca para o alinhamento/)).toBeVisible();
+  await expect(s.getByText(/não compara o gasto com um teto e mostra a média mensal/)).toBeVisible();
+  await expect(page.getByText("Versão 1.7. Toda mudança gera nova versão.")).toBeVisible();
+  await page.goto("/fontes");
+  await expect(page.getByText(/^Senado Federal: API de Dados Abertos/)).toBeVisible();
+});
+
+test("SERR-03/04: senadora sem votações nem notas mostra os estados vazios", async ({ page }) => {
+  await page.goto("/parlamentares/10009004");
+  const ind = page.locator("[data-indicador]");
+  await expect(
+    ind.getByText("Sem votações registradas em 2026", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(page.locator("section#gastos").getByText(/^Nenhuma despesa publicada para \d{4}\.$/)).toBeVisible();
+  await expect(page.getByText(/^Não encontramos declarações de bens associadas a este senador/)).toBeVisible();
+});
+
+test("SBENS-02: bens do senador com a nota dos 8 anos", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a explicação dos bens só aparece no desktop, como no perfil do deputado");
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const bens = page.locator("section#bens");
+  await expect(
+    bens.getByText(/Senadores disputam eleição a cada 8 anos, por isso os anos podem ser mais espaçados\./),
+  ).toBeVisible();
+  await expect(bens.getByText("Eleição 2022").filter({ visible: true })).toBeVisible();
+  await expect(bens.getByText(/^R\$\s2,68 mi$/).filter({ visible: true })).toBeVisible();
+});
+
+test("SUI-04: no celular, as seções seguem a ordem de leitura (Votações, Bens, Mandato)", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, "ordem de uma coluna só no celular");
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const secao = (id: string) => page.locator(`section#${id}`);
+  for (const id of ["votacoes", "bens", "mandato"]) await expect(secao(id)).toBeVisible();
+  const y = async (id: string) => (await secao(id).boundingBox())!.y;
+  const [vot, bens, mand] = [await y("votacoes"), await y("bens"), await y("mandato")];
+  expect(vot).toBeLessThan(bens);
+  expect(bens).toBeLessThan(mand);
+});

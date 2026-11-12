@@ -34,13 +34,21 @@
 - **Date**: 2026-11-11
 - **Status**: active
 
+### AD-005
+- **Decision**: Senadores ficam nas mesmas tabelas dos deputados, com `parlamentar.casa = 'senado'` e `id = 10.000.000 + CodigoParlamentar`; as votações do Senado usam `sigla_orgao = 'PLEN-SF'` e id `SF-{sequencialVotacao}`. Cada coleta só apaga e regrava dados da própria Casa (filtro por `casa`, nunca por faixa de id).
+- **Reason**: Reaproveita perfil, rotas, feed, CSV e contestação sem duplicar código; o seed usa ids de deputado acima de 900 milhões, então faixa de id não separa as Casas.
+- **Trade-off**: O id do senador na URL não é o código do Senado; `codigoSenado()` faz a conversão.
+- **Scope**: Esquema, coletores, leitura e rotas do perfil.
+- **Date**: 2026-11-11
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: `.specs/features/perfil-parlamentar`
-- **Phase / Task**: Execute concluído (retroativo); validação independente
-- **Completed**: T1–T12
+- **Feature**: `.specs/features/perfil-senador`
+- **Phase / Task**: Verificação nº 4 PASS (validation.md); merge da main (PRs #6 e #7) feito; push e PR com ok do usuário
+- **Completed**: T1–T17
 - **In-progress** (file:line): none
-- **Next step**: Revisão humana do PR #1
+- **Next step**: revisão humana do PR do Senado
 - **Blockers**: none
 - **Uncommitted files**: none
-- **Branch**: feat/perfil-parlamentar
+- **Branch**: feat/senadores (worktree ../auditaja-wt/senadores; bancos auditaja_senado_test e auditaja_senado_dev; e2e com E2E_PORT=3242)

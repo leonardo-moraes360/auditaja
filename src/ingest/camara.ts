@@ -12,6 +12,7 @@ import type {
 } from "@/db/types";
 import { numeroBr } from "@/lib/format";
 import { partidosDoNomeDoBloco } from "@/lib/metrics";
+import { ORGAO_PLENARIO_SENADO } from "@/lib/senado";
 import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
 import { extrairDoZip, idDaUri, lerCsv, type Linha } from "./arquivos";
 import { inserirEmBlocos, LICENCA_CAMARA, registrarColeta } from "./coleta";
@@ -324,7 +325,12 @@ export async function coletarCeap(db: Kysely<Database>, cli: ClienteEducado, ano
     return r ? [r] : [];
   });
   await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("despesa_ceap").where("ano", "=", ano).execute();
+    // Só as notas de deputados: a CEAPS dos senadores vem de outra coleta.
+    await trx
+      .deleteFrom("despesa_ceap")
+      .where("ano", "=", ano)
+      .where("parlamentar_id", "in", trx.selectFrom("parlamentar").select("id").where("casa", "=", "camara"))
+      .execute();
     await inserirEmBlocos(trx, "despesa_ceap", rows);
   });
   return rows.length;
@@ -366,7 +372,13 @@ export async function coletarVotacoes(db: Kysely<Database>, cli: ClienteEducado,
     lerCsv(arquivos.objetos.buf),
   );
   await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("votacao").where("data", ">=", `${ano}-01-01`).where("data", "<=", `${ano}-12-31`).execute();
+    // As votações do Senado (PLEN-SF) vêm de outra coleta e não são tocadas aqui.
+    await trx
+      .deleteFrom("votacao")
+      .where("sigla_orgao", "<>", ORGAO_PLENARIO_SENADO)
+      .where("data", ">=", `${ano}-01-01`)
+      .where("data", "<=", `${ano}-12-31`)
+      .execute();
     await inserirEmBlocos(trx, "votacao", m.votacoes);
     await inserirEmBlocos(trx, "voto", m.votos);
     await inserirEmBlocos(trx, "orientacao", m.orientacoes);
@@ -386,7 +398,11 @@ export async function coletarOrgaos(db: Kysely<Database>, cli: ClienteEducado) {
   });
   const rows = montarOrgaos(lerCsv(arq.buf), await idsParlamentares(db), coletaId);
   await db.transaction().execute(async (trx) => {
-    await trx.deleteFrom("orgao_membro").execute();
+    // Só os órgãos de deputados: as comissões dos senadores vêm de outra coleta.
+    await trx
+      .deleteFrom("orgao_membro")
+      .where("parlamentar_id", "in", trx.selectFrom("parlamentar").select("id").where("casa", "=", "camara"))
+      .execute();
     await inserirEmBlocos(trx, "orgao_membro", rows);
   });
   return rows.length;

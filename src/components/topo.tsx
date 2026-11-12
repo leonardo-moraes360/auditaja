@@ -17,7 +17,9 @@ function Logo() {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-heading text-[19px] font-bold tracking-tight sm:text-[22px]">Auditaja</span>
+      <span className="font-heading text-[19px] font-bold tracking-normal sm:text-[22px] sm:tracking-[-0.02em]">
+        Auditaja
+      </span>
     </Link>
   );
 }
@@ -32,7 +34,7 @@ function Busca({ id }: { id: string }) {
         id={id}
         name="q"
         type="search"
-        placeholder="Buscar deputado por nome ou UF"
+        placeholder="Buscar deputado ou senador por nome ou UF"
         className="h-11 w-full rounded-[10px] border border-input bg-campo px-3.5 text-sm"
       />
     </form>

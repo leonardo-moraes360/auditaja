@@ -11,9 +11,19 @@ import {
   type VotoComOrientacoes,
 } from "@/lib/metrics";
 import { presencaEmExercicio } from "@/lib/exercicio";
+import { DESLOCAMENTO_SENADO, orientacaoDaLideranca, ORGAO_PLENARIO_SENADO, presencaSenado } from "@/lib/senado";
+
+export type Casa = "camara" | "senado";
+
+/** `?casa=` aceita só "camara" e "senado"; qualquer outro valor é "Todos" (SUI-09). */
+export function casaDoFiltro(v: unknown): Casa | null {
+  return v === "camara" || v === "senado" ? v : null;
+}
 
 export type ResultadoBusca = {
   id: number;
+  casa: Casa;
+  sexo: string | null;
   nome: string;
   sigla_partido: string | null;
   sigla_uf: string | null;
@@ -34,15 +44,18 @@ export async function buscarParlamentares(opts: {
   uf?: string;
   todos?: boolean;
   limite?: number;
+  casa?: Casa | null;
 }): Promise<ResultadoBusca[]> {
   const db = getDb();
   let query = db
     .selectFrom("parlamentar")
-    .select(["id", "nome", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
+    .select(["id", "casa", "sexo", "nome", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
     .orderBy("nome")
-    .limit(opts.limite ?? 60);
+    // O Senado tem 81 cadeiras: a lista do Senado cabe inteira; a da Câmara segue limitada a 60.
+    .limit(opts.limite ?? (opts.casa === "senado" ? 100 : 60));
   if (!opts.todos) query = query.where("em_exercicio", "=", true);
   if (opts.uf) query = query.where("sigla_uf", "=", opts.uf);
+  if (opts.casa) query = query.where("casa", "=", opts.casa);
   const q = opts.q?.trim();
   if (q) {
     const padrao = `%${q.replace(/[%_\\]/g, "\\$&")}%`;
@@ -56,6 +69,19 @@ export async function buscarParlamentares(opts: {
     );
   }
   return query.execute();
+}
+
+/** Parlamentares em exercício por Casa, para os filtros da lista (SUI-06). */
+export async function contarPorCasa(): Promise<Record<Casa, number>> {
+  const rows = await getDb()
+    .selectFrom("parlamentar")
+    .select(["casa", sql<string>`count(*)`.as("n")])
+    .where("em_exercicio", "=", true)
+    .groupBy("casa")
+    .execute();
+  const r: Record<Casa, number> = { camara: 0, senado: 0 };
+  for (const x of rows) r[x.casa] = Number(x.n);
+  return r;
 }
 
 export async function ufsDisponiveis(): Promise<string[]> {
@@ -74,24 +100,30 @@ export async function ufsDisponiveis(): Promise<string[]> {
  * Última coleta de cada fonte, para a proveniência exibida (R1). A CEAP sai em um arquivo por ano:
  * a coleta exibida é a do arquivo do ano mostrado (`anoCeap`), não a do último arquivo baixado.
  */
-async function coletasRecentes(anoCeap: number) {
+async function coletasRecentes(anoCeap: number, casa: "camara" | "senado" = "camara") {
   const db = getDb();
+  // Cada perfil mostra as fontes da própria Casa e as comuns (TSE, CGU).
+  // Exclui só a outra Casa: fontes comuns (TSE, CGU e futuras) continuam valendo para as duas.
+  const daOutraCasa = casa === "senado" ? "camara_%" : "senado_%";
   const rows = await db
     .selectFrom("coleta")
     .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
+    .where("fonte", "not like", daOutraCasa)
     .distinctOn("fonte")
     .orderBy("fonte")
     .orderBy("coletado_em", "desc")
     .execute();
   const porFonte = Object.fromEntries(rows.map((r) => [r.fonte, r]));
+  const [fonteCota, urlDoAno] =
+    casa === "senado" ? ["senado_ceaps", `%/despesas_ceaps/${anoCeap}`] : ["camara_ceap", `%/Ano-${anoCeap}.csv.zip`];
   const ceapDoAno = await db
     .selectFrom("coleta")
     .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
-    .where("fonte", "=", "camara_ceap")
-    .where("url", "like", `%/Ano-${anoCeap}.csv.zip`)
+    .where("fonte", "=", fonteCota)
+    .where("url", "like", urlDoAno)
     .orderBy("coletado_em", "desc")
     .executeTakeFirst();
-  if (ceapDoAno) porFonte.camara_ceap = ceapDoAno;
+  if (ceapDoAno) porFonte[fonteCota] = ceapDoAno;
   return porFonte;
 }
 
@@ -141,7 +173,7 @@ async function presencaMediaDaCamara(ano: number): Promise<number | null> {
       from parlamentar p
       cross join v
       left join voto vo on vo.votacao_id = v.id and vo.parlamentar_id = p.id
-      where p.em_exercicio
+      where p.em_exercicio and p.casa = 'camara'
       group by p.id
     )
     select avg(presentes::float / elegiveis) as media from d where linhas > 0 and elegiveis > 0
@@ -150,12 +182,34 @@ async function presencaMediaDaCamara(ano: number): Promise<number | null> {
   return media == null ? null : Math.round(Number(media) * 100);
 }
 
+/**
+ * Presença média dos senadores em exercício nas votações nominais do Plenário do Senado no ano:
+ * média simples da presença de cada um, pela regra de `presencaSenado` (SPRES-04).
+ */
+async function presencaMediaDoSenado(ano: number): Promise<number | null> {
+  const rows = await getDb()
+    .selectFrom("voto")
+    .innerJoin("votacao", "votacao.id", "voto.votacao_id")
+    .innerJoin("parlamentar", "parlamentar.id", "voto.parlamentar_id")
+    .select(["voto.parlamentar_id", "voto.voto"])
+    .where("votacao.sigla_orgao", "=", ORGAO_PLENARIO_SENADO)
+    .where("votacao.data", ">=", `${ano}-01-01`)
+    .where("votacao.data", "<=", `${ano}-12-31`)
+    .where("parlamentar.em_exercicio", "=", true)
+    .execute();
+  const porSenador = new Map<number, string[]>();
+  for (const r of rows) porSenador.set(r.parlamentar_id, [...(porSenador.get(r.parlamentar_id) ?? []), r.voto]);
+  const pcts = [...porSenador.values()].map((v) => presencaSenado(v).percentual).filter((x): x is number => x !== null);
+  return pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
+}
+
 export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
   const db = getDb();
   const p = await db
     .selectFrom("parlamentar")
     .select([
       "id",
+      "casa",
       "nome",
       "nome_civil",
       "sigla_partido",
@@ -165,6 +219,10 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       "sexo",
       "id_legislatura",
       "source_url",
+      "mandato_inicio",
+      "mandato_fim",
+      "participacao",
+      "bloco",
       "historico_coleta_id",
     ])
     .where("id", "=", id)
@@ -228,16 +286,20 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       .where("parlamentar_id", "=", id)
       .where("ano", "in", anosCeap)
       .executeTakeFirstOrThrow(),
-    // Último mês publicado na base inteira: base do teto acumulado.
+    // Último mês publicado na base da mesma Casa: base do teto acumulado.
     db
       .selectFrom("despesa_ceap")
       .select(sql<number>`max(mes)`.as("mes"))
       .where("ano", "=", ano)
+      .where("parlamentar_id", "in", db.selectFrom("parlamentar").select("id").where("casa", "=", p.casa))
       .executeTakeFirst(),
   ]);
 
   const totalAno = porMes.reduce((a, m) => a + Number(m.total), 0);
-  const teto = mandato ? null : tetoDaUf(p.sigla_uf, ano);
+  const senado = p.casa === "senado";
+  // O Senado não publica teto da CEAPS por UF em formato aberto (SCEAPS-06).
+  const teto = mandato || senado ? null : tetoDaUf(p.sigla_uf, ano);
+  const orgaoPlenario = senado ? ORGAO_PLENARIO_SENADO : ORGAO_PLENARIO;
   const ultimoMes = ultimoMesGeral?.mes ?? 0;
 
   // Votações nominais do Plenário (presença e alinhamento) do ano mais recente com votações:
@@ -245,7 +307,7 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
   const ultimaVotacao = await db
     .selectFrom("votacao")
     .select(sql<number>`max(extract(year from data))::int`.as("ano"))
-    .where("sigla_orgao", "=", ORGAO_PLENARIO)
+    .where("sigla_orgao", "=", orgaoPlenario)
     .executeTakeFirst();
   const anoVotos = ultimaVotacao?.ano ?? ano;
   const plenario = await db
@@ -258,16 +320,17 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       "proposicao_sigla",
       "proposicao_ementa",
       "aprovacao",
+      "secreta",
       "source_url",
     ])
-    .where("sigla_orgao", "=", ORGAO_PLENARIO)
+    .where("sigla_orgao", "=", orgaoPlenario)
     .where("data", ">=", `${anoVotos}-01-01`)
     .where("data", "<=", `${anoVotos}-12-31`)
     .orderBy("data", "desc")
     .orderBy("id", "desc")
     .execute();
   const idsPlen = plenario.map((v) => v.id);
-  const blocos = await blocosDaLegislatura(p.id_legislatura);
+  const blocos = senado ? [] : await blocosDaLegislatura(p.id_legislatura);
   const [votos, orientacoes] = idsPlen.length
     ? await Promise.all([
         db
@@ -290,21 +353,39 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     orientPorVotacao.set(o.votacao_id, l);
   }
   const votoPorVotacao = new Map(votos.map((v) => [v.votacao_id, v]));
+  /**
+   * Senado: vale só a orientação da liderança do próprio partido (SALI-01). Ela entra na lista
+   * com a sigla do partido como bancada, e o resto das regras de alinhamento é o mesmo da Câmara.
+   */
+  const secretas = new Set(plenario.filter((v) => v.secreta).map((v) => v.id));
+  const orientacoesDoVoto = (votacaoId: string, siglaPartido: string | null) => {
+    const todas = orientPorVotacao.get(votacaoId) ?? [];
+    if (!senado) return todas;
+    // Votação secreta: o voto não é público, então nenhuma orientação se aplica (SALI-02, SVOT-06).
+    if (secretas.has(votacaoId)) return [];
+    const o = orientacaoDaLideranca(siglaPartido, todas);
+    return o && siglaPartido ? [{ siglaBancada: siglaPartido, orientacao: o }] : [];
+  };
   const comOrientacao: VotoComOrientacoes[] = votos.map((v) => ({
     voto: v.voto,
     siglaPartido: v.sigla_partido ?? p.sigla_partido,
-    orientacoes: orientPorVotacao.get(v.votacao_id) ?? [],
+    orientacoes: orientacoesDoVoto(v.votacao_id, v.sigla_partido ?? p.sigla_partido),
   }));
-  const periodos = p.historico_coleta_id
-    ? await db
-        .selectFrom("periodo_fora_exercicio")
-        .select(["inicio", "fim", "situacao", "motivo"])
-        .where("parlamentar_id", "=", id)
-        .orderBy("inicio")
-        .execute()
-    : null;
+  // Câmara: votações em exercício, pelo histórico de situação; Senado: votações com registro do
+  // senador, sem licenças e afastamentos (SPRES-03).
+  const periodos =
+    !senado && p.historico_coleta_id
+      ? await db
+          .selectFrom("periodo_fora_exercicio")
+          .select(["inicio", "fim", "situacao", "motivo"])
+          .where("parlamentar_id", "=", id)
+          .orderBy("inicio")
+          .execute()
+      : null;
   const presenca = presencaEmExercicio(plenario, new Map(votos.map((v) => [v.votacao_id, v.voto])), periodos, anoVotos);
-  const { presentes } = presenca;
+  const presencaSen = senado ? presencaSenado(votos.map((v) => v.voto)) : null;
+  const presentes = presencaSen ? presencaSen.presentes : presenca.presentes;
+  const elegiveis = presencaSen ? presencaSen.denominador : presenca.elegiveis;
   const alin = alinhamento(comOrientacao, blocos);
 
   const listaVotacoes = plenario.map((v) => {
@@ -313,13 +394,15 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       {
         voto: voto?.voto ?? "",
         siglaPartido: voto?.sigla_partido ?? p.sigla_partido,
-        orientacoes: orientPorVotacao.get(v.id) ?? [],
+        orientacoes: orientacoesDoVoto(v.id, voto?.sigla_partido ?? p.sigla_partido),
       },
       blocos,
     );
     return {
       ...v,
       voto: voto?.voto || null,
+      /** Partido do parlamentar no dia do voto (pode diferir do atual). */
+      partidoNoVoto: voto?.sigla_partido ?? null,
       orientacao: orient?.orientacao ?? null,
       tipoOrientacao: orient?.tipo ?? null,
       foraDoExercicio: presenca.foraPorVotacao.get(v.id) ?? null,
@@ -366,7 +449,18 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     .where("parlamentar_id", "=", id)
     .executeTakeFirstOrThrow();
 
-  const mediaPresenca = await presencaMediaDaCamara(anoVotos);
+  const mediaPresenca = senado ? await presencaMediaDoSenado(anoVotos) : await presencaMediaDaCamara(anoVotos);
+
+  const suplentes = senado
+    ? await db
+        .selectFrom("suplente")
+        // O sexo do suplente vem do cadastro dele no Senado, quando ele também é parlamentar da legislatura.
+        .leftJoin("parlamentar as sp", (j) => j.on(sql`sp.id`, "=", sql`${DESLOCAMENTO_SENADO} + suplente.codigo`))
+        .select(["suplente.ordem", "suplente.nome", "sp.sexo"])
+        .where("suplente.parlamentar_id", "=", id)
+        .orderBy("suplente.ordem")
+        .execute()
+    : [];
 
   return {
     parlamentar: p,
@@ -385,25 +479,33 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       teto,
       tetoAcumulado: tetoAcumulado(teto, ultimoMes),
       ultimoMes,
+      /** Total do ano ÷ meses com notas no ano (SCEAPS-05). */
+      mediaMensal: (() => {
+        const meses = mandato ? 0 : porMes.filter((m) => m.ano === ano).length;
+        return meses ? totalAno / meses : null;
+      })(),
     },
     votacoes: {
       ano: anoVotos,
       totalPlenario: plenario.length,
       mediaPresenca,
       presentes,
-      elegiveis: presenca.elegiveis,
-      foraDoExercicio: presenca.foraDoExercicio,
-      tipoFora: presenca.tipoFora,
-      historicoDisponivel: presenca.historicoDisponivel,
-      periodosFora: presenca.periodosNoAno,
+      elegiveis,
+      /** Mesmo número que `elegiveis`: denominador da presença nas duas Casas. */
+      denominadorPresenca: elegiveis,
+      foraDoExercicio: senado ? 0 : presenca.foraDoExercicio,
+      tipoFora: senado ? null : presenca.tipoFora,
+      historicoDisponivel: senado ? false : presenca.historicoDisponivel,
+      periodosFora: senado ? [] : presenca.periodosNoAno,
       alinhamento: alin,
       lista: listaVotacoes,
     },
     bens,
     candidaturas,
     orgaos,
+    suplentes,
     correcoes: Number(correcoes.n),
-    coletas: await coletasRecentes(ano),
+    coletas: await coletasRecentes(ano, p.casa),
   };
 }
 

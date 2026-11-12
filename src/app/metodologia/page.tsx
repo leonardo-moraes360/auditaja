@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TETO_CEAP_ANO, TETO_CEAP_ATO, TETO_CEAP_CONFERIDO_EM, TETO_CEAP_FONTE } from "@/data/teto-ceap";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
+import { LICENCAS_SENADO } from "@/lib/senado";
 
 export const metadata: Metadata = { title: "Metodologia" };
 
@@ -88,12 +89,51 @@ export default function Metodologia() {
         </p>
       </section>
 
+      <section id="senado" className="scroll-mt-4 space-y-2">
+        <h2 className="font-heading text-xl font-bold">Senado Federal</h2>
+        <p>
+          Os senadores seguem as mesmas regras de fonte, de privacidade e de bens dos deputados, com as diferenças
+          abaixo. Os dados vêm da{" "}
+          <a href="https://legis.senado.leg.br/dadosabertos/" target="_blank" rel="noopener noreferrer">
+            API de Dados Abertos do Senado
+          </a>{" "}
+          (senadores, mandatos, suplentes, comissões, votações e orientações) e da API de dados administrativos do
+          Senado (cota dos senadores, CEAPS). Nenhuma das duas exige cadastro ou chave.
+        </p>
+        <h3 className="font-semibold">Cota do senador (CEAPS)</h3>
+        <p>
+          Somamos o valor reembolsado de cada nota no ano. O Senado não publica glosa nem, em formato aberto, o teto da
+          cota por estado; por isso o perfil do senador não compara o gasto com um teto e mostra a média mensal (total
+          do ano dividido pelos meses com notas). Quando o Senado já publica o CPF do fornecedor mascarado, não gravamos
+          documento nenhum: a máscara do Senado e a da Câmara mostram dígitos diferentes e, juntas, revelariam o número.
+        </p>
+        <h3 className="font-semibold">Presença</h3>
+        <p>
+          Contamos as votações nominais do Plenário do Senado no ano em que o senador tem registro. Contam como
+          presença: Sim, Não, Abstenção, Obstrução, &quot;Votou&quot; (votação secreta), presente sem registrar voto
+          (P-NRV) e presidência da sessão. Licenças e afastamentos saem da conta ({[...LICENCAS_SENADO].join(", ")}).
+          Todo o resto conta como ausência, inclusive missão oficial e atividade parlamentar, que aparecem com o motivo
+          na lista de votações. A média do Senado é a média simples da presença dos senadores em exercício.
+        </p>
+        <h3 className="font-semibold">Voto conforme a liderança</h3>
+        <p>
+          Vale só a orientação da liderança do próprio partido do senador no Plenário do Senado (por exemplo,
+          &quot;Progressistas&quot; para o PP e &quot;Podemos&quot; para o PODE). Orientações de Governo, Maioria,
+          Minoria, Oposição, Bancada Feminina e blocos não contam. Como na Câmara, só comparamos votações em que a
+          orientação foi Sim ou Não e o senador votou Sim ou Não.
+        </p>
+        <p>
+          Em votação secreta, como a escolha de autoridades, o Senado registra só que o senador votou. Essas votações
+          contam para a presença, mas nunca para o alinhamento.
+        </p>
+      </section>
+
       <section className="space-y-2">
         <h2 className="font-heading text-xl font-bold">Bens declarados</h2>
         <p>
-          Associamos as candidaturas do TSE aos deputados pelo nome civil e, quando os dois lados publicam, pela data de
-          nascimento; sem data, exigimos a mesma UF. Casamentos ambíguos são descartados. Mostramos só o tipo e o valor
-          de cada bem, em valores nominais, sem correção pela inflação.
+          Associamos as candidaturas do TSE aos deputados e senadores pelo nome civil e, quando os dois lados publicam,
+          pela data de nascimento; sem data, exigimos a mesma UF. Casamentos ambíguos são descartados. Mostramos só o
+          tipo e o valor de cada bem, em valores nominais, sem correção pela inflação.
         </p>
       </section>
 

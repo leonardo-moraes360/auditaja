@@ -6,6 +6,7 @@ import * as m0003 from "./migrations/0003_blocos";
 import * as m0004 from "./migrations/0004_paridade";
 import * as m0006 from "./migrations/0006_exercicio";
 import * as m0007 from "./migrations/0007_emendas";
+import * as m0008 from "./migrations/0008_senado";
 
 /** Lista explícita: funciona igual em scripts, testes e build. */
 const provider: MigrationProvider = {
@@ -17,6 +18,7 @@ const provider: MigrationProvider = {
       "0004_paridade": m0004,
       "0006_exercicio": m0006,
       "0007_emendas": m0007,
+      "0008_senado": m0008,
     };
   },
 };
