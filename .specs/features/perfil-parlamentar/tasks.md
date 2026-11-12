@@ -734,7 +734,7 @@ Phase 9:  T26
 
 ### T30: Presença sem períodos de licença
 
-**What**: A presença deixa de contar votações em dias fora do exercício (licença, afastamento, vacância, antes da posse). Coletor `pnpm ingest historico` (API v2 `/deputados/{id}/historico`, 1 requisição por deputado pelo `ClienteEducado`, coleta registrada a cada 50 deputados; `historico faltantes` retoma), migração 0006 (`periodo_fora_exercicio` e `parlamentar.historico_coleta_id`), regra pura em `src/lib/exercicio.ts`, média da Câmara com a mesma regra, selo "Em licença · não conta" na lista, quadro "Períodos fora do exercício" e cartão como na proposta aprovada (canvas, pranchas "Presença sem licenças"). Metodologia 1.4.
+**What**: A presença deixa de contar votações em dias fora do exercício (licença, afastamento, vacância, antes da posse). Coletor `pnpm ingest historico` (API v2 `/deputados/{id}/historico`, 1 requisição por deputado pelo `ClienteEducado`, coleta registrada a cada 50 deputados; `historico faltantes` retoma), migração 0006 (`periodo_fora_exercicio` e `parlamentar.historico_coleta_id`), regra pura em `src/lib/exercicio.ts`, média da Câmara com a mesma regra, selo "Em licença · não conta" na lista, quadro "Períodos fora do exercício" e cartão como na proposta aprovada (canvas, pranchas "Presença sem licenças"). Metodologia 1.6 (a 1.5 entrou com emendas e sanções).
 **Where**: `src/lib/exercicio.ts`, `src/ingest/historico.ts`, `scripts/ingest.ts`, `src/db/migrations/0006_exercicio.ts`, `src/data/perfil.ts`, `src/components/perfil/secoes.tsx`, `src/app/parlamentares/[id]/page.tsx`, `src/app/metodologia/page.tsx`
 **Depends on**: None
 **Requirement**: VOTO-01, PRES-01 a PRES-05

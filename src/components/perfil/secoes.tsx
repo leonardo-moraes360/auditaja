@@ -1,10 +1,13 @@
 import Link from "next/link";
+import type { SancaoFornecedor } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
 import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
+import { AvisoSancao, SeloSancao } from "./sancao";
+import { ComoLigamosEmendas } from "./secao-emendas";
 
 /** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
 function fraseCase(s: string) {
@@ -82,7 +85,15 @@ export function Indicador({
 
 // ---------------------------------------------------------------- CEAP
 
-export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: boolean }) {
+export function SecaoGastos({
+  perfil,
+  completo,
+  sancoes = [],
+}: {
+  perfil: Perfil;
+  completo: boolean;
+  sancoes?: SancaoFornecedor[];
+}) {
   const { ceap, ano, parlamentar, mandato } = perfil;
   const uf = parlamentar.sigla_uf;
   const tetoMensal = ceap.teto?.mensal ?? null;
@@ -262,6 +273,7 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
                           >
                             {f.fornecedor_nome}
                           </a>
+                          <SeloSancao doc={f.fornecedor_doc} sancoes={sancoes} />
                         </td>
                         <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
                           {f.fornecedor_doc ?? "—"}
@@ -278,6 +290,16 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
               </p>
             </div>
           </div>
+          <AvisoSancao
+            fornecedores={ceap.fornecedores}
+            sancoes={sancoes}
+            periodo={mandato ? "no mandato" : `em ${ano}`}
+            hrefNotas={(doc, de, ate) =>
+              `/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}&doc=${encodeURIComponent(doc)}${
+                de ? `&de=${de}` : ""
+              }${ate ? `&ate=${ate}` : ""}`
+            }
+          />
           {!completo && (
             <Link href={href(`ano=${parametroAno}&lista=completa#gastos`)} className="text-sm font-semibold sm:hidden">
               Ver todas as notas e fornecedores
@@ -731,6 +753,16 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       det: `Votações, votos e orientações${coletadoEm("camara_lote_votos")}`,
     },
     {
+      nome: "Portal da Transparência · Emendas (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
+      det: `Emendas e pagamentos por favorecido${coletadoEm("cgu_emendas")}`,
+    },
+    {
+      nome: "Portal da Transparência · CEIS e CNEP (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+      det: `Empresas sancionadas${coletadoEm("cgu_ceis")}`,
+    },
+    {
       nome: "TSE · Dados Abertos (lote)",
       href: "https://dadosabertos.tse.jus.br/",
       det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
@@ -820,6 +852,8 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
           <Link href="/fontes">Ver todas as coletas</Link>
         </p>
       </section>
+
+      <ComoLigamosEmendas />
 
       <section
         aria-labelledby="erro-titulo"

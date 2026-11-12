@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 18,
+  "next_id": 32,
   "lessons": [
     {
       "id": "L-001",
@@ -312,6 +312,258 @@
       ],
       "created": "2026-11-11T13:54:01Z",
       "last_seen": "2026-11-11T13:54:01Z"
+    },
+    {
+      "id": "L-018",
+      "key": "surviving_mutant::when a rule picks one item among siblings such as one entry of an archive give each sibling a distinct value in the fixture so reading the wrong one fails a test",
+      "text": "When a rule picks one item among siblings, such as one entry of an archive, give each sibling a distinct value in the fixture so reading the wrong one fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N05 N09 src/ingest/transparencia.ts:41 src/ingest/arquivos.ts:106; fixture tests/integracao/emendas.test.ts:70 (ingest)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-019",
+      "key": "surviving_mutant::when a table column must show on a viewport assert the header and the cells visible there not only the cell text",
+      "text": "When a table column must show on a viewport, assert the header and the cells visible there, not only the cell text",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U15 src/components/perfil/secao-emendas.tsx:299; tests/e2e/emendas.spec.ts:76 (ui)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-020",
+      "key": "surviving_mutant::seed a case for each branch of a singular and plural label so the plural count is asserted not only the singular",
+      "text": "Seed a case for each branch of a singular and plural label so the plural count is asserted, not only the singular",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U23 src/components/perfil/sancao.tsx:88 (ui)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-021",
+      "key": "surviving_mutant::text adopted to reach visual parity with an approved artboard needs an assertion or a later edit silently undoes the parity",
+      "text": "Text adopted to reach visual parity with an approved artboard needs an assertion, or a later edit silently undoes the parity",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U20 U21 U22 src/components/perfil/secao-emendas.tsx:251,279,325 (ui)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-022",
+      "key": "spec_precision_gap::when a label shows a count the spec must say which count it is and what the link returns",
+      "text": "When a label shows a count, the spec must say which count it is and what the link returns",
+      "signal": "spec_precision_gap",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C22 paridade/verificacao-2.md; src/components/perfil/sancao.tsx:88 (spec)"
+      ],
+      "created": "2026-11-11T17:44:47Z",
+      "last_seen": "2026-11-11T17:44:47Z"
+    },
+    {
+      "id": "L-023",
+      "key": "surviving_mutant::when a rule picks one entry by name put a decoy entry before the target so a pick first implementation fails a test",
+      "text": "When a rule picks one entry by name, put a decoy entry before the target so a pick-first implementation fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ingest",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N09 src/ingest/arquivos.ts:106 (ingest)"
+      ],
+      "created": "2026-11-11T18:00:46Z",
+      "last_seen": "2026-11-11T18:00:46Z"
+    },
+    {
+      "id": "L-024",
+      "key": "surviving_mutant::when two counts could fill a label seed a case where they differ so using the wrong count fails a test",
+      "text": "When two counts could fill a label, seed a case where they differ so using the wrong count fails a test",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U30 src/components/perfil/sancao.tsx:94 (ui)"
+      ],
+      "created": "2026-11-11T18:00:46Z",
+      "last_seen": "2026-11-11T18:00:46Z"
+    },
+    {
+      "id": "L-025",
+      "key": "surviving_mutant::test an inclusive date range filter with a row dated exactly on each bound",
+      "text": "Test an inclusive date range filter with a row dated exactly on each bound",
+      "signal": "surviving_mutant",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "G01 G02 src/app/parlamentares/[id]/gastos.csv/route.ts:46-47 (routes)"
+      ],
+      "created": "2026-11-11T18:00:46Z",
+      "last_seen": "2026-11-11T18:00:46Z"
+    },
+    {
+      "id": "L-026",
+      "key": "surviving_mutant::assert parity text with an exact match on its element since a substring match accepts added text",
+      "text": "Assert parity text with an exact match on its element, since a substring match accepts added text",
+      "signal": "surviving_mutant",
+      "scope": "ui",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "U22 src/components/perfil/secao-emendas.tsx:251 (ui)"
+      ],
+      "created": "2026-11-11T18:00:47Z",
+      "last_seen": "2026-11-11T18:00:47Z"
+    },
+    {
+      "id": "L-027",
+      "key": "surviving_mutant::test a unit switch threshold at the exact boundary value",
+      "text": "Test a unit-switch threshold at the exact boundary value",
+      "signal": "surviving_mutant",
+      "scope": "lib",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "B03 src/lib/emendas.ts:99 (lib)"
+      ],
+      "created": "2026-11-11T18:00:47Z",
+      "last_seen": "2026-11-11T18:00:47Z"
+    },
+    {
+      "id": "L-028",
+      "key": "surviving_mutant::test a masking regex with every separator form it accepts and with two matches in one string so dropping a separator or the global flag fails a test",
+      "text": "Test a masking regex with every separator form it accepts and with two matches in one string, so dropping a separator or the global flag fails a test",
+      "signal": "surviving_mutant",
+      "scope": "privacy",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P06, P07 src/lib/privacy.ts:45 (privacy)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
+    },
+    {
+      "id": "L-029",
+      "key": "surviving_mutant::when a pattern must not match inside a longer digit run test a longer run glued to text on each side so removing either boundary fails a test",
+      "text": "When a pattern must not match inside a longer digit run, test a longer run glued to text on each side so removing either boundary fails a test",
+      "signal": "surviving_mutant",
+      "scope": "privacy",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P03, P04 src/lib/privacy.ts:45 (privacy)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
+    },
+    {
+      "id": "L-030",
+      "key": "surviving_mutant::test date validation with a well formed impossible date such as february 30 on every parameter that uses it not only an out of range month on one",
+      "text": "Test date validation with a well-formed impossible date such as February 30 on every parameter that uses it, not only an out-of-range month on one",
+      "signal": "surviving_mutant",
+      "scope": "routes",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "D01, D06 src/app/parlamentares/[id]/gastos.csv/route.ts:8 (routes)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
+    },
+    {
+      "id": "L-031",
+      "key": "surviving_mutant::a shared helper applied to a new call site needs a test at that call site in the same branch not one that only arrives with another branch",
+      "text": "A shared helper applied to a new call site needs a test at that call site in the same branch, not one that only arrives with another branch",
+      "signal": "surviving_mutant",
+      "scope": "tests",
+      "status": "candidate",
+      "features": [
+        "emendas-transparencia"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P10 src/lib/privacy.ts:41 (tests)"
+      ],
+      "created": "2026-11-11T19:07:51Z",
+      "last_seen": "2026-11-11T19:07:51Z"
     }
   ]
 }

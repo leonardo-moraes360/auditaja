@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { emendasDoParlamentar, sancoesDosFornecedores } from "@/data/emendas";
 import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
+import { SecaoEmendas } from "@/components/perfil/secao-emendas";
 import { FotoParlamentar } from "@/components/perfil/foto";
 import { AbasSecoes } from "@/components/perfil/abas";
 import { Indicador, Lateral, SecaoBens, SecaoGastos, SecaoVotacoes } from "@/components/perfil/secoes";
@@ -58,6 +60,12 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const completo = sp.lista === "completa";
   const perfil = await perfilParlamentar(id, periodo);
   if (!perfil) notFound();
+  const emendas = await emendasDoParlamentar(id, sp.emendas);
+  const sancoes = await sancoesDosFornecedores(
+    id,
+    perfil.ceap.fornecedores.map((f) => f.fornecedor_doc),
+    perfil.mandato ? perfil.anosDisponiveis : [perfil.ano],
+  );
 
   const { parlamentar: p, ceap, votacoes } = perfil;
   const anosBens = [...new Set(perfil.bens.map((b) => b.ano_eleicao))].sort();
@@ -240,7 +248,8 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
 
       <div className="flex flex-col gap-4 px-4 pt-4 pb-6 sm:gap-5 sm:px-0 sm:pt-0 sm:pb-0 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[999_1_560px]">
-          <SecaoGastos perfil={perfil} completo={completo} />
+          <SecaoGastos perfil={perfil} completo={completo} sancoes={sancoes} />
+          <SecaoEmendas dados={emendas} parlamentarId={p.id} />
           <SecaoVotacoes perfil={perfil} filtro={filtro} completo={completo} />
           <SecaoBens perfil={perfil} />
         </div>

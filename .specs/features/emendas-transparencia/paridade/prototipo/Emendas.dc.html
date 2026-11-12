@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Emendas e sanções · Auditaja</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F6F6F3}
+a{color:#1F4FD1}a:hover{color:#163A9C}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #15181E; background: #F6F6F3; min-height: 100vh;">
+
+<div style="background: #FFF3D6; color: #5C4300; font-size: 13px; text-align: center; padding: 8px 16px;">Proposta visual com dados fictícios. Nomes, valores e favorecidos são ilustrativos.</div>
+
+<main style="max-width: 1200px; margin: 0 auto; padding: 20px 24px 48px; box-sizing: border-box;">
+
+<nav aria-label="Seções do perfil" style="display: flex; gap: 4px; overflow-x: auto; margin: 0 0 20px; border-bottom: 1px solid #E2E2DC;">
+<a href="#gastos" style="padding: 12px 16px; font-size: 15px; font-weight: 500; color: #555B66; text-decoration: none; white-space: nowrap;">Gastos da cota</a>
+<a href="#emendas" style="padding: 12px 16px; font-size: 15px; font-weight: 600; color: #1F4FD1; text-decoration: none; border-bottom: 2px solid #1F4FD1; white-space: nowrap;">Emendas</a>
+<a href="#votacoes" style="padding: 12px 16px; font-size: 15px; font-weight: 500; color: #555B66; text-decoration: none; white-space: nowrap;">Votações</a>
+<a href="#bens" style="padding: 12px 16px; font-size: 15px; font-weight: 500; color: #555B66; text-decoration: none; white-space: nowrap;">Bens declarados</a>
+<a href="#mandato" style="padding: 12px 16px; font-size: 15px; font-weight: 500; color: #555B66; text-decoration: none; white-space: nowrap;">Mandato</a>
+<a href="#fontes" style="padding: 12px 16px; font-size: 15px; font-weight: 500; color: #555B66; text-decoration: none; white-space: nowrap;">Fontes</a>
+</nav>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+
+<section id="emendas" aria-labelledby="h-emendas" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: baseline;">
+<h2 id="h-emendas" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px;">Emendas parlamentares individuais</h2>
+<div style="display: flex; gap: 6px;">
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #C9CAC2; background: #FFFFFF; color: #3D424B; font: inherit; font-size: 13px; cursor: pointer;">2026</button>
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #C9CAC2; background: #FFFFFF; color: #3D424B; font: inherit; font-size: 13px; cursor: pointer;">2025</button>
+<button type="button" aria-pressed="true" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #1F4FD1; background: #E8EEFC; color: #1F4FD1; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">Mandato todo</button>
+</div>
+</div>
+
+<p style="margin: 0; font-size: 14px; color: #3D424B; line-height: 1.5;">Emenda é a parte do Orçamento da União que o parlamentar indica para uma área ou um lugar. Quem executa é o governo federal. <strong>Empenhado</strong> é o valor reservado para a despesa; <strong>pago</strong> é o que já saiu do caixa. Emendas de bancada e de comissão têm autoria coletiva e não entram nesta soma.</p>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Empenhado no mandato</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">R$ 74,2 mi</span>
+<span style="font-size: 12px; color: #555B66;">112 emendas, orçamentos de 2023 a 2026</span>
+</div>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Pago até agora</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">R$ 58,9 mi</span>
+<div style="height: 8px; background: #E2E2DC; border-radius: 4px; overflow: hidden;" role="img" aria-label="79% do valor empenhado já foi pago"><div style="width: 79%; height: 8px; background: #1F4FD1;"></div></div>
+<span style="font-size: 12px; color: #555B66;">79% do empenhado, incluindo restos a pagar</span>
+</div>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Transferências especiais (“emendas Pix”)</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">R$ 21,4 mi</span>
+<span style="font-size: 12px; color: #555B66;">29% do empenhado · vão direto ao caixa do município, sem objeto definido</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; font-size: 13px; color: #555B66;">
+<span>Por ano do orçamento</span>
+<span style="display: flex; gap: 16px;">
+<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #B9C8F3;"></span>Empenhado</span>
+<span style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 3px; background: #1F4FD1;"></span>Pago</span>
+</span>
+</div>
+<div style="height: 190px; display: flex; align-items: flex-end; gap: 32px; padding: 10px 8px 0; border-bottom: 1px solid #C9CAC2;" role="img" aria-label="Gráfico de barras: valor empenhado e pago por ano do orçamento, de 2023 a 2026">
+<sc-for list="{{anos}}" as="a" hint-placeholder-count="4">
+<div style="flex: 1 1 0; display: flex; align-items: flex-end; justify-content: center; gap: 6px; height: 100%;">
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; width: 44%; max-width: 52px;">
+<span style="font-size: 11px; color: #555B66;">{{a.ek}}</span>
+<div style="width: 100%; height: {{a.eh}}px; background: #B9C8F3; border-radius: 4px 4px 0 0;"></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; width: 44%; max-width: 52px;">
+<span style="font-size: 11px; color: #555B66;">{{a.pk}}</span>
+<div style="width: 100%; height: {{a.ph}}px; background: #1F4FD1; border-radius: 4px 4px 0 0;"></div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 32px; padding: 0 8px;">
+<sc-for list="{{anos}}" as="a" hint-placeholder-count="4">
+<span style="flex: 1 1 0; text-align: center; font-size: 12px; color: #555B66;">{{a.ano}}</span>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: #555B66;">Em 2026 o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.</span>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px;">
+<div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+<h3 style="margin: 0; font-size: 15px;">Por área do governo</h3>
+<sc-for list="{{areas}}" as="c" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px;"><span>{{c.nome}}</span><span style="color: #555B66; white-space: nowrap;">{{c.valor}} · {{c.pct}}%</span></div>
+<div style="height: 8px; background: #F0F0EC; border-radius: 4px; overflow: hidden;"><div style="height: 8px; width: {{c.w}}%; background: #6E8FE8;"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 12px; min-width: 0;">
+<h3 style="margin: 0; font-size: 15px;">Onde o recurso foi aplicado</h3>
+<sc-for list="{{locais}}" as="c" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px;"><span>{{c.nome}}</span><span style="color: #555B66; white-space: nowrap;">{{c.valor}}</span></div>
+<div style="height: 8px; background: #F0F0EC; border-radius: 4px; overflow: hidden;"><div style="height: 8px; width: {{c.w}}%; background: #6E8FE8;"></div></div>
+</div>
+</sc-for>
+<span style="font-size: 12px; color: #555B66;">“Estado (UF)” e “Nacional” indicam emendas sem município definido no Orçamento.</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<h3 style="margin: 0; font-size: 15px;">Quem recebeu os pagamentos</h3>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+<thead><tr style="text-align: left; color: #555B66;"><th style="padding: 6px 8px 6px 0; font-weight: 600;">Favorecido</th><th style="padding: 6px 8px; font-weight: 600;">CNPJ/CPF</th><th style="padding: 6px 8px; font-weight: 600;">Tipo</th><th style="padding: 6px 8px; font-weight: 600;">Município</th><th style="padding: 6px 0; font-weight: 600; text-align: right;">Recebido</th></tr></thead>
+<tbody>
+<sc-for list="{{favorecidos}}" as="f" hint-placeholder-count="5">
+<tr style="border-top: 1px solid #ECECE6;"><td style="padding: 8px 8px 8px 0;">{{f.nome}}</td><td style="padding: 8px; color: #555B66; font-variant-numeric: tabular-nums; white-space: nowrap;">{{f.doc}}</td><td style="padding: 8px; color: #555B66;">{{f.tipo}}</td><td style="padding: 8px; color: #555B66; white-space: nowrap;">{{f.mun}}</td><td style="padding: 8px 0; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;">{{f.total}}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<span style="font-size: 12px; color: #555B66;">Prefeituras e fundos municipais aparecem pelo nome. CPF de pessoa física aparece mascarado, como no Portal da Transparência.</span>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; font-size: 12px; color: #555B66; border-top: 1px solid #ECECE6; padding-top: 12px;">
+<span>Fonte: Portal da Transparência (CGU), Emendas Parlamentares, download em lote · base de 10/11/2026 · coletado em 11/11/2026 06:00</span>
+<span style="display: flex; gap: 16px;"><a href="#">Ver no Portal</a><a href="#">Baixar CSV</a><a href="#">Contestar</a></span>
+</div>
+</section>
+
+<section id="gastos" aria-labelledby="h-forn" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 13px; color: #555B66;">Dentro de “Gastos da cota parlamentar”, só o bloco que muda:</span>
+<h3 id="h-forn" style="margin: 0; font-size: 15px;">Maiores fornecedores</h3>
+</div>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+<thead><tr style="text-align: left; color: #555B66;"><th style="padding: 6px 8px 6px 0; font-weight: 600;">Fornecedor</th><th style="padding: 6px 8px; font-weight: 600;">CNPJ/CPF</th><th style="padding: 6px 0; font-weight: 600; text-align: right;">Total</th></tr></thead>
+<tbody>
+<tr style="border-top: 1px solid #ECECE6;"><td style="padding: 8px 8px 8px 0;"><a href="#" style="color: #15181E;">Gráfica Exemplo Ltda</a></td><td style="padding: 8px; color: #555B66; font-variant-numeric: tabular-nums; white-space: nowrap;">12.345.678/0001-90</td><td style="padding: 8px 0; text-align: right; font-variant-numeric: tabular-nums;">R$ 64.200</td></tr>
+<tr style="border-top: 1px solid #ECECE6;"><td style="padding: 8px 8px 8px 0;"><div style="display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;"><a href="#" style="color: #15181E;">Locadora Modelo S.A.</a><span style="background: #FDF0E7; color: #7A2E09; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap;">Sanção no CEIS</span></div></td><td style="padding: 8px; color: #555B66; font-variant-numeric: tabular-nums; white-space: nowrap;">98.765.432/0001-10</td><td style="padding: 8px 0; text-align: right; font-variant-numeric: tabular-nums;">R$ 41.800</td></tr>
+<tr style="border-top: 1px solid #ECECE6;"><td style="padding: 8px 8px 8px 0;"><a href="#" style="color: #15181E;">Aérea Fictícia S.A.</a></td><td style="padding: 8px; color: #555B66; font-variant-numeric: tabular-nums; white-space: nowrap;">11.222.333/0001-44</td><td style="padding: 8px 0; text-align: right; font-variant-numeric: tabular-nums;">R$ 38.950</td></tr>
+<tr style="border-top: 1px solid #ECECE6;"><td style="padding: 8px 8px 8px 0;"><a href="#" style="color: #15181E;">Posto Ilustrativo Ltda</a></td><td style="padding: 8px; color: #555B66; font-variant-numeric: tabular-nums; white-space: nowrap;">55.666.777/0001-88</td><td style="padding: 8px 0; text-align: right; font-variant-numeric: tabular-nums;">R$ 12.430</td></tr>
+</tbody>
+</table>
+</div>
+<div style="background: #FDF0E7; border-radius: 12px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start;">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4440E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6"></path><path d="M12 17h.01"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+<strong style="font-size: 15px; color: #7A2E09;">Locadora Modelo S.A. tem sanção registrada no CEIS</strong>
+<p style="margin: 0; font-size: 14px; color: #3D424B; line-height: 1.5;">Impedimento de contratar com a administração pública de 03/02/2025 a 03/02/2027, aplicado pelo Ministério Exemplo. 4 das 9 notas pagas a essa empresa têm data dentro desse período. O registro é do cadastro oficial da CGU e não indica irregularidade do parlamentar: a cota é reembolso de despesa, não contrato público.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; font-weight: 600;"><a href="#" style="color: #B4440E;">Ver a sanção no Portal</a><a href="#" style="color: #B4440E;">Ver as 4 notas</a><a href="#" style="color: #B4440E;">Como cruzamos (metodologia)</a></div>
+</div>
+</div>
+<span style="font-size: 12px; color: #555B66;">Fonte do cruzamento: Portal da Transparência (CGU), CEIS e CNEP, download em lote · base de 11/11/2026 · comparação pelo CNPJ.</span>
+</section>
+</div>
+
+<aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+<section id="fontes" aria-labelledby="h-fontes" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+<h2 id="h-fontes" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px;">De onde vêm os dados</h2>
+<sc-for list="{{fontes}}" as="s" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid #ECECE6;">
+<a href="#" style="font-size: 14px; font-weight: 600;">{{s.nome}}</a>
+<span style="font-size: 12px; color: #555B66;">{{s.det}}</span>
+</div>
+</sc-for>
+<span style="font-size: 12px; color: #555B66; line-height: 1.5;">Só usamos dados que os órgãos já publicam. Cada registro guarda link e data de coleta.</span>
+</section>
+<section aria-labelledby="h-como" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+<h2 id="h-como" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px;">Como ligamos a emenda ao deputado</h2>
+<p style="margin: 0; font-size: 14px; color: #3D424B; line-height: 1.5;">O Portal identifica o autor pelo nome parlamentar. Ligamos esse nome ao cadastro da Câmara. Quando dois deputados têm o mesmo nome, a emenda fica de fora até a conferência manual.</p>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const H = 150;
+    const mi = (n) => 'R$ ' + (n / 1e6).toFixed(1).replace('.', ',') + ' mi';
+    const raw = [['2023', 17.1, 16.4], ['2024', 19.8, 18.2], ['2025', 20.6, 17.0], ['2026', 16.7, 7.3]];
+    const max = 21;
+    const anos = raw.map(([ano, e, p]) => ({ ano, ek: e.toFixed(1).replace('.', ','), pk: p.toFixed(1).replace('.', ','), eh: Math.round(e / max * H), ph: Math.round(p / max * H) }));
+    const ar = [['Saúde', 37100000], ['Urbanismo', 14800000], ['Encargos especiais (transferências especiais)', 11200000], ['Agricultura', 6300000], ['Educação', 4800000]];
+    const tot = 74200000;
+    const areas = ar.map(([nome, v]) => ({ nome, valor: mi(v), pct: Math.round(v / tot * 100), w: Math.round(v / ar[0][1] * 100) }));
+    const lc = [['Campinas (SP)', 9400000], ['São Paulo (UF)', 8100000], ['Sorocaba (SP)', 6200000], ['Ribeirão Preto (SP)', 4900000], ['Nacional', 2300000]];
+    const locais = lc.map(([nome, v]) => ({ nome, valor: mi(v), w: Math.round(v / lc[0][1] * 100) }));
+    const favorecidos = [
+      { nome: 'Fundo Municipal de Saúde de Campinas', doc: '11.111.111/0001-11', tipo: 'Fundo municipal', mun: 'Campinas (SP)', total: 'R$ 7,8 mi' },
+      { nome: 'Município de Sorocaba', doc: '22.222.222/0001-22', tipo: 'Administração pública', mun: 'Sorocaba (SP)', total: 'R$ 5,1 mi' },
+      { nome: 'Santa Casa Exemplo', doc: '33.333.333/0001-33', tipo: 'Entidade sem fins lucrativos', mun: 'Ribeirão Preto (SP)', total: 'R$ 3,6 mi' },
+      { nome: 'Construtora Ilustrativa Ltda', doc: '44.444.444/0001-44', tipo: 'Empresa', mun: 'Campinas (SP)', total: 'R$ 1,2 mi' },
+      { nome: 'Beneficiário pessoa física', doc: '***.456.789-**', tipo: 'Pessoa física', mun: 'Sorocaba (SP)', total: 'R$ 18 mil' }
+    ];
+    const fontes = [
+      { nome: 'Câmara dos Deputados · API v2', det: 'Mandato, comissões, votações · diária' },
+      { nome: 'Câmara dos Deputados · CEAP em lote', det: 'Notas da cota parlamentar · diária' },
+      { nome: 'Portal da Transparência · Emendas (lote)', det: 'Emendas, pagamentos por favorecido · diária' },
+      { nome: 'Portal da Transparência · CEIS e CNEP (lote)', det: 'Empresas sancionadas · a cada 4 horas' },
+      { nome: 'TSE · Dados Abertos (lote)', det: 'Candidaturas, bens, resultados · por eleição' }
+    ];
+    return { anos, areas, locais, favorecidos, fontes };
+  }
+}
+</script>
+</body>
+</html>
