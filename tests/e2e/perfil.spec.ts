@@ -64,10 +64,15 @@ test("PROV-02: cada seção mostra fonte, data de coleta e link para o original"
   }
 });
 
-test("PRIV-01/05: CPF mascarado e responsáveis no rodapé", async ({ page, isMobile }) => {
+test("PRIV-01/05: CPF de pessoa física oculto e responsáveis no rodapé", async ({ page, isMobile }) => {
   // No celular a tabela de fornecedores fica no resumo completo ("Ver todas as notas e fornecedores").
   await page.goto(`/parlamentares/${ID}${isMobile ? "?lista=completa" : ""}`);
-  await expect(page.getByText("***.456.789-**")).toBeVisible();
+  const linhaPf = page.locator("section#gastos tr", { hasText: "Prestadores pessoa física" });
+  await expect(linhaPf.getByText("CPF não exibido")).toBeVisible();
+  await expect(linhaPf.getByText("soma de todos · 1 nota")).toBeVisible();
+  await expect(linhaPf.getByRole("link", { name: "Prestadores pessoa física" })).toHaveAttribute("href", /&pf=1$/);
+  // Nenhum trecho de CPF mascarado (Receita "***.ddd.ddd-**" ou Senado "ddd.***.***-dd") na página.
+  expect(await page.locator("body").innerText()).not.toMatch(/\d{3}\.\d{3}-\*\*|\*\*\*\.\d{3}|\d{3}\.\*\*\*/);
   const rodape = page.locator("footer");
   await expect(rodape.getByText(/^Controlador: /).filter({ visible: true })).toBeVisible();
   await expect(rodape.getByText(/Encarregado \(LGPD\): /).filter({ visible: true })).toBeVisible();
@@ -227,7 +232,7 @@ test("UI-04: botões usam cursor de clique e, desabilitados, cursor de bloqueio"
   await expect(botao).toHaveCSS("cursor", "not-allowed");
 });
 
-test("Baixar CSV: notas da CEAP do ano, com CPF de terceiro mascarado", async ({ page, isMobile }) => {
+test("Baixar CSV: notas da CEAP do ano, sem CPF de terceiro", async ({ page, isMobile }) => {
   test.skip(isMobile, "Baixar CSV fica no desktop, como no protótipo");
   await page.goto(`/parlamentares/${ID}`);
   const [download] = await Promise.all([
@@ -239,8 +244,17 @@ test("Baixar CSV: notas da CEAP do ano, com CPF de terceiro mascarado", async ({
   expect(corpo.split("\r\n")[0]).toBe(
     "\uFEFFano;mes;data_emissao;tipo_despesa;fornecedor;cnpj_cpf;valor_documento;valor_glosa;valor_liquido;url_documento",
   );
-  expect(corpo).toContain("***.456.789-**");
-  expect(corpo).not.toMatch(/\d{3}\.\d{3}\.\d{3}-\d{2}/);
+  expect(corpo).toContain("Prestador pessoa física;;");
+  expect(corpo).not.toMatch(/\d{3}\.\d{3}\.\d{3}-\d{2}|\*\*\*\.\d{3}|\d{3}\.\*\*\*/);
+  // Linha somada de pessoas físicas baixa só as notas delas.
+  const pf = await (await page.request.get(`/parlamentares/${ID}/gastos.csv?ano=2026&pf=1`)).text();
+  const linhas = pf.split("\r\n").filter(Boolean);
+  expect(linhas).toHaveLength(2);
+  expect(linhas[1]).toContain("Prestador pessoa física;;");
+  // O recibo da Câmara mostra o CPF inteiro: linha de pessoa física sai sem link; empresa mantém.
+  expect(linhas[1]).not.toContain("camara.leg.br");
+  expect(corpo).toContain("Gráfica Exemplo Ltda;12.345.678/0001-90;");
+  expect(corpo).toMatch(/Gráfica Exemplo Ltda;[^\r\n]*;https:\/\/www\.camara\.leg\.br\//);
 });
 
 test("Acompanhar: página explica o feed Atom, que lista votos e meses de gasto", async ({ page, isMobile }) => {

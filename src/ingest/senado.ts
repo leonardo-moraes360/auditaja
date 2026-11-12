@@ -196,8 +196,8 @@ export const TIPO_NAO_INFORMADO = "Não informado pelo Senado";
 
 /**
  * Notas da CEAPS. O Senado publica só o valor reembolsado (sem glosa), que vira o valor líquido.
- * R3: CPF com 11 dígitos sai mascarado; CPF que o Senado já publica mascarado ("000.***.***-00")
- * não é gravado, porque a máscara do Senado e a da Câmara juntas remontariam o número. Documento
+ * R3: CPF não é gravado, nem completo nem na máscara do Senado ("000.***.***-00"), porque máscaras
+ * de fontes diferentes juntas remontariam o número. Documento
  * malformado ou ausente é tratado como de pessoa física: sem documento e sem nome.
  */
 export function montarDespesasCeaps(notas: DespesaCeapsApi[], idsValidos: Set<number>, coletaId: number) {

@@ -108,10 +108,10 @@ describe("EMD-03 e EMDUI-07: tipos de emenda", () => {
 });
 
 describe("EMD-08 e EMD-09: favorecido publicável (R3)", () => {
-  it("troca o nome de PF e mantém só o CPF já mascarado", () => {
+  it("troca o nome de PF e não guarda nem a máscara do Portal", () => {
     expect(favorecidoPublicavel("Pessoa Fisica", "***.113.861-**", "ACACIA GONCALVES")).toEqual({
       nome: "Beneficiário pessoa física",
-      doc: "***.113.861-**",
+      doc: null,
     });
   });
   it("nunca grava CPF completo de PF", () => {
