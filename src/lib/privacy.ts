@@ -36,13 +36,16 @@ export function nomeFornecedorPublicavel(nome: string, classe: ClasseTitular): s
 
 /** CPF solto no texto: 11 dígitos, com até três separadores (ponto, hífen, barra ou espaço) entre os grupos, sem outros dígitos colados. Na dúvida, mascara. */
 const CPF_NO_TEXTO = /(?<!\d)\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{2}(?!\d)/g;
+/** CPF já mascarado pela fonte, com dígitos à mostra: Receita/Câmara ("***.456.789-**") ou Senado ("123.***.***-01"). */
+const CPF_MASCARADO_NO_TEXTO =
+  /(?<![\d*])(?:\*{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\*{2}|\d{3}[-./\s]{0,3}\*{3}[-./\s]{0,3}\*{3}[-./\s]{0,3}\d{2})(?![\d*])/g;
 
 /**
  * R3: a razão social de MEI costuma trazer o CPF do dono ("FULANO DE TAL 12345678901").
  * Todo CPF solto no nome vira "***.***.***-**", sem nenhum dígito: qualquer máscara parcial poderia ser
  * combinada com outra (a da Receita mostra os 6 do meio; a do Senado, os 3 primeiros e os 2 últimos)
- * e remontar o número. CNPJ (14 dígitos) não é afetado.
+ * e remontar o número. Máscara parcial que já venha da fonte também perde os dígitos. CNPJ (14 dígitos) não é afetado.
  */
 export function mascararCpfsNoTexto(texto: string): string {
-  return texto.replace(CPF_NO_TEXTO, "***.***.***-**");
+  return texto.replace(CPF_NO_TEXTO, "***.***.***-**").replace(CPF_MASCARADO_NO_TEXTO, "***.***.***-**");
 }
