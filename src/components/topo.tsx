@@ -35,7 +35,7 @@ function Busca({ id }: { id: string }) {
         id={id}
         name="q"
         type="search"
-        placeholder="Nome do parlamentar ou estado"
+        placeholder="Buscar deputado ou senador por nome ou UF"
         className="h-11 w-full rounded-[10px] border border-input bg-superficie px-3.5 text-base"
       />
     </form>

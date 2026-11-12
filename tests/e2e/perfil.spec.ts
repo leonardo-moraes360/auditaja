@@ -72,7 +72,7 @@ test("PRIV-01/05: CPF de pessoa física oculto e responsáveis no rodapé", asyn
   await expect(rodape.getByText(/^Controlador: /).filter({ visible: true })).toBeVisible();
   await expect(rodape.getByText(/Encarregado \(LGPD\): /).filter({ visible: true })).toBeVisible();
   // UI-02: rodapé escuro no desktop; no celular, nota clara no fim do conteúdo, como no protótipo.
-  await expect(rodape).toHaveCSS("background-color", isMobile ? "rgb(246, 246, 243)" : "rgb(21, 24, 30)");
+  await expect(rodape).toHaveCSS("background-color", isMobile ? "rgb(247, 247, 244)" : "rgb(21, 24, 30)");
 });
 
 test("PRIV-06: política de privacidade pelo rodapé, com os mesmos responsáveis", async ({ page, isMobile }) => {
@@ -147,7 +147,7 @@ for (const [caminho, item, outro] of [
     const nav = page.getByRole("navigation", { name: "Principal" });
     const ativo = nav.getByRole("link", { name: item });
     await expect(ativo).toHaveAttribute("aria-current", "page");
-    await expect(ativo).toHaveCSS("border-bottom-color", "rgb(31, 79, 209)");
+    await expect(ativo).toHaveCSS("border-bottom-color", "rgb(26, 68, 184)");
     await expect(ativo).toHaveCSS("border-bottom-width", "2px");
     await expect(nav.getByRole("link", { name: outro })).not.toHaveAttribute("aria-current", "page");
   });
