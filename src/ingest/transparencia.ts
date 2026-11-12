@@ -12,7 +12,7 @@ import {
 import { dataBrParaIso, dataDaEntrada, linhasCsvDoZip } from "./arquivos";
 import { inserirEmBlocos, registrarColeta } from "./coleta";
 import { mascararCpfsNoTexto, soDigitos } from "@/lib/privacy";
-import type { ClienteEducado } from "./http";
+import { ColetaBloqueada, type ClienteEducado } from "./http";
 
 /**
  * Portal da Transparência (CGU), só download em lote (AD-001, AD-004).
@@ -123,16 +123,34 @@ export function urlSancoes(cadastro: Cadastro, data: string): string {
   return `${ARQUIVOS_CGU}/${cadastro.toLowerCase()}/${data}_${cadastro}.zip`;
 }
 
+/**
+ * O arquivo do dia ainda não foi publicado. O servidor de arquivos da CGU é um bucket S3 sem
+ * listagem pública: para chave inexistente ele responde 403 com `<Code>AccessDenied</Code>` em XML,
+ * não 404. Qualquer outro 403 (página HTML de WAF, captcha, corpo vazio) continua sendo bloqueio.
+ */
+export function arquivoNaoPublicado(e: unknown): boolean {
+  if (e instanceof ColetaBloqueada) {
+    const r = e.resposta;
+    return r?.status === 403 && r.contentType.includes("xml") && r.corpo.includes("<Code>AccessDenied</Code>");
+  }
+  return e instanceof Error && e.message.endsWith("HTTP 404");
+}
+
 async function baixarSancoesRecentes(cli: ClienteEducado, cadastro: Cadastro, hoje: Date) {
+  let negados = 0;
   for (let dias = 0; dias <= DIAS_DE_RECUO; dias++) {
     const url = urlSancoes(cadastro, dataDoArquivo(hoje, dias));
     try {
       return { url, data: dataDoArquivo(hoje, dias), ...(await cli.baixar(url, ".cache/ingest")) };
     } catch (e) {
-      if (!(e instanceof Error) || !e.message.endsWith("HTTP 404")) throw e;
+      if (!arquivoNaoPublicado(e)) throw e;
+      if (e instanceof ColetaBloqueada) negados++;
     }
   }
-  throw new Error(`nenhum arquivo do ${cadastro} nos últimos ${DIAS_DE_RECUO} dias`);
+  // O S3 também diz AccessDenied quando nega acesso a um arquivo que existe: se foi assim em todos
+  // os dias, o aviso aponta a possibilidade de bloqueio em vez de só "não publicado".
+  const dica = negados === DIAS_DE_RECUO + 1 ? " (403 AccessDenied em todos os dias: pode ser bloqueio)" : "";
+  throw new Error(`nenhum arquivo do ${cadastro} nos últimos ${DIAS_DE_RECUO} dias${dica}`);
 }
 
 /**
