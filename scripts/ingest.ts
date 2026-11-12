@@ -11,6 +11,7 @@
  *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
  *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
  *   pnpm ingest transferegov-pix  (Transferegov: planos e pagamentos das emendas Pix; ~1.000 requisições, ~17 min)
+ *   pnpm ingest receita --arquivo <zip>  (Receita: lote Estabelecimentos baixado À MÃO; nunca pela rede)
  *   pnpm ingest tudo 2026   (deputados, histórico, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *   pnpm ingest senadores
  *   pnpm ingest ceaps 2026
@@ -22,6 +23,12 @@
  * casam com os perfis das duas Casas e as sanções só guardam CNPJs que já estão na cota (CEAP e CEAPS).
  * Rode `transferegov-pix` depois de `emendas`: os planos de ação só são ligados a emendas Pix já gravadas.
  *
+ * Receita: o robots.txt de arquivos.receitafederal.gov.br é `Disallow: /`, então não há download por
+ * código. Baixe pelo navegador os arquivos Estabelecimentos0.zip a Estabelecimentos9.zip do mês mais
+ * recente em https://dados.gov.br/dados/conjuntos-dados/cadastro-nacional-da-pessoa-juridica---cnpj,
+ * guarde-os numa pasta com o mês (ex.: ~/receita/2026-10/) e rode o comando uma vez por arquivo,
+ * depois de `transferegov-pix`, `emendas` e `tse-contas`: só entram CNPJs que já estão no banco.
+ *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
  */
 import { createDb } from "../src/db/client";
@@ -30,10 +37,19 @@ import { coletarHistorico } from "../src/ingest/historico";
 import { ClienteEducado } from "../src/ingest/http";
 import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "../src/ingest/senado";
 import { coletarBens } from "../src/ingest/tse";
+import { importarEstabelecimentos, PAGINA_RECEITA } from "../src/ingest/receita";
 import { coletarTransferegovPix } from "../src/ingest/transferegov";
 import { coletarEmendas, coletarSancoes } from "../src/ingest/transparencia";
 
 const [cmd, anoArg] = process.argv.slice(2);
+
+/** Valor de `--nome <valor>` ou `--nome=<valor>`. */
+function opcao(nome: string): string | undefined {
+  const args = process.argv.slice(2);
+  const i = args.indexOf(`--${nome}`);
+  if (i >= 0) return args[i + 1];
+  return args.find((a) => a.startsWith(`--${nome}=`))?.slice(nome.length + 3);
+}
 const ano = Number(anoArg ?? new Date().getFullYear());
 
 async function main() {
@@ -71,6 +87,19 @@ async function main() {
       case "transferegov-pix":
         console.log("Transferegov, emendas Pix:", await coletarTransferegovPix(db, cli));
         break;
+      case "receita": {
+        const arquivo = opcao("arquivo");
+        if (!arquivo || arquivo.startsWith("--")) {
+          console.error(
+            `uso: pnpm ingest receita --arquivo <Estabelecimentos.zip>\n` +
+              `Baixe o lote à mão pelo navegador em ${PAGINA_RECEITA} (o robots.txt da Receita não permite robôs).`,
+          );
+          process.exitCode = 1;
+          break;
+        }
+        console.log("Receita, Estabelecimentos:", await importarEstabelecimentos(db, arquivo));
+        break;
+      }
       case "senadores":
         console.log("senadores:", await coletarSenadores(db, cli));
         break;

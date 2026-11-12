@@ -237,10 +237,11 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Sem `--arquivo`, o comando sai com erro e cita a página do dados.gov.br
-- [ ] Build gate passa
+- [x] Sem `--arquivo`, o comando sai com erro e cita a página do dados.gov.br
+- [x] Build gate passa
 
 **Tests**: none
+**Status**: ✅ Done
 **Gate**: build
 
 ---
