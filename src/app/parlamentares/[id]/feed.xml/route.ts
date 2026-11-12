@@ -1,12 +1,14 @@
 import type { NextRequest } from "next/server";
 import { perfilParlamentar } from "@/data/perfil";
 import { brl, dataBr, MESES } from "@/lib/format";
+import { rotuloVotoSenado } from "@/lib/senado";
 
 const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /**
- * "Acompanhar atualizações": feed Atom público por deputado, sem conta nem e-mail.
- * Uma entrada por votação nominal do Plenário no ano (com o voto) e uma por mês com gasto da CEAP.
+ * "Acompanhar atualizações": feed Atom público por parlamentar, sem conta nem e-mail.
+ * Uma entrada por votação nominal do Plenário no ano (com o voto) e uma por mês com gasto da cota
+ * (CEAP na Câmara, CEAPS no Senado).
  */
 export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentares/[id]/feed.xml">) {
   const { id: idTexto } = await ctx.params;
@@ -17,11 +19,19 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
   const { parlamentar: p, ceap, votacoes, ano } = perfil;
   const base = request.nextUrl.origin;
   const perfilUrl = `${base}/parlamentares/${p.id}`;
+  const senado = p.casa === "senado";
+  const casa = senado ? "do Senado Federal" : "da Câmara dos Deputados";
+  // Senado: o voto vem como sigla ("P-NRV", "NCom"...); o rótulo é o mesmo da lista de votações do perfil.
+  const voto = (v: (typeof votacoes.lista)[number]) =>
+    senado ? rotuloVotoSenado(v.voto, v.secreta) : `Votou: ${v.voto ?? "sem registro"}`;
+  const resumoCota = senado
+    ? "Valor reembolsado da cota do senador (CEAPS) no mês, segundo os dados abertos do Senado Federal."
+    : "Gasto líquido da CEAP no mês, segundo os Dados Abertos da Câmara.";
   const entradas = [
     ...votacoes.lista.slice(0, 30).map((v) => ({
       id: `${perfilUrl}#votacao-${v.id}`,
       data: `${String(v.data).slice(0, 10)}T12:00:00-03:00`,
-      titulo: `Votou: ${v.voto ?? "sem registro"} · ${v.proposicao_sigla ?? v.descricao.slice(0, 80)}`,
+      titulo: `${voto(v)} · ${v.proposicao_sigla ?? v.descricao.slice(0, 80)}`,
       resumo: `${dataBr(v.data)}. ${v.descricao}`,
       link: v.source_url,
     })),
@@ -31,7 +41,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
         id: `${perfilUrl}#ceap-${ano}-${m.mes}`,
         data: `${fim}T12:00:00-03:00`,
         titulo: `Cota parlamentar em ${MESES[m.mes - 1].toLowerCase()}/${ano}: ${brl(m.total)}`,
-        resumo: `Gasto líquido da CEAP no mês, segundo os Dados Abertos da Câmara.`,
+        resumo: resumoCota,
         link: `${perfilUrl}?ano=${ano}#gastos`,
       };
     }),
@@ -41,7 +51,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
   const corpo = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="pt-BR">
   <title>${xml(`${p.nome} · Auditaja`)}</title>
-  <subtitle>Votações e gastos da cota parlamentar, com dados abertos da Câmara dos Deputados.</subtitle>
+  <subtitle>${xml(`Votações e gastos da cota parlamentar, com dados abertos ${casa}.`)}</subtitle>
   <id>${xml(perfilUrl)}</id>
   <link rel="self" href="${xml(`${perfilUrl}/feed.xml`)}"/>
   <link rel="alternate" href="${xml(perfilUrl)}"/>

@@ -28,7 +28,7 @@ async function ConteudoAcompanhar({ params }: { params: PageProps<"/parlamentare
   if (!/^\d{1,9}$/.test(raw)) notFound();
   const p = await getDb()
     .selectFrom("parlamentar")
-    .select(["id", "nome"])
+    .select(["id", "nome", "casa"])
     .where("id", "=", Number(raw))
     .executeTakeFirst();
   if (!p) notFound();
@@ -52,7 +52,7 @@ async function ConteudoAcompanhar({ params }: { params: PageProps<"/parlamentare
         <a href={feed}>{feed}</a>
       </p>
       <p className="text-sm text-muted-foreground">
-        O feed é atualizado a cada coleta dos dados abertos da Câmara.{" "}
+        O feed é atualizado a cada coleta dos dados abertos {p.casa === "senado" ? "do Senado" : "da Câmara"}.{" "}
         <Link href={`/parlamentares/${p.id}`}>Voltar ao perfil</Link>
       </p>
     </div>

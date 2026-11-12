@@ -25,8 +25,7 @@ export function Rodape() {
           </p>
         </div>
         <p className="flex-[1_1_280px]">
-          <span className="sm:hidden">Alertas são indícios para verificação, não acusações. </span>
-          <span className="hidden sm:inline">Alertas são indícios estatísticos para verificação, não acusações. </span>
+          Indicadores são pontos de partida para verificação, não acusações.{" "}
           <Link href="/metodologia" className="sm:text-[#a9bef5] sm:hover:text-white">
             Metodologia
           </Link>{" "}
