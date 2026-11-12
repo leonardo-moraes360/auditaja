@@ -3,7 +3,7 @@
  * A metodologia descrita em /metodologia deve refletir exatamente este arquivo.
  */
 
-export const METODOLOGIA_VERSAO = "1.5";
+export const METODOLOGIA_VERSAO = "1.6";
 
 /** Órgão cujas votações entram nos indicadores de presença e alinhamento. */
 export const ORGAO_PLENARIO = "PLEN";

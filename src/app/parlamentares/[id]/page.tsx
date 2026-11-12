@@ -74,7 +74,15 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const ultimoBens = anosBens.at(-1);
   const anteriorBens = anosBens.at(-2);
   const varBens = anteriorBens ? variacaoNominal(totalBens(anteriorBens), totalBens(ultimoBens!)) : null;
-  const presenca = pct(votacoes.presentes, votacoes.totalPlenario);
+  const presenca = pct(votacoes.presentes, votacoes.elegiveis);
+  const comHistorico = votacoes.historicoDisponivel;
+  const fora = votacoes.foraDoExercicio;
+  const foraTexto =
+    votacoes.tipoFora === "licenca"
+      ? "em licença"
+      : votacoes.tipoFora === "antes_posse"
+        ? "antes da posse"
+        : "fora do exercício";
   const alin = pct(votacoes.alinhamento.iguais, votacoes.alinhamento.comparaveis);
   const pctTeto = ceap.tetoAcumulado ? pct(ceap.totalAno, ceap.tetoAcumulado) : null;
   const periodoLeg = periodoLegislatura(p.id_legislatura);
@@ -161,10 +169,34 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
             titulo="Presença em votações nominais"
             tituloCurto="Presença"
             valor={presenca === null ? "—" : `${presenca}%`}
-            detalhe={`${votacoes.presentes} de ${votacoes.totalPlenario} em ${votacoes.ano}${
-              votacoes.mediaPresenca !== null ? ` · média da Câmara ${votacoes.mediaPresenca}%` : ""
-            }`}
-            detalheCurto={`${votacoes.presentes} de ${votacoes.totalPlenario}`}
+            detalhe={
+              comHistorico && votacoes.elegiveis === 0 && fora > 0
+                ? fora === 1
+                  ? `Fora do exercício na única votação de ${votacoes.ano}`
+                  : `Fora do exercício nas ${fora} votações de ${votacoes.ano}`
+                : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : ""} em ${votacoes.ano}${
+                    votacoes.mediaPresenca !== null ? ` · média da Câmara ${votacoes.mediaPresenca}%` : ""
+                  }`
+            }
+            detalheCurto={
+              comHistorico && votacoes.elegiveis === 0 && fora > 0
+                ? votacoes.tipoFora === "licenca"
+                  ? "Em licença em todas as votações"
+                  : "Fora do exercício em todas as votações"
+                : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : " · pode incluir licenças"}`
+            }
+            nota={
+              !comHistorico ? (
+                "Pode incluir períodos de licença"
+              ) : fora > 0 && votacoes.elegiveis === 0 ? (
+                <a href="#periodos">Ver períodos</a>
+              ) : fora > 0 ? (
+                <>
+                  {fora} {fora === 1 ? "votação" : "votações"} {foraTexto} não {fora === 1 ? "conta" : "contam"} ·{" "}
+                  <a href="#periodos">ver períodos</a>
+                </>
+              ) : undefined
+            }
           />
           <Indicador
             titulo="Votou como o partido orientou"

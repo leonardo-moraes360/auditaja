@@ -21,6 +21,7 @@ export async function semear(db: Kysely<Database>) {
       "bem_declarado",
       "candidatura",
       "orientacao",
+      "periodo_fora_exercicio",
       "voto",
       "votacao",
       "despesa_ceap",
@@ -54,6 +55,10 @@ export async function semear(db: Kysely<Database>) {
       "camara_lote_votos",
       "https://dadosabertos.camara.leg.br/arquivos/votacoesVotos/csv/votacoesVotos-2026.csv",
     );
+    const cHist = await coleta(
+      "camara_api_historico",
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/historico",
+    );
     const cTse = await coleta(
       "tse_bem_candidato",
       "https://cdn.tse.jus.br/estatistica/sead/odsele/bem_candidato/bem_candidato_2026.zip",
@@ -76,6 +81,7 @@ export async function semear(db: Kysely<Database>) {
           em_exercicio: true,
           source_url: "https://dadosabertos.camara.leg.br/api/v2/deputados/900000001",
           coleta_id: cDep,
+          historico_coleta_id: cHist,
         },
         {
           id: SEED.deputado,
@@ -464,6 +470,22 @@ export async function semear(db: Kysely<Database>) {
           source_url: "https://dadosabertos.camara.leg.br/api/v2/votacoes/seed-4",
           coleta_id: cVot,
         },
+        {
+          // Cai na licença fictícia de julho da deputada: não entra na presença dela.
+          id: "seed-5",
+          data: "2026-07-15",
+          sigla_orgao: "PLEN",
+          descricao: "Aprovado o PLP fictício 45/2026",
+          proposicao: null,
+          proposicao_sigla: "PLP 45/2026",
+          proposicao_ementa: "Transparência fictícia de emendas.",
+          aprovacao: 1,
+          votos_sim: 300,
+          votos_nao: 100,
+          votos_outros: 0,
+          source_url: "https://dadosabertos.camara.leg.br/api/v2/votacoes/seed-5",
+          coleta_id: cVot,
+        },
       ])
       .execute();
     await trx
@@ -473,6 +495,18 @@ export async function semear(db: Kysely<Database>) {
         { votacao_id: "seed-2", parlamentar_id: SEED.deputada, voto: "Sim", sigla_partido: "PFX", coleta_id: cVot },
         { votacao_id: "seed-4", parlamentar_id: SEED.deputada, voto: "", sigla_partido: "PFX", coleta_id: cVot },
       ])
+      .execute();
+    await trx
+      .insertInto("periodo_fora_exercicio")
+      .values({
+        parlamentar_id: SEED.deputada,
+        inicio: "2026-07-01",
+        fim: "2026-07-31",
+        situacao: "Licença",
+        motivo: "Licença para Tratamento de Saúde",
+        source_url: "https://dadosabertos.camara.leg.br/api/v2/deputados/900000001/historico",
+        coleta_id: cHist,
+      })
       .execute();
     await trx
       .insertInto("orientacao")

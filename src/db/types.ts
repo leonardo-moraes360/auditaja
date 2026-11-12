@@ -40,6 +40,8 @@ export interface ParlamentarTable {
   em_exercicio: boolean;
   source_url: string;
   coleta_id: number;
+  /** Coleta de /deputados/{id}/historico; null = histórico ainda não coletado. */
+  historico_coleta_id: ColumnType<number | null, number | null | undefined, number | null>;
 }
 
 export interface OrgaoMembroTable {
@@ -101,6 +103,18 @@ export interface OrientacaoTable {
   votacao_id: string;
   sigla_bancada: string;
   orientacao: string;
+  coleta_id: number;
+}
+
+/** Dias inteiros fora do exercício do mandato (src/lib/exercicio.ts). */
+export interface PeriodoForaExercicioTable {
+  id: Generated<number>;
+  parlamentar_id: number;
+  inicio: DateCol;
+  fim: DateCol | null;
+  situacao: string;
+  motivo: string;
+  source_url: string;
   coleta_id: number;
 }
 
@@ -221,6 +235,7 @@ export interface Database {
   emenda: EmendaTable;
   emenda_favorecido: EmendaFavorecidoTable;
   sancao: SancaoTable;
+  periodo_fora_exercicio: PeriodoForaExercicioTable;
 }
 
 export type Parlamentar = Selectable<ParlamentarTable>;

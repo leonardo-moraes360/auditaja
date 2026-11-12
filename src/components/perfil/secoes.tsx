@@ -43,6 +43,7 @@ export function Indicador({
   detalhe,
   detalheCurto,
   progresso,
+  nota,
 }: {
   titulo: string;
   tituloCurto?: string;
@@ -51,6 +52,8 @@ export function Indicador({
   detalhe: string;
   detalheCurto?: string;
   progresso?: number | null;
+  /** Linha extra, só no desktop. */
+  nota?: React.ReactNode;
 }) {
   return (
     <div
@@ -75,6 +78,7 @@ export function Indicador({
       <p className="text-[11px] text-muted-foreground sm:text-xs">
         <Dois curto={detalheCurto ?? detalhe} longo={detalhe} />
       </p>
+      {nota && <p className="hidden text-xs text-muted-foreground sm:block">{nota}</p>}
     </div>
   );
 }
@@ -345,6 +349,56 @@ function corVoto(voto: string | null, orientacao: string | null) {
   return "bg-muted text-texto-2";
 }
 
+const SELO_FORA = { licenca: "Em licença", antes_posse: "Antes da posse", outro: "Fora do exercício" } as const;
+
+function intervalo(inicio: string, fim: string | null) {
+  const d = (x: string) => dataBr(x).slice(0, 5);
+  if (!fim) return `desde ${d(inicio)}`;
+  return fim === inicio ? d(inicio) : `${d(inicio)} a ${d(fim)}`;
+}
+
+/**
+ * Quadro dos períodos fora do exercício no ano das votações (licença, afastamento, antes da posse).
+ * Só os que tiraram alguma votação da conta, como nas pranchas aprovadas.
+ */
+function PeriodosFora({ perfil }: { perfil: Perfil }) {
+  const { votacoes, parlamentar } = perfil;
+  const artigo = parlamentar.sexo === "F" ? "a deputada" : "o deputado";
+  const periodos = votacoes.periodosFora.filter((p) => p.votacoes > 0);
+  if (!periodos.length) return null;
+  return (
+    <div
+      id="periodos"
+      className="mt-2 flex scroll-mt-4 flex-col gap-2 rounded-[10px] bg-background p-3 sm:mt-0 sm:gap-2.5 sm:rounded-[12px] sm:p-4"
+    >
+      <h3 className="text-sm font-bold sm:text-[15px]">
+        <Dois curto={`Fora do exercício em ${votacoes.ano}`} longo={`Períodos fora do exercício em ${votacoes.ano}`} />
+      </h3>
+      <ul className="flex flex-col gap-2 sm:gap-1.5">
+        {periodos.map((p) => (
+          <li
+            key={p.inicio}
+            className="flex flex-col gap-0.5 text-[13px] sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1 sm:text-sm"
+          >
+            <span className="font-semibold tabular-nums sm:w-[200px] sm:font-normal">{intervalo(p.inicio, p.fim)}</span>
+            <span className="text-texto-2">
+              {p.motivo} · {p.votacoes} {p.votacoes === 1 ? "votação" : "votações"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs leading-normal text-texto-2 sm:text-[13px]">
+        <span className="sm:hidden">Essas votações não contam na presença nem em &quot;Ausências&quot;. </span>
+        <span className="hidden sm:inline">
+          A presença conta só as votações em que {artigo} estava em exercício. Licença, afastamento e suplência ficam de
+          fora. Votações nesses períodos aparecem na lista, marcadas, mas não entram em &quot;Ausências&quot;.{" "}
+        </span>
+        <Link href="/metodologia#presenca">Como calculamos</Link>
+      </p>
+    </div>
+  );
+}
+
 /** "Aprovado" / "Rejeitada" a partir do começo da descrição da Câmara; senão pelo campo aprovação. */
 function resultado(descricao: string, aprovacao: number | null) {
   const m = descricao.match(/\b(Aprovad[oa]s?|Rejeitad[oa]s?|Mantid[oa]s?|Derrubad[oa]s?)\b/i);
@@ -365,7 +419,7 @@ export function SecaoVotacoes({
 }) {
   const { votacoes, parlamentar, ano } = perfil;
   const lista = votacoes.lista.filter((v) => {
-    if (filtro === "ausencias") return !v.voto;
+    if (filtro === "ausencias") return !v.voto && !v.foraDoExercicio;
     if (filtro === "divergiu") return diverge(v.voto, v.orientacao);
     return true;
   });
@@ -406,7 +460,11 @@ export function SecaoVotacoes({
             const ementa = v.proposicao_sigla ? (v.proposicao_ementa ?? v.descricao) : null;
             const orient = v.tipoOrientacao ? `Partido: ${v.orientacao}` : "Partido: sem orientação";
             const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
-            const selo = (
+            const selo = v.foraDoExercicio ? (
+              <span className="rounded-[6px] border border-dashed border-input bg-superficie px-[9px] py-[3px] text-xs font-bold text-texto-2 sm:rounded-[8px] sm:px-[11px] sm:py-[5px] sm:text-[13px]">
+                {SELO_FORA[v.foraDoExercicio]} · não conta
+              </span>
+            ) : (
               <span
                 className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-[13px] ${corVoto(v.voto, v.orientacao)}`}
               >
@@ -463,16 +521,14 @@ export function SecaoVotacoes({
           })}
         </ul>
       )}
+      <PeriodosFora perfil={perfil} />
       {!completo && lista.length > 3 && (
         <Link href={verTodas} className="pt-2 text-sm font-semibold sm:hidden">
           Ver as {lista.length} votações
         </Link>
       )}
-      <p className="mt-2 text-xs text-muted-foreground sm:mt-0">
-        A presença conta todas as votações nominais do Plenário no ano, inclusive em períodos de licença.
-      </p>
       <NotaFonte
-        rotulo="Câmara dos Deputados, Dados Abertos (votações)"
+        rotulo="Câmara dos Deputados, Dados Abertos (votações e histórico de situação dos deputados)"
         rotuloCurto="Câmara, Dados Abertos"
         coleta={perfil.coletas.camara_lote_votos}
         extras={completo || lista.length <= 5 ? [] : [{ rotulo: `Ver todas as ${lista.length}`, href: verTodas }]}
