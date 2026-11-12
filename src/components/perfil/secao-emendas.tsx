@@ -7,8 +7,8 @@ import { NotaFonte } from "./fonte";
 
 /** Mesmo cartão e títulos das outras seções do perfil (secoes.tsx). */
 const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
-const H2 = "font-heading text-lg font-bold sm:text-[22px]";
-const H3 = "text-[15px] font-bold";
+const H2 = "font-heading text-lg font-bold sm:text-[1.375rem]";
+const H3 = "text-base font-bold";
 
 export const PAGINA_EMENDAS_PORTAL = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares";
 
@@ -33,8 +33,8 @@ function Indicador({
       data-indicador
       className="flex flex-col gap-1 rounded-[10px] bg-background p-3 sm:gap-1.5 sm:rounded-[12px] sm:p-4"
     >
-      <p className="text-xs text-muted-foreground sm:text-[13px]">{titulo}</p>
-      <p className="font-heading text-xl font-bold sm:text-[26px]">{valor}</p>
+      <p className="text-xs text-muted-foreground sm:text-sm">{titulo}</p>
+      <p className="font-heading text-xl font-bold sm:text-[1.625rem]">{valor}</p>
       {progresso != null && (
         <div
           className="h-2 overflow-hidden rounded bg-border"
@@ -44,7 +44,7 @@ function Indicador({
           <div className="h-2 bg-primary" style={{ width: `${Math.min(100, progresso)}%` }} />
         </div>
       )}
-      <p className="text-[11px] text-muted-foreground sm:text-xs">{detalhe}</p>
+      <p className="text-sm text-muted-foreground sm:text-xs">{detalhe}</p>
     </div>
   );
 }
@@ -55,7 +55,7 @@ function Barras({ itens }: { itens: { nome: string; valor: number; detalhe: stri
     <ul className="flex flex-col gap-2.5 sm:gap-3">
       {itens.map((c) => (
         <li key={c.nome} className="flex flex-col gap-1">
-          <div className="flex justify-between gap-3 text-[13px]">
+          <div className="flex justify-between gap-3 text-sm">
             <span className="min-w-0 break-words">{c.nome}</span>
             <span className="shrink-0 whitespace-nowrap text-muted-foreground">{c.detalhe}</span>
           </div>
@@ -204,7 +204,7 @@ function ConteudoEmendas({
 
       {mandato && (
         <figure className="flex flex-col gap-2">
-          <figcaption className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+          <figcaption className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span>Por ano do orçamento</span>
             <span className="flex gap-4" aria-hidden="true">
               <span className="flex items-center gap-1.5">
@@ -237,7 +237,7 @@ function ConteudoEmendas({
                       { v: a.pago, cor: "bg-primary" },
                     ].map((b, i) => (
                       <div key={i} className="flex h-full w-[44%] max-w-[52px] flex-col items-center justify-end gap-1">
-                        <span className="text-[11px] text-muted-foreground">{milhoes(b.v)}</span>
+                        <span className="text-sm text-muted-foreground">{milhoes(b.v)}</span>
                         <div
                           className={`w-full rounded-t-[4px] ${b.cor}`}
                           style={{ height: `${Math.max(1, (b.v / max) * 100)}%` }}
@@ -313,11 +313,11 @@ function ConteudoEmendas({
                   Sem local definido no Orçamento: {brlMi(totais.multiplo)} ({pctSemLocal}%)
                 </strong>
                 <br />
-                <span className="text-[13px] text-texto-2">
+                <span className="text-sm text-texto-2">
                   O Orçamento marca como “Múltiplo” (vários lugares). Para saber quem recebeu, veja a lista abaixo.
                 </span>
               </p>
-              {dados.locais.length > 0 && <p className="text-[13px] font-semibold text-texto-2">Com local definido:</p>}
+              {dados.locais.length > 0 && <p className="text-sm font-semibold text-texto-2">Com local definido:</p>}
             </div>
           )}
           <Barras itens={dados.locais.map((l) => ({ ...l, detalhe: brlMi(l.valor) }))} />
@@ -342,12 +342,12 @@ function ConteudoEmendas({
                 <li key={i} className="flex justify-between gap-3 rounded-[10px] border border-borda-suave px-3 py-2.5">
                   <span className="flex min-w-0 flex-col gap-0.5 text-sm">
                     <strong className="font-semibold">{f.nome}</strong>
-                    <span className="text-[13px] text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {[f.municipio, f.tipo].filter(Boolean).join(" · ")}
                     </span>
                     {f.doc && <span className="text-xs text-muted-foreground tabular-nums">{f.doc}</span>}
                   </span>
-                  <strong className="shrink-0 text-[15px] whitespace-nowrap tabular-nums">{brlMi(f.valor)}</strong>
+                  <strong className="shrink-0 text-base whitespace-nowrap tabular-nums">{brlMi(f.valor)}</strong>
                 </li>
               ))}
             </ul>
@@ -357,7 +357,7 @@ function ConteudoEmendas({
               role="region"
               aria-label="Quem recebeu os pagamentos"
             >
-              <table className="w-full border-collapse text-[13px]">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="text-left text-muted-foreground">
                     <th scope="col" className="py-1.5 pr-2 font-semibold">

@@ -24,7 +24,7 @@ export function FormularioPedido({
           id="secao"
           name="secao"
           defaultValue={secaoInicial}
-          className="h-10 rounded-md border border-input bg-white px-3"
+          className="h-11 rounded-md border border-input bg-superficie px-3"
         >
           {Object.entries(secoes).map(([k, v]) => (
             <option key={k} value={k}>
@@ -44,7 +44,7 @@ export function FormularioPedido({
           minLength={20}
           maxLength={4000}
           rows={6}
-          className="rounded-md border border-input bg-white p-3"
+          className="rounded-md border border-input bg-superficie p-3"
           aria-describedby={estado.erro ? "descricao-ajuda erro-pedido" : "descricao-ajuda"}
           aria-invalid={estado.erro ? true : undefined}
         />
@@ -61,7 +61,7 @@ export function FormularioPedido({
           name="contato"
           type="email"
           maxLength={200}
-          className="h-10 rounded-md border border-input bg-white px-3"
+          className="h-11 rounded-md border border-input bg-superficie px-3"
           aria-describedby="contato-ajuda"
         />
         <p id="contato-ajuda" className="text-xs text-muted-foreground">
@@ -76,7 +76,7 @@ export function FormularioPedido({
       <button
         type="submit"
         disabled={pendente}
-        className="h-10 rounded-md bg-primary px-5 font-medium text-primary-foreground disabled:opacity-60"
+        className="h-11 rounded-md bg-primary px-5 font-semibold text-primary-foreground hover:bg-primaria-hover disabled:border disabled:border-dashed disabled:border-input disabled:bg-muted disabled:text-muted-foreground"
       >
         {pendente ? "Enviando…" : "Enviar pedido"}
       </button>

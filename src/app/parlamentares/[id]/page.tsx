@@ -146,7 +146,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
 
   return (
     <div className="mx-auto max-w-[1200px] sm:px-6 sm:pt-5 sm:pb-12">
-      <nav aria-label="Trilha" className="mb-4 hidden text-[13px] text-muted-foreground sm:block">
+      <nav aria-label="Trilha" className="mb-4 hidden text-sm text-muted-foreground sm:block">
         <Link href="/parlamentares" className="text-muted-foreground">
           Parlamentares
         </Link>{" "}
@@ -165,7 +165,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
           <FotoParlamentar nome={p.nome} url={p.url_foto} />
           <div className="flex min-w-0 flex-col gap-1.5 sm:flex-[999_1_320px] sm:gap-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="self-start rounded-full bg-sucesso-fundo px-2 py-[3px] text-[11px] font-semibold text-sucesso sm:px-2.5 sm:py-1 sm:text-xs">
+              <span className="self-start rounded-full bg-sucesso-fundo px-2 py-[3px] text-sm font-semibold text-sucesso sm:px-2.5 sm:py-1 sm:text-xs">
                 {situacao}
                 {periodoLeg && <span className="sm:hidden"> · {periodoLeg}</span>}
               </span>

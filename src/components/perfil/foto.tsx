@@ -34,7 +34,7 @@ export function FotoParlamentar({
         aria-label={`Sem foto oficial de ${nome}`}
         style={medida}
         className={`${caixa} flex items-center justify-center bg-secondary font-heading font-bold text-primary ${
-          tamanho ? "" : "text-[26px] sm:text-[40px]"
+          tamanho ? "" : "text-[1.625rem] sm:text-[2.5rem]"
         }`}
       >
         {iniciais}

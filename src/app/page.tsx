@@ -35,11 +35,11 @@ export default function Inicio() {
             name="q"
             type="search"
             placeholder="Nome do deputado ou senador"
-            className="h-11 rounded-md border border-input bg-white px-4 sm:flex-1"
+            className="h-11 rounded-md border border-input bg-superficie px-4 sm:flex-1"
           />
           <button
             type="submit"
-            className="h-11 rounded-md bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
+            className="h-11 rounded-md bg-primary px-5 font-medium text-primary-foreground hover:bg-primaria-hover"
           >
             Buscar
           </button>
@@ -77,7 +77,7 @@ export default function Inicio() {
           {O_QUE_VER.map(([titulo, texto]) => (
             <li key={titulo} className="flex flex-col gap-1.5 rounded-[14px] border bg-card p-4">
               <strong className="text-base">{titulo}</strong>
-              <span className="text-[15px] leading-normal text-texto-2">{texto}</span>
+              <span className="text-base leading-normal text-texto-2">{texto}</span>
             </li>
           ))}
         </ul>

@@ -31,7 +31,7 @@ export function NotaFonte({
   const original = linkOriginal ?? coleta?.url;
   const quando = coleta ? dataHoraBr(coleta.coletado_em) : null;
   return (
-    <div className="border-t border-borda-suave pt-2.5 text-[11px] text-muted-foreground sm:flex sm:flex-wrap sm:justify-between sm:gap-x-4 sm:gap-y-2 sm:pt-3 sm:text-xs">
+    <div className="border-t border-borda-suave pt-2.5 text-sm text-muted-foreground sm:flex sm:flex-wrap sm:justify-between sm:gap-x-4 sm:gap-y-2 sm:pt-3 sm:text-xs">
       <p className="sm:hidden">
         Fonte: {rotuloCurto ?? rotulo} · {quando ? `coletado em ${quando.slice(0, 10)}` : "ainda não coletado"}
       </p>

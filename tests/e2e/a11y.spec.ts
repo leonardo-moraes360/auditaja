@@ -69,11 +69,13 @@ test("A11Y-03: foco visível com contorno sólido de 2 px (2.4.7)", async ({ pag
   await expect(logo).toBeFocused();
   await expect(logo).toHaveCSS("outline-style", "solid");
   await expect(logo).toHaveCSS("outline-width", "2px");
-  await expect(logo).toHaveCSS("outline-color", "rgb(31, 79, 209)");
+  // Design system: anel foco-anel (#0b2a78) afastado 2 px.
+  await expect(logo).toHaveCSS("outline-color", "rgb(11, 42, 120)");
+  await expect(logo).toHaveCSS("outline-offset", "2px");
   const linkRodape = page.locator("footer").getByRole("link", { name: "Metodologia" });
   await linkRodape.focus();
   // Rodapé escuro no desktop: contorno branco. No celular o rodapé é claro (protótipo): contorno da marca.
-  await expect(linkRodape).toHaveCSS("outline-color", isMobile ? "rgb(31, 79, 209)" : "rgb(255, 255, 255)");
+  await expect(linkRodape).toHaveCSS("outline-color", isMobile ? "rgb(11, 42, 120)" : "rgb(255, 255, 255)");
 });
 
 test("A11Y-04: erro do formulário fica ligado ao campo (3.3.1)", async ({ page }) => {

@@ -64,14 +64,14 @@ export function AvisoSancao({
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
-              className="mt-0.5 shrink-0 text-teto"
+              className="mt-0.5 shrink-0 text-sancao"
             >
               <circle cx="12" cy="12" r="10" />
               <path d="M12 7v6" />
               <path d="M12 17h.01" />
             </svg>
             <div className="flex min-w-0 flex-col gap-1.5">
-              <h3 className="text-[15px] font-bold text-aviso">
+              <h3 className="text-base font-bold text-aviso">
                 {f.fornecedor_nome} tem sanção registrada no {s.cadastro}
               </h3>
               <p className="text-sm leading-normal text-texto-2">
@@ -82,7 +82,7 @@ export function AvisoSancao({
               <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
                 <a
                   href={`${PORTAL_DOWNLOAD}/${s.cadastro.toLowerCase()}`}
-                  className="inline-flex min-h-6 items-center text-teto"
+                  className="inline-flex min-h-6 items-center text-sancao"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
@@ -92,12 +92,12 @@ export function AvisoSancao({
                   <a
                     href={hrefNotas(f.fornecedor_doc!, s.data_inicio, s.data_fim)}
                     download
-                    className="inline-flex min-h-6 items-center text-teto"
+                    className="inline-flex min-h-6 items-center text-sancao"
                   >
                     {notasEmCsv ? rotuloNotasCsv(s.notas) : rotuloNotas(s.notas)}
                   </a>
                 )}
-                <Link href="/metodologia#sancoes" className="inline-flex min-h-6 items-center text-teto">
+                <Link href="/metodologia#sancoes" className="inline-flex min-h-6 items-center text-sancao">
                   Como cruzamos (metodologia)
                 </Link>
               </p>
@@ -137,7 +137,7 @@ export function SemSancao({
   return (
     <p
       data-sem-sancao
-      className="flex items-start gap-2.5 rounded-[10px] bg-sucesso-fundo px-3 py-2.5 text-[13px] leading-normal text-sucesso sm:px-3.5 sm:py-3 sm:text-sm"
+      className="flex items-start gap-2.5 rounded-[10px] bg-sucesso-fundo px-3 py-2.5 text-sm leading-normal text-sucesso sm:px-3.5 sm:py-3 sm:text-sm"
     >
       <svg
         width="16"

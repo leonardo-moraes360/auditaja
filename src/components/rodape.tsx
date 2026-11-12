@@ -9,8 +9,8 @@ import { responsavel } from "@/lib/responsavel";
 export function Rodape() {
   const { controlador, doc, encarregado, email } = responsavel();
   return (
-    <footer className="bg-background text-muted-foreground sm:bg-[#15181e] sm:text-[#d5d7dc]">
-      <div className="mx-auto flex max-w-[1248px] flex-wrap gap-x-12 gap-y-2 px-4 pt-2 pb-6 text-xs leading-relaxed sm:gap-y-5 sm:px-6 sm:py-7 sm:text-[13px]">
+    <footer className="bg-background text-muted-foreground sm:border-t sm:border-borda sm:bg-rodape-fundo sm:text-rodape-texto">
+      <div className="mx-auto flex max-w-[1248px] flex-wrap gap-x-12 gap-y-2 px-4 pt-2 pb-6 text-xs leading-relaxed sm:gap-y-5 sm:px-6 sm:py-7 sm:text-sm">
         <div className="flex-[1_1_280px]">
           <p className="hidden font-bold text-white sm:block">Auditaja</p>
           {/* LGPD art. 41, § 1º: identidade e contato do encarregado também no celular. */}
@@ -26,17 +26,17 @@ export function Rodape() {
         </div>
         <p className="flex-[1_1_280px]">
           Indicadores são pontos de partida para verificação, não acusações.{" "}
-          <Link href="/metodologia" className="sm:text-[#a9bef5] sm:hover:text-white">
+          <Link href="/metodologia" className="sm:text-rodape-link sm:hover:text-white">
             Metodologia
           </Link>{" "}
           ·{" "}
-          <Link href="/privacidade" className="sm:text-[#a9bef5] sm:hover:text-white">
+          <Link href="/privacidade" className="sm:text-rodape-link sm:hover:text-white">
             Política de privacidade
           </Link>
           <span className="hidden sm:inline">
             {" "}
             ·{" "}
-            <Link href="/fontes" className="text-[#a9bef5] hover:text-white">
+            <Link href="/fontes" className="text-rodape-link hover:text-white">
               Licenças dos dados
             </Link>
           </span>

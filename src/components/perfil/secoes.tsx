@@ -27,9 +27,9 @@ function Dois({ curto, longo }: { curto: React.ReactNode; longo: React.ReactNode
 }
 
 const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
-const H2 = "font-heading text-lg font-bold sm:text-[22px]";
+const H2 = "font-heading text-lg font-bold sm:text-[1.375rem]";
 const H2_LATERAL = "font-heading text-lg font-bold";
-const H3 = "text-[15px] font-bold";
+const H3 = "text-base font-bold";
 
 export function Indicador({
   titulo,
@@ -56,10 +56,10 @@ export function Indicador({
       data-indicador
       className="flex flex-col gap-1 rounded-[10px] bg-background p-3 sm:gap-1.5 sm:rounded-[12px] sm:p-4"
     >
-      <p className="text-xs text-muted-foreground sm:text-[13px]">
+      <p className="text-xs text-muted-foreground sm:text-sm">
         <Dois curto={tituloCurto ?? titulo} longo={titulo} />
       </p>
-      <p className="font-heading text-xl font-bold sm:text-[26px]">
+      <p className="font-heading text-xl font-bold sm:text-[1.625rem]">
         <Dois curto={valorCurto ?? valor} longo={valor} />
       </p>
       {progresso != null && (
@@ -71,7 +71,7 @@ export function Indicador({
           <div className="h-2 bg-primary" style={{ width: `${Math.min(100, progresso)}%` }} />
         </div>
       )}
-      <p className="text-[11px] text-muted-foreground sm:text-xs">
+      <p className="text-sm text-muted-foreground sm:text-xs">
         <Dois curto={detalheCurto ?? detalhe} longo={detalhe} />
       </p>
       {nota && <p className="hidden text-xs text-muted-foreground sm:block">{nota}</p>}
@@ -177,7 +177,7 @@ export function SecaoGastos({
       </div>
 
       {senado && (
-        <p className="flex items-start gap-3 rounded-[10px] bg-muted p-3 text-[13px] leading-[1.45] text-texto-2 sm:rounded-[12px] sm:px-[18px] sm:py-3.5 sm:text-sm sm:leading-normal">
+        <p className="flex items-start gap-3 rounded-[10px] bg-muted p-3 text-sm leading-[1.45] text-texto-2 sm:rounded-[12px] sm:px-[18px] sm:py-3.5 sm:text-sm sm:leading-normal">
           <svg
             aria-hidden="true"
             viewBox="0 0 24 24"
@@ -202,7 +202,7 @@ export function SecaoGastos({
       ) : (
         <>
           <figure className="flex flex-col gap-2">
-            <figcaption className="hidden flex-wrap justify-between gap-x-4 gap-y-1 text-[13px] text-muted-foreground sm:flex">
+            <figcaption className="hidden flex-wrap justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground sm:flex">
               <span>{mandato ? "Gasto anual no mandato" : `Gasto mensal em ${ano}`}</span>
               {linhaTeto !== null && (
                 <span>
@@ -222,13 +222,17 @@ export function SecaoGastos({
                 <div
                   data-teto
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-dashed border-teto"
+                  className="pointer-events-none absolute inset-x-0 z-0 border-t-2 border-dashed border-teto"
                   style={{ bottom: `${(linhaTeto / max) * 100}%` }}
-                />
+                >
+                  <span className="absolute right-0 bottom-0.5 hidden bg-superficie px-1 text-xs font-semibold text-foreground sm:block">
+                    Teto
+                  </span>
+                </div>
               )}
               {barras.map((b) => (
                 <div key={b.rotulo} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                  <span className="hidden text-[11px] text-muted-foreground sm:block">{milhar(b.total)}</span>
+                  <span className="relative z-10 hidden bg-superficie px-0.5 text-xs text-muted-foreground sm:block">{milhar(b.total)}</span>
                   <div
                     className="w-full rounded-t-[3px] bg-primary sm:max-w-11 sm:rounded-t-[4px]"
                     style={{ height: `${Math.max(1, (b.total / max) * 100)}%` }}
@@ -238,7 +242,7 @@ export function SecaoGastos({
             </div>
             <div className="flex gap-1.5 sm:gap-2.5" aria-hidden="true">
               {barras.map((b) => (
-                <span key={b.rotulo} className="flex-1 text-center text-[11px] text-muted-foreground sm:text-xs">
+                <span key={b.rotulo} className="flex-1 text-center text-sm text-muted-foreground sm:text-xs">
                   <Dois curto={b.inicial} longo={b.rotulo} />
                 </span>
               ))}
@@ -286,11 +290,11 @@ export function SecaoGastos({
               <ul className="flex flex-col gap-2.5 sm:gap-3">
                 {tipos.map((t, i) => (
                   <li key={t.nome} className={`flex flex-col gap-1 ${i >= 4 && !completo ? "max-sm:hidden" : ""}`}>
-                    <div className="flex justify-between gap-2 text-[13px]">
+                    <div className="flex justify-between gap-2 text-sm">
                       <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 break-words">
                         {t.nome}
                         {t.atipico && (
-                          <span className="rounded-full border border-atipico-borda bg-atipico-fundo px-[7px] py-0.5 text-[11px] font-bold whitespace-nowrap text-atipico">
+                          <span className="rounded-full border border-atipico-borda bg-atipico-fundo px-[7px] py-0.5 text-sm font-bold whitespace-nowrap text-atipico">
                             Atípico
                           </span>
                         )}
@@ -315,7 +319,7 @@ export function SecaoGastos({
             <div className={`min-w-0 flex-[1_1_320px] flex-col gap-3 ${completo ? "flex" : "hidden sm:flex"}`}>
               <h3 className={H3}>Maiores fornecedores</h3>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[13px]">
+                <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="text-left text-muted-foreground">
                       <th scope="col" className="py-1.5 pr-2 font-semibold">
@@ -474,14 +478,14 @@ function PeriodosFora({ perfil }: { perfil: Perfil }) {
       id="periodos"
       className="mt-2 flex scroll-mt-4 flex-col gap-2 rounded-[10px] bg-background p-3 sm:mt-0 sm:gap-2.5 sm:rounded-[12px] sm:p-4"
     >
-      <h3 className="text-sm font-bold sm:text-[15px]">
+      <h3 className="text-sm font-bold sm:text-base">
         <Dois curto={`Fora do exercício em ${votacoes.ano}`} longo={`Períodos fora do exercício em ${votacoes.ano}`} />
       </h3>
       <ul className="flex flex-col gap-2 sm:gap-1.5">
         {periodos.map((p) => (
           <li
             key={p.inicio}
-            className="flex flex-col gap-0.5 text-[13px] sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1 sm:text-sm"
+            className="flex flex-col gap-0.5 text-sm sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1 sm:text-sm"
           >
             <span className="font-semibold tabular-nums sm:w-[200px] sm:font-normal">{intervalo(p.inicio, p.fim)}</span>
             <span className="text-texto-2">
@@ -490,7 +494,7 @@ function PeriodosFora({ perfil }: { perfil: Perfil }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs leading-normal text-texto-2 sm:text-[13px]">
+      <p className="text-xs leading-normal text-texto-2 sm:text-sm">
         <span className="sm:hidden">Essas votações não contam na presença nem em &quot;Faltou&quot;. </span>
         <span className="hidden sm:inline">
           A presença conta só as votações em que {artigo} estava em exercício. Licença, afastamento e suplência ficam de
@@ -560,7 +564,7 @@ export function SecaoVotacoes({
         </nav>
       </div>
       {senado && (
-        <p className="pb-2 text-xs leading-[1.45] text-muted-foreground sm:pb-0 sm:text-[13px] sm:leading-normal">
+        <p className="pb-2 text-xs leading-[1.45] text-muted-foreground sm:pb-0 sm:text-sm sm:leading-normal">
           <Dois
             curto="Em votação secreta o Senado registra só que o senador votou."
             longo="Em votação secreta, como a escolha de autoridades, o Senado registra só que o senador votou. Essas votações contam para a presença, mas não para o alinhamento com a liderança."
@@ -594,12 +598,12 @@ export function SecaoVotacoes({
             );
             const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
             const selo = v.foraDoExercicio ? (
-              <span className="rounded-[6px] border border-dashed border-input bg-superficie px-[9px] py-[3px] text-xs font-bold text-texto-2 sm:rounded-[8px] sm:px-[11px] sm:py-[5px] sm:text-[13px]">
+              <span className="rounded-[6px] border border-dashed border-input bg-superficie px-[9px] py-[3px] text-xs font-bold text-texto-2 sm:rounded-[8px] sm:px-[11px] sm:py-[5px] sm:text-sm">
                 {SELO_FORA[v.foraDoExercicio]} · não conta
               </span>
             ) : (
               <span
-                className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-[13px] ${corVoto(v.voto, v.orientacao)}`}
+                className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-sm ${corVoto(v.voto, v.orientacao)}`}
               >
                 {senado ? (
                   v.secreta && v.voto === "Votou" ? (
@@ -620,7 +624,7 @@ export function SecaoVotacoes({
                   i >= 3 && !completo ? "max-sm:hidden" : ""
                 }`}
               >
-                <span className="hidden w-[84px] text-[13px] text-muted-foreground tabular-nums sm:block">
+                <span className="hidden w-[84px] text-sm text-muted-foreground tabular-nums sm:block">
                   {dataBr(v.data)}
                 </span>
                 <div className="flex min-w-0 flex-col gap-1.5 sm:flex-[1_1_260px] sm:gap-0.5">
@@ -629,7 +633,7 @@ export function SecaoVotacoes({
                       href={v.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`text-sm font-semibold text-foreground sm:text-[15px] ${v.proposicao_sigla ? "" : "line-clamp-2"}`}
+                      className={`text-sm font-semibold text-foreground sm:text-base ${v.proposicao_sigla ? "" : "line-clamp-2"}`}
                     >
                       {titulo}
                     </a>
@@ -638,7 +642,7 @@ export function SecaoVotacoes({
                     </span>
                   </div>
                   {(ementa || res) && (
-                    <span className="text-[13px] text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {ementa && (ementa.length > 110 ? `${ementa.slice(0, 110).replace(/\s+\S*$/, "")}…` : ementa)}
                       {ementa && res ? <span className="max-sm:hidden"> · {res}</span> : null}
                       {!ementa && res}
@@ -648,7 +652,7 @@ export function SecaoVotacoes({
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     title={origem}
-                    className="text-xs text-muted-foreground sm:order-none sm:text-[13px] max-sm:order-2"
+                    className="text-xs text-muted-foreground sm:order-none sm:text-sm max-sm:order-2"
                   >
                     {orient}
                     {v.tipoOrientacao && v.tipoOrientacao !== "partido" && (
@@ -734,7 +738,7 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
           <ul className="flex flex-col gap-3 sm:hidden">
             {anos.map((a) => (
               <li key={a} className="flex flex-col gap-1">
-                <div className="flex justify-between text-[13px]">
+                <div className="flex justify-between text-sm">
                   <span>Eleição {a}</span>
                   <strong>{brlCompacto(porAno.get(a)!.total)}</strong>
                 </div>
@@ -758,8 +762,8 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
               const v = i > 0 ? variacaoNominal(porAno.get(anos[i - 1])!.total, e.total) : null;
               return (
                 <li key={a} className="flex flex-col gap-1 rounded-[12px] border p-3.5">
-                  <span className="text-[13px] text-muted-foreground">Eleição {a}</span>
-                  <span className="font-heading text-[22px] font-bold">{brlCompacto(e.total)}</span>
+                  <span className="text-sm text-muted-foreground">Eleição {a}</span>
+                  <span className="font-heading text-[1.375rem] font-bold">{brlCompacto(e.total)}</span>
                   <span className="text-xs text-muted-foreground">
                     {v === null
                       ? feminino(`Candidato a ${e.cargo.toLowerCase()}`, perfil.parlamentar.sexo).replace(/^C/, "c")
@@ -804,7 +808,7 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
               </table>
               {tipos.map((r) => (
                 <div key={r.t} aria-hidden="true" className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-                  <span className="w-[190px] text-[13px]">{r.t}</span>
+                  <span className="w-[190px] text-sm">{r.t}</span>
                   <div className="flex flex-[1_1_240px] flex-col gap-[3px]">
                     <div
                       className="h-2.5 rounded-[3px] bg-anterior"
@@ -815,7 +819,7 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
                       style={{ width: `${Math.max(0.5, (r.b / maxTipo) * 100)}%` }}
                     />
                   </div>
-                  <span className="w-[150px] text-right text-[13px] text-muted-foreground tabular-nums">
+                  <span className="w-[150px] text-right text-sm text-muted-foreground tabular-nums">
                     {mil(r.a)} → {mil(r.b)}
                   </span>
                 </div>
@@ -1093,7 +1097,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         {marcos.length > 0 && (
           <div className={`flex flex-col gap-3.5 ${senado ? "max-sm:hidden" : ""}`}>
             <h3 className="mt-1 text-sm font-bold">Linha do tempo</h3>
-            <ol className="flex flex-col gap-2.5 text-[13px]">
+            <ol className="flex flex-col gap-2.5 text-sm">
               {marcos.map((m, i) => (
                 <li key={i} className="flex gap-2.5">
                   <span
@@ -1147,10 +1151,10 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
 
       <section aria-labelledby="glossario-titulo" className={`${CARTAO} gap-2.5 sm:p-5`} data-glossario>
-        <h2 id="glossario-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
+        <h2 id="glossario-titulo" className="font-heading text-lg font-bold sm:text-lg">
           Palavras desta página
         </h2>
-        <dl className="flex flex-col gap-2 text-[13px] leading-[1.45] sm:text-sm">
+        <dl className="flex flex-col gap-2 text-sm leading-[1.45] sm:text-sm">
           {GLOSSARIO(senado).map(([termo, def]) => (
             <div key={termo}>
               <dt className="font-semibold">{termo}</dt>
@@ -1163,10 +1167,10 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         aria-labelledby="erro-titulo"
         className={`flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5`}
       >
-        <h2 id="erro-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
+        <h2 id="erro-titulo" className="font-heading text-lg font-bold sm:text-lg">
           Encontrou um erro?
         </h2>
-        <p className="text-[13px] leading-[1.45] text-texto-2 sm:text-sm sm:leading-normal">
+        <p className="text-sm leading-[1.45] text-texto-2 sm:text-sm sm:leading-normal">
           <Dois
             curto={
               senado
@@ -1186,7 +1190,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         >
           Pedir correção
         </Link>
-        <p className="hidden text-[13px] text-texto-2 sm:block">
+        <p className="hidden text-sm text-texto-2 sm:block">
           Pedidos de correção recebidos para este perfil: {perfil.correcoes}
         </p>
       </section>
