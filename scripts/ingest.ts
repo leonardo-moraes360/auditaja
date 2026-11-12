@@ -10,6 +10,7 @@
  *   pnpm ingest bens 2022
  *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
  *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
+ *   pnpm ingest transferegov-pix  (Transferegov: planos e pagamentos das emendas Pix; ~1.000 requisições, ~17 min)
  *   pnpm ingest tudo 2026   (deputados, histórico, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *   pnpm ingest senadores
  *   pnpm ingest ceaps 2026
@@ -19,6 +20,7 @@
  * Rode `senadores` (ou `senado`) antes de `bens` para o TSE casar também os senadores.
  * Rode `emendas` depois de `deputados` e `senadores`, e `sancoes` depois de `ceap` e `ceaps`: as emendas
  * casam com os perfis das duas Casas e as sanções só guardam CNPJs que já estão na cota (CEAP e CEAPS).
+ * Rode `transferegov-pix` depois de `emendas`: os planos de ação só são ligados a emendas Pix já gravadas.
  *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
  */
@@ -28,6 +30,7 @@ import { coletarHistorico } from "../src/ingest/historico";
 import { ClienteEducado } from "../src/ingest/http";
 import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "../src/ingest/senado";
 import { coletarBens } from "../src/ingest/tse";
+import { coletarTransferegovPix } from "../src/ingest/transferegov";
 import { coletarEmendas, coletarSancoes } from "../src/ingest/transparencia";
 
 const [cmd, anoArg] = process.argv.slice(2);
@@ -64,6 +67,9 @@ async function main() {
         break;
       case "sancoes":
         console.log("sanções:", await coletarSancoes(db, cli));
+        break;
+      case "transferegov-pix":
+        console.log("Transferegov, emendas Pix:", await coletarTransferegovPix(db, cli));
         break;
       case "senadores":
         console.log("senadores:", await coletarSenadores(db, cli));

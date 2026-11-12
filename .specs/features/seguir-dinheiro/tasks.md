@@ -186,10 +186,11 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Comando imprime o resumo do coletor
-- [ ] Build gate passa
+- [x] Comando imprime o resumo do coletor
+- [x] Build gate passa
 
 **Tests**: none
+**Status**: ✅ Done
 **Gate**: build
 
 ---
