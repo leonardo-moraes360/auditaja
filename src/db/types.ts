@@ -236,6 +236,59 @@ export interface SancaoTable {
   coleta_id: number;
 }
 
+/** Plano de ação de transferência especial ("emenda Pix") do Transferegov, ligado pelo código da emenda. */
+export interface TransfPlanoTable {
+  id_plano_acao: number;
+  codigo_emenda: string;
+  codigo_plano: string;
+  parlamentar_id: number;
+  /** CNPJ do ente que recebeu (14 dígitos). */
+  beneficiario_cnpj: string | null;
+  beneficiario_nome: string | null;
+  beneficiario_uf: string | null;
+  valor: Numeric;
+  data_aceite: DateCol | null;
+  coleta_id: number;
+}
+
+/** Documento de liquidação do relatório de gestão: quem o ente pagou com a emenda Pix. */
+export interface TransfPagamentoTable {
+  id: number;
+  id_plano_acao: number;
+  tipo: "pj" | "pf";
+  /** Só PJ, 14 dígitos com DV válido. PF: null (R3). */
+  recebedor_cnpj: string | null;
+  recebedor_nome: string | null;
+  valor: Numeric;
+  data_pagamento: DateCol;
+  coleta_id: number;
+}
+
+/** Lote "Estabelecimentos" da Receita, só CNPJs já presentes no banco. */
+export interface CnpjAberturaTable {
+  cnpj: string;
+  cnpj_basico: string;
+  matriz: boolean;
+  inicio_atividade: DateCol | null;
+  cnae_principal: string | null;
+  /** AAAA-MM */
+  base_mes: string;
+  coleta_id: number;
+}
+
+/** Despesa de campanha com fornecedor pessoa jurídica (TSE). */
+export interface CampanhaDespesaTable {
+  id: Generated<string>;
+  ano_eleicao: number;
+  sq_candidato: string;
+  parlamentar_id: number;
+  /** 14 dígitos. */
+  fornecedor_cnpj: string;
+  valor: Numeric;
+  data_despesa: DateCol | null;
+  coleta_id: number;
+}
+
 export interface Database {
   coleta: ColetaTable;
   parlamentar: ParlamentarTable;
@@ -254,6 +307,10 @@ export interface Database {
   emenda_favorecido: EmendaFavorecidoTable;
   sancao: SancaoTable;
   periodo_fora_exercicio: PeriodoForaExercicioTable;
+  transf_plano: TransfPlanoTable;
+  transf_pagamento: TransfPagamentoTable;
+  cnpj_abertura: CnpjAberturaTable;
+  campanha_despesa: CampanhaDespesaTable;
 }
 
 export type Parlamentar = Selectable<ParlamentarTable>;

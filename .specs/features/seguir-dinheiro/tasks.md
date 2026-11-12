@@ -80,12 +80,13 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Nenhuma coluna para banco, agência, conta, sócio, endereço, telefone, e-mail ou CPF
-- [ ] Migração em `src/db/migrate.ts` e tipos em `src/db/types.ts`
-- [ ] `semear` limpa as quatro tabelas antes de `parlamentar`
-- [ ] Build gate passa
+- [x] Nenhuma coluna para banco, agência, conta, sócio, endereço, telefone, e-mail ou CPF
+- [x] Migração em `src/db/migrate.ts` e tipos em `src/db/types.ts`
+- [x] `semear` limpa as quatro tabelas antes de `parlamentar`
+- [x] Build gate passa
 
 **Tests**: none
+**Status**: ✅ Done
 **Gate**: build
 
 ---
