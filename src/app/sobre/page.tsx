@@ -34,6 +34,11 @@ export default function Sobre() {
             (CEIS e CNEP).
           </li>
           <li>
+            Aviso de padrão atípico nos gastos da cota, quando um tipo de despesa fica muito acima do que os colegas
+            gastam ou dá um salto em relação ao ano anterior, com a{" "}
+            <Link href="/metodologia#atipico">conta publicada na metodologia</Link>.
+          </li>
+          <li>
             Planilha CSV de gastos (e de emendas, para deputados) e um feed para acompanhar as atualizações de cada
             perfil.
           </li>
@@ -56,7 +61,6 @@ export default function Sobre() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Emendas e sanções de fornecedores no perfil dos senadores.</li>
           <li>Emendas de bancada e de comissão, e emendas anteriores a 2024.</li>
-          <li>Alertas de padrão atípico de gastos.</li>
           <li>Deputados estaduais, vereadores, contratos, licitações e outros gastos públicos.</li>
         </ul>
         <p>Cada etapa nova sai com a metodologia publicada antes.</p>

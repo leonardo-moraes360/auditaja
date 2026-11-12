@@ -26,6 +26,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
   const sp = request.nextUrl.searchParams;
   const ano = sp.get("ano");
   const doc = sp.get("doc");
+  // Tipo de despesa (aviso de padrão atípico): texto exato publicado pela Câmara ou pelo Senado.
+  const tipo = sp.get("tipo");
   // Período de uma sanção (aviso de sanção): datas ISO, inclusive.
   const de = sp.get("de");
   const ate = sp.get("ate");
@@ -50,6 +52,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
     .orderBy("data_emissao");
   if (ano && /^\d{4}$/.test(ano)) q = q.where("ano", "=", Number(ano));
   if (doc) q = q.where("fornecedor_doc", "=", doc);
+  if (tipo) q = q.where("tipo_despesa", "=", tipo);
   if (dataIsoValida(de)) q = q.where("data_emissao", ">=", de!);
   if (dataIsoValida(ate)) q = q.where("data_emissao", "<=", ate!);
   const linhas = await q.execute();

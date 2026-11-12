@@ -25,6 +25,10 @@
   --font-heading: var(--font-grotesk), var(--font-inter), sans-serif;
   --color-aviso: var(--aviso);
   --color-aviso-fundo: var(--aviso-fundo);
+  --color-atipico: var(--atipico);
+  --color-atipico-fundo: var(--atipico-fundo);
+  --color-atipico-borda: var(--atipico-borda);
+  --color-atipico-titulo: var(--atipico-titulo);
   --color-superficie: var(--superficie);
   --color-borda-suave: var(--borda-suave);
   --color-linha: var(--linha);
@@ -91,6 +95,11 @@
   --destructive: #b4440e;
   --aviso: #7a2e09;
   --aviso-fundo: #fdf0e7;
+  /* Padrão atípico (artboard Atipico.dc.html): âmbar, distinto do laranja de sanção. */
+  --atipico: #6b4b00;
+  --atipico-fundo: #fff7e0;
+  --atipico-borda: #f0d58c;
+  --atipico-titulo: #3d2c00;
   /* Tokens do protótipo aprovado (artifact bd51453d…, Main.dc.html). */
   --border: #e2e2dc;
   --borda-suave: #ecece6;
