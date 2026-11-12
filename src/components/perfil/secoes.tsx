@@ -27,9 +27,9 @@ function Dois({ curto, longo }: { curto: React.ReactNode; longo: React.ReactNode
 }
 
 const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
-const H2 = "font-heading text-lg font-bold sm:text-[22px]";
+const H2 = "font-heading text-lg font-bold sm:text-[1.375rem]";
 const H2_LATERAL = "font-heading text-lg font-bold";
-const H3 = "text-[15px] font-bold";
+const H3 = "text-base font-bold";
 
 export function Indicador({
   titulo,
@@ -59,7 +59,7 @@ export function Indicador({
       <p className="text-xs text-muted-foreground sm:text-sm">
         <Dois curto={tituloCurto ?? titulo} longo={titulo} />
       </p>
-      <p className="font-heading text-xl font-bold sm:text-[26px]">
+      <p className="font-heading text-xl font-bold sm:text-[1.625rem]">
         <Dois curto={valorCurto ?? valor} longo={valor} />
       </p>
       {progresso != null && (
@@ -478,7 +478,7 @@ function PeriodosFora({ perfil }: { perfil: Perfil }) {
       id="periodos"
       className="mt-2 flex scroll-mt-4 flex-col gap-2 rounded-[10px] bg-background p-3 sm:mt-0 sm:gap-2.5 sm:rounded-[12px] sm:p-4"
     >
-      <h3 className="text-sm font-bold sm:text-[15px]">
+      <h3 className="text-sm font-bold sm:text-base">
         <Dois curto={`Fora do exercício em ${votacoes.ano}`} longo={`Períodos fora do exercício em ${votacoes.ano}`} />
       </h3>
       <ul className="flex flex-col gap-2 sm:gap-1.5">
@@ -633,7 +633,7 @@ export function SecaoVotacoes({
                       href={v.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`text-sm font-semibold text-foreground sm:text-[15px] ${v.proposicao_sigla ? "" : "line-clamp-2"}`}
+                      className={`text-sm font-semibold text-foreground sm:text-base ${v.proposicao_sigla ? "" : "line-clamp-2"}`}
                     >
                       {titulo}
                     </a>
@@ -763,7 +763,7 @@ export function SecaoBens({ perfil }: { perfil: Perfil }) {
               return (
                 <li key={a} className="flex flex-col gap-1 rounded-[12px] border p-3.5">
                   <span className="text-sm text-muted-foreground">Eleição {a}</span>
-                  <span className="font-heading text-[22px] font-bold">{brlCompacto(e.total)}</span>
+                  <span className="font-heading text-[1.375rem] font-bold">{brlCompacto(e.total)}</span>
                   <span className="text-xs text-muted-foreground">
                     {v === null
                       ? feminino(`Candidato a ${e.cargo.toLowerCase()}`, perfil.parlamentar.sexo).replace(/^C/, "c")
@@ -1151,7 +1151,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
 
       <section aria-labelledby="glossario-titulo" className={`${CARTAO} gap-2.5 sm:p-5`} data-glossario>
-        <h2 id="glossario-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
+        <h2 id="glossario-titulo" className="font-heading text-lg font-bold sm:text-lg">
           Palavras desta página
         </h2>
         <dl className="flex flex-col gap-2 text-sm leading-[1.45] sm:text-sm">
@@ -1167,7 +1167,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         aria-labelledby="erro-titulo"
         className={`flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5`}
       >
-        <h2 id="erro-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
+        <h2 id="erro-titulo" className="font-heading text-lg font-bold sm:text-lg">
           Encontrou um erro?
         </h2>
         <p className="text-sm leading-[1.45] text-texto-2 sm:text-sm sm:leading-normal">

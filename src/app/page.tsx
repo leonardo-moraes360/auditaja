@@ -39,7 +39,7 @@ export default function Inicio() {
           />
           <button
             type="submit"
-            className="h-11 rounded-md bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
+            className="h-11 rounded-md bg-primary px-5 font-medium text-primary-foreground hover:bg-primaria-hover"
           >
             Buscar
           </button>
@@ -77,7 +77,7 @@ export default function Inicio() {
           {O_QUE_VER.map(([titulo, texto]) => (
             <li key={titulo} className="flex flex-col gap-1.5 rounded-[14px] border bg-card p-4">
               <strong className="text-base">{titulo}</strong>
-              <span className="text-[15px] leading-normal text-texto-2">{texto}</span>
+              <span className="text-base leading-normal text-texto-2">{texto}</span>
             </li>
           ))}
         </ul>

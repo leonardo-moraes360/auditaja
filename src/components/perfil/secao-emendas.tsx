@@ -7,8 +7,8 @@ import { NotaFonte } from "./fonte";
 
 /** Mesmo cartão e títulos das outras seções do perfil (secoes.tsx). */
 const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
-const H2 = "font-heading text-lg font-bold sm:text-[22px]";
-const H3 = "text-[15px] font-bold";
+const H2 = "font-heading text-lg font-bold sm:text-[1.375rem]";
+const H3 = "text-base font-bold";
 
 export const PAGINA_EMENDAS_PORTAL = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares";
 
@@ -34,7 +34,7 @@ function Indicador({
       className="flex flex-col gap-1 rounded-[10px] bg-background p-3 sm:gap-1.5 sm:rounded-[12px] sm:p-4"
     >
       <p className="text-xs text-muted-foreground sm:text-sm">{titulo}</p>
-      <p className="font-heading text-xl font-bold sm:text-[26px]">{valor}</p>
+      <p className="font-heading text-xl font-bold sm:text-[1.625rem]">{valor}</p>
       {progresso != null && (
         <div
           className="h-2 overflow-hidden rounded bg-border"
@@ -347,7 +347,7 @@ function ConteudoEmendas({
                     </span>
                     {f.doc && <span className="text-xs text-muted-foreground tabular-nums">{f.doc}</span>}
                   </span>
-                  <strong className="shrink-0 text-[15px] whitespace-nowrap tabular-nums">{brlMi(f.valor)}</strong>
+                  <strong className="shrink-0 text-base whitespace-nowrap tabular-nums">{brlMi(f.valor)}</strong>
                 </li>
               ))}
             </ul>

@@ -98,7 +98,7 @@ export function PontosParaVerificar({ pontos, periodo }: { pontos: PontoParaVeri
       className="flex flex-col gap-2.5 rounded-[12px] border border-atipico-borda bg-atipico-fundo px-3.5 py-3 sm:px-[18px] sm:py-4"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 id="pontos-titulo" className="text-[15px] font-bold text-atipico-titulo sm:text-base">
+        <h2 id="pontos-titulo" className="text-base font-bold text-atipico-titulo sm:text-base">
           {pontos.length === 1 ? "1 ponto para verificar" : `${pontos.length} pontos para verificar`} {periodo}
         </h2>
         <p className="text-sm text-atipico">

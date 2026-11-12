@@ -95,7 +95,7 @@ export function AbasSecoes() {
             href={`#${a.id}`}
             aria-current={on ? "location" : undefined}
             onClick={() => aoClicar(a.id)}
-            className={`border-b-2 px-2.5 py-3 text-sm whitespace-nowrap no-underline sm:px-4 sm:text-[15px] ${
+            className={`border-b-2 px-2.5 py-3 text-sm whitespace-nowrap no-underline sm:px-4 sm:text-base ${
               on
                 ? "border-primary font-semibold text-primary hover:text-primary"
                 : "border-transparent font-normal text-muted-foreground hover:text-foreground sm:font-medium"

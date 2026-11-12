@@ -71,7 +71,7 @@ export function AvisoSancao({
               <path d="M12 17h.01" />
             </svg>
             <div className="flex min-w-0 flex-col gap-1.5">
-              <h3 className="text-[15px] font-bold text-aviso">
+              <h3 className="text-base font-bold text-aviso">
                 {f.fornecedor_nome} tem sanção registrada no {s.cadastro}
               </h3>
               <p className="text-sm leading-normal text-texto-2">

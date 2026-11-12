@@ -18,7 +18,7 @@ function Logo() {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-heading text-[19px] font-bold tracking-normal sm:text-[22px] sm:tracking-[-0.02em]">
+      <span className="font-heading text-[1.1875rem] font-bold tracking-normal sm:text-[1.375rem] sm:tracking-[-0.02em]">
         Auditaja
       </span>
     </Link>

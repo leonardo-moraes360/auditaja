@@ -129,7 +129,7 @@ function Moldura({
           <span className="text-sm font-bold tracking-[0.04em] text-atipico uppercase sm:text-xs">
             Padrão atípico<span className="max-sm:hidden"> · {selo} · ponto de partida para verificação</span>
           </span>
-          <h3 className="text-[15px] leading-[1.35] font-bold text-atipico-titulo sm:text-base sm:leading-snug">
+          <h3 className="text-base leading-[1.35] font-bold text-atipico-titulo sm:text-base sm:leading-snug">
             <Dois curto={tituloCurto} longo={titulo} />
           </h3>
         </div>

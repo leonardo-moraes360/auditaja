@@ -21,7 +21,7 @@ export function NavPrincipalEstatica() {
 
 function Itens({ pathname }: { pathname: string }) {
   return (
-    <nav aria-label="Principal" className="flex flex-wrap gap-x-5 gap-y-1 text-[15px] font-medium">
+    <nav aria-label="Principal" className="flex flex-wrap gap-x-5 gap-y-1 text-base font-medium">
       {ITENS.map(({ href, rotulo }) => {
         const ativo = pathname === href || pathname.startsWith(`${href}/`);
         return (
