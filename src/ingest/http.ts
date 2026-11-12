@@ -19,7 +19,46 @@ export const USER_AGENT = `Auditaja/0.1 (+${
 const INTERVALO_MIN_MS = 1000;
 const MAX_TENTATIVAS = 4;
 
-export class ColetaBloqueada extends Error {}
+/** O que o servidor disse ao bloquear: o chamador decide se um 403 conhecido significa outra coisa. */
+export type RespostaDeBloqueio = { status: number; contentType: string; corpo: string };
+
+export class ColetaBloqueada extends Error {
+  constructor(
+    mensagem: string,
+    readonly resposta?: RespostaDeBloqueio,
+  ) {
+    super(mensagem);
+  }
+}
+
+const MAX_CORPO_ERRO = 2000;
+
+/**
+ * Até 2 KB do corpo de erro, só quando é XML/JSON/texto (ex.: erro do S3); nunca baixa um HTML
+ * inteiro. Falha ao ler o corpo vira corpo vazio: o bloqueio tem de chegar como ColetaBloqueada.
+ */
+async function corpoDeErro(res: Response, contentType: string): Promise<string> {
+  const leitor = /xml|json|text\/plain/.test(contentType) ? res.body?.getReader() : undefined;
+  if (!leitor) {
+    await res.body?.cancel().catch(() => {});
+    return "";
+  }
+  const partes: Uint8Array[] = [];
+  let lidos = 0;
+  try {
+    while (lidos < MAX_CORPO_ERRO) {
+      const { done, value } = await leitor.read();
+      if (done) break;
+      partes.push(value);
+      lidos += value.length;
+    }
+  } catch {
+    return "";
+  } finally {
+    await leitor.cancel().catch(() => {});
+  }
+  return Buffer.concat(partes).toString("utf8").slice(0, MAX_CORPO_ERRO);
+}
 
 type Opcoes = {
   fetchImpl?: typeof fetch;
@@ -88,7 +127,12 @@ export class ClienteEducado {
       });
       if (res.ok) return res;
       if (res.status === 401 || res.status === 403) {
-        throw new ColetaBloqueada(`${url.host} respondeu ${res.status}; não contornamos bloqueios`);
+        const contentType = (res.headers.get("content-type") ?? "").toLowerCase();
+        throw new ColetaBloqueada(`${url.host} respondeu ${res.status}; não contornamos bloqueios`, {
+          status: res.status,
+          contentType,
+          corpo: await corpoDeErro(res, contentType),
+        });
       }
       const repetir = res.status === 429 || res.status >= 500;
       if (!repetir || tentativa >= MAX_TENTATIVAS) {
