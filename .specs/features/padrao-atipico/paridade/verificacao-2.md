@@ -195,3 +195,7 @@ O coordenador manteve estas de propósito. Contam como FAIL acima.
 Se as 5 propostas como intencionais forem aprovadas: 88 ÷ 88 = **100%**.
 
 Rodada 1 → rodada 2: 71,1% → 94,6%. Os 21 FAILs não intencionais da rodada 1 viraram PASS.
+
+## Aprovação
+
+Em 12/11/2026 às 15:29 (horário de Brasília), o usuário aprovou na thread do projeto as 5 divergências propostas como intencionais (M09, M18, Q03, Q04, Q12). Com elas fora do denominador, a paridade desta rodada é de **100% (88 de 88)**.
