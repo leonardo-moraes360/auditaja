@@ -64,7 +64,7 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
               className={`inline-flex h-10 items-center rounded-full border px-4 text-sm no-underline ${
                 atual
                   ? "border-primary bg-secondary font-semibold text-primary"
-                  : "border-input bg-white text-texto-2 hover:border-primary"
+                  : "border-input bg-superficie text-texto-2 hover:border-primary"
               }`}
             >
               {f.rotulo} ({f.n})
@@ -84,7 +84,7 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
             defaultValue={q}
             type="search"
             placeholder="Ex.: Maria, Silva ou SP"
-            className="h-10 rounded-[8px] border border-input bg-white px-3 text-sm"
+            className="h-10 rounded-[8px] border border-input bg-superficie px-3 text-sm"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -95,7 +95,7 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
             id="uf"
             name="uf"
             defaultValue={uf}
-            className="h-10 rounded-[8px] border border-input bg-white px-3 text-sm"
+            className="h-10 rounded-[8px] border border-input bg-superficie px-3 text-sm"
           >
             <option value="">Todas</option>
             {ufs.map((u) => (

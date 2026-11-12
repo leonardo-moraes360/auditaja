@@ -33,7 +33,7 @@ export function linhasDosRotulos(posicoes: number[]): number[] {
   });
 }
 
-const TEXTO = "text-[13px] leading-normal text-texto-2 sm:text-sm sm:leading-[1.55]";
+const TEXTO = "text-sm leading-normal text-texto-2 sm:text-sm sm:leading-[1.55]";
 
 /** " (jan–nov)" quando o ano ainda não tem os 12 meses publicados. */
 function periodoParcial(ultimoMes: number) {
@@ -126,7 +126,7 @@ function Moldura({
       </svg>
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
         <div className="flex flex-col gap-2 sm:gap-1">
-          <span className="text-[11px] font-bold tracking-[0.04em] text-atipico uppercase sm:text-xs">
+          <span className="text-sm font-bold tracking-[0.04em] text-atipico uppercase sm:text-xs">
             Padrão atípico<span className="max-sm:hidden"> · {selo} · ponto de partida para verificação</span>
           </span>
           <h3 className="text-[15px] leading-[1.35] font-bold text-atipico-titulo sm:text-base sm:leading-snug">
@@ -175,9 +175,9 @@ function Diagrama({ a, rotulo, eu }: { a: AlertaColegas; rotulo: string; eu: str
           a.mediana,
         )}, limite de atipicidade ${brl(a.limiteMensal)}, ${eu.toLowerCase()} ${brl(a.mediaMensal)}`}
       >
-        <div className="absolute inset-x-0 top-[13px] h-0.5 bg-[#d9d9d2] sm:top-[27px]" />
+        <div className="absolute inset-x-0 top-[13px] h-0.5 bg-borda-campo sm:top-[27px]" />
         <div
-          className="absolute top-1.5 h-4 rounded-[3px] border border-chart-2 bg-[#dce4fa] sm:top-4 sm:h-6 sm:rounded-[4px]"
+          className="absolute top-1.5 h-4 rounded-[3px] border border-primary bg-primaria-fundo sm:top-4 sm:h-6 sm:rounded-[4px]"
           style={{ left: x(a.q1), width: `calc(${x(a.q3)} - ${x(a.q1)})` }}
         />
         <div className="absolute top-3.5 hidden h-7 w-0.5 bg-primary sm:block" style={{ left: x(a.mediana) }} />
@@ -186,7 +186,7 @@ function Diagrama({ a, rotulo, eu }: { a: AlertaColegas; rotulo: string; eu: str
           style={{ left: x(a.limiteMensal) }}
         />
         <div
-          className="absolute top-[7px] -ml-[7px] size-3.5 rounded-full border-2 border-white bg-teto sm:top-5 sm:-ml-2 sm:size-4"
+          className="absolute top-[7px] -ml-[7px] size-3.5 rounded-full border-2 border-superficie bg-atipico sm:top-5 sm:-ml-2 sm:size-4"
           style={{ left: x(a.mediaMensal) }}
         />
       </div>
@@ -368,7 +368,7 @@ export function AvisosAtipicos({
       .filter((r) => r.n > 0)
       .toSorted((a, b) => a.ano - b.ano);
     return (
-      <p data-atipico-resumo className="text-[13px] leading-normal text-muted-foreground sm:text-sm">
+      <p data-atipico-resumo className="text-sm leading-normal text-muted-foreground sm:text-sm">
         {comAviso.length ? (
           <>
             Padrão atípico, comparado ano a ano:{" "}
@@ -401,7 +401,7 @@ export function AvisosAtipicos({
     : "";
   if (!avisos.length) {
     return (
-      <p data-atipico-resumo className="text-[13px] leading-normal text-muted-foreground sm:text-sm">
+      <p data-atipico-resumo className="text-sm leading-normal text-muted-foreground sm:text-sm">
         Nenhum tipo de despesa ficou acima do limite de atipicidade em {r.ano}.{semSalto} {como}.
       </p>
     );

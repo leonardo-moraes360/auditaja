@@ -267,9 +267,3 @@
     @apply cursor-not-allowed;
   }
 }
-
-/* Ponte para o tema escuro: campos que ainda usam bg-white nas páginas (home, lista, contestar)
-   seguem o tema. Fora de @layer para vencer o utilitário. Remover quando as páginas usarem bg-superficie. */
-.dark .bg-white {
-  background-color: var(--superficie);
-}

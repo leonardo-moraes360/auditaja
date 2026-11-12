@@ -83,7 +83,7 @@ function Icone({ tipo }: { tipo: PontoParaVerificar["tipo"] }) {
 export function PontosParaVerificar({ pontos, periodo }: { pontos: PontoParaVerificar[]; periodo: string }) {
   if (!pontos.length) {
     return (
-      <p data-pontos="0" className="text-[13px] leading-normal text-muted-foreground sm:text-sm">
+      <p data-pontos="0" className="text-sm leading-normal text-muted-foreground sm:text-sm">
         Nenhum ponto para verificar {periodo}: empresas punidas e gastos fora do padrão foram conferidos.{" "}
         <Link href="/metodologia#atipico" className="font-semibold">
           Como conferimos
@@ -101,7 +101,7 @@ export function PontosParaVerificar({ pontos, periodo }: { pontos: PontoParaVeri
         <h2 id="pontos-titulo" className="text-[15px] font-bold text-atipico-titulo sm:text-base">
           {pontos.length === 1 ? "1 ponto para verificar" : `${pontos.length} pontos para verificar`} {periodo}
         </h2>
-        <p className="text-[13px] text-atipico">
+        <p className="text-sm text-atipico">
           Ponto para verificar não é acusação.{" "}
           <Link href="/metodologia#atipico" className="font-semibold text-atipico">
             Como calculamos

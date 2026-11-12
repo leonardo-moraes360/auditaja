@@ -35,7 +35,7 @@ export default function Inicio() {
             name="q"
             type="search"
             placeholder="Nome do deputado ou senador"
-            className="h-11 rounded-md border border-input bg-white px-4 sm:flex-1"
+            className="h-11 rounded-md border border-input bg-superficie px-4 sm:flex-1"
           />
           <button
             type="submit"
