@@ -159,13 +159,14 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Fixture com plano sem código não é ligado e entra no resumo
-- [ ] Nenhum campo bancário gravado (consulta às colunas no teste)
-- [ ] Falha no meio mantém a coleta anterior intacta
-- [ ] `coleta.observacao` guarda a `data-atualizacao` do Transferegov
-- [ ] Full gate passa
+- [x] Fixture com plano sem código não é ligado e entra no resumo
+- [x] Nenhum campo bancário gravado (consulta às colunas no teste)
+- [x] Falha no meio mantém a coleta anterior intacta
+- [x] `coleta.observacao` guarda a `data-atualizacao` do Transferegov
+- [x] Full gate passa
 
 **Tests**: integration
+**Status**: ✅ Done
 **Gate**: full
 
 ---
