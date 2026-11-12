@@ -30,11 +30,11 @@ test("ATPUI-01: dois avisos no bloco de gastos, com números, notas e metodologi
   const avisos = gastos.locator("[data-atipico]");
   await expect(avisos).toHaveCount(2);
   await expect(
-    gastos.getByRole("heading", { name: /Manutenção de escritório.*13 vezes maior que no ano anterior/ }),
+    gastos.getByRole("heading", { name: /Manutenção de escritório.*13 vezes (maior que no ano anterior|mais que em 2024)/ }),
   ).toBeVisible();
-  await expect(gastos.getByRole("heading", { name: /Hospedagem.*gasto mensal muito acima do comum/ })).toBeVisible();
+  await expect(gastos.getByRole("heading", { name: /Hospedagem.*muito acima do comum entre os deputados/ })).toBeVisible();
   await expect(avisos.first()).toContainText("Entre os 26 deputados");
-  const notas = avisos.first().getByRole("link", { name: "Baixar as notas (CSV)" });
+  const notas = avisos.first().getByRole("link", { name: /^Baixar as 10 notas/ });
   await expect(notas).toHaveAttribute("href", /gastos\.csv\?ano=2025&tipo=MANUTEN/);
   await expect(avisos.first().getByRole("link", { name: /Como calculamos/ })).toHaveAttribute(
     "href",
@@ -55,7 +55,7 @@ test("ATPUI-02: CSV filtrado pelo tipo do aviso", async ({ request }) => {
 test("ATPUI-03: sem aviso, uma linha diz que a checagem foi feita", async ({ page }) => {
   await page.goto(`/parlamentares/${SEM_AVISO}`);
   const resumo = page.locator("section#gastos [data-atipico-resumo]");
-  await expect(resumo).toContainText("Nenhum tipo de despesa ficou acima dos limites de padrão atípico em 2026.");
+  await expect(resumo).toContainText("Nenhum tipo de despesa ficou acima do limite de atipicidade em 2026.");
   await expect(page.locator("section#gastos [data-atipico]")).toHaveCount(0);
 });
 

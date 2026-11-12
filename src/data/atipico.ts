@@ -32,6 +32,7 @@ export async function totaisPorTipo(casa: CasaParlamentar, ano: number): Promise
       "doCasa.parlamentar_id",
       "doCasa.tipo_despesa",
       sql<string>`sum(${sql.ref("doCasa.valor_liquido")})`.as("total"),
+      sql<string>`count(*)`.as("notas"),
       "meses.meses",
     ])
     .groupBy(["doCasa.parlamentar_id", "doCasa.tipo_despesa", "meses.meses"])
@@ -41,6 +42,7 @@ export async function totaisPorTipo(casa: CasaParlamentar, ano: number): Promise
     tipo: r.tipo_despesa,
     total: Number(r.total),
     meses: Number(r.meses),
+    notas: Number(r.notas),
   }));
 }
 

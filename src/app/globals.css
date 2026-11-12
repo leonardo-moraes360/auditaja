@@ -29,6 +29,7 @@
   --color-atipico-fundo: var(--atipico-fundo);
   --color-atipico-borda: var(--atipico-borda);
   --color-atipico-titulo: var(--atipico-titulo);
+  --color-atipico-traco: var(--atipico-traco);
   --color-superficie: var(--superficie);
   --color-borda-suave: var(--borda-suave);
   --color-linha: var(--linha);
@@ -100,6 +101,8 @@
   --atipico-fundo: #fff7e0;
   --atipico-borda: #f0d58c;
   --atipico-titulo: #3d2c00;
+  /* Ícone e tracejado do limite (elementos gráficos, contraste 3:1 basta). */
+  --atipico-traco: #8a6100;
   /* Tokens do protótipo aprovado (artifact bd51453d…, Main.dc.html). */
   --border: #e2e2dc;
   --borda-suave: #ecece6;

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { PadraoAtipico } from "@/data/atipico";
-import type { AlertaColegas, AlertaSalto } from "@/lib/atipico";
-import { brl, fraseCase } from "@/lib/format";
+import { PISO_REAIS, type AlertaColegas, type AlertaSalto } from "@/lib/atipico";
+import { brl, fraseCase, MESES } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 
 /** Avisos abertos antes do "Ver mais". */
@@ -35,6 +35,11 @@ export function linhasDosRotulos(posicoes: number[]): number[] {
 
 const TEXTO = "text-[13px] leading-normal text-texto-2 sm:text-sm sm:leading-[1.55]";
 
+/** " (jan–nov)" quando o ano ainda não tem os 12 meses publicados. */
+function periodoParcial(ultimoMes: number) {
+  return ultimoMes >= 1 && ultimoMes < 12 ? ` (jan–${MESES[ultimoMes - 1].toLowerCase()})` : "";
+}
+
 function vezes(v: number) {
   return `${v.toLocaleString("pt-BR", { maximumFractionDigits: v < 10 ? 1 : 0 })} vezes`;
 }
@@ -49,23 +54,49 @@ function variacao(r: number) {
 type Ctx = {
   ano: number;
   casa: "camara" | "senado";
+  sexo: string | null;
+  /** Último mês publicado do ano na Casa (rótulo "2026 (jan–nov)"). */
+  ultimoMes: number;
   hrefNotas: (tipo: string) => string;
+  hrefContestar: string;
 };
+
+/** "Este deputado", "Esta deputada", "Este senador", "Esta senadora". */
+function este(ctx: Ctx) {
+  const f = ctx.sexo === "F";
+  const cargo = ctx.casa === "senado" ? (f ? "senadora" : "senador") : f ? "deputada" : "deputado";
+  return `${f ? "Esta" : "Este"} ${cargo}`;
+}
+
+/** Nome curto do tipo para frases: "HOSPEDAGEM ,EXCETO DO PARLAMENTAR NO DF." → "hospedagem". */
+function tipoCurto(tipo: string) {
+  return fraseCase(tipo).split(/,\s*exceto/i)[0].toLowerCase();
+}
+
+function rotuloNotas(n: number) {
+  return n === 1 ? "a nota" : `as ${n} notas`;
+}
 
 function Moldura({
   icone,
   selo,
   titulo,
+  tituloCurto,
   children,
   tipo,
-  hrefNotas,
+  notasLongo,
+  notasCurto,
+  ctx,
 }: {
   icone: React.ReactNode;
   selo: string;
   titulo: string;
+  tituloCurto: string;
   children: React.ReactNode;
   tipo: string;
-  hrefNotas: (tipo: string) => string;
+  notasLongo: string;
+  notasCurto: string;
+  ctx: Ctx;
 }) {
   return (
     <div
@@ -82,24 +113,29 @@ function Moldura({
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        className="mt-0.5 hidden shrink-0 text-atipico sm:block"
+        className="mt-0.5 hidden shrink-0 text-atipico-traco sm:block"
       >
         {icone}
       </svg>
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2 sm:gap-1">
           <span className="text-[11px] font-bold tracking-[0.04em] text-atipico uppercase sm:text-xs">
-            Padrão atípico · {selo} <span className="max-sm:hidden">· ponto de partida para verificação</span>
+            Padrão atípico<span className="max-sm:hidden"> · {selo} · ponto de partida para verificação</span>
           </span>
-          <h3 className="text-[15px] leading-snug font-bold text-atipico-titulo sm:text-base">{titulo}</h3>
+          <h3 className="text-[15px] leading-[1.35] font-bold text-atipico-titulo sm:text-base sm:leading-snug">
+            <Dois curto={tituloCurto} longo={titulo} />
+          </h3>
         </div>
         {children}
         <p className="flex flex-col gap-x-4 gap-y-1 text-sm font-semibold sm:flex-row sm:flex-wrap">
-          <a href={hrefNotas(tipo)} download className="inline-flex min-h-11 items-center text-atipico sm:min-h-6">
-            Baixar as notas (CSV)
+          <a href={ctx.hrefNotas(tipo)} download className="inline-flex min-h-11 items-center text-atipico sm:min-h-6">
+            <Dois curto={notasCurto} longo={notasLongo} />
           </a>
           <Link href="/metodologia#atipico" className="inline-flex min-h-11 items-center text-atipico sm:min-h-6">
-            Como calculamos (metodologia v{METODOLOGIA_VERSAO})
+            <Dois curto="Como calculamos" longo={`Como calculamos (metodologia v${METODOLOGIA_VERSAO})`} />
+          </Link>
+          <Link href={ctx.hrefContestar} className="hidden text-atipico sm:inline-flex sm:min-h-6 sm:items-center">
+            Contestar
           </Link>
         </p>
       </div>
@@ -107,14 +143,14 @@ function Moldura({
   );
 }
 
-function Diagrama({ a, rotulo }: { a: AlertaColegas; rotulo: string }) {
+function Diagrama({ a, rotulo, eu }: { a: AlertaColegas; rotulo: string; eu: string }) {
   const max = Math.max(a.mediaMensal, a.limiteMensal) * 1.12;
   const pos = (v: number) => Math.max(0, Math.min(100, (v / max) * 100));
   const x = (v: number) => `${pos(v)}%`;
   const rotulos = [
     { chave: "mediana", v: a.mediana, texto: `Mediana ${brl(a.mediana)}/mês`, classe: "" },
     { chave: "limite", v: a.limiteMensal, texto: `Limite ${brl(a.limiteMensal)}/mês`, classe: "font-semibold text-atipico" },
-    { chave: "eu", v: a.mediaMensal, texto: "Este parlamentar", classe: "font-semibold text-aviso" },
+    { chave: "eu", v: a.mediaMensal, texto: eu, classe: "font-semibold text-aviso" },
   ].toSorted((p, q) => p.v - q.v);
   const linhas = linhasDosRotulos(rotulos.map((l) => pos(l.v)));
   const nLinhas = Math.max(...linhas) + 1;
@@ -125,16 +161,16 @@ function Diagrama({ a, rotulo }: { a: AlertaColegas; rotulo: string }) {
         role="img"
         aria-label={`Metade dos ${rotulo} entre ${brl(a.q1)} e ${brl(a.q3)} por mês, mediana ${brl(
           a.mediana,
-        )}, limite de atipicidade ${brl(a.limiteMensal)}, este parlamentar ${brl(a.mediaMensal)}`}
+        )}, limite de atipicidade ${brl(a.limiteMensal)}, ${eu.toLowerCase()} ${brl(a.mediaMensal)}`}
       >
-        <div className="absolute inset-x-0 top-[13px] h-0.5 bg-linha sm:top-[27px]" />
+        <div className="absolute inset-x-0 top-[13px] h-0.5 bg-[#d9d9d2] sm:top-[27px]" />
         <div
-          className="absolute top-1.5 h-4 rounded-[3px] border border-chart-2 bg-secondary sm:top-4 sm:h-6 sm:rounded-[4px]"
+          className="absolute top-1.5 h-4 rounded-[3px] border border-chart-2 bg-[#dce4fa] sm:top-4 sm:h-6 sm:rounded-[4px]"
           style={{ left: x(a.q1), width: `calc(${x(a.q3)} - ${x(a.q1)})` }}
         />
-        <div className="absolute top-1 h-5 w-0.5 bg-primary sm:top-3.5 sm:h-7" style={{ left: x(a.mediana) }} />
+        <div className="absolute top-3.5 hidden h-7 w-0.5 bg-primary sm:block" style={{ left: x(a.mediana) }} />
         <div
-          className="absolute top-0 h-7 border-l-2 border-dashed border-atipico sm:top-1.5 sm:h-11"
+          className="absolute top-0 h-7 border-l-2 border-dashed border-atipico-traco sm:top-1.5 sm:h-11"
           style={{ left: x(a.limiteMensal) }}
         />
         <div
@@ -147,6 +183,7 @@ function Diagrama({ a, rotulo }: { a: AlertaColegas; rotulo: string }) {
         style={{ height: `${nLinhas * 18}px` }}
         aria-hidden="true"
       >
+        <span className="absolute left-0">R$ 0</span>
         {rotulos.map((l, i) => (
           <span
             key={l.chave}
@@ -170,8 +207,11 @@ function AvisoColegas({ a, ctx }: { a: AlertaColegas; ctx: Ctx }) {
     <Moldura
       selo="acima dos colegas"
       titulo={`${fraseCase(a.tipo)}: gasto mensal muito acima do comum entre os ${rotulo} em ${ctx.ano}`}
+      tituloCurto={`${fraseCase(tipoCurto(a.tipo))} muito acima do comum entre os ${rotulo}`}
       tipo={a.tipo}
-      hrefNotas={ctx.hrefNotas}
+      notasLongo={`Baixar ${rotuloNotas(a.notas)} de ${tipoCurto(a.tipo)}`}
+      notasCurto={`Baixar ${rotuloNotas(a.notas)}`}
+      ctx={ctx}
       icone={
         <>
           <path d="M3 3v18h18" />
@@ -184,21 +224,21 @@ function AvisoColegas({ a, ctx }: { a: AlertaColegas; ctx: Ctx }) {
           curto={
             <>
               {brl(a.mediaMensal)} por mês em {ctx.ano}. Metade dos {a.colegas} {rotulo} gastou até {brl(a.mediana)} por
-              mês; o limite de atipicidade é {brl(a.limiteMensal)}.
+              mês; o limite de atipicidade é {brl(a.limiteMensal)} por mês.
             </>
           }
           longo={
             <>
-              Média de <strong>{brl(a.mediaMensal)} por mês</strong> ({brl(a.total)} em {a.meses}{" "}
-              {a.meses === 1 ? "mês" : "meses"} com notas). Entre os {a.colegas} {rotulo} que usaram essa despesa no
-              ano, metade gastou até {brl(a.mediana)} por mês e três em cada quatro até {brl(a.q3)}. O limite de
-              atipicidade é <strong>{brl(a.limiteMensal)} por mês</strong>; no ano, o gasto passa dele em{" "}
-              {brl(a.excessoAno)}.
+              {este(ctx)} gastou em média <strong>{brl(a.mediaMensal)} por mês</strong> em {tipoCurto(a.tipo)} (
+              {brl(a.total)} em {a.meses} {a.meses === 1 ? "mês" : "meses"} com notas). Entre os {a.colegas} {rotulo}{" "}
+              que usaram essa despesa no ano, metade gastou até {brl(a.mediana)} por mês e três em cada quatro até{" "}
+              {brl(a.q3)}. O valor passa do limite de atipicidade, de <strong>{brl(a.limiteMensal)} por mês</strong>, em{" "}
+              {brl(a.excessoAno)} no ano.
             </>
           }
         />
       </p>
-      <Diagrama a={a} rotulo={rotulo} />
+      <Diagrama a={a} rotulo={rotulo} eu={este(ctx)} />
       <p className={TEXTO}>
         <Dois
           curto="Atípico não quer dizer irregular. É um ponto de partida para olhar as notas."
@@ -215,8 +255,11 @@ function AvisoSalto({ a, ctx }: { a: AlertaSalto; ctx: Ctx }) {
     <Moldura
       selo={`salto em relação a ${ctx.ano - 1}`}
       titulo={`${fraseCase(a.tipo)}: gasto ${vezes(a.razao)} maior que no ano anterior`}
+      tituloCurto={`${fraseCase(tipoCurto(a.tipo))}: ${vezes(a.razao)} mais que em ${ctx.ano - 1}`}
       tipo={a.tipo}
-      hrefNotas={ctx.hrefNotas}
+      notasLongo={`Baixar ${rotuloNotas(a.notas)} de ${ctx.ano}`}
+      notasCurto={`Baixar ${rotuloNotas(a.notas)}`}
+      ctx={ctx}
       icone={
         <>
           <path d="M12 19V5" />
@@ -235,17 +278,29 @@ function AvisoSalto({ a, ctx }: { a: AlertaSalto; ctx: Ctx }) {
           longo={
             <>
               Foram <strong>{brl(a.total)}</strong> em {ctx.ano} contra {brl(a.totalAnterior)} em {ctx.ano - 1}. Entre
-              os {a.colegas} {rotulo} que usaram essa despesa nos dois anos, metade ficou entre {variacao(a.q1Razao)} e{" "}
+              os {a.colegas} {rotulo} que usaram essa despesa nos dois anos, metade variou entre {variacao(a.q1Razao)} e{" "}
               {variacao(a.q3Razao)}. O limite de salto é <strong>{vezes(a.limiteRazao)}</strong> o valor do ano anterior,
-              e o aumento foi de {brl(a.aumento)}.
+              e o aumento passa de {brl(PISO_REAIS)}.
             </>
           }
         />
       </p>
+      <div className="flex flex-wrap gap-3">
+        {[
+          { rotulo: String(ctx.ano - 1), valor: brl(a.totalAnterior), destaque: false },
+          { rotulo: `${ctx.ano}${periodoParcial(ctx.ultimoMes)}`, valor: brl(a.total), destaque: false },
+          { rotulo: "Limite de salto", valor: `${a.limiteRazao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} × ${ctx.ano - 1}`, destaque: true },
+        ].map((c) => (
+          <div key={c.rotulo} className="flex flex-[1_1_160px] flex-col gap-0.5 rounded-[10px] bg-superficie px-3 py-2.5">
+            <span className="text-xs text-muted-foreground">{c.rotulo}</span>
+            <span className={`font-heading text-xl font-bold ${c.destaque ? "text-atipico" : ""}`}>{c.valor}</span>
+          </div>
+        ))}
+      </div>
       <p className={TEXTO}>
         <Dois
           curto="Atípico não quer dizer irregular. É um ponto de partida para olhar as notas."
-          longo="Um salto pode ter explicação, como abrir um escritório novo ou mudar a forma de contratar um serviço. Vale olhar as notas e, se for o caso, perguntar ao gabinete."
+          longo="Um salto pode ter explicação, como abrir um escritório novo no estado. Vale olhar as notas e, se for o caso, perguntar ao gabinete."
         />
       </p>
     </Moldura>
@@ -265,17 +320,25 @@ export function AvisosAtipicos({
   resultados,
   mandato,
   casa,
+  sexo,
+  ultimoMes,
   hrefNotas,
   hrefAno,
+  hrefContestar,
 }: {
   resultados: PadraoAtipico[];
   mandato: boolean;
   casa: "camara" | "senado";
+  sexo: string | null;
+  ultimoMes: number;
   hrefNotas: (ano: number, tipo: string) => string;
   hrefAno: (ano: number) => string;
+  hrefContestar: string;
 }) {
+  // Link dentro da frase: no celular ganha 44 px de altura de toque.
+  const ALVO = "inline-flex min-h-11 items-center font-semibold sm:inline sm:min-h-0";
   const como = (
-    <Link href="/metodologia#atipico" className="font-semibold">
+    <Link href="/metodologia#atipico" className={ALVO}>
       Como calculamos
     </Link>
   );
@@ -292,7 +355,7 @@ export function AvisosAtipicos({
             {comAviso.map((r, i) => (
               <span key={r.ano}>
                 {i > 0 && ", "}
-                <Link href={hrefAno(r.ano)}>
+                <Link href={hrefAno(r.ano)} className={ALVO}>
                   {r.ano} ({r.n} {r.n === 1 ? "aviso" : "avisos"})
                 </Link>
               </span>
@@ -307,22 +370,24 @@ export function AvisosAtipicos({
   }
   const r = resultados[0];
   if (!r) return null;
+  const ctx: Ctx = { ano: r.ano, casa, sexo, ultimoMes, hrefNotas: (tipo) => hrefNotas(r.ano, tipo), hrefContestar };
+  // Do maior excesso sobre o limite para o menor, nos dois tipos de aviso.
   const avisos = [
-    ...r.acima.map((a) => ({ chave: `c-${a.tipo}`, valor: a.excessoAno, el: <AvisoColegas a={a} ctx={ctxDe(r, casa, hrefNotas)} /> })),
-    ...r.salto.map((a) => ({ chave: `s-${a.tipo}`, valor: a.aumento, el: <AvisoSalto a={a} ctx={ctxDe(r, casa, hrefNotas)} /> })),
+    ...r.acima.map((a) => ({ chave: `c-${a.tipo}`, valor: a.excessoAno, el: <AvisoColegas a={a} ctx={ctx} /> })),
+    ...r.salto.map((a) => ({ chave: `s-${a.tipo}`, valor: a.excessoAno, el: <AvisoSalto a={a} ctx={ctx} /> })),
   ].toSorted((a, b) => b.valor - a.valor);
   const semSalto = !r.anoAnteriorDisponivel ? ` A comparação com ${r.ano - 1} não é feita porque esse ano não foi coletado.` : "";
   if (!avisos.length) {
     return (
       <p data-atipico-resumo className="text-[13px] leading-normal text-muted-foreground sm:text-sm">
-        Nenhum tipo de despesa ficou acima dos limites de padrão atípico em {r.ano}.{semSalto} {como}.
+        Nenhum tipo de despesa ficou acima do limite de atipicidade em {r.ano}.{semSalto} {como}.
       </p>
     );
   }
   const abertos = avisos.slice(0, ABERTOS);
   const resto = avisos.slice(ABERTOS);
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 sm:gap-5">
       {abertos.map((a) => (
         <div key={a.chave}>{a.el}</div>
       ))}
@@ -331,7 +396,7 @@ export function AvisosAtipicos({
           <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-atipico sm:min-h-6">
             Ver mais {resto.length} {resto.length === 1 ? "padrão atípico" : "padrões atípicos"}
           </summary>
-          <div className="mt-3 flex flex-col gap-3">
+          <div className="mt-3 flex flex-col gap-3 sm:mt-5 sm:gap-5">
             {resto.map((a) => (
               <div key={a.chave}>{a.el}</div>
             ))}
@@ -341,8 +406,4 @@ export function AvisosAtipicos({
       {semSalto && <p className="text-xs text-muted-foreground">{semSalto.trim()}</p>}
     </div>
   );
-}
-
-function ctxDe(r: PadraoAtipico, casa: "camara" | "senado", hrefNotas: (ano: number, tipo: string) => string): Ctx {
-  return { ano: r.ano, casa, hrefNotas: (tipo) => hrefNotas(r.ano, tipo) };
 }

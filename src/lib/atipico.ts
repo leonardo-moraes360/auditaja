@@ -20,7 +20,7 @@ export const PISO_REAIS = 5000;
 export const MESES_MINIMOS_SALTO = 10;
 
 /** Total de um parlamentar num tipo de despesa num ano, e os meses do ano em que ele teve qualquer nota. */
-export type TotalTipo = { parlamentarId: number; tipo: string; total: number; meses: number };
+export type TotalTipo = { parlamentarId: number; tipo: string; total: number; meses: number; notas?: number };
 
 export type Quartis = { q1: number; mediana: number; q3: number };
 
@@ -58,6 +58,8 @@ function porTipo(linhas: TotalTipo[]) {
 export type AlertaColegas = {
   tipo: string;
   total: number;
+  /** Notas do parlamentar nesse tipo no ano (link de download). */
+  notas: number;
   meses: number;
   mediaMensal: number;
   colegas: number;
@@ -87,7 +89,7 @@ export function acimaDosColegas(linhas: TotalTipo[], parlamentarId: number): Ale
     const mediaMensal = eu.total / eu.meses;
     const excessoAno = eu.total - limiteMensal * eu.meses;
     if (mediaMensal > limiteMensal && excessoAno > PISO_REAIS) {
-      alertas.push({ tipo, total: eu.total, meses: eu.meses, mediaMensal, colegas: lista.length, ...q, limiteMensal, excessoAno });
+      alertas.push({ tipo, total: eu.total, notas: eu.notas ?? 0, meses: eu.meses, mediaMensal, colegas: lista.length, ...q, limiteMensal, excessoAno });
     }
   }
   return alertas.sort((a, b) => b.excessoAno - a.excessoAno);
@@ -96,6 +98,7 @@ export function acimaDosColegas(linhas: TotalTipo[], parlamentarId: number): Ale
 export type AlertaSalto = {
   tipo: string;
   total: number;
+  notas: number;
   totalAnterior: number;
   /** total ÷ totalAnterior */
   razao: number;
@@ -106,24 +109,26 @@ export type AlertaSalto = {
   q3Razao: number;
   limiteRazao: number;
   aumento: number;
+  /** Quanto o total do ano passa do limite de salto (limite × total do ano anterior). */
+  excessoAno: number;
 };
 
 /**
  * Aviso "salto": entre os parlamentares que usaram o tipo nos dois anos e tiveram nota em pelo
  * menos 10 meses de cada ano, a razão total do ano ÷ total do ano anterior acima da cerca externa
  * calculada sobre o logaritmo das razões, com aumento acima de R$ 5 mil. Pelo menos 20 parlamentares.
- * Ordem: maior aumento primeiro.
+ * Ordem: maior excesso sobre o limite primeiro.
  */
 export function saltoAnual(atual: TotalTipo[], anterior: TotalTipo[], parlamentarId: number): AlertaSalto[] {
   const antes = new Map<string, TotalTipo>();
   for (const l of anterior) if (l.total > 0 && l.meses >= MESES_MINIMOS_SALTO) antes.set(`${l.parlamentarId}|${l.tipo}`, l);
-  const pares = new Map<string, { id: number; total: number; totalAnterior: number }[]>();
+  const pares = new Map<string, { id: number; total: number; totalAnterior: number; notas: number }[]>();
   for (const l of atual) {
     if (!(l.total > 0) || l.meses < MESES_MINIMOS_SALTO) continue;
     const a = antes.get(`${l.parlamentarId}|${l.tipo}`);
     if (!a) continue;
     const lista = pares.get(l.tipo) ?? [];
-    lista.push({ id: l.parlamentarId, total: l.total, totalAnterior: a.total });
+    lista.push({ id: l.parlamentarId, total: l.total, totalAnterior: a.total, notas: l.notas ?? 0 });
     pares.set(l.tipo, lista);
   }
   const alertas: AlertaSalto[] = [];
@@ -139,6 +144,7 @@ export function saltoAnual(atual: TotalTipo[], anterior: TotalTipo[], parlamenta
       alertas.push({
         tipo,
         total: eu.total,
+        notas: eu.notas,
         totalAnterior: eu.totalAnterior,
         razao,
         colegas: lista.length,
@@ -147,8 +153,9 @@ export function saltoAnual(atual: TotalTipo[], anterior: TotalTipo[], parlamenta
         q3Razao: Math.exp(q.q3),
         limiteRazao: Math.exp(limiteLog),
         aumento,
+        excessoAno: eu.total - Math.exp(limiteLog) * eu.totalAnterior,
       });
     }
   }
-  return alertas.sort((a, b) => b.aumento - a.aumento);
+  return alertas.sort((a, b) => b.excessoAno - a.excessoAno);
 }

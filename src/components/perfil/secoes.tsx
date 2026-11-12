@@ -247,6 +247,9 @@ export function SecaoGastos({
             resultados={perfil.atipico}
             mandato={mandato}
             casa={senado ? "senado" : "camara"}
+            sexo={parlamentar.sexo}
+            ultimoMes={ceap.ultimoMes}
+            hrefContestar={`/parlamentares/${parlamentar.id}/contestar?secao=gastos`}
             hrefNotas={(a, tipo) => `/parlamentares/${parlamentar.id}/gastos.csv?ano=${a}&tipo=${encodeURIComponent(tipo)}`}
             hrefAno={(a) => href(`ano=${a}#gastos`)}
           />
