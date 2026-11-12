@@ -153,3 +153,8 @@ export function dataLocalBr(d: Date): string {
 export function rotuloNotas(n: number): string {
   return n === 1 ? "Ver a nota" : `Ver as ${n} notas`;
 }
+
+/** Senado: não publica a imagem da nota, então o link deixa claro que baixa a planilha. */
+export function rotuloNotasCsv(n: number): string {
+  return n === 1 ? "Baixar a nota (CSV)" : `Baixar as ${n} notas (CSV)`;
+}

@@ -10,9 +10,6 @@
  *   pnpm ingest bens 2022
  *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
  *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
- *
- * Rode `emendas` depois de `deputados` e `senadores`, e `sancoes` depois de `ceap` e `ceaps`: as emendas
- * casam com os perfis das duas Casas e as sanções só guardam CNPJs que já estão na cota.
  *   pnpm ingest tudo 2026   (deputados, histórico, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *   pnpm ingest senadores
  *   pnpm ingest ceaps 2026
@@ -20,6 +17,8 @@
  *   pnpm ingest senado 2026  (senadores, CEAPS e votações do ano; ~170 requisições a 1 req/s)
  *
  * Rode `senadores` (ou `senado`) antes de `bens` para o TSE casar também os senadores.
+ * Rode `emendas` depois de `deputados` e `senadores`, e `sancoes` depois de `ceap` e `ceaps`: as emendas
+ * casam com os perfis das duas Casas e as sanções só guardam CNPJs que já estão na cota (CEAP e CEAPS).
  *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
  */

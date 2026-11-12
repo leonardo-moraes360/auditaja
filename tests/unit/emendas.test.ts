@@ -4,6 +4,7 @@ import {
   anoInicialDoSenador,
   indiceDeAutoresDasCasas,
   rotuloNotas,
+  rotuloNotasCsv,
   baseDaColeta,
   brlMi,
   dataLocalBr,
@@ -225,5 +226,12 @@ describe("C22: rótulo do link de notas", () => {
   it("singular e plural", () => {
     expect(rotuloNotas(1)).toBe("Ver a nota");
     expect(rotuloNotas(4)).toBe("Ver as 4 notas");
+  });
+});
+
+describe("SANSEN-03: link das notas do senador baixa o CSV", () => {
+  it("diz que é planilha", () => {
+    expect(rotuloNotasCsv(1)).toBe("Baixar a nota (CSV)");
+    expect(rotuloNotasCsv(4)).toBe("Baixar as 4 notas (CSV)");
   });
 });

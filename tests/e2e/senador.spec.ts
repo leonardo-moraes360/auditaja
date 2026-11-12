@@ -291,7 +291,7 @@ test("EMDSEN-05/06: emendas do senador com todos os anos do mandato e a regra de
   const periodo = s.getByRole("navigation", { name: "Período das emendas" });
   for (const a of ["2026", "2025", "2024", "Mandato todo"])
     await expect(periodo.getByRole("link", { name: a })).toBeVisible();
-  await expect(s.getByText("3 emendas, orçamentos de 2024 a 2026 (mandato 2023–2031)")).toBeVisible();
+  await expect(s.getByText(/^3 emendas, orçamentos de 2024 a 2026 \(mandato 2023\u2060?–\u2060?2031\)$/)).toBeVisible();
   await expect(s.getByText("Município de Uberlândia")).toBeVisible();
   await expect(
     page.getByText(/Se o nome também é de um deputado federal atual, a emenda fica no perfil do deputado\./),
@@ -325,11 +325,12 @@ test("SANSEN-02: fornecedor da CEAPS com sanção no CEIS ganha selo e aviso fac
   await expect(aerea).toContainText(
     "Suspensão de 01/12/2025 a 01/12/2026. Órgão sancionador: Agência Exemplo. A única nota paga a essa empresa em 2026 tem data dentro desse período.",
   );
-  await expect(aerea.getByRole("link", { name: "Ver a nota" })).toHaveAttribute("href", /gastos\.csv\?/);
+  await expect(aerea.getByRole("link", { name: "Baixar a nota (CSV)" })).toHaveAttribute("href", /gastos\.csv\?/);
 });
 
 test("EMDSEN-08: senadora sem emendas mostra o estado vazio com o ano da posse", async ({ page }) => {
   await page.goto("/parlamentares/10009004");
+  await expect(page.getByText(/^Emenda é a parte do Orçamento da União que a senadora indica/)).toBeVisible();
   await expect(
     page.getByText(
       "Nenhuma emenda individual desta senadora foi encontrada no Portal da Transparência a partir do orçamento de 2024.",

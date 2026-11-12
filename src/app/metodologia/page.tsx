@@ -152,8 +152,8 @@ export default function Metodologia() {
           emenda ao parlamentar quando o nome do autor, sem acentos e sem diferença de maiúsculas, é igual ao nome
           parlamentar de exatamente um deputado ou de exatamente um senador (titular ou suplente). Se o nome é de um
           deputado federal atual e também de um senador, a emenda fica com o deputado: hoje são suplentes de senador
-          fora do exercício, que apresentaram as emendas na Câmara. Quando dois parlamentares da mesma Casa têm o mesmo
-          nome, ou quando nenhum casa, a emenda fica de fora.
+          fora do exercício, que apresentaram as emendas na Câmara. Quando dois deputados, ou dois senadores, têm o
+          mesmo nome, ou quando nenhum casa, a emenda fica de fora.
         </p>
         <p>
           Empenhado é o valor reservado no Orçamento. Pago é a soma do valor pago no ano com os restos a pagar pagos

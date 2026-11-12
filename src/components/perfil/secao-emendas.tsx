@@ -114,9 +114,11 @@ export function SecaoEmendas({
       </div>
 
       <p className="text-sm leading-normal text-texto-2">
-        Emenda é a parte do Orçamento da União que o parlamentar indica para uma área ou um lugar. Quem executa é o
-        governo federal. <strong>Empenhado</strong> é o valor reservado para a despesa; <strong>pago</strong> é o que já
-        saiu do caixa. Emendas de bancada e de comissão têm autoria coletiva e não entram nesta soma.
+        Emenda é a parte do Orçamento da União que{" "}
+        {senado ? (senado.sexo === "F" ? "a senadora" : "o senador") : "o parlamentar"} indica para uma área ou um
+        lugar. Quem executa é o governo federal. <strong>Empenhado</strong> é o valor reservado para a despesa;{" "}
+        <strong>pago</strong> é o que já saiu do caixa. Emendas de bancada e de comissão têm autoria coletiva e não
+        entram nesta soma.
       </p>
 
       {dados.vazio ? (
@@ -182,7 +184,7 @@ function ConteudoEmendas({
                   anosOrdem.length === 1
                     ? `orçamento de ${anosOrdem[0]}`
                     : `orçamentos de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`
-                }${periodoMandato ? ` (mandato ${periodoMandato})` : ""}`
+                }${periodoMandato ? ` (mandato ${periodoMandato.replace("–", "\u2060–\u2060")})` : ""}`
               : `${qtd} do orçamento de ${periodo}`
           }
         />
@@ -350,11 +352,13 @@ function ConteudoEmendas({
 }
 
 /** MET-05: bloco da lateral com a regra de ligação autor ↔ deputado ou senador. */
-export function ComoLigamosEmendas({ senado = false }: { senado?: boolean }) {
+export function ComoLigamosEmendas({ senado = false, sexo = null }: { senado?: boolean; sexo?: string | null }) {
   return (
     <section aria-labelledby="como-ligamos-titulo" className={`${CARTAO} gap-2.5 sm:p-5`}>
       <h2 id="como-ligamos-titulo" className="font-heading text-lg font-bold">
-        {senado ? "Como ligamos a emenda ao senador" : "Como ligamos a emenda ao deputado"}
+        {senado
+          ? `Como ligamos a emenda ${sexo === "F" ? "à senadora" : "ao senador"}`
+          : "Como ligamos a emenda ao deputado"}
       </h2>
       {senado ? (
         <p className="text-sm leading-normal text-texto-2">

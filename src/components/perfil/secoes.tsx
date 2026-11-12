@@ -320,6 +320,7 @@ export function SecaoGastos({
             fornecedores={ceap.fornecedores}
             sancoes={sancoes}
             periodo={mandato ? "no mandato" : `em ${ano}`}
+            notasEmCsv={senado}
             hrefNotas={(doc, de, ate) =>
               `/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}&doc=${encodeURIComponent(doc)}${
                 de ? `&de=${de}` : ""
@@ -1051,7 +1052,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         </p>
       </section>
 
-      <ComoLigamosEmendas senado={senado} />
+      <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
 
       <section
         aria-labelledby="erro-titulo"
