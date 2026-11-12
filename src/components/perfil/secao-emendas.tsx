@@ -216,34 +216,44 @@ function ConteudoEmendas({
               </span>
             </span>
           </figcaption>
+          {/* Senador com dois mandatos chega a 7 anos: abaixo de ~64 px por ano os rótulos de valor não cabem e as
+              barras transbordavam. Barras e anos rolam juntos dentro do cartão, sempre alinhados; row-reverse abre
+              a rolagem no fim, com os anos mais recentes à vista. */}
           <div
-            className="flex h-[150px] items-end gap-4 border-b border-linha px-1 pt-2.5 sm:h-[190px] sm:gap-8 sm:px-2"
-            role="img"
-            aria-label={`Gráfico de barras: valor empenhado e pago por ano do orçamento, de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`}
+            className="flex flex-row-reverse overflow-x-auto"
+            {...(dados.porAno.length > 4 && { tabIndex: 0, role: "region", "aria-label": "Por ano do orçamento" })}
           >
-            {dados.porAno.map((a) => (
-              <div key={a.ano} className="flex h-full flex-1 items-end justify-center gap-1.5">
-                {[
-                  { v: a.empenhado, cor: "bg-anterior" },
-                  { v: a.pago, cor: "bg-primary" },
-                ].map((b, i) => (
-                  <div key={i} className="flex h-full w-[44%] max-w-[52px] flex-col items-center justify-end gap-1">
-                    <span className="text-[11px] text-muted-foreground">{milhoes(b.v)}</span>
-                    <div
-                      className={`w-full rounded-t-[4px] ${b.cor}`}
-                      style={{ height: `${Math.max(1, (b.v / max) * 100)}%` }}
-                    />
+            <div className="flex-1" style={{ minWidth: `${dados.porAno.length * 64}px` }}>
+              <div
+                className="flex h-[150px] items-end gap-4 border-b border-linha px-1 pt-2.5 sm:h-[190px] sm:gap-8 sm:px-2"
+                role="img"
+                aria-label={`Gráfico de barras: valor empenhado e pago por ano do orçamento, de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`}
+              >
+                {dados.porAno.map((a) => (
+                  <div key={a.ano} className="flex h-full min-w-0 flex-1 items-end justify-center gap-1.5">
+                    {[
+                      { v: a.empenhado, cor: "bg-anterior" },
+                      { v: a.pago, cor: "bg-primary" },
+                    ].map((b, i) => (
+                      <div key={i} className="flex h-full w-[44%] max-w-[52px] flex-col items-center justify-end gap-1">
+                        <span className="text-[11px] text-muted-foreground">{milhoes(b.v)}</span>
+                        <div
+                          className={`w-full rounded-t-[4px] ${b.cor}`}
+                          style={{ height: `${Math.max(1, (b.v / max) * 100)}%` }}
+                        />
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
-          <div className="flex gap-4 px-1 sm:gap-8 sm:px-2" aria-hidden="true">
-            {dados.porAno.map((a) => (
-              <span key={a.ano} className="flex-1 text-center text-xs text-muted-foreground">
-                {a.ano}
-              </span>
-            ))}
+              <div className="flex gap-4 px-1 sm:gap-8 sm:px-2" aria-hidden="true">
+                {dados.porAno.map((a) => (
+                  <span key={a.ano} className="min-w-0 flex-1 text-center text-xs text-muted-foreground">
+                    {a.ano}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
           {/* Tabela fora da tela: `sr-only` direto na tabela não encolhe a largura (estoura 320 px). */}
           <div className="sr-only">
@@ -307,7 +317,12 @@ function ConteudoEmendas({
         {dados.favorecidos.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum pagamento a favorecido publicado para este período.</p>
         ) : (
-          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Quem recebeu os pagamentos">
+          <div
+            className="flex flex-row-reverse overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="Quem recebeu os pagamentos"
+          >
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr className="text-left text-muted-foreground">
