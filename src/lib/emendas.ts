@@ -156,3 +156,22 @@ export function rotuloNotas(n: number): string {
 export function rotuloNotasCsv(n: number): string {
   return n === 1 ? "Baixar a nota (CSV)" : `Baixar as ${n} notas (CSV)`;
 }
+
+type FornecedorDoAviso = { fornecedor_nome: string; fornecedor_doc: string | null; documentos: number };
+
+/**
+ * Junta aos maiores fornecedores os que têm nota dentro do período de uma sanção mas ficaram fora do top 5.
+ * Desses extras só entram as sanções com nota no período: sanção antiga de um fornecedor pequeno seria ruído.
+ */
+export function juntarSancionados<F extends FornecedorDoAviso, S extends { cnpj: string; notas: number }>(
+  maiores: F[],
+  extras: FornecedorDoAviso[],
+  sancoes: S[],
+): { fornecedores: FornecedorDoAviso[]; sancoes: S[] } {
+  const listados = new Set(maiores.map((f) => soDigitos(f.fornecedor_doc)).filter((d) => d.length === 14));
+  const fora = extras.filter((f) => !listados.has(soDigitos(f.fornecedor_doc)));
+  return {
+    fornecedores: [...maiores, ...fora],
+    sancoes: sancoes.filter((s) => listados.has(s.cnpj) || s.notas > 0),
+  };
+}

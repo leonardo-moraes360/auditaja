@@ -174,4 +174,47 @@ export async function sancoesDosFornecedores(id: number, docs: (string | null)[]
   return rows.map(({ observacao, ...r }) => ({ ...r, base: baseDaColeta(observacao), notas: Number(r.notas ?? 0) }));
 }
 
+/**
+ * Fornecedores PJ do período exibido da cota com ao menos uma nota emitida dentro do período de uma sanção
+ * CEIS/CNEP, estejam ou não entre os maiores fornecedores. Sem isso, a nota paga a uma empresa sancionada
+ * fora do top 5 não aparecia no perfil.
+ */
+export async function fornecedoresComSancaoNoPeriodo(id: number, anosCeap: number[]) {
+  if (!anosCeap.length) return [];
+  const db = getDb();
+  const rows = await db
+    .selectFrom("despesa_ceap")
+    .select([
+      sql<string>`mode() within group (order by despesa_ceap.fornecedor_nome)`.as("fornecedor_nome"),
+      // Documento como gravado (com máscara de CNPJ): é o que o CSV de notas filtra.
+      sql<string>`mode() within group (order by despesa_ceap.fornecedor_doc)`.as("fornecedor_doc"),
+      sql<string>`count(*)`.as("documentos"),
+    ])
+    .where("despesa_ceap.parlamentar_id", "=", id)
+    .where("despesa_ceap.ano", "in", anosCeap)
+    .where("despesa_ceap.fornecedor_classe", "=", "pessoa_juridica")
+    .where(({ exists, selectFrom }) =>
+      exists(
+        selectFrom("despesa_ceap as n")
+          .innerJoin("sancao", (j) =>
+            j.on(sql<boolean>`regexp_replace(n.fornecedor_doc, '\\D', '', 'g') = sancao.cnpj`),
+          )
+          .select(sql`1`.as("x"))
+          .where("n.parlamentar_id", "=", id)
+          .where("n.ano", "in", anosCeap)
+          .whereRef("n.fornecedor_doc", "=", "despesa_ceap.fornecedor_doc")
+          .where(sql<boolean>`n.data_emissao >= sancao.data_inicio`)
+          .where(sql<boolean>`n.data_emissao <= coalesce(sancao.data_fim, 'infinity'::date)`),
+      ),
+    )
+    .groupBy(sql`regexp_replace(despesa_ceap.fornecedor_doc, '\\D', '', 'g')`)
+    .orderBy(sql`sum(despesa_ceap.valor_liquido)`, "desc")
+    .execute();
+  return rows
+    .filter((r) => soDigitos(r.fornecedor_doc).length === 14)
+    .map((r) => ({ ...r, documentos: Number(r.documentos) }));
+}
+
+export type FornecedorSancionado = Awaited<ReturnType<typeof fornecedoresComSancaoNoPeriodo>>[number];
+
 export type SancaoFornecedor = Awaited<ReturnType<typeof sancoesDosFornecedores>>[number];

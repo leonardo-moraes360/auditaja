@@ -257,6 +257,23 @@ describe("sancoesDosFornecedores", () => {
   });
 });
 
+describe("fornecedoresComSancaoNoPeriodo", () => {
+  it("SAN-05: acha fornecedor sancionado com nota no período, mesmo fora dos maiores", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { fornecedoresComSancaoNoPeriodo } = await import("@/data/emendas");
+    const r = await fornecedoresComSancaoNoPeriodo(SEED.deputada, [2026]);
+    // Só o posto tem nota dentro da sanção em 2026; a gráfica (sanção desde maio, nota de janeiro) fica fora.
+    expect(r.map((f) => [f.fornecedor_doc, f.documentos])).toEqual([["55.666.777/0001-88", 1]]);
+  });
+
+  it("ignora nota fora do período da sanção e ano sem nota", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { fornecedoresComSancaoNoPeriodo } = await import("@/data/emendas");
+    expect(await fornecedoresComSancaoNoPeriodo(SEED.deputada, [2025])).toEqual([]);
+    expect(await fornecedoresComSancaoNoPeriodo(SEED.deputada, [])).toEqual([]);
+  });
+});
+
 describe("EMDSEN-05, SANSEN-01: perfil do senador", () => {
   it("lê as emendas do senador como as do deputado", async (ctx) => {
     if (!disponivel) ctx.skip();

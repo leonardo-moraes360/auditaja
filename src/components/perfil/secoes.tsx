@@ -85,10 +85,13 @@ export function SecaoGastos({
   perfil,
   completo,
   sancoes = [],
+  fornecedoresDoAviso,
 }: {
   perfil: Perfil;
   completo: boolean;
   sancoes?: SancaoFornecedor[];
+  /** Maiores fornecedores mais os sancionados com nota no período (padrão: só os maiores). */
+  fornecedoresDoAviso?: { fornecedor_nome: string; fornecedor_doc: string | null; documentos: number }[];
 }) {
   const { ceap, ano, parlamentar, mandato } = perfil;
   const senado = parlamentar.casa === "senado";
@@ -350,7 +353,7 @@ export function SecaoGastos({
             </div>
           </div>
           <AvisoSancao
-            fornecedores={ceap.fornecedores}
+            fornecedores={fornecedoresDoAviso ?? ceap.fornecedores}
             sancoes={sancoes}
             periodo={mandato ? "no mandato" : `em ${ano}`}
             notasEmCsv={senado}
