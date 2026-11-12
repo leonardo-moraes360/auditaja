@@ -106,14 +106,15 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] 179 dias marca, 180 dias não marca (CNPJ-03, CNPJ-04)
-- [ ] Despesa de campanha com data depois do pagamento não fecha ciclo (LING-06)
-- [ ] CNPJ de campanha de outro parlamentar não fecha ciclo (CICLO-04)
-- [ ] `taxaDeBase(38, 4120)` = "38 de 4.120 (0,9%)"
-- [ ] CNPJ com dígito inválido é descartado; PF vira agregado sem nome nem documento
-- [ ] Quick gate passa
+- [x] 179 dias marca, 180 dias não marca (CNPJ-03, CNPJ-04)
+- [x] Despesa de campanha com data depois do pagamento não fecha ciclo (LING-06)
+- [x] CNPJ de campanha de outro parlamentar não fecha ciclo (CICLO-04)
+- [x] `taxaDeBase(38, 4120)` = "38 de 4.120 (0,9%)"
+- [x] CNPJ com dígito inválido é descartado; PF vira agregado sem nome nem documento
+- [x] Quick gate passa
 
 **Tests**: unit
+**Status**: ✅ Done
 **Gate**: quick
 
 ---
