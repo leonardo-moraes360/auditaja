@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/seguir-dinheiro/design.md`
-**Status**: Draft (aguardando aprovação do usuário; implementação só depois do merge da branch `claude/project-thread-cop38e`)
+**Status**: Approved (usuário, 2026-11-12 23:08; implementação só depois do merge da branch `claude/project-thread-cop38e`, em worktree própria)
 
 **Reservas**: migração `0012_trilha`, `METODOLOGIA_VERSAO` 1.11, e2e `E2E_PORT=3405`, banco `auditaja_trilha_test`.
 
