@@ -7,15 +7,12 @@ import { TopoMovel } from "./topo-movel";
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 text-foreground no-underline hover:text-foreground sm:gap-2.5">
-      {/* Logo: lupa sobre barras (proposta A). Mesmo desenho do favicon, em tokens para seguir o tema. */}
+      {/* Logo: "A" de Auditaja com visto no lugar do traço (proposta B). Mesmo desenho do favicon, em tokens. */}
       <svg viewBox="0 0 64 64" aria-hidden="true" className="size-6 sm:size-7">
         <rect width="64" height="64" rx="14" className="fill-primary" />
-        <g className="fill-primary-foreground stroke-primary-foreground">
-          <circle cx="27" cy="26" r="14" fill="none" strokeWidth="6" />
-          <path d="M37.5 36.5 49 48" strokeWidth="7" strokeLinecap="round" />
-          <rect x="19.5" y="26" width="4" height="7" rx="1" stroke="none" />
-          <rect x="25" y="20" width="4" height="13" rx="1" stroke="none" />
-          <rect x="30.5" y="23" width="4" height="10" rx="1" stroke="none" />
+        <g className="stroke-primary-foreground" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 49 32 13 49 49" strokeWidth="7.5" />
+          <path d="M23 38l6 5.5L41.5 30" strokeWidth="5.5" />
         </g>
       </svg>
       <span className="font-heading text-[1.1875rem] font-bold tracking-normal sm:text-[1.375rem] sm:tracking-[-0.02em]">
