@@ -175,7 +175,7 @@ test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page,
 test("METOD-01: metodologia publica a versão", async ({ page }) => {
   await page.goto("/metodologia");
   await expect(page.getByRole("heading", { level: 1, name: "Metodologia" })).toBeVisible();
-  await expect(page.getByText(/^Versão 1\.8\./)).toBeVisible();
+  await expect(page.getByText(/^Versão 1\.10\./)).toBeVisible();
 });
 
 test("CORR-03 e CORR-01: Contestar pré-seleciona a seção e o pedido é registrado", async ({ page, isMobile }) => {

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Padrão atípico · celular · Auditaja</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F6F6F3}
+a{color:#1F4FD1}a:hover{color:#163A9C}
+</style>
+</helmet>
+<div style="width: 390px; height: 1100px; box-sizing: border-box; font-family: Inter, system-ui, sans-serif; color: #15181E; background: #F6F6F3; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+<div style="background: #FFF3D6; color: #5C4300; font-size: 12px; text-align: center; padding: 6px 10px; border-radius: 8px;">Dados fictícios</div>
+<section aria-labelledby="hm-gastos" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+<h2 id="hm-gastos" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px;">Gastos da cota (CEAP) · 2026</h2>
+<div style="height: 120px; display: flex; align-items: flex-end; gap: 5px; border-bottom: 1px solid #C9CAC2;" role="img" aria-label="Gráfico de gasto mensal, ilustrativo">
+<sc-for list="{{meses}}" as="m" hint-placeholder-count="11">
+<div style="flex: 1; height: {{m.h}}%; background: #1F4FD1; border-radius: 3px 3px 0 0;"></div>
+</sc-for>
+</div>
+<div style="background: #FFF7E0; border: 1px solid #F0D58C; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #6B4B00;">Padrão atípico</span>
+<strong style="font-size: 15px; color: #3D2C00; line-height: 1.35;">Hospedagem muito acima do comum entre os deputados</strong>
+<p style="margin: 0; font-size: 13px; color: #3D424B; line-height: 1.5;">R$ 61.400 em 2026. Metade dos 341 deputados gastou até R$ 7.100; o limite de atipicidade é R$ 52.700.</p>
+<div style="position: relative; height: 28px;" role="img" aria-label="Este deputado está acima do limite de atipicidade">
+<div style="position: absolute; left: 0; right: 0; top: 13px; height: 2px; background: #D9D9D2;"></div>
+<div style="position: absolute; left: 3.9%; width: 17.8%; top: 6px; height: 16px; background: #DCE4FA; border: 1px solid #6E8FE8; border-radius: 3px; box-sizing: border-box;"></div>
+<div style="position: absolute; left: 75.3%; top: 0; height: 28px; border-left: 2px dashed #8A6100;"></div>
+<div style="position: absolute; left: 87.7%; top: 7px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #B4440E; border: 2px solid #FFFFFF; box-sizing: border-box;"></div>
+</div>
+<p style="margin: 0; font-size: 13px; color: #3D424B; line-height: 1.5;">Atípico não quer dizer irregular. É um ponto de partida para olhar as notas.</p>
+<div style="display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600;">
+<a href="#" style="color: #6B4B00; padding: 10px 0;">Baixar as 23 notas</a>
+<a href="#" style="color: #6B4B00; padding: 10px 0;">Como calculamos</a>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<sc-for list="{{tipos}}" as="t" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<div style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px;"><span style="display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center;">{{t.nome}}<sc-if value="{{t.atipico}}" hint-placeholder-val="{{ false }}"><span style="background: #FFF7E0; border: 1px solid #F0D58C; color: #6B4B00; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px;">Atípico</span></sc-if></span><span style="color: #555B66;">{{t.pct}}%</span></div>
+<div style="height: 8px; background: #F0F0EC; border-radius: 4px; overflow: hidden;"><div style="height: 8px; width: {{t.w}}%; background: #6E8FE8;"></div></div>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const v = [31, 34, 38, 36, 41, 44, 39, 42, 47, 40, 33];
+    const meses = v.map((x) => ({ h: Math.round(x / 50 * 100) }));
+    const raw = [['Divulgação', 128300, false], ['Locação de veículos', 74500, false], ['Hospedagem', 61400, true], ['Escritório de apoio', 52900, false]];
+    const tot = 352900;
+    const tipos = raw.map(([nome, x, atipico]) => ({ nome, pct: Math.round(x / tot * 100), w: Math.round(x / raw[0][1] * 100), atipico }));
+    return { meses, tipos };
+  }
+}
+</script>
+</body>
+</html>

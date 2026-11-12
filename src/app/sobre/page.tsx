@@ -34,6 +34,11 @@ export default function Sobre() {
             Aviso quando um fornecedor da cota (CEAP ou CEAPS) aparece nos cadastros de empresas sancionadas da CGU
             (CEIS e CNEP).
           </li>
+          <li>
+            Aviso de padrão atípico nos gastos da cota, quando um tipo de despesa fica muito acima do que os colegas
+            gastam ou dá um salto em relação ao ano anterior, com a{" "}
+            <Link href="/metodologia#atipico">conta publicada na metodologia</Link>.
+          </li>
           <li>Planilha CSV de gastos e de emendas e um feed para acompanhar as atualizações de cada perfil.</li>
         </ul>
       </section>
@@ -53,7 +58,6 @@ export default function Sobre() {
         <h2 className="font-heading text-xl font-bold">O que ainda não cobrimos</h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>Emendas de bancada e de comissão, e emendas de orçamentos anteriores ao mandato atual.</li>
-          <li>Alertas de padrão atípico de gastos.</li>
           <li>Deputados estaduais, vereadores, contratos, licitações e outros gastos públicos.</li>
         </ul>
         <p>Cada etapa nova sai com a metodologia publicada antes.</p>
