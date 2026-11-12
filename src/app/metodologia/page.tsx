@@ -141,15 +141,19 @@ export default function Metodologia() {
         <h2 className="font-heading text-xl font-bold">Emendas parlamentares</h2>
         <p>
           Usamos o arquivo de emendas parlamentares do Portal da Transparência (CGU), baixado em lote do servidor de
-          arquivos da CGU, sem a API e sem chave. Entram só as emendas individuais com orçamento de 2024 em diante, que
-          são as apresentadas na legislatura atual. Emendas de bancada e de comissão têm autoria coletiva e ficam de
-          fora.
+          arquivos da CGU, sem a API e sem chave. Entram só as emendas individuais dos orçamentos votados durante o
+          mandato atual. Para deputados, do orçamento de 2024 em diante (57ª legislatura). Para senadores, a partir do
+          orçamento do ano seguinte à posse: de 2020 para quem tomou posse em 2019 e de 2024 para quem tomou posse em
+          2023, porque o orçamento do ano da posse foi votado antes dela. Emendas de bancada e de comissão têm autoria
+          coletiva e ficam de fora.
         </p>
         <p>
-          O arquivo identifica o autor pelo nome parlamentar, sem CPF nem código da Câmara. Ligamos a emenda ao deputado
-          quando o nome do autor, sem acentos e sem diferença de maiúsculas, é igual ao nome parlamentar de exatamente
-          um deputado. Quando dois deputados têm o mesmo nome, ou quando nenhum casa (senadores, por exemplo), a emenda
-          fica de fora.
+          O arquivo identifica o autor pelo nome parlamentar, sem CPF nem código da Câmara ou do Senado. Ligamos a
+          emenda ao parlamentar quando o nome do autor, sem acentos e sem diferença de maiúsculas, é igual ao nome
+          parlamentar de exatamente um deputado ou de exatamente um senador (titular ou suplente). Se o nome é de um
+          deputado federal atual e também de um senador, a emenda fica com o deputado: hoje são suplentes de senador
+          fora do exercício, que apresentaram as emendas na Câmara. Quando dois parlamentares da mesma Casa têm o mesmo
+          nome, ou quando nenhum casa, a emenda fica de fora.
         </p>
         <p>
           Empenhado é o valor reservado no Orçamento. Pago é a soma do valor pago no ano com os restos a pagar pagos
@@ -163,9 +167,9 @@ export default function Metodologia() {
       <section id="sancoes" className="space-y-2">
         <h2 className="font-heading text-xl font-bold">Sanções de fornecedores</h2>
         <p>
-          Cruzamos os fornecedores pessoa jurídica da cota parlamentar com os cadastros de empresas sancionadas da CGU,
-          o CEIS e o CNEP, baixados em lote do Portal da Transparência. A comparação é pelo CNPJ, e guardamos só as
-          sanções de empresas que aparecem na cota.
+          Cruzamos os fornecedores pessoa jurídica da cota parlamentar (CEAP da Câmara e CEAPS do Senado) com os
+          cadastros de empresas sancionadas da CGU, o CEIS e o CNEP, baixados em lote do Portal da Transparência. A
+          comparação é pelo CNPJ, e guardamos só as sanções de empresas que aparecem na cota.
         </p>
         <p>
           Para cada sanção, contamos quantas notas do período exibido têm data de emissão dentro do período da sanção,

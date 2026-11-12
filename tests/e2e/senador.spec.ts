@@ -55,7 +55,7 @@ test("indicadores do senador (SCEAPS-05, SPRES-03/04, SALI-02)", async ({ page, 
   await expect(ind.getByText("75%", { exact: true }).filter({ visible: true })).toBeVisible();
   await expect(ind.getByText("50%", { exact: true }).filter({ visible: true })).toBeVisible();
   // SCEAPS-06: nenhuma barra de teto.
-  await expect(page.locator("[data-indicador] [role=img]")).toHaveCount(0);
+  await expect(page.locator("[data-indicador]:not(#emendas *) [role=img]")).toHaveCount(0);
 });
 
 test("SCEAPS-06: gastos sem teto e com o aviso do Senado", async ({ page, isMobile }) => {
@@ -241,7 +241,7 @@ test("SUI-11: metodologia descreve as regras do Senado e fontes lista o Senado",
   ).toBeVisible();
   await expect(s.getByText(/contam para a presença, mas nunca para o alinhamento/)).toBeVisible();
   await expect(s.getByText(/não compara o gasto com um teto e mostra a média mensal/)).toBeVisible();
-  await expect(page.getByText("Versão 1.7. Toda mudança gera nova versão.")).toBeVisible();
+  await expect(page.getByText("Versão 1.8. Toda mudança gera nova versão.")).toBeVisible();
   await page.goto("/fontes");
   await expect(page.getByText(/^Senado Federal: API de Dados Abertos/)).toBeVisible();
 });
@@ -279,4 +279,60 @@ test("SUI-04: no celular, as seções seguem a ordem de leitura (Votações, Ben
   const [vot, bens, mand] = [await y("votacoes"), await y("bens"), await y("mandato")];
   expect(vot).toBeLessThan(bens);
   expect(bens).toBeLessThan(mand);
+});
+
+test("EMDSEN-05/06: emendas do senador com todos os anos do mandato e a regra de ligação", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto(`/parlamentares/${SENADOR}`);
+  const s = page.locator("section#emendas");
+  await expect(s.getByRole("heading", { name: "Emendas parlamentares individuais" })).toBeVisible();
+  const periodo = s.getByRole("navigation", { name: "Período das emendas" });
+  for (const a of ["2026", "2025", "2024", "Mandato todo"])
+    await expect(periodo.getByRole("link", { name: a })).toBeVisible();
+  await expect(s.getByText("3 emendas, orçamentos de 2024 a 2026 (mandato 2023–2031)")).toBeVisible();
+  await expect(s.getByText("Município de Uberlândia")).toBeVisible();
+  await expect(
+    page.getByText(/Se o nome também é de um deputado federal atual, a emenda fica no perfil do deputado\./),
+  ).toHaveCount(1);
+  const f = page.locator("section#fontes");
+  await expect(f.getByRole("link", { name: "Portal da Transparência · Emendas (lote)" })).toBeVisible();
+  await expect(f.getByRole("link", { name: "Portal da Transparência · CEIS e CNEP (lote)" })).toBeVisible();
+  if (isMobile) return;
+  await expect(page.getByRole("heading", { name: "Como ligamos a emenda ao senador" })).toBeVisible();
+  await expect(s.getByRole("link", { name: "Baixar CSV" })).toHaveAttribute(
+    "href",
+    `/parlamentares/${SENADOR}/emendas.csv?emendas=mandato`,
+  );
+});
+
+test("EMDSEN-07: ano escolhido filtra as emendas do senador", async ({ page }) => {
+  await page.goto(`/parlamentares/${SENADOR}?emendas=2025#emendas`);
+  const s = page.locator("section#emendas");
+  await expect(s.getByText("Empenhado em 2025")).toBeVisible();
+  await expect(s.getByText("1 emenda do orçamento de 2025")).toBeVisible();
+});
+
+test("SANSEN-02: fornecedor da CEAPS com sanção no CEIS ganha selo e aviso factual", async ({ page }) => {
+  await page.goto(`/parlamentares/${SENADOR}?lista=completa`);
+  const linhas = page.locator("section#gastos table tbody tr");
+  await expect(linhas.filter({ hasText: "Aérea Fictícia S.A." }).first()).toContainText("Sanção no CEIS");
+  const aerea = page.locator("section#gastos [data-sancao]").filter({ hasText: "Aérea Fictícia S.A." });
+  await expect(aerea.getByRole("heading", { level: 3 })).toHaveText(
+    "Aérea Fictícia S.A. tem sanção registrada no CEIS",
+  );
+  await expect(aerea).toContainText(
+    "Suspensão de 01/12/2025 a 01/12/2026. Órgão sancionador: Agência Exemplo. A única nota paga a essa empresa em 2026 tem data dentro desse período.",
+  );
+  await expect(aerea.getByRole("link", { name: "Ver a nota" })).toHaveAttribute("href", /gastos\.csv\?/);
+});
+
+test("EMDSEN-08: senadora sem emendas mostra o estado vazio com o ano da posse", async ({ page }) => {
+  await page.goto("/parlamentares/10009004");
+  await expect(
+    page.getByText(
+      "Nenhuma emenda individual desta senadora foi encontrada no Portal da Transparência a partir do orçamento de 2024.",
+    ),
+  ).toBeVisible();
 });

@@ -851,6 +851,16 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       det: `Notas da cota do senador${coletadoEm("senado_ceaps")}`,
     },
     {
+      nome: "Portal da Transparência · Emendas (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
+      det: `Emendas e pagamentos por favorecido${coletadoEm("cgu_emendas")}`,
+    },
+    {
+      nome: "Portal da Transparência · CEIS e CNEP (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+      det: `Empresas sancionadas${coletadoEm("cgu_ceis")}`,
+    },
+    {
       nome: "TSE · Dados Abertos (lote)",
       href: "https://dadosabertos.tse.jus.br/",
       det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
@@ -1041,7 +1051,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         </p>
       </section>
 
-      <ComoLigamosEmendas />
+      <ComoLigamosEmendas senado={senado} />
 
       <section
         aria-labelledby="erro-titulo"

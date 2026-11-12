@@ -2,7 +2,7 @@ import { normalizarNome } from "@/ingest/arquivos";
 import { brlCompacto, dataBr } from "@/lib/format";
 import { formatarCnpj, mascararCpfsNoTexto, soDigitos } from "@/lib/privacy";
 
-/** Emendas ao orçamento de 2023 foram apresentadas em 2022, pela legislatura anterior. */
+/** Deputados: emendas ao orçamento de 2023 foram apresentadas em 2022, pela legislatura anterior. */
 export const ANO_INICIAL_EMENDAS = 2024;
 
 export const TIPO_TRANSFERENCIA_ESPECIAL = "Emenda Individual - Transferências Especiais";
@@ -34,6 +34,41 @@ export function indiceDeAutores(parlamentares: { id: number; nome: string }[]): 
 
 export function autorDoNome(indice: Map<string, number | null>, nome: string): number | null {
   return indice.get(normalizarNome(nome)) ?? null;
+}
+
+/** Autor ligado a um perfil e o primeiro ano de orçamento que conta para ele. */
+export type AutorEmenda = { id: number; anoInicial: number };
+
+/**
+ * Primeiro orçamento do mandato do senador: o do ano seguinte à posse (o orçamento do ano da posse
+ * foi votado antes dela). Sem data de início, vale o mesmo corte dos deputados.
+ */
+export function anoInicialDoSenador(mandatoInicio: string | Date | null): number {
+  if (!mandatoInicio) return ANO_INICIAL_EMENDAS;
+  const ano = typeof mandatoInicio === "string" ? Number(mandatoInicio.slice(0, 4)) : mandatoInicio.getFullYear();
+  return Number.isFinite(ano) ? ano + 1 : ANO_INICIAL_EMENDAS;
+}
+
+/**
+ * Índice das duas Casas: nome normalizado → autor; `null` marca homônimo dentro da mesma Casa.
+ * O deputado tem prioridade: nome que também é de senador (suplentes fora do exercício que hoje são
+ * deputados) fica com o deputado e não entra no índice do Senado.
+ */
+export function indiceDeAutoresDasCasas(
+  deputados: { id: number; nome: string }[],
+  senadores: { id: number; nome: string; mandato_inicio: string | Date | null }[],
+): Map<string, AutorEmenda | null> {
+  const m = new Map<string, AutorEmenda | null>();
+  for (const [k, id] of indiceDeAutores(deputados))
+    m.set(k, id === null ? null : { id, anoInicial: ANO_INICIAL_EMENDAS });
+  const doSenado = new Map<string, AutorEmenda | null>();
+  for (const s of senadores) {
+    const k = normalizarNome(s.nome);
+    if (m.has(k)) continue;
+    doSenado.set(k, doSenado.has(k) ? null : { id: s.id, anoInicial: anoInicialDoSenador(s.mandato_inicio) });
+  }
+  for (const [k, v] of doSenado) m.set(k, v);
+  return m;
 }
 
 const CPF_MASCARADO = /^\*{3}\.\d{3}\.\d{3}-\*{2}$/;

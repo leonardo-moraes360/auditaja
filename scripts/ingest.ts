@@ -10,6 +10,9 @@
  *   pnpm ingest bens 2022
  *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
  *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
+ *
+ * Rode `emendas` depois de `deputados` e `senadores`, e `sancoes` depois de `ceap` e `ceaps`: as emendas
+ * casam com os perfis das duas Casas e as sanções só guardam CNPJs que já estão na cota.
  *   pnpm ingest tudo 2026   (deputados, histórico, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *   pnpm ingest senadores
  *   pnpm ingest ceaps 2026

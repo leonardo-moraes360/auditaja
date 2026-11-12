@@ -14,6 +14,8 @@ const db = createDb(URL_TESTE);
 let disponivel = true;
 
 const HOMONIMOS = [900000091, 900000092];
+/** Suplente de senador com o mesmo nome da deputada (caso real: deputados que são suplentes de senador). */
+const SUPLENTE_XARA = 10009091;
 
 const CAB_BASE =
   '"Código da Emenda";"Ano da Emenda";"Tipo de Emenda";"Código do Autor da Emenda";"Nome do Autor da Emenda";"Número da emenda";"Localidade de aplicação do recurso";"Código Município IBGE";"Município";"Código UF IBGE";"UF";"Região";"Código Função";"Nome Função";"Código Subfunção";"Nome Subfunção";"Código Programa";"Nome Programa";"Código Ação";"Nome Ação";"Código Plano Orçamentário";"Nome Plano Orçamentário";"Valor Empenhado";"Valor Liquidado";"Valor Pago";"Valor Restos A Pagar Inscritos";"Valor Restos A Pagar Cancelados";"Valor Restos A Pagar Pagos"';
@@ -40,6 +42,9 @@ const CSV_BASE = [
   base("202500010004", 2025, "Emenda de Bancada", "MARIA EXEMPLO", "CAMPINAS - SP", "Saúde", "7.777,00", "0", "0", "0"),
   base("202500020005", 2025, FD, "HOMÔNIMO TESTE", "CAMPINAS - SP", "Saúde", "5.555,00", "0", "0", "0"),
   base("202500030006", 2025, FD, "ALVARO DIAS", "CAMPINAS - SP", "Saúde", "4.444,00", "0", "0", "0"),
+  // Senador do seed (posse em 2023): entra o orçamento de 2024, não o de 2023.
+  base("202400040007", 2024, FD, "OTÁVIO MODELO", "BELO HORIZONTE - MG", "Saúde", "3.000,00", "0", "0", "0"),
+  base("202300040008", 2023, FD, "OTAVIO MODELO", "BELO HORIZONTE - MG", "Saúde", "8.888,00", "0", "0", "0"),
 ].join("\r\n");
 
 const CAB_FAV =
@@ -127,6 +132,27 @@ beforeAll(async () => {
         })
         .execute();
     }
+    await db
+      .insertInto("parlamentar")
+      .values({
+        id: SUPLENTE_XARA,
+        casa: "senado",
+        nome: "Maria Exemplo",
+        nome_civil: null,
+        sigla_partido: null,
+        sigla_uf: "SP",
+        url_foto: null,
+        data_nascimento: null,
+        sexo: "F",
+        id_legislatura: 57,
+        em_exercicio: false,
+        mandato_inicio: "2019-02-01",
+        mandato_fim: "2027-01-31",
+        participacao: "1º Suplente",
+        source_url: "https://example.test",
+        coleta_id,
+      })
+      .execute();
     // Favorecidos primeiro: a data da base tem de vir da entrada certa, não da primeira do ZIP.
     zip = await zipar({ "EmendasParlamentares_PorFavorecido.csv": CSV_FAV, "EmendasParlamentares.csv": CSV_BASE });
   } catch {
@@ -136,7 +162,10 @@ beforeAll(async () => {
 afterAll(async () => {
   if (disponivel) {
     await semear(db);
-    await db.deleteFrom("parlamentar").where("id", "in", HOMONIMOS).execute();
+    await db
+      .deleteFrom("parlamentar")
+      .where("id", "in", [...HOMONIMOS, SUPLENTE_XARA])
+      .execute();
   }
   await db.destroy();
 });
@@ -148,7 +177,7 @@ describe("coletarEmendas", () => {
     const r = await coletarEmendas(db, cliente());
     expect(pedidos.filter((u) => u === URL_EMENDAS)).toHaveLength(1);
     expect(pedidos.every((u) => u.startsWith("https://dadosabertos-download.cgu.gov.br/"))).toBe(true);
-    expect(r).toEqual({ emendas: 2, favorecidos: 4, autoresDescartados: 2 });
+    expect(r).toEqual({ emendas: 3, favorecidos: 4, autoresDescartados: 2 });
   });
 
   it("EMD-02: registra a coleta com fonte, URL, SHA-256, bytes e licença", async (ctx) => {
@@ -167,14 +196,19 @@ describe("coletarEmendas", () => {
       observacao: "base de 10/11/2026",
     });
     const ids = await db.selectFrom("emenda").select("coleta_id").execute();
-    expect(ids.map((x) => x.coleta_id)).toEqual([c.id, c.id]);
+    expect(ids.map((x) => x.coleta_id)).toEqual([c.id, c.id, c.id]);
   });
 
   it("EMD-03, EMD-04, EMD-06, EDGE-03: grava só individuais de 2024 em diante, ligadas à deputada, com valores exatos", async (ctx) => {
     if (!disponivel) ctx.skip();
-    const rows = await db.selectFrom("emenda").selectAll().orderBy("codigo").execute();
+    const rows = await db
+      .selectFrom("emenda")
+      .selectAll()
+      .where("parlamentar_id", "=", SEED.deputada)
+      .orderBy("codigo")
+      .execute();
+    // A suplente de senador xará da deputada não leva as emendas: o deputado tem prioridade.
     expect(rows.map((r) => r.codigo)).toEqual(["202400010002", "202500010001"]);
-    expect(rows.every((r) => r.parlamentar_id === SEED.deputada)).toBe(true);
     expect(rows[1]).toMatchObject({
       ano: 2025,
       tipo: FD,
@@ -193,6 +227,16 @@ describe("coletarEmendas", () => {
       pago: "0.00",
       rp_pagos: "0.00",
     });
+  });
+
+  it("EMDSEN-01, EMDSEN-02: liga a emenda ao senador só a partir do orçamento seguinte à posse", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const rows = await db
+      .selectFrom("emenda")
+      .select(["codigo", "ano", "parlamentar_id", "empenhado"])
+      .where("parlamentar_id", "in", [SEED.senador, SUPLENTE_XARA])
+      .execute();
+    expect(rows).toEqual([{ codigo: "202400040007", ano: 2024, parlamentar_id: SEED.senador, empenhado: "3000.00" }]);
   });
 
   it("EMD-07, EMD-08, EMD-09: grava favorecidos das emendas gravadas, com PF mascarada e CNPJ formatado", async (ctx) => {
@@ -224,7 +268,7 @@ describe("coletarEmendas", () => {
   it("EMD-10: coletar de novo substitui, sem duplicar", async (ctx) => {
     if (!disponivel) ctx.skip();
     await coletarEmendas(db, cliente());
-    expect(await contar("emenda")).toBe(2);
+    expect(await contar("emenda")).toBe(3);
     expect(await contar("emenda_favorecido")).toBe(4);
   });
 

@@ -250,3 +250,34 @@ describe("sancoesDosFornecedores", () => {
     expect(await sancoesDosFornecedores(SEED.deputada, ["***.456.789-**"], [2026])).toEqual([]);
   });
 });
+
+describe("EMDSEN-05, SANSEN-01: perfil do senador", () => {
+  it("lê as emendas do senador como as do deputado", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const r = await (await carregar())(SEED.senador);
+    if (r.vazio) throw new Error("seed sem emendas do senador");
+    expect(r.anos).toEqual([2026, 2025, 2024]);
+    expect(r.totais).toMatchObject({ empenhado: 8_000_000, pago: 4_500_000, emendas: 3 });
+    expect(r.favorecidos).toEqual([
+      {
+        nome: "Município de Uberlândia",
+        doc: "77.777.777/0001-77",
+        tipo: "Município",
+        municipio: "Uberlândia (MG)",
+        valor: 2_000_000,
+      },
+    ]);
+  });
+
+  it("cruza a CEAPS com o CEIS e conta as notas dentro da sanção", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { sancoesDosFornecedores } = await import("@/data/emendas");
+    const r = await sancoesDosFornecedores(SEED.senador, ["11.222.333/0001-44", "12.345.678/0001-90", null], [2026]);
+    expect(r.map((s) => [s.cadastro, s.cnpj, s.notas])).toEqual([
+      // Aérea: nota de 10/01/2026, sanção de 01/12/2025 a 01/12/2026 → 1.
+      ["CEIS", "11222333000144", 1],
+      // Imobiliária (mesmo CNPJ da gráfica da deputada): notas de fevereiro e abril, sanção desde maio → 0.
+      ["CNEP", "12345678000190", 0],
+    ]);
+  });
+});

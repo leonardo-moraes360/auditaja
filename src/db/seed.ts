@@ -741,6 +741,60 @@ export async function semear(db: Kysely<Database>) {
         ),
       ])
       .execute();
+    // Emendas fictícias do senador (posse em 2023: orçamentos de 2024 a 2026) e sanção de um fornecedor da CEAPS.
+    const emendaSen = (
+      codigo: string,
+      ano: number,
+      localidade: string,
+      funcao: string,
+      empenhado: number,
+      pago: number,
+    ) => ({
+      ...emenda(codigo, ano, localidade, funcao, empenhado, pago, 0),
+      autor_nome: "OTAVIO MODELO",
+      parlamentar_id: SEED.senador,
+      uf: "MINAS GERAIS",
+    });
+    await trx
+      .insertInto("emenda")
+      .values([
+        emendaSen("202691000001", 2026, "BELO HORIZONTE - MG", "Saúde", 4_000_000, 1_000_000),
+        emendaSen("202591000002", 2025, "UBERLÂNDIA - MG", "Urbanismo", 2_500_000, 2_000_000),
+        emendaSen("202491000003", 2024, "MINAS GERAIS (UF)", "Saúde", 1_500_000, 1_500_000),
+      ])
+      .execute();
+    await trx
+      .insertInto("emenda_favorecido")
+      .values({
+        ...fav(
+          "202591000002",
+          2025,
+          "202509",
+          "Município de Uberlândia",
+          "77.777.777/0001-77",
+          PJ,
+          "Município",
+          "UBERLÂNDIA",
+          2_000_000,
+        ),
+        parlamentar_id: SEED.senador,
+        uf: "MG",
+      })
+      .execute();
+    await trx
+      .insertInto("sancao")
+      .values({
+        cadastro: "CEIS",
+        codigo: "seed-ceis-sen-1",
+        cnpj: "11222333000144",
+        nome: "AEREA FICTICIA S.A.",
+        categoria: "Suspensão",
+        data_inicio: "2025-12-01",
+        data_fim: "2026-12-01",
+        orgao: "Agência Exemplo",
+        coleta_id: cCeis,
+      })
+      .execute();
     const votacaoSen = (id: string, data: string, sigla: string, ementa: string, secreta: boolean) => ({
       id,
       data,

@@ -2,14 +2,13 @@ import type { Insertable, Kysely } from "kysely";
 import type { Database, EmendaFavorecidoTable, EmendaTable, SancaoTable } from "@/db/types";
 import {
   ANO_INICIAL_EMENDAS,
-  autorDoNome,
   dataLocalBr,
   ehEmendaIndividual,
   favorecidoPublicavel,
-  indiceDeAutores,
+  indiceDeAutoresDasCasas,
   valorBr,
 } from "@/lib/emendas";
-import { dataBrParaIso, dataDaEntrada, linhasCsvDoZip } from "./arquivos";
+import { dataBrParaIso, dataDaEntrada, linhasCsvDoZip, normalizarNome } from "./arquivos";
 import { inserirEmBlocos, registrarColeta } from "./coleta";
 import { mascararCpfsNoTexto, soDigitos } from "@/lib/privacy";
 import type { ClienteEducado } from "./http";
@@ -40,9 +39,10 @@ export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado):
     licenca: LICENCA_CGU,
     observacao: `base de ${dataLocalBr(await dataDaEntrada(zip.buf, "EmendasParlamentares.csv"))}`,
   });
-  // Só deputados: as emendas de senadores ficam fora do escopo atual (perfil do senador não as mostra).
-  const indice = indiceDeAutores(
+  // Deputados e senadores (titulares e suplentes); nome das duas Casas fica com o deputado.
+  const indice = indiceDeAutoresDasCasas(
     await db.selectFrom("parlamentar").select(["id", "nome"]).where("casa", "=", "camara").execute(),
+    await db.selectFrom("parlamentar").select(["id", "nome", "mandato_inicio"]).where("casa", "=", "senado").execute(),
   );
 
   const emendas: Insertable<EmendaTable>[] = [];
@@ -51,13 +51,19 @@ export async function coletarEmendas(db: Kysely<Database>, cli: ClienteEducado):
   for await (const l of linhasCsvDoZip(zip.buf, "EmendasParlamentares.csv")) {
     const ano = Number(l["Ano da Emenda"]);
     const tipo = l["Tipo de Emenda"] ?? "";
-    if (!(ano >= ANO_INICIAL_EMENDAS) || !ehEmendaIndividual(tipo)) continue;
+    // O corte por ano depende do autor (deputado: 2024; senador: ano seguinte à posse).
+    if (!Number.isFinite(ano) || !ehEmendaIndividual(tipo)) continue;
     const autor = l["Nome do Autor da Emenda"] ?? "";
-    const parlamentar_id = autorDoNome(indice, autor);
-    if (parlamentar_id === null) {
-      descartados.add(autor);
+    const dono = indice.get(normalizarNome(autor)) ?? null;
+    if (dono === null) {
+      // Conta como descartado só quem teria entrado pelo corte dos deputados (ex-parlamentares de
+      // orçamentos antigos não interessam).
+      if (ano >= ANO_INICIAL_EMENDAS) descartados.add(autor);
       continue;
     }
+    // Só orçamentos do mandato: deputado a partir de 2024; senador a partir do ano seguinte à posse.
+    if (ano < dono.anoInicial) continue;
+    const parlamentar_id = dono.id;
     const codigo = l["Código da Emenda"];
     donoDaEmenda.set(codigo, { parlamentar_id, ano });
     emendas.push({
