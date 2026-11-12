@@ -311,7 +311,9 @@ function ConteudoEmendas({
                 {dados.favorecidos.map((f, i) => (
                   <tr key={i} className="border-t border-borda-suave">
                     <td className="py-2 pr-2">{f.nome}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">{f.doc ?? "—"}</td>
+                    <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                      {f.doc ?? (f.pessoaFisica ? "CPF não exibido" : "—")}
+                    </td>
                     <td className="px-2 py-2 text-muted-foreground">{f.tipo}</td>
                     <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{f.municipio ?? "—"}</td>
                     <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlMi(f.valor)}</td>
@@ -322,8 +324,8 @@ function ConteudoEmendas({
           </div>
         )}
         <p className="text-xs text-muted-foreground">
-          Prefeituras e fundos municipais aparecem pelo nome. CPF de pessoa física aparece mascarado, como no Portal da
-          Transparência.
+          Prefeituras e fundos municipais aparecem pelo nome. Pessoas físicas aparecem somadas, sem nome e sem CPF: a
+          máscara do Portal da Transparência, junto com a de outras fontes, remontaria o número.
         </p>
       </div>
     </>

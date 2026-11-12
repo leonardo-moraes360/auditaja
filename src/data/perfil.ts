@@ -262,10 +262,12 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     db
       .selectFrom("despesa_ceap")
       // Mesmo CNPJ com grafias diferentes ("VED Imóveis" e "VED IMOVEIS") é um fornecedor só: agrupa pelo
-      // documento e mostra o nome mais frequente. Pessoa física (CPF mascarado) segue por nome + documento.
+      // documento e mostra o nome mais frequente. Pessoas físicas (sem CPF, R3) somam numa linha só.
       .select([
         sql<string>`mode() within group (order by fornecedor_nome)`.as("fornecedor_nome"),
-        "fornecedor_doc",
+        sql<string | null>`case when fornecedor_classe = 'terceiro_pf' then null else fornecedor_doc end`.as(
+          "fornecedor_doc",
+        ),
         "fornecedor_classe",
         sql<string>`sum(valor_liquido)`.as("total"),
         sql<string>`count(*)`.as("documentos"),
@@ -273,8 +275,8 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       .where("parlamentar_id", "=", id)
       .where("ano", "in", anosCeap)
       .groupBy([
-        sql`case when fornecedor_classe = 'pessoa_juridica' and fornecedor_doc is not null then fornecedor_doc else fornecedor_nome || '|' || coalesce(fornecedor_doc, '') end`,
-        "fornecedor_doc",
+        sql`case when fornecedor_classe = 'terceiro_pf' then 'pf' when fornecedor_classe = 'pessoa_juridica' and fornecedor_doc is not null then fornecedor_doc else fornecedor_nome || '|' || coalesce(fornecedor_doc, '') end`,
+        sql`case when fornecedor_classe = 'terceiro_pf' then null else fornecedor_doc end`,
         "fornecedor_classe",
       ])
       .orderBy(sql`sum(valor_liquido)`, "desc")

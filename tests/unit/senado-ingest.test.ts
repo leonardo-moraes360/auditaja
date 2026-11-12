@@ -122,9 +122,11 @@ describe("CEAPS (SCEAPS-01..04)", () => {
     expect(JSON.stringify(linhas)).not.toContain("PESSOA FICTICIA");
   });
 
-  it("CPF completo sai mascarado no padrão da Receita", () => {
+  it("CPF completo não é gravado, nem mascarado", () => {
     const { linhas } = montarDespesasCeaps([{ ...notas[0], cpfCnpj: "123.456.789-01", fornecedor: "Fulano" }], ids, 1);
-    expect(linhas[0].fornecedor_doc).toBe("***.456.789-**");
+    expect(linhas[0].fornecedor_doc).toBeNull();
+    expect(linhas[0].fornecedor_classe).toBe("terceiro_pf");
+    expect(JSON.stringify(linhas)).not.toMatch(/456\.?789/);
     expect(linhas[0].fornecedor_nome).toBe("Prestador pessoa física");
     expect(JSON.stringify(linhas)).not.toContain("12345678901");
   });

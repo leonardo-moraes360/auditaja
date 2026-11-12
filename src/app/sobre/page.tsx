@@ -45,9 +45,7 @@ export default function Sobre() {
           <li>Só usamos dados públicos, coletados por download em lote ou pela API oficial de cada órgão.</li>
           <li>Cada seção do perfil mostra a fonte, a data da coleta e um link para o original.</li>
           <li>Indicadores são pontos de partida para verificação, não acusações.</li>
-          <li>
-            Fornecedor pessoa física aparece como &quot;Prestador pessoa física&quot;, com o CPF mascarado ou omitido.
-          </li>
+          <li>Fornecedor pessoa física aparece como &quot;Prestador pessoa física&quot;, sem nenhum dígito do CPF.</li>
           <li>Qualquer pessoa, inclusive o próprio parlamentar, pode pedir a correção de um dado.</li>
         </ul>
       </section>

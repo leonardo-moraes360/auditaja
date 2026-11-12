@@ -51,10 +51,11 @@ export default function Privacidade() {
         <h3 className="font-heading font-bold">Terceiros que aparecem nos dados públicos</h3>
         <p>
           Dados de outras pessoas são minimizados no momento da gravação, antes de chegar ao banco, e não apenas na
-          tela. O CPF de fornecedor pessoa física é gravado mascarado no padrão da Receita Federal (
-          <span className="font-mono">***.456.789-**</span>) e o nome é substituído por &quot;Prestador pessoa
-          física&quot;. Nomes de passageiros da cota parlamentar não são coletados. Empresas aparecem com nome e CNPJ,
-          como publicados pela Câmara.
+          tela. O CPF de fornecedor ou favorecido pessoa física não é gravado, nem mascarado: a Câmara e o Portal da
+          Transparência mostram os seis dígitos do meio, o Senado mostra os três primeiros e os dois últimos, e as
+          máscaras juntas remontariam o número. O nome é substituído por &quot;Prestador pessoa física&quot;. Nomes de
+          passageiros da cota parlamentar não são coletados. Empresas aparecem com nome e CNPJ, como publicados pela
+          Câmara.
         </p>
         <h3 className="font-heading font-bold">Quem pede correção de um dado</h3>
         <p>
@@ -161,8 +162,8 @@ export default function Privacidade() {
         <h2 className="font-heading text-xl font-bold">Segurança</h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            O banco nunca recebe o CPF completo de terceiros, o nome de fornecedor pessoa física, o nome de passageiros
-            nem a descrição livre de bens: o que não é gravado não pode vazar.
+            O banco nunca recebe CPF de terceiros, nem completo nem mascarado, o nome de fornecedor pessoa física, o
+            nome de passageiros nem a descrição livre de bens: o que não é gravado não pode vazar.
           </li>
           <li>O banco de dados é acessado só pelo servidor da aplicação, nunca pelo navegador.</li>
           <li>Credenciais ficam em variáveis de ambiente, fora do código-fonte.</li>

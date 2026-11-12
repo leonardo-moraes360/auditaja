@@ -77,7 +77,7 @@ test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }
   await expect(secao.getByRole("columnheader", { name: "Tipo" })).toBeVisible();
   await expect(secao).toContainText("“Estado (UF)” e “Nacional” indicam emendas sem município definido no Orçamento.");
   await expect(secao).toContainText(
-    "Prefeituras e fundos municipais aparecem pelo nome. CPF de pessoa física aparece mascarado, como no Portal da Transparência.",
+    "Prefeituras e fundos municipais aparecem pelo nome. Pessoas físicas aparecem somadas, sem nome e sem CPF: a máscara do Portal da Transparência, junto com a de outras fontes, remontaria o número.",
   );
   await expect(secao.locator("figure > span")).toHaveText(
     "Em 2026 o ano ainda está em curso: boa parte do empenhado só é paga no ano seguinte, como restos a pagar.",
@@ -170,7 +170,7 @@ test("SAN-04: selo de sanção ao lado do fornecedor na tabela", async ({ page }
   const linhas = page.locator("section#gastos table tbody tr");
   await expect(linhas.filter({ hasText: "Posto Ilustrativo Ltda" })).toContainText("Sanção no CEIS");
   await expect(linhas.filter({ hasText: "Gráfica Exemplo Ltda" })).toContainText("Sanção no CNEP");
-  await expect(linhas.filter({ hasText: "Prestador pessoa física" })).not.toContainText("Sanção");
+  await expect(linhas.filter({ hasText: "Prestadores pessoa física" })).not.toContainText("Sanção");
 });
 
 test("SAN-05..07: aviso factual com período, órgão, notas e ressalva", async ({ page }) => {

@@ -287,32 +287,47 @@ export function SecaoGastos({
                     </tr>
                   </thead>
                   <tbody>
-                    {ceap.fornecedores.map((f, i) => (
-                      <tr key={i} className="border-t border-borda-suave">
-                        <td className="py-2 pr-2">
-                          <a
-                            href={`/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}${
-                              f.fornecedor_doc ? `&doc=${encodeURIComponent(f.fornecedor_doc)}` : ""
-                            }`}
-                            download
-                            className="text-foreground"
-                          >
-                            {f.fornecedor_nome}
-                          </a>
-                          <SeloSancao doc={f.fornecedor_doc} sancoes={sancoes} />
-                        </td>
-                        <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
-                          {f.fornecedor_doc ?? "—"}
-                        </td>
-                        <td className="py-2 text-right whitespace-nowrap tabular-nums">{brl(f.total)}</td>
-                      </tr>
-                    ))}
+                    {ceap.fornecedores.map((f, i) => {
+                      // R3: prestadores pessoa física somados numa linha, sem nome e sem nenhum dígito de CPF.
+                      const pf = f.fornecedor_classe === "terceiro_pf";
+                      const notas = Number(f.documentos);
+                      const filtro = pf
+                        ? "&pf=1"
+                        : f.fornecedor_doc
+                          ? `&doc=${encodeURIComponent(f.fornecedor_doc)}`
+                          : "";
+                      return (
+                        <tr key={i} className="border-t border-borda-suave">
+                          <td className="py-2 pr-2">
+                            <a
+                              href={`/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}${filtro}`}
+                              download
+                              className="text-foreground"
+                            >
+                              {pf ? "Prestadores pessoa física" : f.fornecedor_nome}
+                            </a>
+                            {pf ? (
+                              <span className="block text-xs text-muted-foreground">
+                                soma de todos · {notas} {notas === 1 ? "nota" : "notas"}
+                              </span>
+                            ) : (
+                              <SeloSancao doc={f.fornecedor_doc} sancoes={sancoes} />
+                            )}
+                          </td>
+                          <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                            {pf ? "CPF não exibido" : (f.fornecedor_doc ?? "—")}
+                          </td>
+                          <td className="py-2 text-right whitespace-nowrap tabular-nums">{brl(f.total)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
               <p className="text-xs text-muted-foreground">
-                CPF de pessoa física aparece mascarado, como no Portal da Transparência. O nome do fornecedor baixa as
-                notas dele.
+                CPF de pessoa física não é exibido: cada fonte mascara um trecho diferente e as máscaras juntas
+                remontariam o número. Os prestadores pessoa física aparecem somados numa linha. O nome do fornecedor
+                baixa as notas dele.
               </p>
             </div>
           </div>

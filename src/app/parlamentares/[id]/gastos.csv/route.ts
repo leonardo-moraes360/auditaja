@@ -16,8 +16,8 @@ function celula(v: unknown): string {
 
 /**
  * "Baixar CSV" da seção de gastos: as notas da CEAP do deputado no ano (ou no mandato),
- * opcionalmente de um fornecedor. Só campos já minimizados na coleta (AD-002): CPF de
- * pessoa física chega mascarado e sem nome.
+ * opcionalmente de um fornecedor (`doc`) ou só das notas de pessoas físicas (`pf=1`). Só campos já
+ * minimizados na coleta (AD-002): pessoa física chega sem CPF e sem nome.
  */
 export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentares/[id]/gastos.csv">) {
   const { id: idTexto } = await ctx.params;
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
   const sp = request.nextUrl.searchParams;
   const ano = sp.get("ano");
   const doc = sp.get("doc");
+  const pf = sp.get("pf") === "1";
   // Período de uma sanção (aviso de sanção): datas ISO, inclusive.
   const de = sp.get("de");
   const ate = sp.get("ate");
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
       "tipo_despesa",
       "fornecedor_nome",
       "fornecedor_doc",
+      "fornecedor_classe",
       "valor_documento",
       "valor_glosa",
       "valor_liquido",
@@ -49,7 +51,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
     .orderBy("mes")
     .orderBy("data_emissao");
   if (ano && /^\d{4}$/.test(ano)) q = q.where("ano", "=", Number(ano));
-  if (doc) q = q.where("fornecedor_doc", "=", doc);
+  if (pf) q = q.where("fornecedor_classe", "=", "terceiro_pf");
+  else if (doc) q = q.where("fornecedor_doc", "=", doc);
   if (dataIsoValida(de)) q = q.where("data_emissao", ">=", de!);
   if (dataIsoValida(ate)) q = q.where("data_emissao", "<=", ate!);
   const linhas = await q.execute();
@@ -73,7 +76,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
       l.data_emissao ? String(l.data_emissao).slice(0, 10) : "",
       l.tipo_despesa,
       l.fornecedor_nome,
-      l.fornecedor_doc,
+      // R3: nenhum dígito de CPF, mesmo que um registro antigo ainda tenha a máscara.
+      l.fornecedor_classe === "terceiro_pf" ? null : l.fornecedor_doc,
       l.valor_documento,
       l.valor_glosa,
       l.valor_liquido,
@@ -82,7 +86,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
       .map(celula)
       .join(";"),
   );
-  const nome = `ceap-${id}-${ano && /^\d{4}$/.test(ano) ? ano : "mandato"}${doc ? "-fornecedor" : ""}.csv`;
+  const nome = `ceap-${id}-${ano && /^\d{4}$/.test(ano) ? ano : "mandato"}${pf ? "-pessoa-fisica" : doc ? "-fornecedor" : ""}.csv`;
   return new Response("﻿" + [cabecalho.join(";"), ...corpo].join("\r\n") + "\r\n", {
     headers: {
       "content-type": "text/csv; charset=utf-8",

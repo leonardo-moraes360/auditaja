@@ -89,7 +89,7 @@ describe("coletarCeap", () => {
     expect(ids.map((r) => r.coleta_id)).toEqual([coleta.id, coleta.id]);
   });
 
-  it("PRIV-01..03: grava CPF mascarado, rótulo genérico e nada do passageiro ou do CPF do parlamentar", async (ctx) => {
+  it("PRIV-01..03: não grava CPF (nem mascarado), rótulo genérico e nada do passageiro ou do CPF do parlamentar", async (ctx) => {
     if (!disponivel) ctx.skip();
     const rows = await db
       .selectFrom("despesa_ceap")
@@ -98,7 +98,7 @@ describe("coletarCeap", () => {
       .orderBy("ide_documento")
       .execute();
     expect(rows[0]).toMatchObject({
-      fornecedor_doc: "***.456.789-**",
+      fornecedor_doc: null,
       fornecedor_nome: "Prestador pessoa física",
       fornecedor_classe: "terceiro_pf",
     });
@@ -106,6 +106,7 @@ describe("coletarCeap", () => {
     const tudo = JSON.stringify(rows);
     expect(tudo).not.toContain("12345678901");
     expect(tudo).not.toContain("123.456.789-01");
+    expect(tudo).not.toMatch(/456\.?789/);
     expect(tudo).not.toContain("Passageira");
     expect(tudo).not.toContain("11122233344");
   });

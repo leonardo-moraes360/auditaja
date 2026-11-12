@@ -83,7 +83,10 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
       .selectFrom("emenda_favorecido")
       .select([
         "favorecido_nome",
-        "favorecido_doc",
+        // R3: pessoa física sem nenhum dígito de CPF, mesmo que um registro antigo ainda tenha a máscara.
+        sql<string | null>`case when tipo_favorecido = 'Pessoa Fisica' then null else favorecido_doc end`.as(
+          "favorecido_doc",
+        ),
         "tipo_favorecido",
         sql<string | null>`mode() within group (order by natureza_juridica)`.as("natureza"),
         sql<string | null>`mode() within group (order by municipio)`.as("municipio"),
@@ -92,7 +95,11 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
       ])
       .where("parlamentar_id", "=", id)
       .where("ano_emenda", "in", anosDoPeriodo)
-      .groupBy(["favorecido_nome", "favorecido_doc", "tipo_favorecido"])
+      .groupBy([
+        "favorecido_nome",
+        sql`case when tipo_favorecido = 'Pessoa Fisica' then null else favorecido_doc end`,
+        "tipo_favorecido",
+      ])
       .orderBy(sql`sum(valor)`, "desc")
       .orderBy("favorecido_nome")
       .limit(LIMITE)
@@ -118,6 +125,7 @@ export async function emendasDoParlamentar(id: number, param?: string | string[]
     favorecidos: favorecidos.map((f) => ({
       nome: f.favorecido_nome,
       doc: f.favorecido_doc,
+      pessoaFisica: f.tipo_favorecido === "Pessoa Fisica",
       tipo: tipoDoFavorecido(f.natureza, f.tipo_favorecido),
       municipio: f.municipio ? rotuloLocalidade(f.uf ? `${f.municipio} - ${f.uf}` : f.municipio) : null,
       valor: Number(f.valor),

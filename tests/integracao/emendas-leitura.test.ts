@@ -82,6 +82,7 @@ describe("emendasDoParlamentar", () => {
       {
         nome: "Município de São Paulo",
         doc: "22.222.222/0001-22",
+        pessoaFisica: false,
         tipo: "Município",
         municipio: "São Paulo (SP)",
         valor: 2_000_000,
@@ -89,6 +90,7 @@ describe("emendasDoParlamentar", () => {
       {
         nome: "Santa Casa Exemplo",
         doc: "33.333.333/0001-33",
+        pessoaFisica: false,
         tipo: "Associação Privada",
         municipio: "Sorocaba (SP)",
         valor: 1_200_000,
@@ -96,6 +98,7 @@ describe("emendasDoParlamentar", () => {
       {
         nome: "Construtora Ilustrativa Ltda",
         doc: "44.444.444/0001-44",
+        pessoaFisica: false,
         tipo: "Sociedade Empresária Limitada",
         municipio: "Ribeirão Preto (SP)",
         valor: 1_000_000,
@@ -103,6 +106,7 @@ describe("emendasDoParlamentar", () => {
       {
         nome: "Fundo Municipal de Saúde de Campinas",
         doc: "11.111.111/0001-11",
+        pessoaFisica: false,
         tipo: "Fundo Público da Administração Direta Municipal",
         municipio: "Campinas (SP)",
         valor: 1_000_000,
@@ -110,6 +114,7 @@ describe("emendasDoParlamentar", () => {
       {
         nome: "Município de Jundiaí",
         doc: "55.555.555/0001-55",
+        pessoaFisica: false,
         tipo: "Município",
         municipio: "Jundiaí (SP)",
         valor: 800_000,
@@ -136,7 +141,8 @@ describe("emendasDoParlamentar", () => {
     if (r.vazio) throw new Error("seed sem emendas");
     expect(r.favorecidos[0]).toEqual({
       nome: "Beneficiário pessoa física",
-      doc: "***.456.789-**",
+      doc: null,
+      pessoaFisica: true,
       tipo: "Pessoa física",
       municipio: "Santos (SP)",
       valor: 18_000,
