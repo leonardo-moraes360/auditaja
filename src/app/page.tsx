@@ -25,7 +25,7 @@ export default function Inicio() {
             name="q"
             type="search"
             placeholder="Digite o nome do deputado"
-            className="h-11 flex-1 rounded-md border border-input bg-white px-4"
+            className="h-11 rounded-md border border-input bg-white px-4 sm:flex-1"
           />
           <button
             type="submit"
