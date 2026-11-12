@@ -241,7 +241,7 @@ test("SUI-11: metodologia descreve as regras do Senado e fontes lista o Senado",
   ).toBeVisible();
   await expect(s.getByText(/contam para a presença, mas nunca para o alinhamento/)).toBeVisible();
   await expect(s.getByText(/não compara o gasto com um teto e mostra a média mensal/)).toBeVisible();
-  await expect(page.getByText("Versão 1.7. Toda mudança gera nova versão.")).toBeVisible();
+  await expect(page.getByText("Versão 1.9. Toda mudança gera nova versão.")).toBeVisible();
   await page.goto("/fontes");
   await expect(page.getByText(/^Senado Federal: API de Dados Abertos/)).toBeVisible();
 });

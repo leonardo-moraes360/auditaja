@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { TETO_CEAP_ANO, TETO_CEAP_ATO, TETO_CEAP_CONFERIDO_EM, TETO_CEAP_FONTE } from "@/data/teto-ceap";
+import { FATOR_TUKEY, MESES_MINIMOS_SALTO, MINIMO_COLEGAS, PISO_REAIS } from "@/lib/atipico";
+import { brl } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 import { LICENCAS_SENADO } from "@/lib/senado";
 
@@ -47,6 +49,45 @@ export default function Metodologia() {
           dados publicados. É uma aproximação: janeiro e o começo de fevereiro de {TETO_CEAP_ANO} ainda seguiam o valor
           anterior, um pouco menor, então o teto exibido fica um pouco acima do real. Para outros anos, não exibimos a
           comparação até conferir os valores vigentes.
+        </p>
+      </section>
+
+      <section id="atipico" className="scroll-mt-4 space-y-2">
+        <h2 className="font-heading text-xl font-bold">Padrão atípico nos gastos da cota</h2>
+        <p>
+          O aviso de padrão atípico aponta um gasto da cota muito diferente do comum. É um ponto de partida para
+          verificação: não diz que houve irregularidade, e muitos casos têm explicação, como a distância entre o estado e
+          Brasília. Usamos duas comparações, que enxergam coisas diferentes, e cada aviso mostra os números usados no
+          cálculo para qualquer pessoa refazer a conta.
+        </p>
+        <h3 className="font-semibold">Acima dos colegas</h3>
+        <p>
+          Para cada tipo de despesa, dividimos o que o parlamentar gastou no ano pelos meses em que ele apresentou alguma
+          nota, e comparamos essa média mensal com a dos colegas da mesma Casa que usaram o mesmo tipo no mesmo ano.
+          Deputados são comparados com deputados, senadores com senadores. Ordenamos as médias e pegamos o primeiro
+          quartil (Q1, abaixo do qual está um quarto dos colegas) e o terceiro quartil (Q3, três quartos). O limite de
+          atipicidade é <strong>Q3 + {FATOR_TUKEY} × (Q3 − Q1)</strong>, a chamada cerca externa de Tukey. Ela não usa a
+          média nem supõe que os gastos sigam uma curva normal, então poucos valores muito altos não arrastam o limite. O
+          aviso aparece quando a média mensal passa do limite e, no ano, o gasto fica mais de {brl(PISO_REAIS)} acima dele
+          (limite mensal vezes os meses do parlamentar).
+        </p>
+        <h3 className="font-semibold">Salto em relação ao ano anterior</h3>
+        <p>
+          Para cada tipo de despesa, dividimos o total do ano pelo total do ano anterior. Só entram parlamentares que
+          usaram o tipo nos dois anos e apresentaram notas em pelo menos {MESES_MINIMOS_SALTO} meses de cada ano.
+          Comparamos o logaritmo dessa razão com o dos colegas pela mesma cerca externa de Tukey; o logaritmo trata dobrar
+          e cair pela metade como variações do mesmo tamanho. O aviso aparece quando a razão passa do limite e o aumento
+          passa de {brl(PISO_REAIS)}. Sem o ano anterior coletado, como no primeiro ano da legislatura, essa comparação
+          não é feita.
+        </p>
+        <h3 className="font-semibold">Regras comuns</h3>
+        <p>
+          Só calculamos um limite quando pelo menos {MINIMO_COLEGAS} parlamentares entram na comparação daquele tipo de
+          despesa. Usamos o valor líquido de cada nota (Câmara) ou o valor reembolsado (Senado), em valores nominais.
+          Testamos os dois métodos nos arquivos da Câmara e do Senado de 2009 a 2026: o aviso de colegas volta no ano
+          seguinte em cerca de metade dos casos (mostra hábitos, não acaso), e o de salto alcança tipos grandes, como
+          manutenção de escritório e divulgação, que a comparação com os colegas quase nunca alcança. Ficaram de fora
+          métodos que não distinguiram ninguém nesse teste, como a lei de Benford e a concentração num único fornecedor.
         </p>
       </section>
 
