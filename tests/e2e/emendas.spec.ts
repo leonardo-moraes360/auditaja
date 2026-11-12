@@ -232,7 +232,7 @@ test("EMDUI-15: CSV com uma linha por emenda do período", async ({ request }) =
 
 test("MET-01..03: metodologia com emendas e sanções (desde a 1.5)", async ({ page }) => {
   await page.goto("/metodologia");
-  await expect(page.getByText("Versão 1.9. Toda mudança gera nova versão.")).toBeVisible();
+  await expect(page.getByText("Versão 1.10. Toda mudança gera nova versão.")).toBeVisible();
   const emendas = page.locator("section#emendas");
   await expect(emendas.getByRole("heading", { level: 2 })).toHaveText("Emendas parlamentares");
   await expect(emendas).toContainText("orçamento de 2024 em diante");
@@ -249,7 +249,7 @@ test("MET-04, MET-05: fontes e regra de ligação na lateral do perfil", async (
   const fontes = page.locator("section#fontes");
   await expect(fontes.getByRole("link", { name: "Portal da Transparência · Emendas (lote)" })).toBeVisible();
   await expect(fontes.getByRole("link", { name: "Portal da Transparência · CEIS e CNEP (lote)" })).toBeVisible();
-  await expect(fontes.getByRole("link", { name: "Metodologia v1.9" })).toBeVisible();
+  await expect(fontes.getByRole("link", { name: "Metodologia v1.10" })).toBeVisible();
   const bloco = page.getByRole("region", { name: "Como ligamos a emenda ao deputado" });
   await expect(bloco).toContainText("Quando dois deputados têm o mesmo nome, a emenda fica de fora.");
 });

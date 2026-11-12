@@ -16,7 +16,12 @@ export async function totaisPorTipo(casa: CasaParlamentar, ano: number): Promise
       q
         .selectFrom("despesa_ceap")
         .innerJoin("parlamentar", "parlamentar.id", "despesa_ceap.parlamentar_id")
-        .select(["despesa_ceap.parlamentar_id", "despesa_ceap.tipo_despesa", "despesa_ceap.mes", "despesa_ceap.valor_liquido"])
+        .select([
+          "despesa_ceap.parlamentar_id",
+          "despesa_ceap.tipo_despesa",
+          "despesa_ceap.mes",
+          "despesa_ceap.valor_liquido",
+        ])
         .where("parlamentar.casa", "=", casa)
         .where("despesa_ceap.ano", "=", ano),
     )

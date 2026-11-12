@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { EmendasDoParlamentar } from "@/data/emendas";
-import { baseDaColeta, brlMi } from "@/lib/emendas";
+import { ANO_INICIAL_EMENDAS, baseDaColeta, brlMi } from "@/lib/emendas";
 import { brl, pct } from "@/lib/format";
 import { classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
@@ -68,12 +68,24 @@ function Barras({ itens }: { itens: { nome: string; valor: number; detalhe: stri
   );
 }
 
-export function SecaoEmendas({ dados, parlamentarId }: { dados: EmendasDoParlamentar; parlamentarId: number }) {
+/** Senado: mandato de 8 anos, com todos os anos como botões, e o período do mandato no indicador. */
+export type EmendasDoSenador = { anoInicial: number; mandato: string | null; sexo: string | null };
+
+export function SecaoEmendas({
+  dados,
+  parlamentarId,
+  senado,
+}: {
+  dados: EmendasDoParlamentar;
+  parlamentarId: number;
+  senado?: EmendasDoSenador;
+}) {
   const { periodo, anos } = dados;
   const mandato = periodo === "mandato";
   const parametro = mandato ? "mandato" : String(periodo);
   const href = (p: string) => `/parlamentares/${parlamentarId}?emendas=${p}#emendas`;
-  const botoesAno = anos.slice(0, 2);
+  const botoesAno = senado ? anos : anos.slice(0, 2);
+  const deste = senado ? (senado.sexo === "F" ? "desta senadora" : "deste senador") : "deste deputado";
   const base = baseDaColeta(dados.coleta?.observacao);
 
   return (
@@ -102,18 +114,20 @@ export function SecaoEmendas({ dados, parlamentarId }: { dados: EmendasDoParlame
       </div>
 
       <p className="text-sm leading-normal text-texto-2">
-        Emenda é a parte do Orçamento da União que o parlamentar indica para uma área ou um lugar. Quem executa é o
-        governo federal. <strong>Empenhado</strong> é o valor reservado para a despesa; <strong>pago</strong> é o que já
-        saiu do caixa. Emendas de bancada e de comissão têm autoria coletiva e não entram nesta soma.
+        Emenda é a parte do Orçamento da União que{" "}
+        {senado ? (senado.sexo === "F" ? "a senadora" : "o senador") : "o parlamentar"} indica para uma área ou um
+        lugar. Quem executa é o governo federal. <strong>Empenhado</strong> é o valor reservado para a despesa;{" "}
+        <strong>pago</strong> é o que já saiu do caixa. Emendas de bancada e de comissão têm autoria coletiva e não
+        entram nesta soma.
       </p>
 
       {dados.vazio ? (
         <p className="text-muted-foreground">
-          Nenhuma emenda individual deste deputado foi encontrada no Portal da Transparência a partir do orçamento de
-          2024.
+          Nenhuma emenda individual {deste} foi encontrada no Portal da Transparência a partir do orçamento de{" "}
+          {senado?.anoInicial ?? ANO_INICIAL_EMENDAS}.
         </p>
       ) : (
-        <ConteudoEmendas dados={dados} mandato={mandato} />
+        <ConteudoEmendas dados={dados} mandato={mandato} periodoMandato={senado?.mandato ?? null} />
       )}
 
       <NotaFonte
@@ -143,9 +157,12 @@ export function SecaoEmendas({ dados, parlamentarId }: { dados: EmendasDoParlame
 function ConteudoEmendas({
   dados,
   mandato,
+  periodoMandato,
 }: {
   dados: Extract<EmendasDoParlamentar, { vazio: false }>;
   mandato: boolean;
+  /** "2019–2027" no perfil do senador. */
+  periodoMandato: string | null;
 }) {
   const { totais, periodo, anos } = dados;
   const pctPago = pct(totais.pago, totais.empenhado);
@@ -163,7 +180,11 @@ function ConteudoEmendas({
           valor={brlMi(totais.empenhado)}
           detalhe={
             mandato
-              ? `${qtd}, orçamentos de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`
+              ? `${qtd}, ${
+                  anosOrdem.length === 1
+                    ? `orçamento de ${anosOrdem[0]}`
+                    : `orçamentos de ${anosOrdem[0]} a ${anosOrdem.at(-1)}`
+                }${periodoMandato ? ` (mandato ${periodoMandato.replace("–", "\u2060–\u2060")})` : ""}`
               : `${qtd} do orçamento de ${periodo}`
           }
         />
@@ -332,17 +353,29 @@ function ConteudoEmendas({
   );
 }
 
-/** MET-05: bloco da lateral com a regra de ligação autor ↔ deputado. */
-export function ComoLigamosEmendas() {
+/** MET-05: bloco da lateral com a regra de ligação autor ↔ deputado ou senador. */
+export function ComoLigamosEmendas({ senado = false, sexo = null }: { senado?: boolean; sexo?: string | null }) {
   return (
     <section aria-labelledby="como-ligamos-titulo" className={`${CARTAO} gap-2.5 sm:p-5`}>
       <h2 id="como-ligamos-titulo" className="font-heading text-lg font-bold">
-        Como ligamos a emenda ao deputado
+        {senado
+          ? `Como ligamos a emenda ${sexo === "F" ? "à senadora" : "ao senador"}`
+          : "Como ligamos a emenda ao deputado"}
       </h2>
-      <p className="text-sm leading-normal text-texto-2">
-        O Portal identifica o autor pelo nome parlamentar. Ligamos esse nome ao cadastro da Câmara. Quando dois
-        deputados têm o mesmo nome, a emenda fica de fora. <Link href="/metodologia#emendas">Ver a metodologia</Link>
-      </p>
+      {senado ? (
+        <p className="text-sm leading-normal text-texto-2">
+          O Portal identifica o autor pelo nome parlamentar. Ligamos esse nome ao cadastro do Senado (titulares e
+          suplentes). Contamos os orçamentos votados durante o mandato: para quem tomou posse em 2019, de 2020 em
+          diante; em 2023, de 2024 em diante. Se o nome também é de um deputado federal atual, a emenda fica no perfil
+          do deputado. Quando dois senadores têm o mesmo nome, a emenda fica de fora.{" "}
+          <Link href="/metodologia#emendas">Ver a metodologia</Link>
+        </p>
+      ) : (
+        <p className="text-sm leading-normal text-texto-2">
+          O Portal identifica o autor pelo nome parlamentar. Ligamos esse nome ao cadastro da Câmara. Quando dois
+          deputados têm o mesmo nome, a emenda fica de fora. <Link href="/metodologia#emendas">Ver a metodologia</Link>
+        </p>
+      )}
     </section>
   );
 }

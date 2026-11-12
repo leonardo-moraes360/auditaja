@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { SancaoFornecedor } from "@/data/emendas";
-import { frasesNotas, periodoDaSancao, rotuloNotas } from "@/lib/emendas";
+import { frasesNotas, periodoDaSancao, rotuloNotas, rotuloNotasCsv } from "@/lib/emendas";
 import { soDigitos } from "@/lib/privacy";
 
 const PORTAL_DOWNLOAD = "https://portaldatransparencia.gov.br/download-de-dados";
@@ -32,12 +32,15 @@ export function AvisoSancao({
   sancoes,
   periodo,
   hrefNotas,
+  notasEmCsv = false,
 }: {
   fornecedores: { fornecedor_nome: string; fornecedor_doc: string | null; documentos: number }[];
   sancoes: SancaoFornecedor[];
   periodo: string;
   /** CSV das notas de um fornecedor no período exibido e dentro do período da sanção (rota gastos.csv). */
   hrefNotas: (doc: string, de: string | null, ate: string | null) => string;
+  /** Senado: o link baixa o CSV porque não há documento da nota para abrir. */
+  notasEmCsv?: boolean;
 }) {
   const itens = fornecedores.flatMap((f) => doFornecedor(f.fornecedor_doc, sancoes).map((s) => ({ f, s })));
   if (!itens.length) return null;
@@ -91,7 +94,7 @@ export function AvisoSancao({
                     download
                     className="inline-flex min-h-6 items-center text-teto"
                   >
-                    {rotuloNotas(s.notas)}
+                    {notasEmCsv ? rotuloNotasCsv(s.notas) : rotuloNotas(s.notas)}
                   </a>
                 )}
                 <Link href="/metodologia#sancoes" className="inline-flex min-h-6 items-center text-teto">

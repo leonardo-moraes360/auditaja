@@ -26,11 +26,12 @@ export default function Sobre() {
           </li>
           <li>Bens declarados à Justiça Eleitoral nas eleições de 2018, 2022 e 2026.</li>
           <li>
-            Para deputados: emendas individuais a partir do orçamento de 2024, com valor empenhado, valor pago e
-            transferências especiais, e quem recebeu os pagamentos, do Portal da Transparência.
+            Emendas individuais dos orçamentos do mandato (deputados: de 2024 em diante; senadores: a partir do ano
+            seguinte à posse), com valor empenhado, valor pago e transferências especiais, e quem recebeu os pagamentos,
+            do Portal da Transparência.
           </li>
           <li>
-            Para deputados: aviso quando um fornecedor da cota aparece nos cadastros de empresas sancionadas da CGU
+            Aviso quando um fornecedor da cota (CEAP ou CEAPS) aparece nos cadastros de empresas sancionadas da CGU
             (CEIS e CNEP).
           </li>
           <li>
@@ -38,10 +39,7 @@ export default function Sobre() {
             gastam ou dá um salto em relação ao ano anterior, com a{" "}
             <Link href="/metodologia#atipico">conta publicada na metodologia</Link>.
           </li>
-          <li>
-            Planilha CSV de gastos (e de emendas, para deputados) e um feed para acompanhar as atualizações de cada
-            perfil.
-          </li>
+          <li>Planilha CSV de gastos e de emendas e um feed para acompanhar as atualizações de cada perfil.</li>
         </ul>
       </section>
       <section className="space-y-2">
@@ -57,8 +55,7 @@ export default function Sobre() {
       <section className="space-y-2">
         <h2 className="font-heading text-xl font-bold">O que ainda não cobrimos</h2>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Emendas e sanções de fornecedores no perfil dos senadores.</li>
-          <li>Emendas de bancada e de comissão, e emendas anteriores a 2024.</li>
+          <li>Emendas de bancada e de comissão, e emendas de orçamentos anteriores ao mandato atual.</li>
           <li>Deputados estaduais, vereadores, contratos, licitações e outros gastos públicos.</li>
         </ul>
         <p>Cada etapa nova sai com a metodologia publicada antes.</p>

@@ -70,7 +70,9 @@ function este(ctx: Ctx) {
 
 /** Nome curto do tipo para frases: "HOSPEDAGEM ,EXCETO DO PARLAMENTAR NO DF." → "hospedagem". */
 function tipoCurto(tipo: string) {
-  return fraseCase(tipo).split(/,\s*exceto/i)[0].toLowerCase();
+  return fraseCase(tipo)
+    .split(/,\s*exceto/i)[0]
+    .toLowerCase();
 }
 
 function rotuloNotas(n: number) {
@@ -149,7 +151,12 @@ function Diagrama({ a, rotulo, eu }: { a: AlertaColegas; rotulo: string; eu: str
   const x = (v: number) => `${pos(v)}%`;
   const rotulos = [
     { chave: "mediana", v: a.mediana, texto: `Mediana ${brl(a.mediana)}/mês`, classe: "" },
-    { chave: "limite", v: a.limiteMensal, texto: `Limite ${brl(a.limiteMensal)}/mês`, classe: "font-semibold text-atipico" },
+    {
+      chave: "limite",
+      v: a.limiteMensal,
+      texto: `Limite ${brl(a.limiteMensal)}/mês`,
+      classe: "font-semibold text-atipico",
+    },
     { chave: "eu", v: a.mediaMensal, texto: eu, classe: "font-semibold text-aviso" },
   ].toSorted((p, q) => p.v - q.v);
   const linhas = linhasDosRotulos(rotulos.map((l) => pos(l.v)));
@@ -195,7 +202,8 @@ function Diagrama({ a, rotulo, eu }: { a: AlertaColegas; rotulo: string; eu: str
         ))}
       </div>
       <figcaption className="hidden text-xs text-muted-foreground sm:block">
-        Caixa azul: metade do meio dos {rotulo} (de {brl(a.q1)} a {brl(a.q3)} por mês). Tracejado: limite de atipicidade.
+        Caixa azul: metade do meio dos {rotulo} (de {brl(a.q1)} a {brl(a.q3)} por mês). Tracejado: limite de
+        atipicidade.
       </figcaption>
     </figure>
   );
@@ -279,8 +287,8 @@ function AvisoSalto({ a, ctx }: { a: AlertaSalto; ctx: Ctx }) {
             <>
               Foram <strong>{brl(a.total)}</strong> em {ctx.ano} contra {brl(a.totalAnterior)} em {ctx.ano - 1}. Entre
               os {a.colegas} {rotulo} que usaram essa despesa nos dois anos, metade variou entre {variacao(a.q1Razao)} e{" "}
-              {variacao(a.q3Razao)}. O limite de salto é <strong>{vezes(a.limiteRazao)}</strong> o valor do ano anterior,
-              e o aumento passa de {brl(PISO_REAIS)}.
+              {variacao(a.q3Razao)}. O limite de salto é <strong>{vezes(a.limiteRazao)}</strong> o valor do ano
+              anterior, e o aumento passa de {brl(PISO_REAIS)}.
             </>
           }
         />
@@ -289,9 +297,16 @@ function AvisoSalto({ a, ctx }: { a: AlertaSalto; ctx: Ctx }) {
         {[
           { rotulo: String(ctx.ano - 1), valor: brl(a.totalAnterior), destaque: false },
           { rotulo: `${ctx.ano}${periodoParcial(ctx.ultimoMes)}`, valor: brl(a.total), destaque: false },
-          { rotulo: "Limite de salto", valor: `${a.limiteRazao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} × ${ctx.ano - 1}`, destaque: true },
+          {
+            rotulo: "Limite de salto",
+            valor: `${a.limiteRazao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} × ${ctx.ano - 1}`,
+            destaque: true,
+          },
         ].map((c) => (
-          <div key={c.rotulo} className="flex flex-[1_1_160px] flex-col gap-0.5 rounded-[10px] bg-superficie px-3 py-2.5">
+          <div
+            key={c.rotulo}
+            className="flex flex-[1_1_160px] flex-col gap-0.5 rounded-[10px] bg-superficie px-3 py-2.5"
+          >
             <span className="text-xs text-muted-foreground">{c.rotulo}</span>
             <span className={`font-heading text-xl font-bold ${c.destaque ? "text-atipico" : ""}`}>{c.valor}</span>
           </div>
@@ -376,7 +391,9 @@ export function AvisosAtipicos({
     ...r.acima.map((a) => ({ chave: `c-${a.tipo}`, valor: a.excessoAno, el: <AvisoColegas a={a} ctx={ctx} /> })),
     ...r.salto.map((a) => ({ chave: `s-${a.tipo}`, valor: a.excessoAno, el: <AvisoSalto a={a} ctx={ctx} /> })),
   ].toSorted((a, b) => b.valor - a.valor);
-  const semSalto = !r.anoAnteriorDisponivel ? ` A comparação com ${r.ano - 1} não é feita porque esse ano não foi coletado.` : "";
+  const semSalto = !r.anoAnteriorDisponivel
+    ? ` A comparação com ${r.ano - 1} não é feita porque esse ano não foi coletado.`
+    : "";
   if (!avisos.length) {
     return (
       <p data-atipico-resumo className="text-[13px] leading-normal text-muted-foreground sm:text-sm">

@@ -64,6 +64,9 @@ export function numeroBr(v: string | null | undefined): number {
 /** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
 export function fraseCase(s: string) {
   // A Câmara publica "HOSPEDAGEM ,EXCETO ...": vírgula colada na palavra seguinte.
-  const l = s.toLowerCase().replace(/\.$/, "").replace(/\s+,\s*/g, ", ");
+  const l = s
+    .toLowerCase()
+    .replace(/\.$/, "")
+    .replace(/\s+,\s*/g, ", ");
   return l.charAt(0).toUpperCase() + l.slice(1);
 }

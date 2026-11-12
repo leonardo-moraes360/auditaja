@@ -11,7 +11,6 @@ import { AvisosAtipicos, tiposAtipicos } from "./atipico";
 import { AvisoSancao, SeloSancao } from "./sancao";
 import { ComoLigamosEmendas } from "./secao-emendas";
 
-
 /** "k" com uma casa: 31200 → "31,2k". */
 function milhar(v: number) {
   return `${(v / 1000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`;
@@ -250,7 +249,9 @@ export function SecaoGastos({
             sexo={parlamentar.sexo}
             ultimoMes={ceap.ultimoMes}
             hrefContestar={`/parlamentares/${parlamentar.id}/contestar?secao=gastos`}
-            hrefNotas={(a, tipo) => `/parlamentares/${parlamentar.id}/gastos.csv?ano=${a}&tipo=${encodeURIComponent(tipo)}`}
+            hrefNotas={(a, tipo) =>
+              `/parlamentares/${parlamentar.id}/gastos.csv?ano=${a}&tipo=${encodeURIComponent(tipo)}`
+            }
             hrefAno={(a) => href(`ano=${a}#gastos`)}
           />
 
@@ -352,6 +353,7 @@ export function SecaoGastos({
             fornecedores={ceap.fornecedores}
             sancoes={sancoes}
             periodo={mandato ? "no mandato" : `em ${ano}`}
+            notasEmCsv={senado}
             hrefNotas={(doc, de, ate) =>
               `/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}&doc=${encodeURIComponent(doc)}${
                 de ? `&de=${de}` : ""
@@ -883,6 +885,16 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       det: `Notas da cota do senador${coletadoEm("senado_ceaps")}`,
     },
     {
+      nome: "Portal da Transparência · Emendas (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
+      det: `Emendas e pagamentos por favorecido${coletadoEm("cgu_emendas")}`,
+    },
+    {
+      nome: "Portal da Transparência · CEIS e CNEP (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+      det: `Empresas sancionadas${coletadoEm("cgu_ceis")}`,
+    },
+    {
       nome: "TSE · Dados Abertos (lote)",
       href: "https://dadosabertos.tse.jus.br/",
       det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
@@ -1073,7 +1085,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
         </p>
       </section>
 
-      <ComoLigamosEmendas />
+      <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
 
       <section
         aria-labelledby="erro-titulo"

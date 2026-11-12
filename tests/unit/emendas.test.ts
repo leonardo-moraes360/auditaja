@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   ANO_INICIAL_EMENDAS,
+  anoInicialDoSenador,
+  indiceDeAutoresDasCasas,
   rotuloNotas,
+  rotuloNotasCsv,
   baseDaColeta,
   brlMi,
   dataLocalBr,
@@ -51,6 +54,40 @@ describe("EMD-04 e EMD-05: ligação do autor ao deputado", () => {
   });
   it("devolve null quando nenhum deputado casa", () => {
     expect(autorDoNome(indice, "ALVARO DIAS")).toBeNull();
+  });
+});
+
+describe("EMDSEN-01..04: ligação do autor nas duas Casas", () => {
+  const indice = indiceDeAutoresDasCasas(
+    [
+      { id: 1, nome: "Maria Exemplo" },
+      { id: 2, nome: "Fábio Duplo" },
+    ],
+    [
+      { id: 10, nome: "Otávio Modelo", mandato_inicio: "2023-02-01" },
+      { id: 11, nome: "Rita Antiga", mandato_inicio: "2019-02-01" },
+      // Suplente de senador que hoje é deputado: a emenda fica com o deputado.
+      { id: 12, nome: "FABIO DUPLO", mandato_inicio: "2019-02-01" },
+      { id: 13, nome: "Fernando Igual", mandato_inicio: "2019-02-01" },
+      { id: 14, nome: "Fernando Igual", mandato_inicio: "2023-02-01" },
+      { id: 15, nome: "Sem Posse", mandato_inicio: null },
+    ],
+  );
+  it("deputado começa em 2024 e senador no ano seguinte à posse", () => {
+    expect(indice.get("MARIA EXEMPLO")).toEqual({ id: 1, anoInicial: ANO_INICIAL_EMENDAS });
+    expect(indice.get("OTAVIO MODELO")).toEqual({ id: 10, anoInicial: 2024 });
+    expect(indice.get("RITA ANTIGA")).toEqual({ id: 11, anoInicial: 2020 });
+  });
+  it("nome das duas Casas fica com o deputado", () => {
+    expect(indice.get("FABIO DUPLO")).toEqual({ id: 2, anoInicial: ANO_INICIAL_EMENDAS });
+  });
+  it("homônimo entre senadores fica de fora", () => {
+    expect(indice.get("FERNANDO IGUAL")).toBeNull();
+  });
+  it("sem data de posse vale o corte dos deputados", () => {
+    expect(indice.get("SEM POSSE")).toEqual({ id: 15, anoInicial: ANO_INICIAL_EMENDAS });
+    expect(anoInicialDoSenador(new Date(2019, 1, 1))).toBe(2020);
+    expect(anoInicialDoSenador("lixo")).toBe(ANO_INICIAL_EMENDAS);
   });
 });
 
@@ -189,5 +226,12 @@ describe("C22: rótulo do link de notas", () => {
   it("singular e plural", () => {
     expect(rotuloNotas(1)).toBe("Ver a nota");
     expect(rotuloNotas(4)).toBe("Ver as 4 notas");
+  });
+});
+
+describe("SANSEN-03: link das notas do senador baixa o CSV", () => {
+  it("diz que é planilha", () => {
+    expect(rotuloNotasCsv(1)).toBe("Baixar a nota (CSV)");
+    expect(rotuloNotasCsv(4)).toBe("Baixar as 4 notas (CSV)");
   });
 });

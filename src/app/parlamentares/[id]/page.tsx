@@ -5,6 +5,7 @@ import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { emendasDoParlamentar, sancoesDosFornecedores } from "@/data/emendas";
+import { anoInicialDoSenador } from "@/lib/emendas";
 import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
 import { SecaoEmendas } from "@/components/perfil/secao-emendas";
 import { FotoParlamentar } from "@/components/perfil/foto";
@@ -73,16 +74,15 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const completo = sp.lista === "completa";
   const perfil = await perfilParlamentar(id, periodo);
   if (!perfil) notFound();
-  // Emendas e sanções (CGU) cobrem só deputados por enquanto: o perfil do senador não as mostra.
-  const deSenador = perfil.parlamentar.casa === "senado";
-  const emendas = deSenador ? null : await emendasDoParlamentar(id, sp.emendas);
-  const sancoes = deSenador
-    ? []
-    : await sancoesDosFornecedores(
-        id,
-        perfil.ceap.fornecedores.map((f) => f.fornecedor_doc),
-        perfil.mandato ? perfil.anosDisponiveis : [perfil.ano],
-      );
+  // Emendas e sanções (CGU) valem para as duas Casas; a coleta liga cada emenda a um único perfil.
+  const [emendas, sancoes] = await Promise.all([
+    emendasDoParlamentar(id, sp.emendas),
+    sancoesDosFornecedores(
+      id,
+      perfil.ceap.fornecedores.map((f) => f.fornecedor_doc),
+      perfil.mandato ? perfil.anosDisponiveis : [perfil.ano],
+    ),
+  ]);
 
   const { parlamentar: p, ceap, votacoes } = perfil;
   const anosBens = [...new Set(perfil.bens.map((b) => b.ano_eleicao))].sort();
@@ -321,7 +321,19 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
       <div className="flex flex-col gap-4 px-4 pt-4 pb-6 sm:gap-5 sm:px-0 sm:pt-0 sm:pb-0 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[999_1_560px]">
           <SecaoGastos perfil={perfil} completo={completo} sancoes={sancoes} />
-          {emendas && <SecaoEmendas dados={emendas} parlamentarId={p.id} />}
+          <SecaoEmendas
+            dados={emendas}
+            parlamentarId={p.id}
+            senado={
+              senado
+                ? {
+                    anoInicial: anoInicialDoSenador(p.mandato_inicio),
+                    mandato: mandatoSen ? mandatoSen.anos : null,
+                    sexo: p.sexo,
+                  }
+                : undefined
+            }
+          />
           <SecaoVotacoes perfil={perfil} filtro={filtro} completo={completo} />
           <SecaoBens perfil={perfil} />
         </div>

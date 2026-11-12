@@ -89,7 +89,17 @@ export function acimaDosColegas(linhas: TotalTipo[], parlamentarId: number): Ale
     const mediaMensal = eu.total / eu.meses;
     const excessoAno = eu.total - limiteMensal * eu.meses;
     if (mediaMensal > limiteMensal && excessoAno > PISO_REAIS) {
-      alertas.push({ tipo, total: eu.total, notas: eu.notas ?? 0, meses: eu.meses, mediaMensal, colegas: lista.length, ...q, limiteMensal, excessoAno });
+      alertas.push({
+        tipo,
+        total: eu.total,
+        notas: eu.notas ?? 0,
+        meses: eu.meses,
+        mediaMensal,
+        colegas: lista.length,
+        ...q,
+        limiteMensal,
+        excessoAno,
+      });
     }
   }
   return alertas.sort((a, b) => b.excessoAno - a.excessoAno);
@@ -121,7 +131,8 @@ export type AlertaSalto = {
  */
 export function saltoAnual(atual: TotalTipo[], anterior: TotalTipo[], parlamentarId: number): AlertaSalto[] {
   const antes = new Map<string, TotalTipo>();
-  for (const l of anterior) if (l.total > 0 && l.meses >= MESES_MINIMOS_SALTO) antes.set(`${l.parlamentarId}|${l.tipo}`, l);
+  for (const l of anterior)
+    if (l.total > 0 && l.meses >= MESES_MINIMOS_SALTO) antes.set(`${l.parlamentarId}|${l.tipo}`, l);
   const pares = new Map<string, { id: number; total: number; totalAnterior: number; notas: number }[]>();
   for (const l of atual) {
     if (!(l.total > 0) || l.meses < MESES_MINIMOS_SALTO) continue;

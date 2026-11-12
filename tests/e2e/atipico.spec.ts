@@ -30,9 +30,13 @@ test("ATPUI-01: dois avisos no bloco de gastos, com números, notas e metodologi
   const avisos = gastos.locator("[data-atipico]");
   await expect(avisos).toHaveCount(2);
   await expect(
-    gastos.getByRole("heading", { name: /Manutenção de escritório.*13 vezes (maior que no ano anterior|mais que em 2024)/ }),
+    gastos.getByRole("heading", {
+      name: /Manutenção de escritório.*13 vezes (maior que no ano anterior|mais que em 2024)/,
+    }),
   ).toBeVisible();
-  await expect(gastos.getByRole("heading", { name: /Hospedagem.*muito acima do comum entre os deputados/ })).toBeVisible();
+  await expect(
+    gastos.getByRole("heading", { name: /Hospedagem.*muito acima do comum entre os deputados/ }),
+  ).toBeVisible();
   await expect(avisos.first()).toContainText("Entre os 26 deputados");
   const notas = avisos.first().getByRole("link", { name: /^Baixar as 10 notas/ });
   await expect(notas).toHaveAttribute("href", /gastos\.csv\?ano=2025&tipo=MANUTEN/);
@@ -65,9 +69,9 @@ test("ATPUI-04: mandato todo lista os anos com aviso", async ({ page }) => {
   await expect(resumo.getByRole("link", { name: /2025 \(2 avisos\)/ })).toHaveAttribute("href", /ano=2025#gastos/);
 });
 
-test("ATPUI-05: metodologia v1.9 descreve os dois avisos", async ({ page }) => {
+test("ATPUI-05: metodologia descreve os dois avisos", async ({ page }) => {
   await page.goto("/metodologia#atipico");
-  await expect(page.getByText("Versão 1.9.")).toBeVisible();
+  await expect(page.getByText("Versão 1.10.")).toBeVisible();
   const s = page.locator("section#atipico");
   await expect(s.getByRole("heading", { name: "Acima dos colegas" })).toBeVisible();
   await expect(s.getByRole("heading", { name: "Salto em relação ao ano anterior" })).toBeVisible();
