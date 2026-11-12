@@ -24,7 +24,8 @@ const ceapBase = {
 describe("CEAP", () => {
   it("aplica R2/R3 e ignora lideranças", () => {
     const r = linhaCeap(ceapBase, new Set([100]), 1)!;
-    expect(r.fornecedor_doc).toBe("***.456.789-**");
+    expect(r.fornecedor_doc).toBeNull();
+    expect(r.fornecedor_classe).toBe("terceiro_pf");
     expect(r.fornecedor_nome).toBe("Prestador pessoa física");
     expect(r.valor_liquido).toBe(150);
     expect(r.data_emissao).toBe("2026-03-10");

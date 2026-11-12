@@ -48,3 +48,15 @@ describe("mascararCpfsNoTexto", () => {
     );
   });
 });
+
+describe("mascararCpfsNoTexto: máscara parcial vinda da fonte", () => {
+  it("apaga os dígitos da máscara da Receita/Câmara e da do Senado", () => {
+    expect(mascararCpfsNoTexto("MARIA ***.456.789-** ME")).toBe("MARIA ***.***.***-** ME");
+    expect(mascararCpfsNoTexto("JOAO 123.***.***-01")).toBe("JOAO ***.***.***-**");
+    expect(mascararCpfsNoTexto("JOAO 123***.***01")).toBe("JOAO ***.***.***-**");
+  });
+  it("não mexe em máscara total nem em CNPJ", () => {
+    expect(mascararCpfsNoTexto("FULANO ***.***.***-**")).toBe("FULANO ***.***.***-**");
+    expect(mascararCpfsNoTexto("EMPRESA 12.345.678/0001-90")).toBe("EMPRESA 12.345.678/0001-90");
+  });
+});

@@ -1,17 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { documentoPublicavel, mascararCpf, nomeFornecedorPublicavel } from "@/lib/privacy";
+import { documentoPublicavel, nomeFornecedorPublicavel } from "@/lib/privacy";
 
 describe("R3: mascaramento", () => {
-  it("mascara CPF no padrão da Receita, sem expor os extremos", () => {
-    expect(mascararCpf("123.456.789-01")).toBe("***.456.789-**");
-    expect(mascararCpf("12345678901")).toBe("***.456.789-**");
-  });
-
-  it("classifica CPF como terceiro_pf e nunca devolve os 11 dígitos", () => {
-    const r = documentoPublicavel("123.456.789-01");
-    expect(r.classe).toBe("terceiro_pf");
-    expect(r.doc).toBe("***.456.789-**");
-    expect(r.doc).not.toContain("123");
+  it("classifica CPF como terceiro_pf e não devolve nenhum dígito", () => {
+    // Câmara mostra os 6 do meio, Senado os 3 primeiros e os 2 últimos: qualquer máscara remontaria o CPF.
+    for (const cpf of ["123.456.789-01", "12345678901"]) {
+      expect(documentoPublicavel(cpf)).toEqual({ doc: null, classe: "terceiro_pf" });
+    }
   });
 
   it("formata CNPJ mesmo com pontuação irregular da fonte", () => {

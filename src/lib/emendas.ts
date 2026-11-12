@@ -36,16 +36,14 @@ export function autorDoNome(indice: Map<string, number | null>, nome: string): n
   return indice.get(normalizarNome(nome)) ?? null;
 }
 
-const CPF_MASCARADO = /^\*{3}\.\d{3}\.\d{3}-\*{2}$/;
-
 /**
- * R3 e AD-002: favorecido PF vira rótulo genérico e só guarda o CPF se já vier mascarado.
+ * R3 e AD-002: favorecido PF vira rótulo genérico e não guarda o CPF, nem a máscara do Portal
+ * (6 dígitos do meio): combinada com a do Senado (3 primeiros e 2 últimos), remontaria o número.
  * CNPJ de 14 dígitos é formatado; qualquer outro documento é descartado.
  */
 export function favorecidoPublicavel(tipo: string, codigo: string, nome: string): { nome: string; doc: string | null } {
   if (tipo === "Pessoa Fisica") {
-    const c = codigo.trim();
-    return { nome: "Beneficiário pessoa física", doc: CPF_MASCARADO.test(c) ? c : null };
+    return { nome: "Beneficiário pessoa física", doc: null };
   }
   const d = soDigitos(codigo);
   // MEI: a razão social traz o CPF do dono ("FULANO 12345678901"); sai mascarado (R3).

@@ -195,12 +195,12 @@ describe("coletarEmendas", () => {
     });
   });
 
-  it("EMD-07, EMD-08, EMD-09: grava favorecidos das emendas gravadas, com PF mascarada e CNPJ formatado", async (ctx) => {
+  it("EMD-07, EMD-08, EMD-09: grava favorecidos das emendas gravadas, com PF sem CPF e CNPJ formatado", async (ctx) => {
     if (!disponivel) ctx.skip();
     const rows = await db.selectFrom("emenda_favorecido").selectAll().orderBy("valor").execute();
     expect(rows.map((r) => [r.codigo_emenda, r.favorecido_nome, r.favorecido_doc, r.valor])).toEqual([
       ["202500010001", "Beneficiário pessoa física", null, "50.00"],
-      ["202500010001", "Beneficiário pessoa física", "***.113.861-**", "300.00"],
+      ["202500010001", "Beneficiário pessoa física", null, "300.00"],
       ["202500010001", "EMPRESA ÚNICA LTDA", "11.854.334/0001-49", "1200.00"],
       ["202400010002", "MUNICÍPIO DE SÃO PAULO", null, "2000.50"],
     ]);

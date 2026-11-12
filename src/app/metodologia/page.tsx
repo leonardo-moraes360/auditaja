@@ -22,8 +22,10 @@ export default function Metodologia() {
           <li>Cada registro guarda a fonte, o endereço, a data de coleta e o hash do arquivo original.</li>
           <li>Indicadores são pontos de partida para verificação. Não qualificamos pessoas como culpadas de nada.</li>
           <li>
-            CPF de terceiros (fornecedores pessoa física) aparece mascarado no padrão da Receita Federal, e o nome é
-            substituído por &quot;Prestador pessoa física&quot;. Nomes de passageiros da cota não são coletados.
+            CPF de terceiros (fornecedores e favorecidos pessoa física) não é exibido nem gravado, nem mascarado: cada
+            fonte mascara dígitos diferentes e as máscaras juntas remontariam o número. O nome é substituído por
+            &quot;Prestador pessoa física&quot;, e os prestadores pessoa física aparecem somados numa linha. Nomes de
+            passageiros da cota não são coletados.
           </li>
         </ul>
       </section>
@@ -145,8 +147,8 @@ export default function Metodologia() {
         <p>
           Somamos o valor reembolsado de cada nota no ano. O Senado não publica glosa nem, em formato aberto, o teto da
           cota por estado; por isso o perfil do senador não compara o gasto com um teto e mostra a média mensal (total
-          do ano dividido pelos meses com notas). Quando o Senado já publica o CPF do fornecedor mascarado, não gravamos
-          documento nenhum: a máscara do Senado e a da Câmara mostram dígitos diferentes e, juntas, revelariam o número.
+          do ano dividido pelos meses com notas). CPF de fornecedor pessoa física não é gravado, nem na máscara do
+          Senado: a máscara do Senado e a da Câmara mostram dígitos diferentes e, juntas, revelariam o número.
         </p>
         <h3 className="font-semibold">Presença</h3>
         <p>
@@ -197,7 +199,8 @@ export default function Metodologia() {
           depois. Transferências especiais são as emendas que o arquivo chama de &quot;Transferências Especiais&quot;
           (as &quot;emendas Pix&quot;). Emendas marcadas como &quot;Múltiplo&quot; não têm um local único no Orçamento e
           aparecem numa frase à parte, não na lista de locais. Favorecido pessoa física aparece como &quot;Beneficiário
-          pessoa física&quot;, com o CPF mascarado como o Portal publica.
+          pessoa física&quot;, sem o CPF: a máscara do Portal mostra os mesmos dígitos que a da Câmara e, junto com a do
+          Senado, remontaria o número.
         </p>
       </section>
 
