@@ -1,20 +1,16 @@
 import Link from "next/link";
 import type { SancaoFornecedor } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
-import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
+import { brl, brlCompacto, dataBr, dataHoraBr, fraseCase, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
 import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
 import { classificarVotoSenado, codigoSenado, rotuloVotoSenado } from "@/lib/senado";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
+import { AvisosAtipicos, tiposAtipicos } from "./atipico";
 import { AvisoSancao, SeloSancao } from "./sancao";
 import { ComoLigamosEmendas } from "./secao-emendas";
 
-/** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
-function fraseCase(s: string) {
-  const l = s.toLowerCase().replace(/\.$/, "");
-  return l.charAt(0).toUpperCase() + l.slice(1);
-}
 
 /** "k" com uma casa: 31200 → "31,2k". */
 function milhar(v: number) {
@@ -115,9 +111,12 @@ export function SecaoGastos({
   const max = Math.max(1, linhaTeto ?? 0, ...barras.map((b) => b.total)) * 1.08;
 
   // Por tipo: 6 maiores e "Outros" no desktop; 4 maiores no celular.
-  const tipos = ceap.porTipo.slice(0, 6).map((t) => ({ nome: fraseCase(t.tipo), total: t.total }));
+  const atipicos = mandato ? new Set<string>() : tiposAtipicos(perfil.atipico[0]);
+  const tipos = ceap.porTipo
+    .slice(0, 6)
+    .map((t) => ({ nome: fraseCase(t.tipo), total: t.total, atipico: atipicos.has(t.tipo) }));
   const resto = ceap.porTipo.slice(6).reduce((s, t) => s + t.total, 0);
-  if (resto > 0) tipos.push({ nome: "Outros", total: resto });
+  if (resto > 0) tipos.push({ nome: "Outros", total: resto, atipico: false });
   const maiorTipo = tipos[0]?.total ?? 1;
   const href = (q: string) => `/parlamentares/${parlamentar.id}?${q}`;
 
@@ -244,6 +243,17 @@ export function SecaoGastos({
             </table>
           </figure>
 
+          <AvisosAtipicos
+            resultados={perfil.atipico}
+            mandato={mandato}
+            casa={senado ? "senado" : "camara"}
+            sexo={parlamentar.sexo}
+            ultimoMes={ceap.ultimoMes}
+            hrefContestar={`/parlamentares/${parlamentar.id}/contestar?secao=gastos`}
+            hrefNotas={(a, tipo) => `/parlamentares/${parlamentar.id}/gastos.csv?ano=${a}&tipo=${encodeURIComponent(tipo)}`}
+            hrefAno={(a) => href(`ano=${a}#gastos`)}
+          />
+
           <div className="flex flex-wrap gap-6">
             <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-2.5 sm:gap-3">
               <h3 className={`${H3} hidden sm:block`}>Por tipo de despesa</h3>
@@ -251,7 +261,14 @@ export function SecaoGastos({
                 {tipos.map((t, i) => (
                   <li key={t.nome} className={`flex flex-col gap-1 ${i >= 4 && !completo ? "max-sm:hidden" : ""}`}>
                     <div className="flex justify-between gap-2 text-[13px]">
-                      <span className="min-w-0 break-words">{t.nome}</span>
+                      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 break-words">
+                        {t.nome}
+                        {t.atipico && (
+                          <span className="rounded-full border border-atipico-borda bg-atipico-fundo px-[7px] py-0.5 text-[11px] font-bold whitespace-nowrap text-atipico">
+                            Atípico
+                          </span>
+                        )}
+                      </span>
                       <span className="shrink-0 whitespace-nowrap text-muted-foreground">
                         <Dois
                           curto={`${pct(t.total, ceap.totalAno)}%`}

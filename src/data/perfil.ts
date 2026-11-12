@@ -1,6 +1,7 @@
 import "server-only";
 import { sql } from "kysely";
 import { getDb } from "@/db/client";
+import { padraoAtipico } from "@/data/atipico";
 import { tetoDaUf } from "@/data/teto-ceap";
 import {
   alinhamento,
@@ -296,6 +297,8 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
   ]);
 
   const totalAno = porMes.reduce((a, m) => a + Number(m.total), 0);
+  // Padrão atípico (metodologia v1.9): um resultado por ano exibido, do mais recente ao mais antigo.
+  const atipico = await padraoAtipico(p.casa, anosCeap, id);
   const senado = p.casa === "senado";
   // O Senado não publica teto da CEAPS por UF em formato aberto (SCEAPS-06).
   const teto = mandato || senado ? null : tetoDaUf(p.sigla_uf, ano);
@@ -485,6 +488,7 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
         return meses ? totalAno / meses : null;
       })(),
     },
+    atipico,
     votacoes: {
       ano: anoVotos,
       totalPlenario: plenario.length,
