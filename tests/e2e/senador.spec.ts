@@ -41,16 +41,16 @@ test("indicadores do senador (SCEAPS-05, SPRES-03/04, SALI-02)", async ({ page, 
   if (isMobile) {
     await expect(ind.getByText("Cota em 2026")).toBeVisible();
     await expect(ind.getByText(/^R\$\s5 mil\/mês$/)).toBeVisible();
-    await expect(ind.getByText("3 de 4", { exact: true })).toBeVisible();
-    await expect(ind.getByText("Seguiu a liderança")).toBeVisible();
-    await expect(ind.getByText("1 divergência", { exact: true })).toBeVisible();
+    await expect(ind.getByText("3 de 4 votações", { exact: true })).toBeVisible();
+    await expect(ind.getByText("Como a liderança orientou", { exact: true })).toBeVisible();
+    await expect(ind.getByText("diferente 1 vez", { exact: true })).toBeVisible();
   } else {
     await expect(ind.getByText("Cota do senador (CEAPS) em 2026")).toBeVisible();
     await expect(ind.getByText(/^R\$\s15\.000$/)).toBeVisible();
     await expect(ind.getByText(/^Média de R\$\s5\.000 por mês, jan a abr$/)).toBeVisible();
-    await expect(ind.getByText("3 de 4 em 2026 · média do Senado 88%")).toBeVisible();
+    await expect(ind.getByText("Votou em 3 de 4 votações de 2026 · média do Senado 88%")).toBeVisible();
     await expect(ind.getByText("Votou como a liderança orientou")).toBeVisible();
-    await expect(ind.getByText("Divergiu em 1 de 2 votações abertas")).toBeVisible();
+    await expect(ind.getByText("Votou diferente em 1 de 2 votações abertas")).toBeVisible();
   }
   await expect(ind.getByText("75%", { exact: true }).filter({ visible: true })).toBeVisible();
   await expect(ind.getByText("50%", { exact: true }).filter({ visible: true })).toBeVisible();
@@ -64,7 +64,7 @@ test("SCEAPS-06: gastos sem teto e com o aviso do Senado", async ({ page, isMobi
   await expect(
     gastos
       .getByRole("heading", { level: 2 })
-      .getByText(isMobile ? "Gastos da cota (CEAPS) · 2026" : "Gastos da cota do senador (CEAPS)", { exact: true }),
+      .getByText(isMobile ? "Verba do gabinete · 2026" : /^Gastos com a verba do gabinete \(cota CEAPS\)$/),
   ).toBeVisible();
   await expect(gastos.locator("[data-teto]")).toHaveCount(0);
   await expect(
@@ -85,28 +85,28 @@ test("SVOT-06/07/08: voto secreto, ausência com motivo e filtro de divergência
   await expect(
     vot.getByText(isMobile ? "Votou (secreto)" : "Votou (voto secreto)", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
-  await expect(vot.getByText("Orientação: não se aplica")).toBeVisible();
+  await expect(vot.getByText("Voto secreto: sem orientação")).toBeVisible();
   await expect(vot.getByText("Ausente: missão oficial")).toBeVisible();
   await expect(vot.getByText("Em licença ou afastado")).toBeVisible();
   await expect(
     vot
-      .getByText(isMobile ? "Liderança: Sim" : "Liderança do PFX: Sim", { exact: true })
+      .getByText(isMobile ? "A liderança pediu: Sim" : "A liderança do PFX pediu: Sim", { exact: true })
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
   if (!isMobile) {
     // Partido do dia do voto (PFW), não o atual (PFX).
     await expect(
-      vot.locator("li", { hasText: "PL 2468/2026" }).getByText("Liderança do PFW: Sim", { exact: true }),
+      vot.locator("li", { hasText: "PL 2468/2026" }).getByText("A liderança do PFW pediu: Sim", { exact: true }),
     ).toBeVisible();
     await expect(
       vot.getByRole("heading", { level: 2 }).getByText("Votações nominais no Plenário", { exact: true }),
     ).toBeVisible();
-    await vot.getByRole("link", { name: "Divergiu da liderança" }).click();
+    await vot.getByRole("link", { name: "Votou diferente" }).click();
     await expect(page).toHaveURL(/votos=divergiu/);
     await expect(page.locator("section#votacoes li")).toHaveCount(1);
     await expect(page.locator("section#votacoes li")).toContainText("PEC 8/2026");
-    await page.locator("section#votacoes").getByRole("link", { name: "Ausências" }).click();
+    await page.locator("section#votacoes").getByRole("link", { name: "Faltou" }).click();
     await expect(page.locator("section#votacoes li")).toHaveCount(1);
     await expect(page.locator("section#votacoes li")).toContainText("Ausente: missão oficial");
   }
@@ -154,7 +154,7 @@ test("textos de correção do senador", async ({ page, isMobile }) => {
   ).toBeVisible();
 });
 
-test("SUI-05: fontes do Senado, sem as da Câmara", async ({ page, isMobile }) => {
+test("SUI-05: fontes do Senado, sem as da Câmara", async ({ page }) => {
   await page.goto(`/parlamentares/${SENADOR}`);
   const f = page.locator("section#fontes");
   await expect(f.getByRole("link", { name: "Senado Federal · Dados Abertos" })).toBeVisible();
@@ -165,7 +165,7 @@ test("SUI-05: fontes do Senado, sem as da Câmara", async ({ page, isMobile }) =
     await expect(
       s.getByText(/^Fonte: Senado.+ · coletado em \d{2}\/\d{2}\/\d{4}/).filter({ visible: true }),
     ).toBeVisible();
-    await expect(s.getByRole("link", { name: isMobile ? "ver original" : "Ver na fonte" })).toBeVisible();
+    await expect(s.getByRole("link", { name: "Ver na fonte" })).toBeVisible();
   }
 });
 
@@ -292,7 +292,7 @@ test("EMDSEN-05/06: emendas do senador com todos os anos do mandato e a regra de
   for (const a of ["2026", "2025", "2024", "Mandato todo"])
     await expect(periodo.getByRole("link", { name: a })).toBeVisible();
   await expect(s.getByText(/^3 emendas, orçamentos de 2024 a 2026 \(mandato 2023\u2060?–\u2060?2031\)$/)).toBeVisible();
-  await expect(s.getByText("Município de Uberlândia")).toBeVisible();
+  await expect(s.getByText("Município de Uberlândia").filter({ visible: true })).toBeVisible();
   await expect(
     page.getByText(/Se o nome também é de um deputado federal atual, a emenda fica no perfil do deputado\./),
   ).toHaveCount(1);
@@ -310,7 +310,7 @@ test("EMDSEN-05/06: emendas do senador com todos os anos do mandato e a regra de
 test("EMDSEN-07: ano escolhido filtra as emendas do senador", async ({ page }) => {
   await page.goto(`/parlamentares/${SENADOR}?emendas=2025#emendas`);
   const s = page.locator("section#emendas");
-  await expect(s.getByText("Empenhado em 2025")).toBeVisible();
+  await expect(s.getByText("Reservado (empenhado) em 2025")).toBeVisible();
   await expect(s.getByText("1 emenda do orçamento de 2025")).toBeVisible();
 });
 

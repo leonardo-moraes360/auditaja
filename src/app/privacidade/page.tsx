@@ -136,9 +136,9 @@ export default function Privacidade() {
         </ul>
         <p>
           Para corrigir um dado, abra o perfil do deputado em <Link href="/parlamentares">Parlamentares</Link> e use
-          &quot;Contestar um dado&quot; ou o link &quot;Contestar&quot; de cada seção. Para os demais pedidos, escreva
-          ao encarregado ({email}). Respondemos nos prazos do art. 19 da LGPD. Como os dados de deputados vêm de fontes
-          oficiais, um erro na origem também precisa ser corrigido pelo órgão que o publicou.
+          &quot;Pedir correção&quot; no topo do perfil ou em cada seção. Para os demais pedidos, escreva ao encarregado
+          ({email}). Respondemos nos prazos do art. 19 da LGPD. Como os dados de deputados vêm de fontes oficiais, um
+          erro na origem também precisa ser corrigido pelo órgão que o publicou.
         </p>
         <p>
           Você também pode apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD), em{" "}

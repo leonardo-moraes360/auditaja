@@ -31,16 +31,16 @@ test("EMDUI-03, EMDUI-05..08: mandato todo por padrão, com indicadores e série
   await expect(periodo.getByRole("link")).toHaveText(["2026", "2025", "Mandato todo"]);
   await expect(periodo.getByRole("link", { name: "Mandato todo" })).toHaveAttribute("aria-current", "page");
   const ind = secao.locator("[data-indicador]");
-  await expect(ind.nth(0)).toContainText("Empenhado no mandato");
+  await expect(ind.nth(0)).toContainText("Reservado (empenhado) no mandato");
   await expect(ind.nth(0)).toContainText(/R\$\s11,1 mi/);
   await expect(ind.nth(0)).toContainText("9 emendas, orçamentos de 2024 a 2026");
-  await expect(ind.nth(1)).toContainText("Pago até agora");
+  await expect(ind.nth(1)).toContainText("Já pago");
   await expect(ind.nth(1)).toContainText(/R\$\s7,0 mi/);
-  await expect(ind.nth(1)).toContainText("63% do empenhado, incluindo restos a pagar");
+  await expect(ind.nth(1)).toContainText("63% do reservado, inclui pagamentos de anos anteriores");
   await expect(ind.nth(1).getByRole("img")).toHaveAttribute("aria-label", "63% do valor empenhado já foi pago");
-  await expect(ind.nth(2)).toContainText("Transferências especiais (“emendas Pix”)");
+  await expect(ind.nth(2)).toContainText("Emendas Pix (transferências especiais)");
   await expect(ind.nth(2)).toContainText(/R\$\s2,0 mi/);
-  await expect(ind.nth(2)).toContainText("18% do empenhado");
+  await expect(ind.nth(2)).toContainText("18% do reservado");
   await expect(secao.getByRole("img", { name: /^Gráfico de barras/ })).toHaveAttribute(
     "aria-label",
     "Gráfico de barras: valor empenhado e pago por ano do orçamento, de 2024 a 2026",
@@ -52,13 +52,13 @@ test("EMDUI-03, EMDUI-05..08: mandato todo por padrão, com indicadores e série
   ]);
 });
 
-test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }) => {
+test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page, isMobile }) => {
   await page.goto(`/parlamentares/${ID}`);
   const secao = page.locator("section#emendas");
   const areas = secao.locator("h3:text-is('Por área do governo') + ul li");
   await expect(areas).toHaveCount(5);
   await expect(areas.first()).toContainText(/Saúde\s*R\$\s6,0 mi · 54%/);
-  const locais = secao.locator("h3:text-is('Onde o recurso foi aplicado') + ul li");
+  const locais = secao.locator("h3:text-is('Onde o dinheiro foi aplicado') ~ ul li");
   await expect(locais.locator("span.min-w-0")).toHaveText([
     "Campinas (SP)",
     "São Paulo (UF)",
@@ -66,7 +66,16 @@ test("EMDUI-09..11: áreas, locais sem Múltiplo e favorecidos", async ({ page }
     "Ribeirão Preto (SP)",
     "Jundiaí (SP)",
   ]);
-  await expect(secao).toContainText("R$ 1,0 mi (9% do empenhado) estão marcados como “Múltiplo” no Orçamento");
+  await expect(secao).toContainText("Sem local definido no Orçamento: R$ 1,0 mi (9%)");
+  if (isMobile) {
+    // Celular: cartões com o valor à vista no lugar da tabela.
+    const cartoes = secao.locator("[data-favorecidos-cartoes] li");
+    await expect(cartoes).toHaveCount(5);
+    await expect(cartoes.first()).toContainText("Município de São Paulo");
+    await expect(cartoes.first()).toContainText("São Paulo (SP) · Município");
+    await expect(cartoes.first()).toContainText(/R\$\s2,0 mi/);
+    return;
+  }
   const linhas = secao.locator("h3:text-is('Quem recebeu os pagamentos') ~ div table tbody tr");
   await expect(linhas).toHaveCount(5);
   await expect(linhas.first()).toContainText("Município de São Paulo");
@@ -92,10 +101,10 @@ test("EMDUI-04: escolher um ano soma só aquele orçamento", async ({ page }) =>
   await expect(page).toHaveURL(new RegExp(`/parlamentares/${ID}\\?emendas=2025#emendas$`));
   await expect(secao.getByRole("link", { name: "2025", exact: true })).toHaveAttribute("aria-current", "page");
   const ind = secao.locator("[data-indicador]");
-  await expect(ind.nth(0)).toContainText("Empenhado em 2025");
+  await expect(ind.nth(0)).toContainText("Reservado (empenhado) em 2025");
   await expect(ind.nth(0)).toContainText(/R\$\s4,0 mi/);
   await expect(ind.nth(0)).toContainText("3 emendas do orçamento de 2025");
-  await expect(ind.nth(1)).toContainText("75% do empenhado");
+  await expect(ind.nth(1)).toContainText("75% do reservado");
   await expect(secao.getByRole("img", { name: /^Gráfico de barras/ })).toHaveCount(0);
 });
 
@@ -117,7 +126,7 @@ test("EMDUI-12: rodapé com fonte, data da coleta e links", async ({ page, isMob
     "href",
     `/parlamentares/${ID}/emendas.csv?emendas=mandato`,
   );
-  await expect(secao.getByRole("link", { name: "Contestar" })).toHaveAttribute(
+  await expect(secao.getByRole("link", { name: "Pedir correção" })).toHaveAttribute(
     "href",
     `/parlamentares/${ID}/contestar?secao=emendas`,
   );
@@ -139,15 +148,19 @@ test("EMDUI-14: período inválido cai no mandato todo", async ({ page }) => {
     await page.goto(`/parlamentares/${ID}?emendas=${q}`);
     const secao = page.locator("section#emendas");
     await expect(secao.getByRole("link", { name: "Mandato todo" })).toHaveAttribute("aria-current", "page");
-    await expect(secao.locator("[data-indicador]").first()).toContainText("Empenhado no mandato");
+    await expect(secao.locator("[data-indicador]").first()).toContainText("Reservado (empenhado) no mandato");
   }
 });
 
-test("EDGE-05: a 320 px a página não rola na horizontal; a tabela rola na própria caixa", async ({ page }) => {
+test("EDGE-05: a 320 px a página não rola na horizontal; favorecidos viram cartões e a tabela rola na própria caixa", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto(`/parlamentares/${ID}`);
   await page.waitForLoadState("networkidle");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await expect(page.locator("section#emendas [data-favorecidos-cartoes]")).toBeVisible();
+  await page.setViewportSize({ width: 700, height: 800 });
   const caixa = page.getByRole("region", { name: "Quem recebeu os pagamentos" });
   await expect(caixa).toHaveClass(/overflow-x-auto/);
   await expect(caixa.locator("table")).toHaveCount(1);
@@ -257,11 +270,11 @@ test("MET-04, MET-05: fontes e regra de ligação na lateral do perfil", async (
 test("EDGE-04: empenhado zero mostra — no lugar dos percentuais", async ({ page }) => {
   await page.goto("/parlamentares/900000003");
   const ind = page.locator("section#emendas [data-indicador]");
-  await expect(ind.nth(1)).toContainText("Pago até agora");
+  await expect(ind.nth(1)).toContainText("Já pago");
   await expect(ind.nth(1).locator("p").last()).toHaveText("—");
   await expect(ind.nth(1).getByRole("img")).toHaveCount(0);
   await expect(ind.nth(2).locator("p").last()).toHaveText(
-    "— do empenhado · vão direto ao caixa de estados e municípios, sem objeto definido",
+    "— do reservado · caem direto no caixa da prefeitura ou do estado, sem dizer em quê serão usadas",
   );
 });
 

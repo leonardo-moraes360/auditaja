@@ -40,8 +40,13 @@ function periodoParcial(ultimoMes: number) {
   return ultimoMes >= 1 && ultimoMes < 12 ? ` (jan–${MESES[ultimoMes - 1].toLowerCase()})` : "";
 }
 
+/** Mesma precisão no texto e no quadro do limite ("13 vezes" e "13 × 2025", nunca "12,8" ao lado de "13"). */
+function numeroVezes(v: number) {
+  return v.toLocaleString("pt-BR", { maximumFractionDigits: v < 10 ? 1 : 0 });
+}
+
 function vezes(v: number) {
-  return `${v.toLocaleString("pt-BR", { maximumFractionDigits: v < 10 ? 1 : 0 })} vezes`;
+  return `${numeroVezes(v)} vezes`;
 }
 
 /** Variação em % a partir de uma razão: 0,9 → "10% a menos"; 1,25 → "25% a mais". */
@@ -137,7 +142,7 @@ function Moldura({
             <Dois curto="Como calculamos" longo={`Como calculamos (metodologia v${METODOLOGIA_VERSAO})`} />
           </Link>
           <Link href={ctx.hrefContestar} className="hidden text-atipico sm:inline-flex sm:min-h-6 sm:items-center">
-            Contestar
+            Pedir correção
           </Link>
         </p>
       </div>
@@ -299,7 +304,7 @@ function AvisoSalto({ a, ctx }: { a: AlertaSalto; ctx: Ctx }) {
           { rotulo: `${ctx.ano}${periodoParcial(ctx.ultimoMes)}`, valor: brl(a.total), destaque: false },
           {
             rotulo: "Limite de salto",
-            valor: `${a.limiteRazao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} × ${ctx.ano - 1}`,
+            valor: `${numeroVezes(a.limiteRazao)} × ${ctx.ano - 1}`,
             destaque: true,
           },
         ].map((c) => (

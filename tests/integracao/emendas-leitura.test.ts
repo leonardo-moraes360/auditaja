@@ -257,6 +257,37 @@ describe("sancoesDosFornecedores", () => {
   });
 });
 
+describe("fornecedoresComSancaoNoPeriodo", () => {
+  it("SAN-05: acha fornecedor sancionado com nota no período, mesmo fora dos maiores", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { fornecedoresComSancaoNoPeriodo } = await import("@/data/emendas");
+    const r = await fornecedoresComSancaoNoPeriodo(SEED.deputada, [2026]);
+    // Só o posto tem nota dentro da sanção em 2026; a gráfica (sanção desde maio, nota de janeiro) fica fora.
+    expect(r.map((f) => [f.fornecedor_doc, f.documentos])).toEqual([["55.666.777/0001-88", 1]]);
+  });
+
+  it("ignora nota fora do período da sanção e ano sem nota", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { fornecedoresComSancaoNoPeriodo } = await import("@/data/emendas");
+    expect(await fornecedoresComSancaoNoPeriodo(SEED.deputada, [2025])).toEqual([]);
+    expect(await fornecedoresComSancaoNoPeriodo(SEED.deputada, [])).toEqual([]);
+  });
+});
+
+describe("resumoSancoesPorAno", () => {
+  it("conta empresas pagas e empresas com nota dentro da sanção, por ano", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { resumoSancoesPorAno } = await import("@/data/emendas");
+    const r = await resumoSancoesPorAno(SEED.deputada, [2025, 2026]);
+    const em2026 = r.find((x) => x.ano === 2026)!;
+    // Posto (nota dentro da sanção) conta; gráfica (sanção depois da nota) não.
+    expect(em2026.sancionadas).toBe(1);
+    expect(em2026.empresas).toBeGreaterThanOrEqual(2);
+    expect(r.find((x) => x.ano === 2025)?.sancionadas ?? 0).toBe(0);
+    expect(await resumoSancoesPorAno(SEED.deputada, [])).toEqual([]);
+  });
+});
+
 describe("EMDSEN-05, SANSEN-01: perfil do senador", () => {
   it("lê as emendas do senador como as do deputado", async (ctx) => {
     if (!disponivel) ctx.skip();

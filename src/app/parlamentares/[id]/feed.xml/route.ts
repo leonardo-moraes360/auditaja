@@ -6,7 +6,7 @@ import { rotuloVotoSenado } from "@/lib/senado";
 const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /**
- * "Acompanhar atualizações": feed Atom público por parlamentar, sem conta nem e-mail.
+ * "Receber atualizações": feed Atom público por parlamentar, sem conta nem e-mail.
  * Uma entrada por votação nominal do Plenário no ano (com o voto) e uma por mês com gasto da cota
  * (CEAP na Câmara, CEAPS no Senado).
  */
