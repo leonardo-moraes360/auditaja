@@ -172,7 +172,10 @@ test("SUI-05: fontes do Senado, sem as da Câmara", async ({ page, isMobile }) =
 test("SUI-10: acompanhar, contestar e CSV funcionam pelo id do senador", async ({ page, request }) => {
   const feed = await request.get(`/parlamentares/${SENADOR}/feed.xml`);
   expect(feed.ok()).toBe(true);
-  expect(await feed.text()).toContain("Otávio Modelo");
+  const xml = await feed.text();
+  expect(xml).toContain("Otávio Modelo");
+  expect(xml).toContain("dados abertos do Senado Federal");
+  expect(xml).not.toContain("Câmara");
   const csv = await request.get(`/parlamentares/${SENADOR}/gastos.csv?ano=2026`);
   expect(csv.ok()).toBe(true);
   expect(await csv.text()).toContain("Imobiliária Exemplo Ltda");
