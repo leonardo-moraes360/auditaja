@@ -167,7 +167,7 @@ export async function semear(db: Kysely<Database>) {
       valor_glosa: 0,
       valor_liquido: valor,
       valor_restituicao: 0,
-      url_documento: null,
+      url_documento: `https://www.camara.leg.br/cota-parlamentar/documentos/publ/seed-${mes}.pdf`,
       ide_documento: `seed-${mes}-${valor}`,
       coleta_id: cCeap,
     });

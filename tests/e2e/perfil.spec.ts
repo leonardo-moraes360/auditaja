@@ -251,6 +251,10 @@ test("Baixar CSV: notas da CEAP do ano, sem CPF de terceiro", async ({ page, isM
   const linhas = pf.split("\r\n").filter(Boolean);
   expect(linhas).toHaveLength(2);
   expect(linhas[1]).toContain("Prestador pessoa física;;");
+  // O recibo da Câmara mostra o CPF inteiro: linha de pessoa física sai sem link; empresa mantém.
+  expect(linhas[1]).not.toContain("camara.leg.br");
+  expect(corpo).toContain("Gráfica Exemplo Ltda;12.345.678/0001-90;");
+  expect(corpo).toMatch(/Gráfica Exemplo Ltda;[^\r\n]*;https:\/\/www\.camara\.leg\.br\//);
 });
 
 test("Acompanhar: página explica o feed Atom, que lista votos e meses de gasto", async ({ page, isMobile }) => {

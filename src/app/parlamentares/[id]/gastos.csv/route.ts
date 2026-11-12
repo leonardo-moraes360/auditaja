@@ -81,7 +81,8 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/parlamentare
       l.valor_documento,
       l.valor_glosa,
       l.valor_liquido,
-      l.url_documento,
+      // O recibo da Câmara mostra o CPF inteiro do prestador: sem link nas linhas de pessoa física.
+      l.fornecedor_classe === "terceiro_pf" ? null : l.url_documento,
     ]
       .map(celula)
       .join(";"),
