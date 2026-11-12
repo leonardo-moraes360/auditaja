@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { BotaoTema } from "./botao-tema";
 import { NavPrincipal, NavPrincipalEstatica } from "./nav-principal";
 import { TopoMovel } from "./topo-movel";
 
@@ -10,7 +11,7 @@ function Logo() {
         <rect x="1" y="1" width="26" height="26" rx="7" className="fill-primary" />
         <path
           d="M8 15l4 4 8-9"
-          stroke="#fff"
+          className="stroke-primary-foreground"
           strokeWidth="2.5"
           fill="none"
           strokeLinecap="round"
@@ -34,8 +35,8 @@ function Busca({ id }: { id: string }) {
         id={id}
         name="q"
         type="search"
-        placeholder="Buscar deputado ou senador por nome ou UF"
-        className="h-11 w-full rounded-[10px] border border-input bg-campo px-3.5 text-sm"
+        placeholder="Nome do parlamentar ou estado"
+        className="h-11 w-full rounded-[10px] border border-input bg-superficie px-3.5 text-base"
       />
     </form>
   );
@@ -53,6 +54,12 @@ function Menu() {
 export function Topo() {
   return (
     <header className="border-b bg-superficie">
+      {/* Faixa da bandeira: única área com verde e amarelo (azul 50%, verde 25%, amarelo 25%). */}
+      <div aria-hidden="true" className="flex h-1">
+        <div className="flex-[2] bg-azul-bandeira" />
+        <div className="flex-1 bg-verde-bandeira" />
+        <div className="flex-1 bg-amarelo-bandeira" />
+      </div>
       {/* Desktop: logo, menu e busca numa linha (protótipo, Main.dc.html). */}
       <div className="mx-auto hidden max-w-[1248px] flex-wrap items-center gap-x-8 gap-y-4 px-6 py-3.5 sm:flex">
         <Logo />
@@ -60,9 +67,19 @@ export function Topo() {
         <div className="ml-auto max-w-[360px] flex-[1_1_260px]">
           <Busca id="busca-topo" />
         </div>
+        <BotaoTema />
       </div>
       {/* Celular: logo e botões de ícone; menu e busca abrem sob demanda (Mobile.dc.html). */}
-      <TopoMovel logo={<Logo />} menu={<Menu />} busca={<Busca id="busca-topo-movel" />} />
+      <TopoMovel
+        logo={<Logo />}
+        menu={
+          <>
+            <Menu />
+            <BotaoTema className="my-2" />
+          </>
+        }
+        busca={<Busca id="busca-topo-movel" />}
+      />
     </header>
   );
 }

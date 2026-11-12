@@ -2,72 +2,107 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Só tema claro no MVP: a variante dark fica presa a uma classe que não usamos. */
-@custom-variant dark (&:is(.dark *));
+/* Tema escuro por classe .dark no <html>, aplicada pelo botão de tema (escolha salva). */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Protótipo sem altura de linha definida: os tamanhos de texto usam o "normal" do navegador. */
-  --text-xs--line-height: normal;
-  --text-sm--line-height: normal;
-  --text-base--line-height: normal;
-  --text-lg--line-height: normal;
-  --text-xl--line-height: normal;
-  --text-2xl--line-height: normal;
-  --text-3xl--line-height: normal;
-  --text-4xl--line-height: normal;
+  /* Escala de texto do design system (rem + altura de linha sem unidade, acompanha o zoom do navegador).
+     Mínimo de 14 px para texto: text-xs e text-sm ficam iguais de propósito. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.43;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.43;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.55;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.25;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 1.15;
+  --text-5xl: 2.5rem;
+  --text-5xl--line-height: 1.1;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
   --font-heading: var(--font-grotesk), var(--font-inter), sans-serif;
-  --color-aviso: var(--aviso);
-  --color-aviso-fundo: var(--aviso-fundo);
+
+  /* Tokens do design system (proposta aprovada em 12/11/2026). */
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-borda: var(--borda);
+  --color-borda-campo: var(--borda-campo);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-texto-3: var(--texto-3);
+  --color-azul-bandeira: var(--azul-bandeira);
+  --color-verde-bandeira: var(--verde-bandeira);
+  --color-amarelo-bandeira: var(--amarelo-bandeira);
+  --color-primaria: var(--primaria);
+  --color-primaria-hover: var(--primaria-hover);
+  --color-sobre-primaria: var(--sobre-primaria);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-primaria-fundo: var(--primaria-fundo);
+  --color-foco-anel: var(--foco-anel);
+  --color-rodape-fundo: var(--rodape-fundo);
+  --color-rodape-texto: var(--rodape-texto);
+  --color-rodape-link: var(--rodape-link);
   --color-atipico: var(--atipico);
   --color-atipico-fundo: var(--atipico-fundo);
   --color-atipico-borda: var(--atipico-borda);
-  --color-atipico-titulo: var(--atipico-titulo);
-  --color-atipico-traco: var(--atipico-traco);
-  --color-superficie: var(--superficie);
-  --color-borda-suave: var(--borda-suave);
-  --color-linha: var(--linha);
-  --color-texto-2: var(--texto-2);
-  --color-campo: var(--campo);
-  --color-teto: var(--teto);
+  --color-sancao: var(--sancao);
+  --color-sancao-fundo: var(--sancao-fundo);
+  --color-sancao-borda: var(--sancao-borda);
   --color-sucesso: var(--sucesso);
   --color-sucesso-fundo: var(--sucesso-fundo);
-  --color-anterior: var(--anterior);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
+  --color-erro: var(--erro);
+  --color-teto: var(--teto);
+  --color-serie-atual: var(--serie-atual);
+  --color-serie-anterior: var(--serie-anterior);
+  --color-serie-destaque: var(--serie-destaque);
+
+  /* Nomes antigos, mantidos como apelidos para não mexer nas páginas durante a troca.
+     aviso* = sanção; anterior = série anterior; linha/campo/borda-suave = neutros novos. */
+  --color-aviso: var(--sancao);
+  --color-aviso-fundo: var(--sancao-fundo);
+  --color-atipico-titulo: var(--atipico);
+  --color-atipico-traco: var(--atipico-borda);
+  --color-borda-suave: var(--borda);
+  --color-linha: var(--borda-campo);
+  --color-campo: var(--superficie);
+  --color-anterior: var(--serie-anterior);
+
+  /* Variáveis do shadcn/ui. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -77,73 +112,124 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Contrastes medidos (WCAG 2.1) estão nas notas de cada token no design system. */
 :root {
-  --background: #f6f6f3;
-  --foreground: #15181e;
+  color-scheme: light;
+  --fundo: #f7f7f4;
   --superficie: #ffffff;
-  --card: #ffffff;
-  --card-foreground: #15181e;
-  --popover: #ffffff;
-  --popover-foreground: #15181e;
-  --primary: #1f4fd1;
-  --primary-foreground: #ffffff;
-  --secondary: #e8eefc;
-  --secondary-foreground: #163a9c;
-  --muted: #f0f0ec;
-  --muted-foreground: #555b66;
-  --accent: #e8eefc;
-  --accent-foreground: #163a9c;
-  --destructive: #b4440e;
-  --aviso: #7a2e09;
-  --aviso-fundo: #fdf0e7;
-  /* Padrão atípico (artboard Atipico.dc.html): âmbar, distinto do laranja de sanção. */
-  --atipico: #6b4b00;
-  --atipico-fundo: #fff7e0;
-  --atipico-borda: #f0d58c;
-  --atipico-titulo: #3d2c00;
-  /* Ícone e tracejado do limite (elementos gráficos, contraste 3:1 basta). */
-  --atipico-traco: #8a6100;
-  /* Tokens do protótipo aprovado (artifact bd51453d…, Main.dc.html). */
-  --border: #e2e2dc;
-  --borda-suave: #ecece6;
-  --linha: #c9cac2;
+  --superficie-2: #eff0ec;
+  --borda: #e2e2dc;
+  --borda-campo: #80858e;
+  --texto: #14171c;
   --texto-2: #3d424b;
-  --campo: #fafaf8;
-  --teto: #b4440e;
-  --sucesso: #1e5b32;
-  --sucesso-fundo: #e6f4ea;
-  --anterior: #b9c8f3;
-  --input: #80858e;
-  --ring: #1f4fd1;
-  --chart-1: #1f4fd1;
-  --chart-2: #6e8fe8;
-  --chart-3: #3d424b;
-  --chart-4: #b4440e;
-  --chart-5: #d5d7dc;
+  --texto-3: #555b66;
+  /* Bandeira: só faixa do cabeçalho e logo. */
+  --azul-bandeira: #002776;
+  --verde-bandeira: #009c3b;
+  --amarelo-bandeira: #ffdf00;
+  --primaria: #1a44b8;
+  --primaria-hover: #0b2a78;
+  --sobre-primaria: #ffffff;
+  --link: #1a44b8;
+  --link-hover: #0b2a78;
+  --primaria-fundo: #e8edfa;
+  --foco-anel: #0b2a78;
+  --rodape-fundo: #15181e;
+  --rodape-texto: #d5d7dc;
+  --rodape-link: #a9bef5;
+  --rodape-foco: #ffffff;
+  --atipico: #6b4b00;
+  --atipico-fundo: #fff6d6;
+  --atipico-borda: #8a6100;
+  /* Sanção em ameixa, separada do vermelho de erro do sistema. */
+  --sancao: #7b2d69;
+  --sancao-fundo: #f7ecf3;
+  --sancao-borda: #a1458c;
+  --sucesso: #0f6b35;
+  --sucesso-fundo: #e4f3e9;
+  --erro: #b42318;
+  /* Linha de teto do gráfico: tracejado neutro, não mais o laranja da sanção. */
+  --teto: #3d424b;
+  --serie-atual: #1a44b8;
+  --serie-anterior: #6e8fe8;
+  --serie-destaque: #5e5a66;
+
+  --background: var(--fundo);
+  --foreground: var(--texto);
+  --card: var(--superficie);
+  --card-foreground: var(--texto);
+  --popover: var(--superficie);
+  --popover-foreground: var(--texto);
+  --primary: var(--primaria);
+  --primary-foreground: var(--sobre-primaria);
+  --secondary: var(--primaria-fundo);
+  --secondary-foreground: var(--primaria-hover);
+  --muted: var(--superficie-2);
+  --muted-foreground: var(--texto-3);
+  --accent: var(--primaria-fundo);
+  --accent-foreground: var(--primaria-hover);
+  --destructive: var(--erro);
+  --border: var(--borda);
+  --input: var(--borda-campo);
+  --ring: var(--foco-anel);
+  --chart-1: var(--serie-atual);
+  --chart-2: var(--serie-atual);
+  --chart-3: var(--serie-destaque);
+  --chart-4: var(--teto);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  color-scheme: dark;
+  --fundo: #0e1424;
+  --superficie: #161d30;
+  --superficie-2: #1d2539;
+  --borda: #2a3349;
+  --borda-campo: #6b7488;
+  --texto: #eceef2;
+  --texto-2: #c3c8d2;
+  --texto-3: #9aa2b1;
+  /* Azul clareado para a faixa não virar só verde e amarelo no fundo escuro. */
+  --azul-bandeira: #4f74d9;
+  --primaria: #7fa2ff;
+  --primaria-hover: #a9c1ff;
+  --sobre-primaria: #0e1424;
+  --link: #9db8ff;
+  --link-hover: #c2cbf2;
+  --primaria-fundo: #1b2a52;
+  --foco-anel: #ffffff;
+  --rodape-fundo: #0a0f1c;
+  --rodape-link: #c2cbf2;
+  --atipico: #ffd966;
+  --atipico-fundo: #2b2410;
+  --atipico-borda: #c9a227;
+  --sancao: #f0a8db;
+  --sancao-fundo: #2c1428;
+  --sancao-borda: #d27dbb;
+  --sucesso: #5fd38d;
+  --sucesso-fundo: #12301f;
+  --erro: #ff8a80;
+  --teto: #c3c8d2;
+  --serie-atual: #7fa2ff;
+  --serie-anterior: #5873c2;
+  --serie-destaque: #a7a3b0;
+  --secondary-foreground: var(--link);
+  --accent-foreground: var(--link);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  /* Foco visível (WCAG 2.4.7): contorno sólido de 2px na cor da marca, afastado do elemento. */
+  /* Foco visível (WCAG 2.4.7): anel de 2px afastado 2px, para contrastar com o fundo e não com o controle. */
   :focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--foco-anel);
     outline-offset: 2px;
   }
-  /* No rodapé escuro o azul não contrasta: contorno claro. */
+  /* No rodapé escuro: anel branco. */
   @media (min-width: 40rem) {
     footer :focus-visible {
-      outline-color: #ffffff;
+      outline-color: var(--rodape-foco);
     }
   }
   body {
@@ -151,16 +237,23 @@
   }
   /* Links na cor da marca, como no protótipo; classes de cor no próprio link têm precedência. */
   a {
-    color: var(--primary);
+    color: var(--link);
     text-decoration-line: underline;
   }
   a:hover {
-    color: #163a9c;
+    color: var(--link-hover);
   }
   html {
     @apply font-sans;
-    /* O protótipo não define altura de linha: vale o "normal" do navegador, não o 1,5 do Tailwind. */
-    line-height: normal;
+    line-height: 1.5;
+  }
+  /* Alto contraste do sistema: avisos e controles mantêm borda visível. */
+  @media (forced-colors: active) {
+    [role="note"],
+    [role="alert"],
+    [role="status"] {
+      border: 2px solid CanvasText;
+    }
   }
   /* Botões: cursor de clique; desabilitados mostram que não dá para clicar. */
   button,
@@ -173,4 +266,10 @@
   input:is([type="button"], [type="submit"], [type="reset"]):disabled {
     @apply cursor-not-allowed;
   }
+}
+
+/* Ponte para o tema escuro: campos que ainda usam bg-white nas páginas (home, lista, contestar)
+   seguem o tema. Fora de @layer para vencer o utilitário. Remover quando as páginas usarem bg-superficie. */
+.dark .bg-white {
+  background-color: var(--superficie);
 }
