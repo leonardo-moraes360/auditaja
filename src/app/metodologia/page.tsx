@@ -90,6 +90,43 @@ export default function Metodologia() {
           de cada bem, em valores nominais, sem correção pela inflação.
         </p>
       </section>
+
+      <section id="emendas" className="space-y-2">
+        <h2 className="font-heading text-xl font-bold">Emendas parlamentares</h2>
+        <p>
+          Usamos o arquivo de emendas parlamentares do Portal da Transparência (CGU), baixado em lote do servidor de
+          arquivos da CGU, sem a API e sem chave. Entram só as emendas individuais com orçamento de 2024 em diante, que
+          são as apresentadas na legislatura atual. Emendas de bancada e de comissão têm autoria coletiva e ficam de
+          fora.
+        </p>
+        <p>
+          O arquivo identifica o autor pelo nome parlamentar, sem CPF nem código da Câmara. Ligamos a emenda ao deputado
+          quando o nome do autor, sem acentos e sem diferença de maiúsculas, é igual ao nome parlamentar de exatamente
+          um deputado. Quando dois deputados têm o mesmo nome, ou quando nenhum casa (senadores, por exemplo), a emenda
+          fica de fora.
+        </p>
+        <p>
+          Empenhado é o valor reservado no Orçamento. Pago é a soma do valor pago no ano com os restos a pagar pagos
+          depois. Transferências especiais são as emendas que o arquivo chama de &quot;Transferências Especiais&quot;
+          (as &quot;emendas Pix&quot;). Emendas marcadas como &quot;Múltiplo&quot; não têm um local único no Orçamento e
+          aparecem numa frase à parte, não na lista de locais. Favorecido pessoa física aparece como &quot;Beneficiário
+          pessoa física&quot;, com o CPF mascarado como o Portal publica.
+        </p>
+      </section>
+
+      <section id="sancoes" className="space-y-2">
+        <h2 className="font-heading text-xl font-bold">Sanções de fornecedores</h2>
+        <p>
+          Cruzamos os fornecedores pessoa jurídica da cota parlamentar com os cadastros de empresas sancionadas da CGU,
+          o CEIS e o CNEP, baixados em lote do Portal da Transparência. A comparação é pelo CNPJ, e guardamos só as
+          sanções de empresas que aparecem na cota.
+        </p>
+        <p>
+          Para cada sanção, contamos quantas notas do período exibido têm data de emissão dentro do período da sanção,
+          do início ao fim, inclusive. Sanção sem data final vale até hoje. O aviso diz o que está no cadastro oficial e
+          não indica irregularidade do parlamentar.
+        </p>
+      </section>
     </article>
   );
 }

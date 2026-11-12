@@ -6,6 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Se o Chromium do Playwright não estiver instalado na versão certa, aponte
  * PW_CHROME para um executável do Chrome/Chromium.
  */
+// E2E_PORT: worktrees em paralelo (emendas, Senado, presença) usam portas próprias.
+const PORTA = process.env.E2E_PORT ?? "3212";
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
 
 export default defineConfig({
@@ -13,7 +15,7 @@ export default defineConfig({
   fullyParallel: false,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:3212",
+    baseURL: `http://127.0.0.1:${PORTA}`,
     launchOptions: process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : {},
   },
   projects: [
@@ -22,8 +24,8 @@ export default defineConfig({
     { name: "celular", use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } } },
   ],
   webServer: {
-    command: "pnpm start --port 3212",
-    url: "http://127.0.0.1:3212/metodologia",
+    command: `pnpm start --port ${PORTA}`,
+    url: `http://127.0.0.1:${PORTA}/metodologia`,
     reuseExistingServer: false,
     env: { DATABASE_URL: TEST_DATABASE_URL },
   },

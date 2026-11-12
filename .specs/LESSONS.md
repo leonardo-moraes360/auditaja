@@ -116,6 +116,90 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: V3 src/components/ui/button.tsx:6 (ui)
 - last seen: 2026-11-11T13:54:01Z
 
+### L-018 - When a rule picks one item among siblings, such as one entry of an archive, give each sibling a distinct value in the fixture so reading the wrong one fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ingest` · harmful: 0
+- features: emendas-transparencia
+- evidence: N05 N09 src/ingest/transparencia.ts:41 src/ingest/arquivos.ts:106; fixture tests/integracao/emendas.test.ts:70 (ingest)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-019 - When a table column must show on a viewport, assert the header and the cells visible there, not only the cell text
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U15 src/components/perfil/secao-emendas.tsx:299; tests/e2e/emendas.spec.ts:76 (ui)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-020 - Seed a case for each branch of a singular and plural label so the plural count is asserted, not only the singular
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U23 src/components/perfil/sancao.tsx:88 (ui)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-021 - Text adopted to reach visual parity with an approved artboard needs an assertion, or a later edit silently undoes the parity
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U20 U21 U22 src/components/perfil/secao-emendas.tsx:251,279,325 (ui)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-022 - When a label shows a count, the spec must say which count it is and what the link returns
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: emendas-transparencia
+- evidence: C22 paridade/verificacao-2.md; src/components/perfil/sancao.tsx:88 (spec)
+- last seen: 2026-11-11T17:44:47Z
+
+### L-023 - When a rule picks one entry by name, put a decoy entry before the target so a pick-first implementation fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ingest` · harmful: 0
+- features: emendas-transparencia
+- evidence: N09 src/ingest/arquivos.ts:106 (ingest)
+- last seen: 2026-11-11T18:00:46Z
+
+### L-024 - When two counts could fill a label, seed a case where they differ so using the wrong count fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U30 src/components/perfil/sancao.tsx:94 (ui)
+- last seen: 2026-11-11T18:00:46Z
+
+### L-025 - Test an inclusive date range filter with a row dated exactly on each bound
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: emendas-transparencia
+- evidence: G01 G02 src/app/parlamentares/[id]/gastos.csv/route.ts:46-47 (routes)
+- last seen: 2026-11-11T18:00:46Z
+
+### L-026 - Assert parity text with an exact match on its element, since a substring match accepts added text
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `ui` · harmful: 0
+- features: emendas-transparencia
+- evidence: U22 src/components/perfil/secao-emendas.tsx:251 (ui)
+- last seen: 2026-11-11T18:00:47Z
+
+### L-027 - Test a unit-switch threshold at the exact boundary value
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `lib` · harmful: 0
+- features: emendas-transparencia
+- evidence: B03 src/lib/emendas.ts:99 (lib)
+- last seen: 2026-11-11T18:00:47Z
+
+### L-028 - Test a masking regex with every separator form it accepts and with two matches in one string, so dropping a separator or the global flag fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `privacy` · harmful: 0
+- features: emendas-transparencia
+- evidence: P06, P07 src/lib/privacy.ts:45 (privacy)
+- last seen: 2026-11-11T19:07:51Z
+
+### L-029 - When a pattern must not match inside a longer digit run, test a longer run glued to text on each side so removing either boundary fails a test
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `privacy` · harmful: 0
+- features: emendas-transparencia
+- evidence: P03, P04 src/lib/privacy.ts:45 (privacy)
+- last seen: 2026-11-11T19:07:51Z
+
+### L-030 - Test date validation with a well-formed impossible date such as February 30 on every parameter that uses it, not only an out-of-range month on one
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `routes` · harmful: 0
+- features: emendas-transparencia
+- evidence: D01, D06 src/app/parlamentares/[id]/gastos.csv/route.ts:8 (routes)
+- last seen: 2026-11-11T19:07:51Z
+
+### L-031 - A shared helper applied to a new call site needs a test at that call site in the same branch, not one that only arrives with another branch
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `tests` · harmful: 0
+- features: emendas-transparencia
+- evidence: P10 src/lib/privacy.ts:41 (tests)
+- last seen: 2026-11-11T19:07:51Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

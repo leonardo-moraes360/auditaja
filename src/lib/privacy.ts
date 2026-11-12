@@ -38,5 +38,18 @@ export function documentoPublicavel(raw: string | null | undefined): {
  * Exibimos um rótulo genérico; o documento mascarado continua visível.
  */
 export function nomeFornecedorPublicavel(nome: string, classe: ClasseTitular): string {
-  return classe === "terceiro_pf" ? "Prestador pessoa física" : nome.trim();
+  return classe === "terceiro_pf" ? "Prestador pessoa física" : mascararCpfsNoTexto(nome.trim());
+}
+
+/** CPF solto no texto: 11 dígitos, com até três separadores (ponto, hífen, barra ou espaço) entre os grupos, sem outros dígitos colados. Na dúvida, mascara. */
+const CPF_NO_TEXTO = /(?<!\d)\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{3}[-./\s]{0,3}\d{2}(?!\d)/g;
+
+/**
+ * R3: a razão social de MEI costuma trazer o CPF do dono ("FULANO DE TAL 12345678901").
+ * Todo CPF solto no nome vira "***.***.***-**", sem nenhum dígito: qualquer máscara parcial poderia ser
+ * combinada com outra (a da Receita mostra os 6 do meio; a do Senado, os 3 primeiros e os 2 últimos)
+ * e remontar o número. CNPJ (14 dígitos) não é afetado.
+ */
+export function mascararCpfsNoTexto(texto: string): string {
+  return texto.replace(CPF_NO_TEXTO, "***.***.***-**");
 }

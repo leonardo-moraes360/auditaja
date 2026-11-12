@@ -166,6 +166,9 @@ describe("perfilParlamentar (Postgres)", () => {
       "camara_api_deputados",
       "camara_ceap",
       "camara_lote_votos",
+      "cgu_ceis",
+      "cgu_cnep",
+      "cgu_emendas",
       "tse_bem_candidato",
     ]);
   });

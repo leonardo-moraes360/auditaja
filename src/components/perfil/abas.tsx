@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const ABAS = [
   { id: "gastos", rotulo: "Gastos da cota", curto: "Gastos" },
+  { id: "emendas", rotulo: "Emendas", curto: "Emendas" },
   { id: "votacoes", rotulo: "Votações", curto: "Votações" },
   { id: "bens", rotulo: "Bens declarados", curto: "Bens" },
   { id: "mandato", rotulo: "Mandato", curto: "Mandato" },
@@ -22,7 +23,7 @@ const LINHA = 0.3;
  */
 function secaoPelaRolagem(lateralVisivel: boolean): Id {
   const linha = window.innerHeight * LINHA;
-  const ids: Id[] = lateralVisivel ? ["gastos", "votacoes", "bens"] : ABAS.map((a) => a.id);
+  const ids: Id[] = lateralVisivel ? ["gastos", "emendas", "votacoes", "bens"] : ABAS.map((a) => a.id);
   let ativa: Id = ids[0];
   for (const id of ids) {
     const el = document.getElementById(id);
