@@ -274,6 +274,20 @@ describe("fornecedoresComSancaoNoPeriodo", () => {
   });
 });
 
+describe("resumoSancoesPorAno", () => {
+  it("conta empresas pagas e empresas com nota dentro da sanção, por ano", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { resumoSancoesPorAno } = await import("@/data/emendas");
+    const r = await resumoSancoesPorAno(SEED.deputada, [2025, 2026]);
+    const em2026 = r.find((x) => x.ano === 2026)!;
+    // Posto (nota dentro da sanção) conta; gráfica (sanção depois da nota) não.
+    expect(em2026.sancionadas).toBe(1);
+    expect(em2026.empresas).toBeGreaterThanOrEqual(2);
+    expect(r.find((x) => x.ano === 2025)?.sancionadas ?? 0).toBe(0);
+    expect(await resumoSancoesPorAno(SEED.deputada, [])).toEqual([]);
+  });
+});
+
 describe("EMDSEN-05, SANSEN-01: perfil do senador", () => {
   it("lê as emendas do senador como as do deputado", async (ctx) => {
     if (!disponivel) ctx.skip();

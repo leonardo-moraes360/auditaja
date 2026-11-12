@@ -167,6 +167,7 @@ function ConteudoEmendas({
   const { totais, periodo, anos } = dados;
   const pctPago = pct(totais.pago, totais.empenhado);
   const pctEsp = pct(totais.especiais, totais.empenhado);
+  const pctSemLocal = pct(totais.multiplo, totais.empenhado) ?? 0;
   const anosOrdem = anos.toSorted((a, b) => a - b);
   const qtd = `${totais.emendas} ${totais.emendas === 1 ? "emenda" : "emendas"}`;
   const anoAtual = new Date().getFullYear();
@@ -176,7 +177,7 @@ function ConteudoEmendas({
     <>
       <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] sm:gap-3">
         <Indicador
-          titulo={mandato ? "Empenhado no mandato" : `Empenhado em ${periodo}`}
+          titulo={mandato ? "Reservado (empenhado) no mandato" : `Reservado (empenhado) em ${periodo}`}
           valor={brlMi(totais.empenhado)}
           detalhe={
             mandato
@@ -189,15 +190,15 @@ function ConteudoEmendas({
           }
         />
         <Indicador
-          titulo="Pago até agora"
+          titulo="Já pago"
           valor={brlMi(totais.pago)}
           progresso={pctPago}
-          detalhe={pctPago === null ? "—" : `${pctPago}% do empenhado, incluindo restos a pagar`}
+          detalhe={pctPago === null ? "—" : `${pctPago}% do reservado, inclui pagamentos de anos anteriores`}
         />
         <Indicador
-          titulo="Transferências especiais (“emendas Pix”)"
+          titulo="Emendas Pix (transferências especiais)"
           valor={brlMi(totais.especiais)}
-          detalhe={`${pctEsp === null ? "—" : `${pctEsp}%`} do empenhado · vão direto ao caixa de estados e municípios, sem objeto definido`}
+          detalhe={`${pctEsp === null ? "—" : `${pctEsp}%`} do reservado · caem direto no caixa da prefeitura ou do estado, sem dizer em quê serão usadas`}
         />
       </div>
 
@@ -295,16 +296,33 @@ function ConteudoEmendas({
           />
         </div>
         <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-3">
-          <h3 className={H3}>Onde o recurso foi aplicado</h3>
+          <h3 className={H3}>Onde o dinheiro foi aplicado</h3>
+          {totais.multiplo > 0 && (
+            // A parte sem local é mostrada como fatia, não em nota de rodapé: lida só a lista de locais, o
+            // total parecia pequeno (avaliação com cidadãos, 12/11/2026).
+            <div data-sem-local className="flex flex-col gap-2">
+              <div
+                className="flex h-5 overflow-hidden rounded-[5px] bg-primary"
+                role="img"
+                aria-label={`${pctSemLocal}% do empenhado sem local definido no Orçamento`}
+              >
+                <div className="h-full bg-linha" style={{ width: `${pctSemLocal}%` }} />
+              </div>
+              <p className="text-sm leading-normal">
+                <strong>
+                  Sem local definido no Orçamento: {brlMi(totais.multiplo)} ({pctSemLocal}%)
+                </strong>
+                <br />
+                <span className="text-[13px] text-texto-2">
+                  O Orçamento marca como “Múltiplo” (vários lugares). Para saber quem recebeu, veja a lista abaixo.
+                </span>
+              </p>
+              {dados.locais.length > 0 && <p className="text-[13px] font-semibold text-texto-2">Com local definido:</p>}
+            </div>
+          )}
           <Barras itens={dados.locais.map((l) => ({ ...l, detalhe: brlMi(l.valor) }))} />
           {dados.locais.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhuma emenda do período tem local único no Orçamento.</p>
-          )}
-          {totais.multiplo > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {brlMi(totais.multiplo)} ({pct(totais.multiplo, totais.empenhado)}% do empenhado) estão marcados como
-              “Múltiplo” no Orçamento, sem um local único; veja abaixo quem recebeu os pagamentos.
-            </p>
           )}
           <p className="text-xs text-muted-foreground">
             “Estado (UF)” e “Nacional” indicam emendas sem município definido no Orçamento.
@@ -317,47 +335,64 @@ function ConteudoEmendas({
         {dados.favorecidos.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum pagamento a favorecido publicado para este período.</p>
         ) : (
-          <div
-            className="flex flex-row-reverse overflow-x-auto"
-            tabIndex={0}
-            role="region"
-            aria-label="Quem recebeu os pagamentos"
-          >
-            <table className="w-full border-collapse text-[13px]">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th scope="col" className="py-1.5 pr-2 font-semibold">
-                    Favorecido
-                  </th>
-                  <th scope="col" className="px-2 py-1.5 font-semibold">
-                    CNPJ/CPF
-                  </th>
-                  <th scope="col" className="px-2 py-1.5 font-semibold">
-                    Tipo
-                  </th>
-                  <th scope="col" className="px-2 py-1.5 font-semibold">
-                    Município
-                  </th>
-                  <th scope="col" className="py-1.5 text-right font-semibold">
-                    Recebido
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {dados.favorecidos.map((f, i) => (
-                  <tr key={i} className="border-t border-borda-suave">
-                    <td className="py-2 pr-2">{f.nome}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
-                      {f.doc ?? (f.pessoaFisica ? "CPF não exibido" : "—")}
-                    </td>
-                    <td className="px-2 py-2 text-muted-foreground">{f.tipo}</td>
-                    <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{f.municipio ?? "—"}</td>
-                    <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlMi(f.valor)}</td>
+          <>
+            {/* Celular: cartões com o valor à vista (na tabela, a coluna "Recebido" ficava fora da tela). */}
+            <ul className="flex flex-col gap-2 sm:hidden" data-favorecidos-cartoes>
+              {dados.favorecidos.map((f, i) => (
+                <li key={i} className="flex justify-between gap-3 rounded-[10px] border border-borda-suave px-3 py-2.5">
+                  <span className="flex min-w-0 flex-col gap-0.5 text-sm">
+                    <strong className="font-semibold">{f.nome}</strong>
+                    <span className="text-[13px] text-muted-foreground">
+                      {[f.municipio, f.tipo].filter(Boolean).join(" · ")}
+                    </span>
+                    {f.doc && <span className="text-xs text-muted-foreground tabular-nums">{f.doc}</span>}
+                  </span>
+                  <strong className="shrink-0 text-[15px] whitespace-nowrap tabular-nums">{brlMi(f.valor)}</strong>
+                </li>
+              ))}
+            </ul>
+            <div
+              className="hidden flex-row-reverse overflow-x-auto sm:flex"
+              tabIndex={0}
+              role="region"
+              aria-label="Quem recebeu os pagamentos"
+            >
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th scope="col" className="py-1.5 pr-2 font-semibold">
+                      Favorecido
+                    </th>
+                    <th scope="col" className="px-2 py-1.5 font-semibold">
+                      CNPJ/CPF
+                    </th>
+                    <th scope="col" className="px-2 py-1.5 font-semibold">
+                      Tipo
+                    </th>
+                    <th scope="col" className="px-2 py-1.5 font-semibold">
+                      Município
+                    </th>
+                    <th scope="col" className="py-1.5 text-right font-semibold">
+                      Recebido
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {dados.favorecidos.map((f, i) => (
+                    <tr key={i} className="border-t border-borda-suave">
+                      <td className="py-2 pr-2">{f.nome}</td>
+                      <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                        {f.doc ?? (f.pessoaFisica ? "CPF não exibido" : "—")}
+                      </td>
+                      <td className="px-2 py-2 text-muted-foreground">{f.tipo}</td>
+                      <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{f.municipio ?? "—"}</td>
+                      <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlMi(f.valor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
         <p className="text-xs text-muted-foreground">
           Prefeituras e fundos municipais aparecem pelo nome. Pessoas físicas aparecem somadas, sem nome e sem CPF: a

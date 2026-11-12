@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { SancaoFornecedor } from "@/data/emendas";
+import type { ResumoSancoesAno, SancaoFornecedor } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, fraseCase, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
@@ -8,7 +8,7 @@ import { classificarVotoSenado, codigoSenado, rotuloVotoSenado } from "@/lib/sen
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
 import { AvisosAtipicos, tiposAtipicos } from "./atipico";
-import { AvisoSancao, SeloSancao } from "./sancao";
+import { AvisoSancao, SeloSancao, SemSancao } from "./sancao";
 import { ComoLigamosEmendas } from "./secao-emendas";
 
 /** "k" com uma casa: 31200 → "31,2k". */
@@ -86,12 +86,20 @@ export function SecaoGastos({
   completo,
   sancoes = [],
   fornecedoresDoAviso,
+  resumoSancoes = [],
+  baseSancoes = null,
+  anosComPonto = new Set<number>(),
 }: {
   perfil: Perfil;
   completo: boolean;
   sancoes?: SancaoFornecedor[];
   /** Maiores fornecedores mais os sancionados com nota no período (padrão: só os maiores). */
   fornecedoresDoAviso?: { fornecedor_nome: string; fornecedor_doc: string | null; documentos: number }[];
+  /** Empresas pagas e empresas sancionadas por ano: frase quando o período exibido não tem sanção. */
+  resumoSancoes?: ResumoSancoesAno[];
+  baseSancoes?: string | null;
+  /** Anos com ponto para verificar: ganham uma marca no seletor de ano. */
+  anosComPonto?: Set<number>;
 }) {
   const { ceap, ano, parlamentar, mandato } = perfil;
   const senado = parlamentar.casa === "senado";
@@ -127,19 +135,33 @@ export function SecaoGastos({
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 id="gastos-titulo" className={H2}>
           <Dois
-            curto={`Gastos da cota (${senado ? "CEAPS" : "CEAP"}) · ${mandato ? "mandato" : ano}`}
-            longo={senado ? "Gastos da cota do senador (CEAPS)" : "Gastos da cota parlamentar (CEAP)"}
+            curto={`Verba do gabinete · ${mandato ? "mandato" : ano}`}
+            longo={
+              <>
+                Gastos com a verba do gabinete{" "}
+                <span className="text-base font-medium text-muted-foreground">(cota {senado ? "CEAPS" : "CEAP"})</span>
+              </>
+            }
           />
         </h2>
-        <nav aria-label="Período dos gastos" className="hidden flex-wrap gap-1.5 sm:flex">
+        <nav
+          aria-label="Período dos gastos"
+          className="-mx-1 flex max-w-full gap-1.5 overflow-x-auto px-1 sm:flex-wrap"
+        >
           {perfil.anosDisponiveis.map((a) => (
             <Link
               key={a}
               href={href(`ano=${a}#gastos`)}
               aria-current={!mandato && a === ano ? "page" : undefined}
-              className={classeFiltro(!mandato && a === ano)}
+              className={`${classeFiltro(!mandato && a === ano)} gap-1.5`}
             >
               {a}
+              {anosComPonto.has(a) && (
+                <>
+                  <span aria-hidden="true" className="size-2 rounded-full bg-aviso" />
+                  <span className="sr-only">(tem ponto para verificar)</span>
+                </>
+              )}
             </Link>
           ))}
           {!senado && (
@@ -363,6 +385,13 @@ export function SecaoGastos({
               }${ate ? `&ate=${ate}` : ""}`
             }
           />
+          <SemSancao
+            resumo={resumoSancoes}
+            anosExibidos={mandato ? perfil.anosDisponiveis : [ano]}
+            periodo={mandato ? "no mandato" : `em ${ano}`}
+            base={baseSancoes}
+            hrefAno={(a) => href(`ano=${a}#gastos`)}
+          />
           {!completo && (
             <Link href={href(`ano=${parametroAno}&lista=completa#gastos`)} className="text-sm font-semibold sm:hidden">
               Ver todas as notas e fornecedores
@@ -395,6 +424,13 @@ export function SecaoGastos({
 // ---------------------------------------------------------------- Votações
 
 /** Rótulo da orientação: "Partido" quando é do partido; indica bloco ou federação quando é deles. */
+/** "O partido pediu: Sim"; liberado vira "O partido deixou livre". */
+function pediu(quem: string, orientacao: string | null) {
+  if (!orientacao) return `${quem} não orientou`;
+  if (/^libera/i.test(orientacao)) return `${quem} deixou livre`;
+  return `${quem} pediu: ${orientacao}`;
+}
+
 /** De quem veio a orientação seguida pelo partido do deputado (vai no title do rótulo "Partido: X"). */
 const ORIGEM_ORIENTACAO = {
   partido: "Orientação do partido",
@@ -455,10 +491,10 @@ function PeriodosFora({ perfil }: { perfil: Perfil }) {
         ))}
       </ul>
       <p className="text-xs leading-normal text-texto-2 sm:text-[13px]">
-        <span className="sm:hidden">Essas votações não contam na presença nem em &quot;Ausências&quot;. </span>
+        <span className="sm:hidden">Essas votações não contam na presença nem em &quot;Faltou&quot;. </span>
         <span className="hidden sm:inline">
           A presença conta só as votações em que {artigo} estava em exercício. Licença, afastamento e suplência ficam de
-          fora. Votações nesses períodos aparecem na lista, marcadas, mas não entram em &quot;Ausências&quot;.{" "}
+          fora. Votações nesses períodos aparecem na lista, marcadas, mas não entram em &quot;Faltou&quot;.{" "}
         </span>
         <Link href="/metodologia#presenca">Como calculamos</Link>
       </p>
@@ -494,8 +530,8 @@ export function SecaoVotacoes({
   });
   const filtros = [
     ["todas", "Todas"],
-    ["divergiu", senado ? "Divergiu da liderança" : "Divergiu do partido"],
-    ["ausencias", "Ausências"],
+    ["divergiu", "Votou diferente"],
+    ["ausencias", "Faltou"],
   ] as const;
   // Resumo: 5 votações no perfil do deputado e 6 no do senador, como nos artboards.
   const visiveis = completo ? lista : lista.slice(0, senado ? 6 : 5);
@@ -510,7 +546,7 @@ export function SecaoVotacoes({
             longo={senado ? "Votações nominais no Plenário" : "Votações nominais recentes"}
           />
         </h2>
-        <nav aria-label="Filtrar votações" className="hidden flex-wrap gap-1.5 sm:flex">
+        <nav aria-label="Filtrar votações" className="flex flex-wrap gap-1.5">
           {filtros.map(([k, r]) => (
             <Link
               key={k}
@@ -542,19 +578,19 @@ export function SecaoVotacoes({
             const partidoDoDia = v.partidoNoVoto ?? parlamentar.sigla_partido;
             const orient = senado ? (
               v.secreta ? (
-                "Orientação: não se aplica"
+                "Voto secreto: sem orientação"
               ) : v.orientacao ? (
                 <Dois
-                  curto={`Liderança: ${v.orientacao}`}
-                  longo={`Liderança${partidoDoDia ? ` do ${partidoDoDia}` : ""}: ${v.orientacao}`}
+                  curto={pediu("A liderança", v.orientacao)}
+                  longo={pediu(`A liderança${partidoDoDia ? ` do ${partidoDoDia}` : ""}`, v.orientacao)}
                 />
               ) : (
-                "Liderança: sem orientação"
+                "A liderança não orientou"
               )
             ) : v.tipoOrientacao ? (
-              `Partido: ${v.orientacao}`
+              pediu("O partido", v.orientacao)
             ) : (
-              "Partido: sem orientação"
+              "O partido não orientou"
             );
             const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
             const selo = v.foraDoExercicio ? (
@@ -572,7 +608,7 @@ export function SecaoVotacoes({
                     rotuloVotoSenado(v.voto, v.secreta)
                   )
                 ) : (
-                  `Votou: ${v.voto ?? "sem registro"}`
+                  `Votou: ${v.voto ?? "não votou"}`
                 )}
                 {diverge(v.voto, v.orientacao) && <span className="sr-only"> (divergiu da orientação)</span>}
               </span>
@@ -842,6 +878,26 @@ function marcoCandidatura(c: Perfil["candidaturas"][number], sexo: string | null
   return feminino(texto, sexo);
 }
 
+/** Glossário curto da lateral: nome comum primeiro, sigla depois (avaliação com cidadãos, 12/11/2026). */
+function GLOSSARIO(senado: boolean): [string, string][] {
+  return [
+    [
+      senado ? "Verba do gabinete (cota CEAPS)" : "Verba do gabinete (cota CEAP)",
+      `Dinheiro que ${senado ? "o Senado" : "a Câmara"} devolve ao parlamentar por gastos do mandato, como aluguel de escritório, viagens e divulgação.`,
+    ],
+    [
+      "Empresa punida (CEIS e CNEP)",
+      "Listas oficiais da CGU com empresas proibidas de contratar com o governo ou punidas por corrupção.",
+    ],
+    ["Emenda", "Parte do Orçamento federal que o parlamentar indica para uma cidade, um estado ou uma entidade."],
+    ["Emenda Pix", "Emenda que cai direto no caixa da prefeitura ou do estado, sem dizer em quê será usada."],
+    [
+      "Fora do padrão",
+      "Gasto muito maior que o dos colegas ou que o do próprio ano anterior. Pode ter explicação; não é acusação.",
+    ],
+  ];
+}
+
 export function Lateral({ perfil }: { perfil: Perfil }) {
   const { parlamentar: p, orgaos, candidaturas, coletas, suplentes } = perfil;
   const senado = p.casa === "senado";
@@ -1090,6 +1146,19 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
 
       <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
 
+      <section aria-labelledby="glossario-titulo" className={`${CARTAO} gap-2.5 sm:p-5`} data-glossario>
+        <h2 id="glossario-titulo" className="font-heading text-[17px] font-bold sm:text-lg">
+          Palavras desta página
+        </h2>
+        <dl className="flex flex-col gap-2 text-[13px] leading-[1.45] sm:text-sm">
+          {GLOSSARIO(senado).map(([termo, def]) => (
+            <div key={termo}>
+              <dt className="font-semibold">{termo}</dt>
+              <dd className="text-texto-2">{def}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
       <section
         aria-labelledby="erro-titulo"
         className={`flex flex-col gap-2 rounded-[14px] bg-secondary p-4 sm:gap-2.5 sm:rounded-[16px] sm:p-5`}

@@ -4,7 +4,15 @@ import { Suspense } from "react";
 import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { emendasDoParlamentar, fornecedoresComSancaoNoPeriodo, sancoesDosFornecedores } from "@/data/emendas";
+import {
+  baseDasSancoes,
+  emendasDoParlamentar,
+  fornecedoresComSancaoNoPeriodo,
+  resumoSancoesPorAno,
+  sancoesDosFornecedores,
+} from "@/data/emendas";
+import { padraoAtipico } from "@/data/atipico";
+import { anosComPonto, PontosParaVerificar, pontosParaVerificar } from "@/components/perfil/pontos";
 import { anoInicialDoSenador, juntarSancionados } from "@/lib/emendas";
 import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
 import { SecaoEmendas } from "@/components/perfil/secao-emendas";
@@ -76,10 +84,22 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   if (!perfil) notFound();
   // Emendas e sanções (CGU) valem para as duas Casas; a coleta liga cada emenda a um único perfil.
   const anosCeap = perfil.mandato ? perfil.anosDisponiveis : [perfil.ano];
-  const [emendas, extras] = await Promise.all([
+  const anosTodos = perfil.anosDisponiveis;
+  const [emendas, extras, resumoSancoes, atipicosTodos, baseSancoes] = await Promise.all([
     emendasDoParlamentar(id, sp.emendas),
     fornecedoresComSancaoNoPeriodo(id, anosCeap),
+    resumoSancoesPorAno(id, anosTodos),
+    // Pontos para verificar valem para todos os anos coletados, não só o exibido.
+    perfil.mandato ? perfil.atipico : padraoAtipico(perfil.parlamentar.casa, anosTodos, id),
+    baseDasSancoes(),
   ]);
+  const pontos = pontosParaVerificar(id, resumoSancoes, atipicosTodos);
+  const periodoPontos =
+    anosTodos.length > 1
+      ? `em ${Math.min(...anosTodos)}–${Math.max(...anosTodos)}`
+      : anosTodos.length
+        ? `em ${anosTodos[0]}`
+        : "";
   // Sanção de fornecedor fora dos 5 maiores também aparece, desde que haja nota dentro do período dela.
   const docsCeap = [...perfil.ceap.fornecedores, ...extras].map((f) => f.fornecedor_doc);
   const sancionados = juntarSancionados(
@@ -122,7 +142,6 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const situacao = p.em_exercicio ? "Em exercício" : "Fora de exercício";
   const partido = partidoPorExtenso(p.sigla_partido);
   const cota = perfil.mandato ? "no mandato" : `em ${perfil.ano}`;
-  const sinal = (v: number) => `${v > 0 ? "+" : ""}${v}%`;
   const docs = `${ceap.documentos.toLocaleString("pt-BR")} documentos`;
 
   return (
@@ -190,13 +209,15 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
           </div>
           <div className="hidden flex-[1_1_220px] flex-wrap justify-end gap-2.5 sm:flex">
             <Link href={`/parlamentares/${p.id}/acompanhar`} className={BOTAO_PRIMARIO}>
-              Acompanhar atualizações
+              Receber atualizações
             </Link>
             <Link href={`/parlamentares/${p.id}/contestar`} className={BOTAO_SECUNDARIO}>
-              Contestar um dado
+              Pedir correção
             </Link>
           </div>
         </div>
+
+        {anosTodos.length > 0 && <PontosParaVerificar pontos={pontos} periodo={periodoPontos} />}
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(210px,1fr))] sm:gap-3">
           {senado ? (
@@ -235,7 +256,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
               senado
                 ? votacoes.denominadorPresenca === 0
                   ? `Sem votações registradas em ${votacoes.ano}`
-                  : `${votacoes.presentes} de ${votacoes.denominadorPresenca} em ${votacoes.ano}${
+                  : `Votou em ${votacoes.presentes} de ${votacoes.denominadorPresenca} votações de ${votacoes.ano}${
                       votacoes.mediaPresenca !== null
                         ? ` · média ${senado ? "do Senado" : "da Câmara"} ${votacoes.mediaPresenca}%`
                         : ""
@@ -244,7 +265,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
                   ? fora === 1
                     ? `Fora do exercício na única votação de ${votacoes.ano}`
                     : `Fora do exercício nas ${fora} votações de ${votacoes.ano}`
-                  : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : ""} em ${votacoes.ano}${
+                  : `Votou em ${votacoes.presentes} de ${votacoes.elegiveis} votações de ${votacoes.ano}${
                       votacoes.mediaPresenca !== null ? ` · média da Câmara ${votacoes.mediaPresenca}%` : ""
                     }`
             }
@@ -252,12 +273,12 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
               senado
                 ? votacoes.denominadorPresenca === 0
                   ? `Sem votações registradas em ${votacoes.ano}`
-                  : `${votacoes.presentes} de ${votacoes.denominadorPresenca}`
+                  : `${votacoes.presentes} de ${votacoes.denominadorPresenca} votações`
                 : comHistorico && votacoes.elegiveis === 0 && fora > 0
                   ? votacoes.tipoFora === "licenca"
                     ? "Em licença em todas as votações"
                     : "Fora do exercício em todas as votações"
-                  : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : " · pode incluir licenças"}`
+                  : `${votacoes.presentes} de ${votacoes.elegiveis} votações${comHistorico ? "" : " · pode incluir licenças"}`
             }
             nota={
               senado ? undefined : !comHistorico ? (
@@ -274,18 +295,18 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
           />
           <Indicador
             titulo={senado ? "Votou como a liderança orientou" : "Votou como o partido orientou"}
-            tituloCurto={senado ? "Seguiu a liderança" : "Seguiu o partido"}
+            tituloCurto={senado ? "Como a liderança orientou" : "Como o partido orientou"}
             valor={alin === null ? "—" : `${alin}%`}
             detalhe={
               votacoes.alinhamento.comparaveis
-                ? `Divergiu em ${votacoes.alinhamento.divergencias} de ${votacoes.alinhamento.comparaveis} votações${
+                ? `Votou diferente em ${votacoes.alinhamento.divergencias} de ${votacoes.alinhamento.comparaveis} votações${
                     senado ? " abertas" : ""
                   }`
                 : "Sem votações com orientação comparável"
             }
             detalheCurto={
               votacoes.alinhamento.comparaveis
-                ? `${votacoes.alinhamento.divergencias} ${votacoes.alinhamento.divergencias === 1 ? "divergência" : "divergências"}`
+                ? `diferente ${votacoes.alinhamento.divergencias} ${votacoes.alinhamento.divergencias === 1 ? "vez" : "vezes"}`
                 : "sem orientação"
             }
           />
@@ -298,24 +319,28 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
                 ? ultimoBens
                   ? "sem declaração anterior na série"
                   : "nenhuma declaração encontrada"
-                : `${sinal(varBens)} sobre ${anteriorBens}, em valor nominal`
+                : `Em ${anteriorBens} eram ${brlCompacto(totalBens(anteriorBens!))} · valores sem correção pela inflação`
             }
             detalheCurto={
               varBens === null
                 ? ultimoBens
                   ? "primeira declaração"
                   : "nenhuma declaração encontrada"
-                : `${sinal(varBens)} sobre ${anteriorBens}`
+                : `era ${brlCompacto(totalBens(anteriorBens!))} em ${anteriorBens}`
             }
           />
         </div>
 
         <div className="flex gap-2 sm:hidden">
-          <Link href={`/parlamentares/${p.id}/acompanhar`} className={`${BOTAO_PRIMARIO} flex-1 px-0`}>
-            Acompanhar
+          <Link
+            href={`/parlamentares/${p.id}/acompanhar`}
+            aria-label="Receber atualizações"
+            className={`${BOTAO_PRIMARIO} flex-1 px-0`}
+          >
+            Atualizações
           </Link>
           <Link href={`/parlamentares/${p.id}/contestar`} className={`${BOTAO_SECUNDARIO} flex-1 px-0`}>
-            Contestar dado
+            Pedir correção
           </Link>
         </div>
       </section>
@@ -329,6 +354,9 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
             completo={completo}
             sancoes={sancionados.sancoes}
             fornecedoresDoAviso={sancionados.fornecedores}
+            resumoSancoes={resumoSancoes}
+            baseSancoes={baseSancoes}
+            anosComPonto={anosComPonto(pontos)}
           />
           <SecaoEmendas
             dados={emendas}

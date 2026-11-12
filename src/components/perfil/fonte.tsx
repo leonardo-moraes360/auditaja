@@ -34,20 +34,13 @@ export function NotaFonte({
     <div className="border-t border-borda-suave pt-2.5 text-[11px] text-muted-foreground sm:flex sm:flex-wrap sm:justify-between sm:gap-x-4 sm:gap-y-2 sm:pt-3 sm:text-xs">
       <p className="sm:hidden">
         Fonte: {rotuloCurto ?? rotulo} · {quando ? `coletado em ${quando.slice(0, 10)}` : "ainda não coletado"}
-        {original && (
-          <>
-            {" · "}
-            <a href={original} rel="noopener noreferrer" target="_blank">
-              ver original
-            </a>
-          </>
-        )}
       </p>
       <p className="hidden sm:block">
         Fonte: {rotulo}
         {quando ? ` · coletado em ${quando}` : " · ainda não coletado"}
       </p>
-      <p className="hidden flex-wrap gap-x-4 gap-y-1 sm:ml-auto sm:flex">
+      {/* No celular os links também aparecem (planilha e correção sumiam), com 44 px de alvo de toque. */}
+      <p className="flex flex-wrap gap-x-4 sm:ml-auto sm:gap-y-1 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center sm:[&_a]:min-h-0">
         {original && (
           <a href={original} rel="noopener noreferrer" target="_blank">
             {rotuloOriginal}
@@ -64,7 +57,9 @@ export function NotaFonte({
             </Link>
           ),
         )}
-        <Link href={`/parlamentares/${parlamentarId}/contestar?secao=${encodeURIComponent(secao)}`}>Contestar</Link>
+        <Link href={`/parlamentares/${parlamentarId}/contestar?secao=${encodeURIComponent(secao)}`}>
+          Pedir correção
+        </Link>
       </p>
     </div>
   );

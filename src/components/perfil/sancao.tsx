@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { SancaoFornecedor } from "@/data/emendas";
+import type { ResumoSancoesAno, SancaoFornecedor } from "@/data/emendas";
 import { frasesNotas, periodoDaSancao, rotuloNotas, rotuloNotasCsv } from "@/lib/emendas";
 import { soDigitos } from "@/lib/privacy";
 
@@ -110,5 +110,66 @@ export function AvisoSancao({
         {itens[0].s.base ? ` · base de ${itens[0].s.base}` : ""} · comparação pelo CNPJ.
       </p>
     </div>
+  );
+}
+
+/**
+ * Frase de ausência: o período exibido não tem nota paga a empresa punida na data da nota. Diz que a checagem
+ * foi feita (a ausência de aviso, sozinha, não dizia) e aponta os outros anos que têm caso.
+ */
+export function SemSancao({
+  resumo,
+  anosExibidos,
+  periodo,
+  base,
+  hrefAno,
+}: {
+  resumo: ResumoSancoesAno[];
+  anosExibidos: number[];
+  periodo: string;
+  base: string | null;
+  hrefAno: (ano: number) => string;
+}) {
+  const exibidos = resumo.filter((r) => anosExibidos.includes(r.ano));
+  if (!exibidos.length || exibidos.some((r) => r.sancionadas > 0)) return null;
+  const empresas = exibidos.reduce((s, r) => s + r.empresas, 0);
+  const outros = resumo.filter((r) => !anosExibidos.includes(r.ano) && r.sancionadas > 0);
+  return (
+    <p
+      data-sem-sancao
+      className="flex items-start gap-2.5 rounded-[10px] bg-sucesso-fundo px-3 py-2.5 text-[13px] leading-normal text-sucesso sm:px-3.5 sm:py-3 sm:text-sm"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="mt-0.5 shrink-0"
+      >
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+      <span>
+        <strong>Empresas punidas:</strong>{" "}
+        {empresas === 1
+          ? `a empresa paga com a cota ${periodo} não aparece`
+          : `nenhuma das ${empresas} empresas pagas com a cota ${periodo} aparece`}{" "}
+        nas listas oficiais de empresas punidas (CEIS e CNEP{base ? `, base de ${base}` : ""}).
+        {outros.map((r) => (
+          <span key={r.ano}>
+            {" "}
+            Em {r.ano} há {r.sancionadas === 1 ? "1 caso" : `${r.sancionadas} casos`}:{" "}
+            <Link href={hrefAno(r.ano)} className="font-semibold text-sucesso">
+              ver
+            </Link>
+            .
+          </span>
+        ))}
+      </span>
+    </p>
   );
 }

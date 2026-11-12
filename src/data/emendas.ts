@@ -217,4 +217,47 @@ export async function fornecedoresComSancaoNoPeriodo(id: number, anosCeap: numbe
 
 export type FornecedorSancionado = Awaited<ReturnType<typeof fornecedoresComSancaoNoPeriodo>>[number];
 
+/**
+ * Por ano da cota: quantas empresas tiveram nota dentro do período de uma sanção CEIS/CNEP, e quantas
+ * empresas (CNPJ) foram pagas no total. Alimenta a faixa "Pontos para verificar" e a frase de ausência.
+ */
+export async function resumoSancoesPorAno(id: number, anos: number[]) {
+  if (!anos.length) return [];
+  const db = getDb();
+  const cnpj = sql<string>`regexp_replace(despesa_ceap.fornecedor_doc, '\\D', '', 'g')`;
+  const rows = await db
+    .selectFrom("despesa_ceap")
+    .select([
+      "despesa_ceap.ano",
+      sql<string>`count(distinct ${cnpj})`.as("empresas"),
+      sql<string>`count(distinct ${cnpj}) filter (where exists (
+        select 1 from sancao
+        where sancao.cnpj = ${cnpj}
+          and despesa_ceap.data_emissao >= sancao.data_inicio
+          and despesa_ceap.data_emissao <= coalesce(sancao.data_fim, 'infinity'::date)
+      ))`.as("sancionadas"),
+    ])
+    .where("despesa_ceap.parlamentar_id", "=", id)
+    .where("despesa_ceap.ano", "in", anos)
+    .where("despesa_ceap.fornecedor_classe", "=", "pessoa_juridica")
+    .where(sql<boolean>`length(${cnpj}) = 14`)
+    .groupBy("despesa_ceap.ano")
+    .orderBy("despesa_ceap.ano")
+    .execute();
+  return rows.map((r) => ({ ano: r.ano, empresas: Number(r.empresas), sancionadas: Number(r.sancionadas) }));
+}
+
+export type ResumoSancoesAno = Awaited<ReturnType<typeof resumoSancoesPorAno>>[number];
+
+/** Base (data do arquivo) da coleta de sanções mais recente, para citar na frase de ausência. */
+export async function baseDasSancoes() {
+  const r = await getDb()
+    .selectFrom("coleta")
+    .select(["observacao", "coletado_em"])
+    .where("fonte", "like", "cgu_ceis%")
+    .orderBy("coletado_em", "desc")
+    .executeTakeFirst();
+  return r ? (baseDaColeta(r.observacao) ?? null) : null;
+}
+
 export type SancaoFornecedor = Awaited<ReturnType<typeof sancoesDosFornecedores>>[number];

@@ -142,7 +142,7 @@ function Moldura({
             <Dois curto="Como calculamos" longo={`Como calculamos (metodologia v${METODOLOGIA_VERSAO})`} />
           </Link>
           <Link href={ctx.hrefContestar} className="hidden text-atipico sm:inline-flex sm:min-h-6 sm:items-center">
-            Contestar
+            Pedir correção
           </Link>
         </p>
       </div>
