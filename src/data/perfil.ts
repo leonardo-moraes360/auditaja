@@ -10,6 +10,7 @@ import {
   type BlocoParlamentar,
   type VotoComOrientacoes,
 } from "@/lib/metrics";
+import { presencaEmExercicio } from "@/lib/exercicio";
 import { DESLOCAMENTO_SENADO, orientacaoDaLideranca, ORGAO_PLENARIO_SENADO, presencaSenado } from "@/lib/senado";
 
 export type Casa = "camara" | "senado";
@@ -101,12 +102,13 @@ export async function ufsDisponiveis(): Promise<string[]> {
  */
 async function coletasRecentes(anoCeap: number, casa: "camara" | "senado" = "camara") {
   const db = getDb();
-  // Cada perfil mostra as fontes da própria Casa e as do TSE.
-  const prefixo = casa === "senado" ? "senado_%" : "camara_%";
+  // Cada perfil mostra as fontes da própria Casa e as comuns (TSE, CGU).
+  // Exclui só a outra Casa: fontes comuns (TSE, CGU e futuras) continuam valendo para as duas.
+  const daOutraCasa = casa === "senado" ? "camara_%" : "senado_%";
   const rows = await db
     .selectFrom("coleta")
     .select(["fonte", "url", "coletado_em", "sha256", "licenca"])
-    .where((eb) => eb.or([eb("fonte", "like", prefixo), eb("fonte", "like", "tse_%")]))
+    .where("fonte", "not like", daOutraCasa)
     .distinctOn("fonte")
     .orderBy("fonte")
     .orderBy("coletado_em", "desc")
@@ -151,24 +153,33 @@ export type PeriodoCeap = number | "mandato";
 
 /**
  * Presença média dos deputados em exercício nas votações nominais do Plenário do ano:
- * média simples da presença de cada um (votos não vazios ÷ votações do ano), em %.
+ * média simples da presença de cada um (votos não vazios ÷ votações em que estava em exercício
+ * ou votou), em %. Entra quem tem alguma linha de voto no ano; sem histórico, contam todas.
  */
 async function presencaMediaDaCamara(ano: number): Promise<number | null> {
-  const r = await getDb()
-    .selectFrom("voto")
-    .innerJoin("votacao", "votacao.id", "voto.votacao_id")
-    .innerJoin("parlamentar", "parlamentar.id", "voto.parlamentar_id")
-    .select(sql<string>`count(*) filter (where voto.voto <> '')`.as("presentes"))
-    .select(sql<string>`count(distinct voto.parlamentar_id)`.as("deputados"))
-    .select(sql<string>`count(distinct voto.votacao_id)`.as("votacoes"))
-    .where("votacao.sigla_orgao", "=", ORGAO_PLENARIO)
-    .where("votacao.data", ">=", `${ano}-01-01`)
-    .where("votacao.data", "<=", `${ano}-12-31`)
-    .where("parlamentar.em_exercicio", "=", true)
-    .executeTakeFirst();
-  const dep = Number(r?.deputados ?? 0);
-  const vot = Number(r?.votacoes ?? 0);
-  return dep && vot ? Math.round((Number(r!.presentes) / (dep * vot)) * 100) : null;
+  const r = await sql<{ media: string | null }>`
+    with v as (
+      select id, data from votacao
+      where sigla_orgao = ${ORGAO_PLENARIO} and data >= ${`${ano}-01-01`} and data <= ${`${ano}-12-31`}
+    ),
+    d as (
+      select p.id,
+        count(vo.parlamentar_id) as linhas,
+        count(*) filter (where vo.voto <> '') as presentes,
+        count(*) filter (where vo.voto <> '' or not exists (
+          select 1 from periodo_fora_exercicio pf
+          where pf.parlamentar_id = p.id and pf.inicio <= v.data and (pf.fim is null or v.data <= pf.fim)
+        )) as elegiveis
+      from parlamentar p
+      cross join v
+      left join voto vo on vo.votacao_id = v.id and vo.parlamentar_id = p.id
+      where p.em_exercicio and p.casa = 'camara'
+      group by p.id
+    )
+    select avg(presentes::float / elegiveis) as media from d where linhas > 0 and elegiveis > 0
+  `.execute(getDb());
+  const media = r.rows[0]?.media;
+  return media == null ? null : Math.round(Number(media) * 100);
 }
 
 /**
@@ -212,6 +223,7 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       "mandato_fim",
       "participacao",
       "bloco",
+      "historico_coleta_id",
     ])
     .where("id", "=", id)
     .executeTakeFirst();
@@ -359,10 +371,21 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     siglaPartido: v.sigla_partido ?? p.sigla_partido,
     orientacoes: orientacoesDoVoto(v.votacao_id, v.sigla_partido ?? p.sigla_partido),
   }));
+  // Câmara: votações em exercício, pelo histórico de situação; Senado: votações com registro do
+  // senador, sem licenças e afastamentos (SPRES-03).
+  const periodos =
+    !senado && p.historico_coleta_id
+      ? await db
+          .selectFrom("periodo_fora_exercicio")
+          .select(["inicio", "fim", "situacao", "motivo"])
+          .where("parlamentar_id", "=", id)
+          .orderBy("inicio")
+          .execute()
+      : null;
+  const presenca = presencaEmExercicio(plenario, new Map(votos.map((v) => [v.votacao_id, v.voto])), periodos, anoVotos);
   const presencaSen = senado ? presencaSenado(votos.map((v) => v.voto)) : null;
-  const presentes = presencaSen ? presencaSen.presentes : votos.filter((v) => v.voto !== "").length;
-  // Câmara: votações do ano; Senado: votações com registro do senador, sem licenças (SPRES-03).
-  const denominadorPresenca = presencaSen ? presencaSen.denominador : plenario.length;
+  const presentes = presencaSen ? presencaSen.presentes : presenca.presentes;
+  const elegiveis = presencaSen ? presencaSen.denominador : presenca.elegiveis;
   const alin = alinhamento(comOrientacao, blocos);
 
   const listaVotacoes = plenario.map((v) => {
@@ -382,6 +405,7 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       partidoNoVoto: voto?.sigla_partido ?? null,
       orientacao: orient?.orientacao ?? null,
       tipoOrientacao: orient?.tipo ?? null,
+      foraDoExercicio: presenca.foraPorVotacao.get(v.id) ?? null,
     };
   });
 
@@ -466,7 +490,13 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
       totalPlenario: plenario.length,
       mediaPresenca,
       presentes,
-      denominadorPresenca,
+      elegiveis,
+      /** Mesmo número que `elegiveis`: denominador da presença nas duas Casas. */
+      denominadorPresenca: elegiveis,
+      foraDoExercicio: senado ? 0 : presenca.foraDoExercicio,
+      tipoFora: senado ? null : presenca.tipoFora,
+      historicoDisponivel: senado ? false : presenca.historicoDisponivel,
+      periodosFora: senado ? [] : presenca.periodosNoAno,
       alinhamento: alin,
       lista: listaVotacoes,
     },

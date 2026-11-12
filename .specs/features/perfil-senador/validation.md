@@ -7,7 +7,7 @@ Condição antes de publicar o ramo: apagar as refs locais que ainda guardam o r
 
 - **Data**: 2026-11-11
 - **Spec**: `.specs/features/perfil-senador/spec.md` (45 requisitos, com as emendas de SCEAPS-02, SVOT-06 e SCAD-04
-  confirmadas pelo usuário), `design.md`, `tasks.md` (T1–T16) e a AD-004 em `.specs/STATE.md`.
+  confirmadas pelo usuário), `design.md`, `tasks.md` (T1–T16) e a AD-005 em `.specs/STATE.md`.
 - **Faixa do diff**:
   - Total: `e4e563d..abc95ff` (26 commits).
   - Correções desde a rodada 3: `d733ab1..abc95ff` (`bb97def`, `3460770`, `3f7d10e`, `1c0910c`, `32679b9`,
@@ -297,7 +297,7 @@ Detalhes em `paridade/verificacao-4.md`. São 130 itens:
    - SCAD-05: `parlamentar.coleta_id` aponta só para a lista, e as coletas ficam fora da transação
      (`src/ingest/senado.ts:361-377`).
    - "CNPJ válido" é só "14 dígitos" (`src/lib/privacy.ts:31`).
-   - A AD-004 separa as votações pelo órgão, não pela `casa` (`src/ingest/camara.ts:378`).
+   - A AD-005 separa as votações pelo órgão, não pela `casa` (`src/ingest/camara.ts:378`).
 
 ---
 

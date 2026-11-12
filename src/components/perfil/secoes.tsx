@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { SancaoFornecedor } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
@@ -6,6 +7,8 @@ import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
 import { classificarVotoSenado, codigoSenado, rotuloVotoSenado } from "@/lib/senado";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
+import { AvisoSancao, SeloSancao } from "./sancao";
+import { ComoLigamosEmendas } from "./secao-emendas";
 
 /** "LOCAÇÃO OU FRETAMENTO" → "Locação ou fretamento". */
 function fraseCase(s: string) {
@@ -41,6 +44,7 @@ export function Indicador({
   detalhe,
   detalheCurto,
   progresso,
+  nota,
 }: {
   titulo: string;
   tituloCurto?: string;
@@ -49,6 +53,8 @@ export function Indicador({
   detalhe: string;
   detalheCurto?: string;
   progresso?: number | null;
+  /** Linha extra, só no desktop. */
+  nota?: React.ReactNode;
 }) {
   return (
     <div
@@ -73,13 +79,22 @@ export function Indicador({
       <p className="text-[11px] text-muted-foreground sm:text-xs">
         <Dois curto={detalheCurto ?? detalhe} longo={detalhe} />
       </p>
+      {nota && <p className="hidden text-xs text-muted-foreground sm:block">{nota}</p>}
     </div>
   );
 }
 
 // ---------------------------------------------------------------- CEAP
 
-export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: boolean }) {
+export function SecaoGastos({
+  perfil,
+  completo,
+  sancoes = [],
+}: {
+  perfil: Perfil;
+  completo: boolean;
+  sancoes?: SancaoFornecedor[];
+}) {
   const { ceap, ano, parlamentar, mandato } = perfil;
   const senado = parlamentar.casa === "senado";
   const uf = parlamentar.sigla_uf;
@@ -284,6 +299,7 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
                           >
                             {f.fornecedor_nome}
                           </a>
+                          <SeloSancao doc={f.fornecedor_doc} sancoes={sancoes} />
                         </td>
                         <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
                           {f.fornecedor_doc ?? "—"}
@@ -300,6 +316,16 @@ export function SecaoGastos({ perfil, completo }: { perfil: Perfil; completo: bo
               </p>
             </div>
           </div>
+          <AvisoSancao
+            fornecedores={ceap.fornecedores}
+            sancoes={sancoes}
+            periodo={mandato ? "no mandato" : `em ${ano}`}
+            hrefNotas={(doc, de, ate) =>
+              `/parlamentares/${parlamentar.id}/gastos.csv?ano=${parametroAno}&doc=${encodeURIComponent(doc)}${
+                de ? `&de=${de}` : ""
+              }${ate ? `&ate=${ate}` : ""}`
+            }
+          />
           {!completo && (
             <Link href={href(`ano=${parametroAno}&lista=completa#gastos`)} className="text-sm font-semibold sm:hidden">
               Ver todas as notas e fornecedores
@@ -353,6 +379,56 @@ function corVoto(voto: string | null, orientacao: string | null) {
   return "bg-muted text-texto-2";
 }
 
+const SELO_FORA = { licenca: "Em licença", antes_posse: "Antes da posse", outro: "Fora do exercício" } as const;
+
+function intervalo(inicio: string, fim: string | null) {
+  const d = (x: string) => dataBr(x).slice(0, 5);
+  if (!fim) return `desde ${d(inicio)}`;
+  return fim === inicio ? d(inicio) : `${d(inicio)} a ${d(fim)}`;
+}
+
+/**
+ * Quadro dos períodos fora do exercício no ano das votações (licença, afastamento, antes da posse).
+ * Só os que tiraram alguma votação da conta, como nas pranchas aprovadas.
+ */
+function PeriodosFora({ perfil }: { perfil: Perfil }) {
+  const { votacoes, parlamentar } = perfil;
+  const artigo = parlamentar.sexo === "F" ? "a deputada" : "o deputado";
+  const periodos = votacoes.periodosFora.filter((p) => p.votacoes > 0);
+  if (!periodos.length) return null;
+  return (
+    <div
+      id="periodos"
+      className="mt-2 flex scroll-mt-4 flex-col gap-2 rounded-[10px] bg-background p-3 sm:mt-0 sm:gap-2.5 sm:rounded-[12px] sm:p-4"
+    >
+      <h3 className="text-sm font-bold sm:text-[15px]">
+        <Dois curto={`Fora do exercício em ${votacoes.ano}`} longo={`Períodos fora do exercício em ${votacoes.ano}`} />
+      </h3>
+      <ul className="flex flex-col gap-2 sm:gap-1.5">
+        {periodos.map((p) => (
+          <li
+            key={p.inicio}
+            className="flex flex-col gap-0.5 text-[13px] sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1 sm:text-sm"
+          >
+            <span className="font-semibold tabular-nums sm:w-[200px] sm:font-normal">{intervalo(p.inicio, p.fim)}</span>
+            <span className="text-texto-2">
+              {p.motivo} · {p.votacoes} {p.votacoes === 1 ? "votação" : "votações"}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs leading-normal text-texto-2 sm:text-[13px]">
+        <span className="sm:hidden">Essas votações não contam na presença nem em &quot;Ausências&quot;. </span>
+        <span className="hidden sm:inline">
+          A presença conta só as votações em que {artigo} estava em exercício. Licença, afastamento e suplência ficam de
+          fora. Votações nesses períodos aparecem na lista, marcadas, mas não entram em &quot;Ausências&quot;.{" "}
+        </span>
+        <Link href="/metodologia#presenca">Como calculamos</Link>
+      </p>
+    </div>
+  );
+}
+
 /** "Aprovado" / "Rejeitada" a partir do começo da descrição da Câmara; senão pelo campo aprovação. */
 function resultado(descricao: string, aprovacao: number | null) {
   const m = descricao.match(/\b(Aprovad[oa]s?|Rejeitad[oa]s?|Mantid[oa]s?|Derrubad[oa]s?)\b/i);
@@ -375,7 +451,7 @@ export function SecaoVotacoes({
   const senado = parlamentar.casa === "senado";
   const ausente = (voto: string | null) => (senado ? !voto || classificarVotoSenado(voto) === "ausente" : !voto);
   const lista = votacoes.lista.filter((v) => {
-    if (filtro === "ausencias") return ausente(v.voto);
+    if (filtro === "ausencias") return senado ? ausente(v.voto) : !v.voto && !v.foraDoExercicio;
     if (filtro === "divergiu") return diverge(v.voto, v.orientacao);
     return true;
   });
@@ -444,7 +520,11 @@ export function SecaoVotacoes({
               "Partido: sem orientação"
             );
             const origem = v.tipoOrientacao ? ORIGEM_ORIENTACAO[v.tipoOrientacao] : undefined;
-            const selo = (
+            const selo = v.foraDoExercicio ? (
+              <span className="rounded-[6px] border border-dashed border-input bg-superficie px-[9px] py-[3px] text-xs font-bold text-texto-2 sm:rounded-[8px] sm:px-[11px] sm:py-[5px] sm:text-[13px]">
+                {SELO_FORA[v.foraDoExercicio]} · não conta
+              </span>
+            ) : (
               <span
                 className={`rounded-[6px] px-2.5 py-1 text-xs font-bold sm:rounded-[8px] sm:px-3 sm:py-1.5 sm:text-[13px] ${corVoto(v.voto, v.orientacao)}`}
               >
@@ -509,21 +589,22 @@ export function SecaoVotacoes({
           })}
         </ul>
       )}
+      <PeriodosFora perfil={perfil} />
       {!completo && lista.length > 3 && (
         <Link href={verTodas} className="pt-2 text-sm font-semibold sm:hidden">
           Ver as {lista.length} votações
         </Link>
       )}
-      <p className="mt-2 text-xs text-muted-foreground sm:mt-0">
-        {senado
-          ? "A presença não conta as votações em que o senador estava de licença ou afastado."
-          : "A presença conta todas as votações nominais do Plenário no ano, inclusive em períodos de licença."}
-      </p>
+      {senado && (
+        <p className="mt-2 text-xs text-muted-foreground sm:mt-0">
+          A presença não conta as votações em que o senador estava de licença ou afastado.
+        </p>
+      )}
       <NotaFonte
         rotulo={
           senado
             ? "Senado Federal, Dados Abertos (/votacao e orientação de bancada)"
-            : "Câmara dos Deputados, Dados Abertos (votações)"
+            : "Câmara dos Deputados, Dados Abertos (votações e histórico de situação dos deputados)"
         }
         rotuloCurto={senado ? "Senado, Dados Abertos" : "Câmara, Dados Abertos"}
         coleta={senado ? perfil.coletas.senado_votacoes : perfil.coletas.camara_lote_votos}
@@ -797,6 +878,16 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       det: `Votações, votos e orientações${coletadoEm("camara_lote_votos")}`,
     },
     {
+      nome: "Portal da Transparência · Emendas (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
+      det: `Emendas e pagamentos por favorecido${coletadoEm("cgu_emendas")}`,
+    },
+    {
+      nome: "Portal da Transparência · CEIS e CNEP (lote)",
+      href: "https://portaldatransparencia.gov.br/download-de-dados/ceis",
+      det: `Empresas sancionadas${coletadoEm("cgu_ceis")}`,
+    },
+    {
       nome: "TSE · Dados Abertos (lote)",
       href: "https://dadosabertos.tse.jus.br/",
       det: `Candidaturas e bens, por eleição${coletadoEm("tse_bem_candidato")}`,
@@ -949,6 +1040,8 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
           <Link href="/fontes">Ver todas as coletas</Link>
         </p>
       </section>
+
+      <ComoLigamosEmendas />
 
       <section
         aria-labelledby="erro-titulo"

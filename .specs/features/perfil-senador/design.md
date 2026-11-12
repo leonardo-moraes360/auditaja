@@ -24,7 +24,7 @@ adm.senado.gov.br/…/despesas_ceaps/{ano}┘                          despesa_c
 | Tema | Decisão | Alternativa descartada |
 | ---- | ------- | ---------------------- |
 | Id | `10_000_000 + CodigoParlamentar` (`idSenador()` em `src/lib/senado.ts`) | Chave composta (casa, código): exigiria mudar todas as FKs, rotas, feed e contestação |
-| Esquema | Migração `0005_senado`: `casa in ('camara','senado')`; colunas `mandato_inicio`, `mandato_fim`, `participacao`, `bloco` em `parlamentar`; tabela `suplente(parlamentar_id, ordem, nome, codigo)`; `votacao.secreta boolean default false` | Tabelas separadas para o Senado: duplicaria leitura e tela |
+| Esquema | Migração `0008_senado`: `casa in ('camara','senado')`; colunas `mandato_inicio`, `mandato_fim`, `participacao`, `bloco` em `parlamentar`; tabela `suplente(parlamentar_id, ordem, nome, codigo)`; `votacao.secreta boolean default false` | Tabelas separadas para o Senado: duplicaria leitura e tela |
 | CEAPS | Mesma tabela `despesa_ceap`; `valor_documento = valor_liquido = valorReembolsado`, glosa/restituição 0, `ide_documento = id` da API | Tabela própria: o perfil teria de somar duas fontes |
 | Votações | Uma requisição `/votacao` por ano (todas as votações com os 81 votos) e uma `/orientacaoBancada/{ini}/{fim}` | `/senador/{cod}/votacoes` foi desativado em 2026-02; 81 requisições por ano |
 | Presença | Função pura `presencaSenado(votos)` com três conjuntos de siglas (presente, licença, ausente) | Reusar `voto <> ''` da Câmara: o Senado registra ausência com sigla, não com vazio |

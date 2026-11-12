@@ -101,13 +101,17 @@ describe("perfil do senador (Postgres)", () => {
 
   it("SUI-05: fontes do Senado e do TSE, sem as da Câmara", async (ctx) => {
     if (!disponivel) ctx.skip();
-    expect(Object.keys((await perfil()).coletas).sort()).toEqual([
-      "senado_api_senadores",
-      "senado_ceaps",
-      "senado_orientacoes",
-      "senado_votacoes",
-      "tse_bem_candidato",
-    ]);
+    const fontes = Object.keys((await perfil()).coletas).sort();
+    expect(fontes).toEqual(
+      expect.arrayContaining([
+        "senado_api_senadores",
+        "senado_ceaps",
+        "senado_orientacoes",
+        "senado_votacoes",
+        "tse_bem_candidato",
+      ]),
+    );
+    expect(fontes.filter((f) => f.startsWith("camara_"))).toEqual([]);
   });
 
   it("SBENS-02: bens do TSE do senador", async (ctx) => {

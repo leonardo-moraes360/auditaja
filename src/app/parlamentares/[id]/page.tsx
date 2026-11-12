@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { emendasDoParlamentar, sancoesDosFornecedores } from "@/data/emendas";
 import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
+import { SecaoEmendas } from "@/components/perfil/secao-emendas";
 import { FotoParlamentar } from "@/components/perfil/foto";
 import { AbasSecoes } from "@/components/perfil/abas";
 import { Indicador, Lateral, SecaoBens, SecaoGastos, SecaoVotacoes } from "@/components/perfil/secoes";
@@ -71,6 +73,16 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const completo = sp.lista === "completa";
   const perfil = await perfilParlamentar(id, periodo);
   if (!perfil) notFound();
+  // Emendas e sanções (CGU) cobrem só deputados por enquanto: o perfil do senador não as mostra.
+  const deSenador = perfil.parlamentar.casa === "senado";
+  const emendas = deSenador ? null : await emendasDoParlamentar(id, sp.emendas);
+  const sancoes = deSenador
+    ? []
+    : await sancoesDosFornecedores(
+        id,
+        perfil.ceap.fornecedores.map((f) => f.fornecedor_doc),
+        perfil.mandato ? perfil.anosDisponiveis : [perfil.ano],
+      );
 
   const { parlamentar: p, ceap, votacoes } = perfil;
   const anosBens = [...new Set(perfil.bens.map((b) => b.ano_eleicao))].sort();
@@ -80,7 +92,15 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const anteriorBens = anosBens.at(-2);
   const varBens = anteriorBens ? variacaoNominal(totalBens(anteriorBens), totalBens(ultimoBens!)) : null;
   const senado = p.casa === "senado";
-  const presenca = pct(votacoes.presentes, votacoes.denominadorPresenca);
+  const presenca = pct(votacoes.presentes, votacoes.elegiveis);
+  const comHistorico = votacoes.historicoDisponivel;
+  const fora = votacoes.foraDoExercicio;
+  const foraTexto =
+    votacoes.tipoFora === "licenca"
+      ? "em licença"
+      : votacoes.tipoFora === "antes_posse"
+        ? "antes da posse"
+        : "fora do exercício";
   const alin = pct(votacoes.alinhamento.iguais, votacoes.alinhamento.comparaveis);
   const pctTeto = ceap.tetoAcumulado ? pct(ceap.totalAno, ceap.tetoAcumulado) : null;
   const mandatoSen = senado ? periodoMandato(p.mandato_inicio, p.mandato_fim) : null;
@@ -208,18 +228,44 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
             tituloCurto="Presença"
             valor={presenca === null ? "—" : `${presenca}%`}
             detalhe={
-              votacoes.denominadorPresenca === 0
-                ? `Sem votações registradas em ${votacoes.ano}`
-                : `${votacoes.presentes} de ${votacoes.denominadorPresenca} em ${votacoes.ano}${
-                    votacoes.mediaPresenca !== null
-                      ? ` · média ${senado ? "do Senado" : "da Câmara"} ${votacoes.mediaPresenca}%`
-                      : ""
-                  }`
+              senado
+                ? votacoes.denominadorPresenca === 0
+                  ? `Sem votações registradas em ${votacoes.ano}`
+                  : `${votacoes.presentes} de ${votacoes.denominadorPresenca} em ${votacoes.ano}${
+                      votacoes.mediaPresenca !== null
+                        ? ` · média ${senado ? "do Senado" : "da Câmara"} ${votacoes.mediaPresenca}%`
+                        : ""
+                    }`
+                : comHistorico && votacoes.elegiveis === 0 && fora > 0
+                  ? fora === 1
+                    ? `Fora do exercício na única votação de ${votacoes.ano}`
+                    : `Fora do exercício nas ${fora} votações de ${votacoes.ano}`
+                  : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : ""} em ${votacoes.ano}${
+                      votacoes.mediaPresenca !== null ? ` · média da Câmara ${votacoes.mediaPresenca}%` : ""
+                    }`
             }
             detalheCurto={
-              votacoes.denominadorPresenca === 0
-                ? `Sem votações registradas em ${votacoes.ano}`
-                : `${votacoes.presentes} de ${votacoes.denominadorPresenca}`
+              senado
+                ? votacoes.denominadorPresenca === 0
+                  ? `Sem votações registradas em ${votacoes.ano}`
+                  : `${votacoes.presentes} de ${votacoes.denominadorPresenca}`
+                : comHistorico && votacoes.elegiveis === 0 && fora > 0
+                  ? votacoes.tipoFora === "licenca"
+                    ? "Em licença em todas as votações"
+                    : "Fora do exercício em todas as votações"
+                  : `${votacoes.presentes} de ${votacoes.elegiveis}${comHistorico ? " em exercício" : " · pode incluir licenças"}`
+            }
+            nota={
+              senado ? undefined : !comHistorico ? (
+                "Pode incluir períodos de licença"
+              ) : fora > 0 && votacoes.elegiveis === 0 ? (
+                <a href="#periodos">Ver períodos</a>
+              ) : fora > 0 ? (
+                <>
+                  {fora} {fora === 1 ? "votação" : "votações"} {foraTexto} não {fora === 1 ? "conta" : "contam"} ·{" "}
+                  <a href="#periodos">ver períodos</a>
+                </>
+              ) : undefined
             }
           />
           <Indicador
@@ -274,7 +320,8 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
 
       <div className="flex flex-col gap-4 px-4 pt-4 pb-6 sm:gap-5 sm:px-0 sm:pt-0 sm:pb-0 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-col gap-4 sm:gap-5 lg:flex-[999_1_560px]">
-          <SecaoGastos perfil={perfil} completo={completo} />
+          <SecaoGastos perfil={perfil} completo={completo} sancoes={sancoes} />
+          {emendas && <SecaoEmendas dados={emendas} parlamentarId={p.id} />}
           <SecaoVotacoes perfil={perfil} filtro={filtro} completo={completo} />
           <SecaoBens perfil={perfil} />
         </div>

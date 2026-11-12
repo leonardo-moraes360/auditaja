@@ -85,8 +85,8 @@ T17
 
 ### T1: Migração e tipos do Senado
 
-**What**: Migração `0005_senado` (casa `senado`, colunas de mandato, tabela `suplente`, `votacao.secreta`) e tipos Kysely.
-**Where**: `src/db/migrations/0005_senado.ts`, `src/db/migrate.ts`, `src/db/types.ts`
+**What**: Migração `0008_senado` (casa `senado`, colunas de mandato, tabela `suplente`, `votacao.secreta`) e tipos Kysely.
+**Where**: `src/db/migrations/0008_senado.ts`, `src/db/migrate.ts`, `src/db/types.ts`
 **Depends on**: None
 **Reuses**: `src/db/migrations/0004_paridade.ts`
 **Requirement**: SCAD-03

@@ -158,7 +158,7 @@ describe("coleta do Senado", () => {
     expect(await contar("despesa_ceap")).toBe(antes);
   });
 
-  it("AD-004: as coletas da Câmara não tocam notas nem votações do Senado", async (ctx) => {
+  it("AD-005: as coletas da Câmara não tocam notas nem votações do Senado", async (ctx) => {
     if (!disponivel) ctx.skip();
     await semear(db);
     const senado = async () => ({

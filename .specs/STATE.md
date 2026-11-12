@@ -27,6 +27,14 @@
 - **Status**: active
 
 ### AD-004
+- **Decision**: Arquivos do Portal da Transparência são baixados direto do servidor de arquivos da CGU (`dadosabertos-download.cgu.gov.br`), destino do redirecionamento de `/download-de-dados/...`, e nunca pelo host `portaldatransparencia.gov.br`, que responde com captcha (AWS WAF).
+- **Reason**: R7 proíbe contornar captcha; o servidor de arquivos é o caminho oficial do download e não exige verificação.
+- **Trade-off**: Se a CGU mudar o caminho dos arquivos, a URL fixa quebra e a coleta falha alto (sem fallback para o host com captcha).
+- **Scope**: Coletores de emendas e sanções e qualquer base futura do Portal.
+- **Date**: 2026-11-11
+- **Status**: active
+
+### AD-005
 - **Decision**: Senadores ficam nas mesmas tabelas dos deputados, com `parlamentar.casa = 'senado'` e `id = 10.000.000 + CodigoParlamentar`; as votações do Senado usam `sigla_orgao = 'PLEN-SF'` e id `SF-{sequencialVotacao}`. Cada coleta só apaga e regrava dados da própria Casa (filtro por `casa`, nunca por faixa de id).
 - **Reason**: Reaproveita perfil, rotas, feed, CSV e contestação sem duplicar código; o seed usa ids de deputado acima de 900 milhões, então faixa de id não separa as Casas.
 - **Trade-off**: O id do senador na URL não é o código do Senado; `codigoSenado()` faz a conversão.
@@ -37,10 +45,10 @@
 ## Handoff
 
 - **Feature**: `.specs/features/perfil-senador`
-- **Phase / Task**: Verificação nº 4 PASS (validation.md); aguardando rebase sobre a main e ok do usuário para push e PR
+- **Phase / Task**: Verificação nº 4 PASS (validation.md); merge da main (PRs #6 e #7) feito; push e PR com ok do usuário
 - **Completed**: T1–T17
 - **In-progress** (file:line): none
-- **Next step**: rebase sobre a main depois dos PRs #6 e #7 (ver pendências na memória do projeto), gates e push com ok do usuário
+- **Next step**: revisão humana do PR do Senado
 - **Blockers**: none
 - **Uncommitted files**: none
 - **Branch**: feat/senadores (worktree ../auditaja-wt/senadores; bancos auditaja_senado_test e auditaja_senado_dev; e2e com E2E_PORT=3242)

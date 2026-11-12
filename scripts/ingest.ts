@@ -3,10 +3,14 @@
  *   pnpm ingest deputados
  *   pnpm ingest orgaos
  *   pnpm ingest blocos
+ *   pnpm ingest historico            (situação de cada deputado: ~600 requisições, ~10 min)
+ *   pnpm ingest historico faltantes  (só quem ainda não tem histórico coletado)
  *   pnpm ingest ceap 2026
  *   pnpm ingest votacoes 2026
  *   pnpm ingest bens 2022
- *   pnpm ingest tudo 2026   (deputados, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
+ *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
+ *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
+ *   pnpm ingest tudo 2026   (deputados, histórico, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *   pnpm ingest senadores
  *   pnpm ingest ceaps 2026
  *   pnpm ingest votacoes-senado 2026
@@ -18,9 +22,11 @@
  */
 import { createDb } from "../src/db/client";
 import { coletarBlocos, coletarCeap, coletarDeputados, coletarOrgaos, coletarVotacoes } from "../src/ingest/camara";
+import { coletarHistorico } from "../src/ingest/historico";
 import { ClienteEducado } from "../src/ingest/http";
 import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "../src/ingest/senado";
 import { coletarBens } from "../src/ingest/tse";
+import { coletarEmendas, coletarSancoes } from "../src/ingest/transparencia";
 
 const [cmd, anoArg] = process.argv.slice(2);
 const ano = Number(anoArg ?? new Date().getFullYear());
@@ -39,6 +45,9 @@ async function main() {
       case "blocos":
         console.log("blocos:", await coletarBlocos(db, cli));
         break;
+      case "historico":
+        console.log("histórico:", await coletarHistorico(db, cli, { soFaltantes: anoArg === "faltantes" }));
+        break;
       case "ceap":
         console.log(`despesas ${ano}: ${await coletarCeap(db, cli, ano)}`);
         break;
@@ -47,6 +56,12 @@ async function main() {
         break;
       case "bens":
         console.log(`bens ${ano}:`, await coletarBens(db, cli, ano));
+        break;
+      case "emendas":
+        console.log("emendas:", await coletarEmendas(db, cli));
+        break;
+      case "sancoes":
+        console.log("sanções:", await coletarSancoes(db, cli));
         break;
       case "senadores":
         console.log("senadores:", await coletarSenadores(db, cli));
@@ -64,6 +79,7 @@ async function main() {
         break;
       case "tudo":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);
+        console.log("histórico:", await coletarHistorico(db, cli));
         console.log(`órgãos: ${await coletarOrgaos(db, cli)}`);
         console.log("blocos:", await coletarBlocos(db, cli));
         console.log(`despesas ${ano}: ${await coletarCeap(db, cli, ano)}`);

@@ -48,12 +48,18 @@ export default function Metodologia() {
         </p>
       </section>
 
-      <section className="space-y-2">
+      <section id="presenca" className="scroll-mt-4 space-y-2">
         <h2 className="font-heading text-xl font-bold">Presença em votações</h2>
         <p>
-          Contamos as votações nominais do Plenário no ano e quantas delas têm voto registrado do deputado (Sim, Não,
-          Abstenção, Obstrução ou Artigo 17). O número inclui períodos de licença ou de suplência, então um deputado
-          licenciado aparece com presença menor. Votações simbólicas não entram, porque não registram voto individual.
+          Contamos as votações nominais do Plenário no ano em que o deputado estava em exercício e quantas delas têm
+          voto registrado (Sim, Não, Abstenção, Obstrução ou Artigo 17). Usamos o histórico de situação publicado pela
+          Câmara: dias de licença, afastamento, suplência, vacância, suspensão ou antes da posse ficam fora da conta. Se
+          a situação muda no dia da votação, ela conta quando o deputado esteve em exercício em algum momento daquele
+          dia, e um voto registrado sempre conta. Votações simbólicas não entram, porque não registram voto individual.
+        </p>
+        <p>
+          A média da Câmara é a média simples da presença dos deputados em exercício, calculada do mesmo jeito. Enquanto
+          o histórico de um deputado não foi coletado, a conta dele usa todas as votações do ano, e o perfil avisa.
         </p>
       </section>
 
@@ -128,6 +134,43 @@ export default function Metodologia() {
           Associamos as candidaturas do TSE aos deputados e senadores pelo nome civil e, quando os dois lados publicam,
           pela data de nascimento; sem data, exigimos a mesma UF. Casamentos ambíguos são descartados. Mostramos só o
           tipo e o valor de cada bem, em valores nominais, sem correção pela inflação.
+        </p>
+      </section>
+
+      <section id="emendas" className="space-y-2">
+        <h2 className="font-heading text-xl font-bold">Emendas parlamentares</h2>
+        <p>
+          Usamos o arquivo de emendas parlamentares do Portal da Transparência (CGU), baixado em lote do servidor de
+          arquivos da CGU, sem a API e sem chave. Entram só as emendas individuais com orçamento de 2024 em diante, que
+          são as apresentadas na legislatura atual. Emendas de bancada e de comissão têm autoria coletiva e ficam de
+          fora.
+        </p>
+        <p>
+          O arquivo identifica o autor pelo nome parlamentar, sem CPF nem código da Câmara. Ligamos a emenda ao deputado
+          quando o nome do autor, sem acentos e sem diferença de maiúsculas, é igual ao nome parlamentar de exatamente
+          um deputado. Quando dois deputados têm o mesmo nome, ou quando nenhum casa (senadores, por exemplo), a emenda
+          fica de fora.
+        </p>
+        <p>
+          Empenhado é o valor reservado no Orçamento. Pago é a soma do valor pago no ano com os restos a pagar pagos
+          depois. Transferências especiais são as emendas que o arquivo chama de &quot;Transferências Especiais&quot;
+          (as &quot;emendas Pix&quot;). Emendas marcadas como &quot;Múltiplo&quot; não têm um local único no Orçamento e
+          aparecem numa frase à parte, não na lista de locais. Favorecido pessoa física aparece como &quot;Beneficiário
+          pessoa física&quot;, com o CPF mascarado como o Portal publica.
+        </p>
+      </section>
+
+      <section id="sancoes" className="space-y-2">
+        <h2 className="font-heading text-xl font-bold">Sanções de fornecedores</h2>
+        <p>
+          Cruzamos os fornecedores pessoa jurídica da cota parlamentar com os cadastros de empresas sancionadas da CGU,
+          o CEIS e o CNEP, baixados em lote do Portal da Transparência. A comparação é pelo CNPJ, e guardamos só as
+          sanções de empresas que aparecem na cota.
+        </p>
+        <p>
+          Para cada sanção, contamos quantas notas do período exibido têm data de emissão dentro do período da sanção,
+          do início ao fim, inclusive. Sanção sem data final vale até hoje. O aviso diz o que está no cadastro oficial e
+          não indica irregularidade do parlamentar.
         </p>
       </section>
     </article>

@@ -47,6 +47,8 @@ export interface ParlamentarTable {
   bloco: ColumnType<string | null, string | null | undefined, string | null>;
   source_url: string;
   coleta_id: number;
+  /** Coleta de /deputados/{id}/historico; null = histórico ainda não coletado. */
+  historico_coleta_id: ColumnType<number | null, number | null | undefined, number | null>;
 }
 
 export interface SuplenteTable {
@@ -121,6 +123,18 @@ export interface OrientacaoTable {
   coleta_id: number;
 }
 
+/** Dias inteiros fora do exercício do mandato (src/lib/exercicio.ts). */
+export interface PeriodoForaExercicioTable {
+  id: Generated<number>;
+  parlamentar_id: number;
+  inicio: DateCol;
+  fim: DateCol | null;
+  situacao: string;
+  motivo: string;
+  source_url: string;
+  coleta_id: number;
+}
+
 export interface BlocoTable {
   id: number;
   nome: string;
@@ -169,6 +183,59 @@ export interface PedidoCorrecaoTable {
   criado_em: Generated<Timestamp>;
 }
 
+/** Emenda individual do Portal da Transparência ligada a um deputado pelo nome do autor. */
+export interface EmendaTable {
+  id: Generated<number>;
+  codigo: string;
+  /** "Ano da Emenda": ano do orçamento (LOA). */
+  ano: number;
+  tipo: string;
+  autor_nome: string;
+  parlamentar_id: number;
+  localidade: string;
+  uf: string | null;
+  funcao: string;
+  empenhado: Numeric;
+  liquidado: Numeric;
+  pago: Numeric;
+  rp_pagos: Numeric;
+  coleta_id: number;
+}
+
+export interface EmendaFavorecidoTable {
+  id: Generated<number>;
+  codigo_emenda: string;
+  parlamentar_id: number;
+  ano_emenda: number;
+  ano_mes: string;
+  /** R3: "Beneficiário pessoa física" no lugar do nome de PF. */
+  favorecido_nome: string;
+  /** CNPJ formatado, CPF já mascarado (`***.ddd.ddd-**`) ou null. */
+  favorecido_doc: string | null;
+  tipo_favorecido: string;
+  /** "Município", "Associação Privada"…; null quando a fonte diz "Sem informação". */
+  natureza_juridica: string | null;
+  uf: string | null;
+  municipio: string | null;
+  valor: Numeric;
+  coleta_id: number;
+}
+
+/** Sanção CEIS/CNEP de pessoa jurídica que forneceu à cota parlamentar. */
+export interface SancaoTable {
+  id: Generated<number>;
+  cadastro: "CEIS" | "CNEP";
+  codigo: string;
+  /** 14 dígitos, sem formatação. */
+  cnpj: string;
+  nome: string;
+  categoria: string;
+  data_inicio: DateCol | null;
+  data_fim: DateCol | null;
+  orgao: string;
+  coleta_id: number;
+}
+
 export interface Database {
   coleta: ColetaTable;
   parlamentar: ParlamentarTable;
@@ -183,6 +250,10 @@ export interface Database {
   candidatura: CandidaturaTable;
   bem_declarado: BemDeclaradoTable;
   pedido_correcao: PedidoCorrecaoTable;
+  emenda: EmendaTable;
+  emenda_favorecido: EmendaFavorecidoTable;
+  sancao: SancaoTable;
+  periodo_fora_exercicio: PeriodoForaExercicioTable;
 }
 
 export type Parlamentar = Selectable<ParlamentarTable>;

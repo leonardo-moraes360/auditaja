@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Presença sem licenças · Auditaja</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F6F6F3}
+a{color:#1F4FD1}a:hover{color:#163A9C}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1760px; box-sizing: border-box; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #15181E; background: #F6F6F3;">
+
+<div style="background: #FFF3D6; color: #5C4300; font-size: 13px; text-align: center; padding: 8px 16px;">Proposta visual com dados fictícios. Nomes, valores e votações são ilustrativos.</div>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 28px;">
+
+<section aria-labelledby="h-antes" style="display: flex; flex-direction: column; gap: 12px;">
+<h2 id="h-antes" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px;">1. Indicador no topo do perfil</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+<div style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #555B66;">Hoje</span>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Presença em votações nominais</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">55%</span>
+<span style="font-size: 12px; color: #555B66;">69 de 126 em 2026 · média da Câmara 84%</span>
+</div>
+<span style="font-size: 13px; color: #3D424B; line-height: 1.5;">As 52 votações em que ela estava de licença médica contam como falta.</span>
+</div>
+<div style="background: #FFFFFF; border: 2px solid #1F4FD1; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+<span style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #1F4FD1;">Proposta</span>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Presença em votações nominais</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">93%</span>
+<span style="font-size: 12px; color: #555B66;">69 de 74 em exercício em 2026 · média da Câmara 91%</span>
+<span style="font-size: 12px; color: #555B66;">52 votações em licença não contam · <a href="#periodos">ver períodos</a></span>
+</div>
+<span style="font-size: 13px; color: #3D424B; line-height: 1.5;">O denominador passa a ser só as votações em que ela estava em exercício. A linha extra aparece apenas quando há votações fora do exercício.</span>
+</div>
+</div>
+</section>
+
+<section id="votacoes" aria-labelledby="h-vot" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: baseline;">
+<h2 id="h-vot" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px;">2. Votações nominais recentes</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px;">
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid #1F4FD1; background: #E8EEFC; color: #1F4FD1; font: inherit; font-size: 13px; font-weight: 600;">Todas</button>
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid #80858E; background: #FFFFFF; color: #3D424B; font: inherit; font-size: 13px;">Divergiu do partido</button>
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid #80858E; background: #FFFFFF; color: #3D424B; font: inherit; font-size: 13px;">Ausências</button>
+</div>
+</div>
+<div style="display: flex; flex-direction: column;">
+<sc-for list="{{votacoes}}" as="v" hint-placeholder-count="5">
+<div style="display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; padding: 14px 0; border-top: 1px solid #ECECE6;">
+<span style="width: 84px; font-size: 13px; color: #555B66; font-variant-numeric: tabular-nums;">{{v.data}}</span>
+<div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+<a href="#" style="font-size: 15px; font-weight: 600; color: #15181E;">{{v.prop}}</a>
+<span style="font-size: 13px; color: #555B66;">{{v.ementa}} · {{v.resultado}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+<span style="font-size: 13px; color: #555B66;">Partido: {{v.orient}}</span>
+<span style="font-size: 13px; font-weight: 700; padding: 5px 11px; border-radius: 8px; background: {{v.bg}}; color: {{v.fg}}; border: 1px {{v.borda}} {{v.bordaCor}};">{{v.rotulo}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+<div id="periodos" style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+<h3 style="margin: 0; font-size: 15px; font-weight: 700;">Períodos fora do exercício em 2026</h3>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px;">
+<li style="display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px;"><span style="width: 200px; font-variant-numeric: tabular-nums;">01/02 a 18/07</span><span style="color: #3D424B;">Licença para tratamento de saúde · 49 votações</span></li>
+<li style="display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px;"><span style="width: 200px; font-variant-numeric: tabular-nums;">31/08 a 14/09</span><span style="color: #3D424B;">Afastamento com prazo determinado · 3 votações</span></li>
+</ul>
+<span style="font-size: 13px; color: #3D424B; line-height: 1.5;">A presença conta só as votações em que a deputada estava em exercício. Licença, afastamento e suplência ficam de fora. Votações nesses períodos aparecem na lista, marcadas, mas não entram em "Ausências". <a href="#">Como calculamos</a></span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; font-size: 12px; color: #555B66; border-top: 1px solid #ECECE6; padding-top: 12px;">
+<span>Fonte: Câmara dos Deputados, API v2 /votacoes e /deputados/{id}/historico · coletado em 11/11/2026 06:00</span>
+<span style="display: flex; gap: 16px;"><a href="#">Ver todas as 126</a><a href="#">Contestar</a></span>
+</div>
+</section>
+
+<section aria-labelledby="h-casos" style="display: flex; flex-direction: column; gap: 12px;">
+<h2 id="h-casos" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px;">3. Casos de borda do indicador</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px;">
+<div style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+<span style="font-size: 13px; font-weight: 600; color: #3D424B;">Suplente que tomou posse em setembro</span>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Presença em votações nominais</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">100%</span>
+<span style="font-size: 12px; color: #555B66;">3 de 3 em exercício em 2026 · média da Câmara 91%</span>
+<span style="font-size: 12px; color: #555B66;">123 votações antes da posse não contam · <a href="#">ver períodos</a></span>
+</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+<span style="font-size: 13px; font-weight: 600; color: #3D424B;">Licenciado o ano inteiro</span>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Presença em votações nominais</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">—</span>
+<span style="font-size: 12px; color: #555B66;">Fora do exercício nas 126 votações de 2026</span>
+<span style="font-size: 12px; color: #555B66;"><a href="#">Ver períodos</a></span>
+</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+<span style="font-size: 13px; font-weight: 600; color: #3D424B;">Histórico ainda não coletado</span>
+<div style="background: #F6F6F3; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px;">
+<span style="font-size: 13px; color: #555B66;">Presença em votações nominais</span>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700;">55%</span>
+<span style="font-size: 12px; color: #555B66;">69 de 126 em 2026 · média da Câmara 91%</span>
+<span style="font-size: 12px; color: #555B66;">Pode incluir períodos de licença</span>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="h-met" style="background: #FFFFFF; border: 1px solid #E2E2DC; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 10px; max-width: 760px;">
+<h2 id="h-met" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px;">4. Metodologia · Presença em votações</h2>
+<p style="margin: 0; font-size: 15px; line-height: 1.6;">Contamos as votações nominais do Plenário no ano em que o deputado estava em exercício e quantas delas têm voto registrado (Sim, Não, Abstenção, Obstrução ou Artigo 17). Usamos o histórico de situação publicado pela Câmara: dias de licença, afastamento, suplência ou antes da posse ficam fora da conta. Se a situação muda no dia da votação, ela conta quando o deputado esteve em exercício em algum momento daquele dia, e um voto registrado sempre conta. Votações simbólicas não entram, porque não registram voto individual.</p>
+<p style="margin: 0; font-size: 15px; line-height: 1.6;">A média da Câmara é a média simples da presença dos deputados em exercício, calculada do mesmo jeito.</p>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const com = { bg: '#E8EEFC', fg: '#163A9C', borda: 'solid', bordaCor: '#E8EEFC' };
+    const contra = { bg: '#FDF0E7', fg: '#7A2E09', borda: 'solid', bordaCor: '#FDF0E7' };
+    const aus = { bg: '#F0F0EC', fg: '#3D424B', borda: 'solid', bordaCor: '#F0F0EC' };
+    const lic = { bg: '#FFFFFF', fg: '#3D424B', borda: 'dashed', bordaCor: '#80858E' };
+    const votacoes = [
+      { data: '05/11/2026', prop: 'PL 1.234/2026', ementa: 'Licenciamento ambiental simplificado', resultado: 'Aprovado', orient: 'Sim', rotulo: 'Votou: Sim', ...com },
+      { data: '29/10/2026', prop: 'PEC 12/2026', ementa: 'Regras fiscais para estados', resultado: 'Rejeitada', orient: 'Sim', rotulo: 'Votou: Não', ...contra },
+      { data: '22/10/2026', prop: 'MPV 1.300/2026', ementa: 'Crédito extraordinário para a Defesa Civil', resultado: 'Aprovada', orient: 'Sim', rotulo: 'Votou: sem registro', ...aus },
+      { data: '09/09/2026', prop: 'PLP 45/2026', ementa: 'Transparência de emendas parlamentares', resultado: 'Aprovado', orient: 'Liberado', rotulo: 'Em licença · não conta', ...lic },
+      { data: '08/07/2026', prop: 'PL 987/2026', ementa: 'Reajuste de taxas cartoriais', resultado: 'Aprovado', orient: 'Não', rotulo: 'Em licença · não conta', ...lic }
+    ];
+    return { votacoes };
+  }
+}
+</script>
+</body>
+</html>

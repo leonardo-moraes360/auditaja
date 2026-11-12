@@ -729,3 +729,24 @@ Phase 9:  T26
 
 **Tests**: unit, integration, e2e
 **Gate**: full
+
+---
+
+### T30: Presença sem períodos de licença
+
+**What**: A presença deixa de contar votações em dias fora do exercício (licença, afastamento, vacância, antes da posse). Coletor `pnpm ingest historico` (API v2 `/deputados/{id}/historico`, 1 requisição por deputado pelo `ClienteEducado`, coleta registrada a cada 50 deputados; `historico faltantes` retoma), migração 0006 (`periodo_fora_exercicio` e `parlamentar.historico_coleta_id`), regra pura em `src/lib/exercicio.ts`, média da Câmara com a mesma regra, selo "Em licença · não conta" na lista, quadro "Períodos fora do exercício" e cartão como na proposta aprovada (canvas, pranchas "Presença sem licenças"). Metodologia 1.6 (a 1.5 entrou com emendas e sanções).
+**Where**: `src/lib/exercicio.ts`, `src/ingest/historico.ts`, `scripts/ingest.ts`, `src/db/migrations/0006_exercicio.ts`, `src/data/perfil.ts`, `src/components/perfil/secoes.tsx`, `src/app/parlamentares/[id]/page.tsx`, `src/app/metodologia/page.tsx`
+**Depends on**: None
+**Requirement**: VOTO-01, PRES-01 a PRES-05
+
+**Done when**:
+
+- [x] Unit: dia de saída e de volta, renovações, motivo novo, suplente antes da posse, eventos fora de ordem e de outras legislaturas, recorte do ano, voto em licença conta
+- [x] Integração: seed com licença em julho (2 de 4 em exercício), média da Câmara com e sem histórico
+- [x] E2E: cartão, selo, quadro dos períodos, filtro "Ausências" sem a votação em licença, aviso sem histórico
+- [x] Verificação adversarial independente com paridade ≥ 95% às pranchas aprovadas (verificação 2: 91,1%, 100% com as 5 divergências aceitas pelo usuário; `paridade/presenca-verificacao-2.md`)
+- [x] Gate full passa (lint, typecheck, 120 unit e 22 integração, build, 94 e2e e 4 pulados por tamanho de tela)
+
+**Tests**: unit, integration, e2e
+**Gate**: full
+

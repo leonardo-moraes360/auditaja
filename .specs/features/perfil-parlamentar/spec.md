@@ -89,7 +89,7 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 
 **Acceptance Criteria**:
 
-1. The system SHALL calcular a presença como votações nominais do Plenário no ano com voto não vazio do deputado, sobre o total de votações nominais do Plenário no ano; linha de voto vazia não conta como presença. <!-- VOTO-01 -->
+1. The system SHALL calcular a presença como votações nominais do Plenário no ano com voto não vazio do deputado, sobre as votações nominais do Plenário no ano em que ele estava em exercício (PRES-02); linha de voto vazia não conta como presença. <!-- VOTO-01 -->
 2. The system SHALL escolher a orientação aplicável na ordem partido, federação, bloco, ignorando orientação vazia. <!-- VOTO-02 -->
 3. The system SHALL contar no alinhamento só votações com orientação "Sim" ou "Não" e voto "Sim" ou "Não", e marcar como divergência quando forem diferentes. <!-- VOTO-03 -->
 4. IF uma sigla de bloco é uma sigla completa de partido (ex.: "Psd") THEN the system SHALL casá-la só por igualdade, nunca como prefixo (PSD não casa PSDB). <!-- VOTO-04 -->
@@ -97,8 +97,13 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 6. WHEN uma votação não tem voto do deputado THEN the system SHALL mostrar "Votou: sem registro" no lugar do voto. <!-- VOTO-06 -->
 7. WHEN o usuário escolhe o filtro "Sem voto registrado" THEN the system SHALL listar só votações sem voto do deputado. <!-- VOTO-07 -->
 8. WHEN a orientação é de um bloco com abreviação truncada (ex.: "Bl UniPpPsd...") e exatamente um bloco da legislatura na API da Câmara casa com ela THEN the system SHALL aplicá-la a todos os partidos desse bloco, inclusive os de federação e os fora da abreviação; sem bloco identificado, só aos partidos visíveis na abreviação. <!-- VOTO-08 -->
+9. The system SHALL montar, a partir de `/deputados/{id}/historico` da API v2 da Câmara (só a legislatura atual, em ordem de data e hora), os dias inteiros fora do exercício: licença, afastamento, vacância e o trecho antes da primeira posse; saída às 00:00 tira o dia, saída em outro horário só a partir do dia seguinte, e posse ou reassunção devolve o dia inteiro. <!-- PRES-01 -->
+10. WHEN uma votação cai num dia fora do exercício e o deputado não registrou voto nela THEN the system SHALL tirá-la do denominador da presença do deputado e da média da Câmara; voto registrado sempre conta. <!-- PRES-02 -->
+11. WHEN uma votação está fora do exercício THEN the system SHALL marcá-la na lista ("Em licença · não conta", "Antes da posse · não conta" ou "Fora do exercício · não conta") e não listá-la no filtro "Ausências". <!-- PRES-03 -->
+12. WHEN há períodos fora do exercício no ano das votações THEN the system SHALL mostrar, no cartão de presença do desktop, quantas votações não contam com link para os períodos, e abaixo da lista o quadro "Períodos fora do exercício" com datas, motivo da Câmara e número de votações; sem nenhuma votação em exercício o cartão mostra "—". <!-- PRES-04 -->
+13. IF o histórico do deputado ainda não foi coletado THEN the system SHALL contar todas as votações do ano, como antes, e avisar que a presença pode incluir períodos de licença. <!-- PRES-05 -->
 
-**Independent Test**: no seed, presença 67% (2 de 3) e alinhamento 50% (1 de 2); o filtro de divergência mostra só a PEC fictícia.
+**Independent Test**: no seed, presença 50% (2 de 4 em exercício; a votação de julho cai na licença) e alinhamento 50% (1 de 2); o filtro de divergência mostra só a PEC fictícia.
 
 ---
 
@@ -257,6 +262,11 @@ O cidadão não tem um lugar único e confiável para ver como um deputado feder
 | VOTO-07 | P1: Ver votações e alinhamento | Tasks | Verified |
 | VOTO-08 | P1: Ver votações e alinhamento | Tasks | Implemented |
 | VOTO-06 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-01 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-02 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-03 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-04 | P1: Ver votações e alinhamento | Tasks | Verified |
+| PRES-05 | P1: Ver votações e alinhamento | Tasks | Verified |
 | BENS-01 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-02 | P1: Ver bens declarados | Tasks | Verified |
 | BENS-03 | P1: Ver bens declarados | Tasks | Verified |

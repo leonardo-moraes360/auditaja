@@ -21,10 +21,14 @@ export const SEED = {
 export async function semear(db: Kysely<Database>) {
   await db.transaction().execute(async (trx) => {
     for (const t of [
+      "sancao",
+      "emenda_favorecido",
+      "emenda",
       "pedido_correcao",
       "bem_declarado",
       "candidatura",
       "orientacao",
+      "periodo_fora_exercicio",
       "voto",
       "votacao",
       "despesa_ceap",
@@ -37,7 +41,7 @@ export async function semear(db: Kysely<Database>) {
     ] as const) {
       await trx.deleteFrom(t).execute();
     }
-    const coleta = async (fonte: string, url: string) =>
+    const coleta = async (fonte: string, url: string, observacao = "seed") =>
       (
         await trx
           .insertInto("coleta")
@@ -48,7 +52,7 @@ export async function semear(db: Kysely<Database>) {
             sha256: "0".repeat(64),
             bytes: 0,
             licenca: "dados fictícios de teste",
-            observacao: "seed",
+            observacao,
           })
           .returning("id")
           .executeTakeFirstOrThrow()
@@ -58,6 +62,10 @@ export async function semear(db: Kysely<Database>) {
     const cVot = await coleta(
       "camara_lote_votos",
       "https://dadosabertos.camara.leg.br/arquivos/votacoesVotos/csv/votacoesVotos-2026.csv",
+    );
+    const cHist = await coleta(
+      "camara_api_historico",
+      "https://dadosabertos.camara.leg.br/api/v2/deputados/{id}/historico",
     );
     const cTse = await coleta(
       "tse_bem_candidato",
@@ -81,6 +89,7 @@ export async function semear(db: Kysely<Database>) {
           em_exercicio: true,
           source_url: "https://dadosabertos.camara.leg.br/api/v2/deputados/900000001",
           coleta_id: cDep,
+          historico_coleta_id: cHist,
         },
         {
           id: SEED.deputado,
@@ -192,6 +201,221 @@ export async function semear(db: Kysely<Database>) {
       ])
       .execute();
 
+    // Emendas fictícias da deputada (orçamentos 2024–2026), favorecidos e sanções de dois fornecedores da cota.
+    const cEmd = await coleta(
+      "cgu_emendas",
+      "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/emendas-parlamentares/EmendasParlamentares.zip",
+      "seed · base de 09/11/2026",
+    );
+    const FD = "Emenda Individual - Transferências com Finalidade Definida";
+    const emenda = (
+      codigo: string,
+      ano: number,
+      localidade: string,
+      funcao: string,
+      empenhado: number,
+      pago: number,
+      rp_pagos: number,
+      tipo = FD,
+    ) => ({
+      codigo,
+      ano,
+      tipo,
+      autor_nome: "MARIA EXEMPLO",
+      parlamentar_id: SEED.deputada,
+      localidade,
+      uf: "SÃO PAULO",
+      funcao,
+      empenhado,
+      liquidado: pago,
+      pago,
+      rp_pagos,
+      coleta_id: cEmd,
+    });
+    await trx
+      .insertInto("emenda")
+      .values([
+        emenda("202690000001", 2026, "CAMPINAS - SP", "Saúde", 3_000_000, 1_000_000, 0),
+        emenda(
+          "202690000002",
+          2026,
+          "SÃO PAULO (UF)",
+          "Encargos especiais",
+          2_000_000,
+          2_000_000,
+          0,
+          "Emenda Individual - Transferências Especiais",
+        ),
+        emenda("202590000003", 2025, "SOROCABA - SP", "Saúde", 1_500_000, 900_000, 300_000),
+        // Mesmo código em dois locais: conta como uma emenda só.
+        emenda("202590000003", 2025, "ITU - SP", "Saúde", 500_000, 0, 0),
+        emenda("202590000004", 2025, "RIBEIRÃO PRETO - SP", "Urbanismo", 1_200_000, 600_000, 400_000),
+        emenda("202590000005", 2025, "JUNDIAÍ - SP", "Educação", 800_000, 800_000, 0),
+        emenda("202490000006", 2024, "SANTOS - SP", "Agricultura", 600_000, 300_000, 300_000),
+        emenda("202490000007", 2024, "NACIONAL", "Assistência social", 400_000, 0, 400_000),
+        emenda("202490000008", 2024, "BAURU - SP", "Cultura", 100_000, 0, 0),
+        emenda("202690000009", 2026, "MÚLTIPLO", "Saúde", 1_000_000, 0, 0),
+        // EDGE-04: emenda sem empenho (deputada fora de exercício).
+        { ...emenda("202590000010", 2025, "ITU - SP", "Saúde", 0, 0, 0), parlamentar_id: SEED.foraDeExercicio },
+      ])
+      .execute();
+    const fav = (
+      codigo_emenda: string,
+      ano_emenda: number,
+      ano_mes: string,
+      favorecido_nome: string,
+      favorecido_doc: string | null,
+      tipo_favorecido: string,
+      natureza_juridica: string | null,
+      municipio: string,
+      valor: number,
+    ) => ({
+      codigo_emenda,
+      parlamentar_id: SEED.deputada,
+      ano_emenda,
+      ano_mes,
+      favorecido_nome,
+      favorecido_doc,
+      tipo_favorecido,
+      natureza_juridica,
+      uf: "SP",
+      municipio,
+      valor,
+      coleta_id: cEmd,
+    });
+    const PJ = "Pessoa Jurídica";
+    const FUNDO = "Fundo Público da Administração Direta Municipal";
+    await trx
+      .insertInto("emenda_favorecido")
+      .values([
+        fav(
+          "202690000001",
+          2026,
+          "202603",
+          "Fundo Municipal de Saúde de Campinas",
+          "11.111.111/0001-11",
+          PJ,
+          FUNDO,
+          "CAMPINAS",
+          900_000,
+        ),
+        fav(
+          "202690000001",
+          2026,
+          "202605",
+          "Fundo Municipal de Saúde de Campinas",
+          "11.111.111/0001-11",
+          PJ,
+          FUNDO,
+          "CAMPINAS",
+          100_000,
+        ),
+        fav(
+          "202690000002",
+          2026,
+          "202604",
+          "Município de São Paulo",
+          "22.222.222/0001-22",
+          PJ,
+          "Município",
+          "SÃO PAULO",
+          2_000_000,
+        ),
+        fav(
+          "202590000003",
+          2025,
+          "202508",
+          "Santa Casa Exemplo",
+          "33.333.333/0001-33",
+          PJ,
+          "Associação Privada",
+          "SOROCABA",
+          1_200_000,
+        ),
+        fav(
+          "202590000004",
+          2025,
+          "202509",
+          "Construtora Ilustrativa Ltda",
+          "44.444.444/0001-44",
+          PJ,
+          "Sociedade Empresária Limitada",
+          "RIBEIRÃO PRETO",
+          1_000_000,
+        ),
+        fav(
+          "202590000005",
+          2025,
+          "202510",
+          "Município de Jundiaí",
+          "55.555.555/0001-55",
+          PJ,
+          "Município",
+          "JUNDIAÍ",
+          800_000,
+        ),
+        fav(
+          "202490000006",
+          2024,
+          "202411",
+          "Beneficiário pessoa física",
+          "***.456.789-**",
+          "Pessoa Fisica",
+          null,
+          "SANTOS",
+          18_000,
+        ),
+        fav(
+          "202490000007",
+          2024,
+          "202412",
+          "Cooperativa Exemplo",
+          "66.666.666/0001-66",
+          PJ,
+          "Cooperativa",
+          "SANTOS",
+          10_000,
+        ),
+      ])
+      .execute();
+    const cCeis = await coleta(
+      "cgu_ceis",
+      "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/ceis/20261110_CEIS.zip",
+      "seed · base de 10/11/2026",
+    );
+    const cCnep = await coleta(
+      "cgu_cnep",
+      "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/cnep/20261110_CNEP.zip",
+      "seed · base de 10/11/2026",
+    );
+    await trx
+      .insertInto("sancao")
+      .values([
+        {
+          cadastro: "CEIS",
+          codigo: "seed-ceis-1",
+          cnpj: "55666777000188",
+          nome: "POSTO ILUSTRATIVO LTDA",
+          categoria: "Impedimento/proibição de contratar com prazo determinado",
+          data_inicio: "2026-02-01",
+          data_fim: "2027-02-01",
+          orgao: "Ministério Exemplo",
+          coleta_id: cCeis,
+        },
+        {
+          cadastro: "CNEP",
+          codigo: "seed-cnep-1",
+          cnpj: "12345678000190",
+          nome: "GRAFICA EXEMPLO LTDA",
+          categoria: "Multa",
+          data_inicio: "2026-05-01",
+          data_fim: null,
+          orgao: "Controladoria Exemplo",
+          coleta_id: cCnep,
+        },
+      ])
+      .execute();
+
     await trx
       .insertInto("votacao")
       .values([
@@ -254,6 +478,22 @@ export async function semear(db: Kysely<Database>) {
           source_url: "https://dadosabertos.camara.leg.br/api/v2/votacoes/seed-4",
           coleta_id: cVot,
         },
+        {
+          // Cai na licença fictícia de julho da deputada: não entra na presença dela.
+          id: "seed-5",
+          data: "2026-07-15",
+          sigla_orgao: "PLEN",
+          descricao: "Aprovado o PLP fictício 45/2026",
+          proposicao: null,
+          proposicao_sigla: "PLP 45/2026",
+          proposicao_ementa: "Transparência fictícia de emendas.",
+          aprovacao: 1,
+          votos_sim: 300,
+          votos_nao: 100,
+          votos_outros: 0,
+          source_url: "https://dadosabertos.camara.leg.br/api/v2/votacoes/seed-5",
+          coleta_id: cVot,
+        },
       ])
       .execute();
     await trx
@@ -263,6 +503,18 @@ export async function semear(db: Kysely<Database>) {
         { votacao_id: "seed-2", parlamentar_id: SEED.deputada, voto: "Sim", sigla_partido: "PFX", coleta_id: cVot },
         { votacao_id: "seed-4", parlamentar_id: SEED.deputada, voto: "", sigla_partido: "PFX", coleta_id: cVot },
       ])
+      .execute();
+    await trx
+      .insertInto("periodo_fora_exercicio")
+      .values({
+        parlamentar_id: SEED.deputada,
+        inicio: "2026-07-01",
+        fim: "2026-07-31",
+        situacao: "Licença",
+        motivo: "Licença para Tratamento de Saúde",
+        source_url: "https://dadosabertos.camara.leg.br/api/v2/deputados/900000001/historico",
+        coleta_id: cHist,
+      })
       .execute();
     await trx
       .insertInto("orientacao")

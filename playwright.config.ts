@@ -6,7 +6,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Se o Chromium do Playwright não estiver instalado na versão certa, aponte
  * PW_CHROME para um executável do Chrome/Chromium.
  */
-/** Porta do servidor de teste; outra porta permite rodar worktrees em paralelo. */
+// E2E_PORT: worktrees em paralelo (emendas, Senado, presença) usam portas próprias.
 const PORTA = process.env.E2E_PORT ?? "3212";
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
 
