@@ -210,13 +210,14 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] CNPJ que não está no banco não é gravado
-- [ ] Nenhum campo de endereço, telefone ou e-mail gravado
-- [ ] Lote de mês anterior é recusado com mensagem que cita os dois meses
-- [ ] O módulo não importa `ClienteEducado` nem faz requisição (teste de import)
-- [ ] Full gate passa
+- [x] CNPJ que não está no banco não é gravado
+- [x] Nenhum campo de endereço, telefone ou e-mail gravado
+- [x] Lote de mês anterior é recusado com mensagem que cita os dois meses
+- [x] O módulo não importa `ClienteEducado` nem faz requisição (teste de import)
+- [x] Full gate passa
 
 **Tests**: integration
+**Status**: ✅ Done
 **Gate**: full
 
 ---
