@@ -134,11 +134,12 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] 429, 4xx e 5xx param a paginação com `ColetaBloqueada`; 200 segue (L-002)
-- [ ] Id repetido entre páginas aparece uma vez (L-004)
-- [ ] Full gate passa
+- [x] 429, 4xx e 5xx param a paginação com `ColetaBloqueada`; 200 segue (L-002)
+- [x] Id repetido entre páginas aparece uma vez (L-004)
+- [x] Full gate passa
 
 **Tests**: integration
+**Status**: ✅ Done
 **Gate**: full
 
 ---
