@@ -25,6 +25,10 @@ export default function Fontes() {
           responder 401 ou 403.
         </li>
         <li>Tribunal Superior Eleitoral: arquivos em lote de cdn.tse.jus.br.</li>
+        <li>
+          Controladoria-Geral da União: arquivos em lote do Portal da Transparência em dadosabertos-download.cgu.gov.br
+          (emendas parlamentares e cadastros CEIS e CNEP), sem a API e sem chave.
+        </li>
       </ul>
       <Suspense fallback={<Esqueleto linhas={4} />}>
         <TabelaColetas />
