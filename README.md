@@ -60,16 +60,17 @@ A stack é **Next.js 16**, **React 19**, **Tailwind CSS 4**, **PostgreSQL 16** e
 
 ## Como contribuir
 
-Contribuições são bem-vindas! Antes de começar:
+Contribuições são bem-vindas! Leia o [CONTRIBUTING.md](CONTRIBUTING.md) para saber como configurar o ambiente, abrir PRs e seguir os padrões do projeto. Esperamos que todos sigam nosso [Código de Conduta](CODE_OF_CONDUCT.md).
 
-1. Leia o [guia técnico](AGENTS.md) para entender a estrutura do projeto.
-2. Confira as [issues abertas](https://github.com/leonardo-moraes360/auditaja/issues) ou proponha uma melhoria.
-3. Siga o padrão de commits convencionais (`feat:`, `fix:`, `docs:`...).
-4. Rode `pnpm lint && pnpm typecheck && pnpm format:check` antes de abrir o PR.
+Resumo rápido:
+
+1. Confira as [issues abertas](https://github.com/leonardo-moraes360/auditaja/issues) ou [proponha uma melhoria](https://github.com/leonardo-moraes360/auditaja/issues/new?template=feature.yml).
+2. Siga o padrão de [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (`feat:`, `fix:`, `docs:`...).
+3. Rode os checks antes de abrir o PR: `pnpm lint && pnpm typecheck && pnpm format:check && pnpm test`.
 
 ### Encontrou um erro nos dados?
 
-Use o formulário "Contestar" no perfil do parlamentar. A correção será verificada e aplicada.
+Use o formulário "Contestar" no perfil do parlamentar, ou abra uma [issue de correção de dado](https://github.com/leonardo-moraes360/auditaja/issues/new?template=correcao-de-dado.yml).
 
 ### Encontrou uma vulnerabilidade?
 
