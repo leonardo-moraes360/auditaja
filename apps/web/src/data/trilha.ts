@@ -137,11 +137,19 @@ function moda(vs: string[]): string {
   return [...n].toSorted((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? "";
 }
 
-/**
- * LING-07: taxa de base de cada sinal, na base inteira (todas as emendas Pix e todos os parlamentares),
- * com as mesmas regras do perfil: uma consulta agregada por sinal.
- */
-export async function taxasDeBase(): Promise<TaxasDeBase> {
+let cacheTaxas: { chave: string; valor: TaxasDeBase } | null = null;
+
+async function chaveDeCacheTaxas(): Promise<string> {
+  const db = getDb();
+  const r = await db
+    .selectFrom("coleta")
+    .select(sql<string>`max(coletado_em)`.as("ultima"))
+    .where("fonte", "in", ["transferegov_especiais", "receita_estabelecimentos", "tse_prestacao_contas"])
+    .executeTakeFirst();
+  return r?.ultima ?? "";
+}
+
+async function calcularTaxasDeBase(): Promise<TaxasDeBase> {
   const db = getDb();
   const recem = await sql<{ n: string; m: string }>`
     with entes as (
@@ -198,6 +206,27 @@ export async function taxasDeBase(): Promise<TaxasDeBase> {
     recemAberta: [Number(recem.rows[0]?.m ?? 0), Number(recem.rows[0]?.n ?? 0)],
     ciclo: [Number(ciclo.rows[0]?.m ?? 0), Number(ciclo.rows[0]?.n ?? 0)],
   };
+}
+
+/**
+ * LING-07: taxa de base de cada sinal, na base inteira (todas as emendas Pix e todos os parlamentares),
+ * com as mesmas regras do perfil: uma consulta agregada por sinal.
+ *
+ * Cache em memória invalidado pela data da última coleta das fontes relevantes (Transferegov, Receita, TSE).
+ * Evita recalcular ~220 ms por visita ao perfil quando os dados não mudaram.
+ */
+export async function taxasDeBase(): Promise<TaxasDeBase> {
+  const chave = await chaveDeCacheTaxas();
+  if (cacheTaxas && cacheTaxas.chave === chave) {
+    return cacheTaxas.valor;
+  }
+  const valor = await calcularTaxasDeBase();
+  cacheTaxas = { chave, valor };
+  return valor;
+}
+
+export function invalidarCacheTaxasDeBase(): void {
+  cacheTaxas = null;
 }
 
 /** Mês do lote vigente da Receita ("AAAA-MM"), para "base de MM/AAAA" (CNPJ-05, CNPJ-06). */
