@@ -18,6 +18,7 @@ const paginas = {
 const estaticas = {
   "/metodologia": () => import("@/app/metodologia/page"),
   "/privacidade": () => import("@/app/privacidade/page"),
+  "/termos": () => import("@/app/termos/page"),
 };
 
 /** Conta componentes assíncronos (as partes com dados) dentro e fora de <Suspense>. */
