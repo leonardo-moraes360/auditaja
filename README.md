@@ -6,13 +6,25 @@ O MVP é o **perfil do deputado federal**: gastos da cota parlamentar (CEAP), vo
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, shadcn/ui, PostgreSQL 16, Kysely, Vitest e Playwright. Gerenciador: pnpm.
+Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, shadcn/ui, PostgreSQL 16, Kysely, Vitest e Playwright. Gerenciador: pnpm, em monorepo com workspaces.
+
+## Estrutura
+
+| Pacote             | Caminho           | O que tem                                                                                   |
+| ------------------ | ----------------- | ------------------------------------------------------------------------------------------- |
+| `@auditaja/web`    | `apps/web`        | Site Next.js: páginas, componentes, leituras do banco (`src/data`), SEO, e2e com Playwright |
+| `@auditaja/db`     | `packages/db`     | Esquema Kysely, cliente PostgreSQL, migrações, seed de teste e `db-init` do Docker          |
+| `@auditaja/core`   | `packages/core`   | Regras de domínio puras: métricas, privacidade, emendas, trilha, Senado, padrão atípico     |
+| `@auditaja/ingest` | `packages/ingest` | Coletores das fontes públicas e o CLI `pnpm ingest`                                         |
+
+Dependências: `db ← core ← ingest` e `web → core, db`. Os pacotes exportam TypeScript direto (`@auditaja/core/metrics`, `@auditaja/db/client`...), sem etapa de build: o Next compila via `transpilePackages`, e tsx e Vitest leem o código-fonte. Os comandos abaixo rodam na raiz; para um pacote só, use `pnpm --filter @auditaja/<pacote> <script>`.
 
 ## Como rodar
 
 ```bash
 pnpm install
-cp .env.example .env && cp .env.example .env.local
+cp .env.example .env && cp .env.example apps/web/.env.local
+# o Next lê só apps/web/.env*; o .env da raiz é dos scripts de banco e coleta
 pnpm db:up          # Postgres em 127.0.0.1:5436 (cria também o banco auditaja_test)
 pnpm db:migrate
 pnpm ingest tudo 2026   # coleta real: ~80 MB, alguns minutos
@@ -32,7 +44,7 @@ Sem rede, use os dados fictícios do banco de teste: `pnpm db:seed:test` e apont
 | `bens`      | TSE, `consulta_cand` e `bem_candidato` (download em lote no CDN) |
 | `tudo`      | Todos acima; bens de 2018, 2022 e 2026                           |
 
-Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `ClienteEducado` (`src/ingest/http.ts`): User-Agent identificado, leitura do `robots.txt` antes de cada host, no máximo 1 requisição por segundo (ou o `Crawl-delay`), backoff em 429/5xx e parada em 401/403. A API CKAN do TSE fica de fora porque o `robots.txt` dela proíbe `/api/`.
+Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `ClienteEducado` (`packages/ingest/src/http.ts`): User-Agent identificado, leitura do `robots.txt` antes de cada host, no máximo 1 requisição por segundo (ou o `Crawl-delay`), backoff em 429/5xx e parada em 401/403. A API CKAN do TSE fica de fora porque o `robots.txt` dela proíbe `/api/`.
 
 ## Regras legais aplicadas (R1–R13)
 
@@ -57,19 +69,19 @@ O domínio público vem de `NEXT_PUBLIC_SITE_URL`, lido no build: sem ele, canon
 | `/parlamentares/{id}.md`          | Perfil em Markdown (`noindex`, canonical para o HTML)                    |
 | `opengraph-image`/`twitter-image` | Cartões 1200×630 do site e de cada perfil                                |
 
-Cada página define title, description e canonical por `metadataDaPagina` (`src/lib/site.ts`). O perfil traz JSON-LD (`Person`, `ProfilePage`, `BreadcrumbList`, `Dataset`) montado em `src/lib/seo-perfil.ts`, só com o que a página já mostra (R2). Robôs de IA (lista em `ROBOS_DE_IA`) recebem a metadata no `<head>` sem streaming (`htmlLimitedBots` no `next.config.ts`).
+Cada página define title, description e canonical por `metadataDaPagina` (`apps/web/src/lib/site.ts`). O perfil traz JSON-LD (`Person`, `ProfilePage`, `BreadcrumbList`, `Dataset`) montado em `apps/web/src/lib/seo-perfil.ts`, só com o que a página já mostra (R2). Robôs de IA (lista em `ROBOS_DE_IA`) recebem a metadata no `<head>` sem streaming (`htmlLimitedBots` no `apps/web/next.config.ts`).
 
 Limite conhecido: o conteúdo dos perfis e das listas chega por streaming (Suspense). Quem executa JavaScript, como o Googlebot, vê tudo; um robô sem JavaScript recebe o texto num bloco oculto do HTML, e por isso o perfil também sai em Markdown.
 
 ## Versão (semver)
 
-A versão do site fica no `package.json` e segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/). O rodapé mostra `vX.Y.Z · <hash curto>`, lidos no build pelo `next.config.ts` (hash: `NEXT_PUBLIC_COMMIT`, depois `SOURCE_COMMIT` do Coolify, depois `git rev-parse --short HEAD`). Sem git, aparece só a versão.
+A versão do site fica no `apps/web/package.json` e segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/). O rodapé mostra `vX.Y.Z · <hash curto>`, lidos no build pelo `apps/web/next.config.ts` (hash: `NEXT_PUBLIC_COMMIT`, depois `SOURCE_COMMIT` do Coolify, depois `git rev-parse --short HEAD`). Sem git, aparece só a versão.
 
 Enquanto o site não for lançado, fica em 0.x. Para publicar uma versão:
 
 1. Anote as mudanças em `## [Não publicado]` no `CHANGELOG.md` ao longo do trabalho.
 2. Rode `pnpm versao patch` (correção), `minor` (funcionalidade nova) ou `major` (mudança incompatível, ou o lançamento 1.0.0).
-3. O script sobe o `package.json`, move as notas para a seção da nova versão e imprime o `git commit` e o `git tag` para você revisar.
+3. O script sobe o `apps/web/package.json`, move as notas para a seção da nova versão e imprime o `git commit` e o `git tag` para você revisar.
 
 ## Verificação
 
@@ -81,6 +93,10 @@ pnpm build && pnpm test:e2e
 
 Se o Chromium do Playwright não estiver na versão esperada, defina `PW_CHROME` com o caminho de um Chrome/Chromium.
 
+## Deploy (Coolify)
+
+O build continua sendo `pnpm install` e `pnpm build` na raiz do repositório, e o start, `pnpm start`. Os dois delegam para `@auditaja/web`, e a saída fica em `apps/web/.next`. O diretório base do deploy precisa ser a raiz, não `apps/web`, para o pnpm enxergar os pacotes do workspace. `NEXT_PUBLIC_SITE_URL` continua sendo lido no build.
+
 ## Licença
 
 - **Código:** [GNU AGPL-3.0 ou posterior](LICENSE) (`AGPL-3.0-or-later`), público em https://github.com/leonardo-moraes360/auditaja. Quem colocar no ar uma versão modificada precisa oferecer o código dela aos usuários.
@@ -88,13 +104,13 @@ Se o Chromium do Playwright não estiver na versão esperada, defina `PW_CHROME`
 - **Dados de origem:** seguem a licença de cada órgão (Câmara, Senado, TSE, CGU, Transferegov, Receita), gravada em cada coleta e listada em `/fontes`.
 - **Nome e logo:** ficam fora das duas licenças.
 
-No site, a licença aparece no rodapé, na seção `/sobre#licenca`, no campo `license` do JSON-LD (`WebSite` e `Dataset`), no `llms.txt` (com o link do repositório) e no fim de cada perfil em Markdown. As constantes ficam em `src/lib/licenca.ts`.
+No site, a licença aparece no rodapé, na seção `/sobre#licenca`, no campo `license` do JSON-LD (`WebSite` e `Dataset`), no `llms.txt` (com o link do repositório) e no fim de cada perfil em Markdown. As constantes ficam em `apps/web/src/lib/licenca.ts`.
 
 Contribuições entram sob as mesmas licenças. Para relicenciar no futuro, será preciso adotar um termo de contribuição (DCO ou CLA) antes de aceitar código de terceiros.
 
 ## Pendências conhecidas
 
-- **Teto da CEAP por UF:** o Ato da Mesa nº 244/2026 atualizou os valores, mas a tabela não está na página do ato. `src/data/teto-ceap.ts` só aceita valores conferidos; até lá a interface não compara com o teto.
+- **Teto da CEAP por UF:** o Ato da Mesa nº 244/2026 atualizou os valores, mas a tabela não está na página do ato. `apps/web/src/data/teto-ceap.ts` só aceita valores conferidos; até lá a interface não compara com o teto.
 - **Orientação de blocos:** a Câmara publica nomes de bloco truncados ("Bl UniPpPsd..."). Partidos que não aparecem na abreviação ficam sem orientação.
 - **Presença:** inclui períodos de licença, porque os arquivos não trazem o período de exercício.
 - **Senado:** fora do MVP.

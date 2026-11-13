@@ -7,7 +7,37 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      eslint:
+        specifier: ^9
+        version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
+      eslint-config-next:
+        specifier: 16.4.6
+        version: 16.4.6(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+      next:
+        specifier: 16.4.6
+        version: 16.4.6(@babel/core@7.29.13(supports-color@7.2.0))(@playwright/test@1.65.0)(@types/node@20.19.43)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      prettier:
+        specifier: ^3.9.10
+        version: 3.9.10
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  apps/web:
     dependencies:
+      '@auditaja/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@auditaja/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@base-ui/react':
         specifier: ^1.9.0
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -17,12 +47,6 @@ importers:
       cn:
         specifier: ^0.5.2
         version: 0.5.2
-      csv-parse:
-        specifier: ^7.0.3
-        version: 7.0.3
-      iconv-lite:
-        specifier: ^0.7.3
-        version: 0.7.3
       kysely:
         specifier: ^0.29.8
         version: 0.29.8
@@ -50,9 +74,6 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
-      yauzl:
-        specifier: ^3.4.0
-        version: 3.4.0
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -78,24 +99,90 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.3.0(@types/react@19.3.0)
+      tailwindcss:
+        specifier: 4.3.3
+        version: 4.3.3
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@20.19.43)(vite@8.3.7(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/core:
+    dependencies:
+      '@auditaja/db':
+        specifier: workspace:*
+        version: link:../db
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@20.19.43)(vite@8.3.7(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/db:
+    dependencies:
+      kysely:
+        specifier: ^0.29.8
+        version: 0.29.8
+      pg:
+        specifier: ^8.23.1
+        version: 8.23.1
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@20.19.43)(vite@8.3.7(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/ingest:
+    dependencies:
+      '@auditaja/core':
+        specifier: workspace:*
+        version: link:../core
+      '@auditaja/db':
+        specifier: workspace:*
+        version: link:../db
+      csv-parse:
+        specifier: ^7.0.3
+        version: 7.0.3
+      iconv-lite:
+        specifier: ^0.7.3
+        version: 0.7.3
+      kysely:
+        specifier: ^0.29.8
+        version: 0.29.8
+      yauzl:
+        specifier: ^3.4.0
+        version: 3.4.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
       '@types/yauzl':
         specifier: ^3.4.0
         version: 3.4.0
       '@types/yazl':
         specifier: ^3.3.1
         version: 3.3.1
-      eslint:
-        specifier: ^9
-        version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
-      eslint-config-next:
-        specifier: 16.4.6
-        version: 16.4.6(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
-      prettier:
-        specifier: ^3.9.10
-        version: 3.9.10
-      tailwindcss:
-        specifier: 4.3.3
-        version: 4.3.3
       tsx:
         specifier: ^4.23.15
         version: 4.23.15

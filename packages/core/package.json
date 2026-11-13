@@ -1,0 +1,23 @@
+{
+  "name": "@auditaja/core",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "description": "Regras de domínio puras: métricas, privacidade, emendas, trilha, Senado, padrão atípico.",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./fixtures/*": "./tests/fixtures/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@auditaja/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+  }
+}

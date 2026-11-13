@@ -1,0 +1,31 @@
+{
+  "name": "@auditaja/ingest",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "description": "Coletores das fontes públicas (Câmara, Senado, TSE, Portal da Transparência, Transferegov, Receita).",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@auditaja/core": "workspace:*",
+    "@auditaja/db": "workspace:*",
+    "csv-parse": "^7.0.3",
+    "iconv-lite": "^0.7.3",
+    "kysely": "^0.29.8",
+    "yauzl": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/yauzl": "^3.4.0",
+    "@types/yazl": "^3.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.1.0",
+    "yazl": "^3.3.1"
+  }
+}

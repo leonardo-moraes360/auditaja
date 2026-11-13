@@ -9,7 +9,7 @@ services:
       - "127.0.0.1:5436:5432"
     volumes:
       - auditaja-pg:/var/lib/postgresql/data
-      - ./scripts/db-init:/docker-entrypoint-initdb.d:ro
+      - ./packages/db/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U auditaja"]
       interval: 5s
