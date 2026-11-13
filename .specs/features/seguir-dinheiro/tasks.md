@@ -287,10 +287,11 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Comando imprime o resumo
-- [ ] Build gate passa
+- [x] Comando imprime o resumo
+- [x] Build gate passa
 
 **Tests**: none
+**Status**: ✅ Done
 **Gate**: build
 
 ---

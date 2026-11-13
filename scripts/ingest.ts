@@ -11,6 +11,7 @@
  *   pnpm ingest emendas     (Portal da Transparência, lote: emendas individuais e favorecidos)
  *   pnpm ingest sancoes     (Portal da Transparência, lote: CEIS e CNEP dos fornecedores da cota)
  *   pnpm ingest transferegov-pix  (Transferegov: planos e pagamentos das emendas Pix; ~1.000 requisições, ~17 min)
+ *   pnpm ingest tse-contas 2022  (TSE: despesas de campanha com fornecedor PJ; ZIP de ~520 MB, rode depois de `bens`)
  *   pnpm ingest receita --arquivo <zip>  (Receita: lote Estabelecimentos baixado À MÃO; nunca pela rede)
  *   pnpm ingest tudo 2026   (deputados, histórico, órgãos, blocos, CEAP e votações do ano; bens 2018, 2022 e 2026)
  *   pnpm ingest senadores
@@ -36,7 +37,7 @@ import { coletarBlocos, coletarCeap, coletarDeputados, coletarOrgaos, coletarVot
 import { coletarHistorico } from "../src/ingest/historico";
 import { ClienteEducado } from "../src/ingest/http";
 import { coletarCeaps, coletarSenadores, coletarVotacoesSenado } from "../src/ingest/senado";
-import { coletarBens } from "../src/ingest/tse";
+import { coletarBens, coletarDespesasCampanha } from "../src/ingest/tse";
 import { importarEstabelecimentos, PAGINA_RECEITA } from "../src/ingest/receita";
 import { coletarTransferegovPix } from "../src/ingest/transferegov";
 import { coletarEmendas, coletarSancoes } from "../src/ingest/transparencia";
@@ -77,6 +78,9 @@ async function main() {
         break;
       case "bens":
         console.log(`bens ${ano}:`, await coletarBens(db, cli, ano));
+        break;
+      case "tse-contas":
+        console.log(`despesas de campanha ${ano}:`, await coletarDespesasCampanha(db, cli, ano));
         break;
       case "emendas":
         console.log("emendas:", await coletarEmendas(db, cli));
