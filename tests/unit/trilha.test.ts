@@ -7,7 +7,11 @@ import {
   eleicaoDoMandato,
   DIAS_RECEM_ABERTA,
   ehEntePublico,
+  estadoAvaliacao,
+  fraseSemPix,
   nomeLegivel,
+  notasAvaliacao,
+  quemIndicou,
   recebedorPublicavel,
   recemAberta,
   taxaDeBase,
@@ -207,5 +211,50 @@ describe("nomeLegivel (DENS-10)", () => {
   });
   it("mantém siglas societárias", () => {
     expect(nomeLegivel("DISTRIBUIDORA MODELO S.A.")).toBe("Distribuidora Modelo S.A.");
+  });
+});
+
+describe("estadoAvaliacao e notasAvaliacao (DENS-06)", () => {
+  it("sem base, sem dado do perfil e avaliado", () => {
+    expect(estadoAvaliacao(false, false)).toBe("sem_base");
+    expect(estadoAvaliacao(false, true)).toBe("sem_base");
+    expect(estadoAvaliacao(true, false)).toBe("sem_dado");
+    expect(estadoAvaliacao(true, true)).toBe("avaliado");
+  });
+  it("só diz 'ainda não importamos' quando a base não foi importada", () => {
+    expect(notasAvaliacao("sem_base", "sem_base", null, 2022)).toEqual([
+      "Ainda não importamos a data de abertura das empresas (Receita Federal) nem as despesas de campanha de 2022 (TSE): os dois indícios não foram avaliados.",
+    ]);
+    expect(notasAvaliacao("sem_dado", "sem_dado", "2026-10", 2018)).toEqual([
+      "Nenhuma empresa paga com estas emendas está na base da Receita de 10/2026: empresa recém-aberta não foi avaliada.",
+      "O TSE não tem despesas de campanha de 2018 com fornecedor pessoa jurídica neste perfil: ciclo com a campanha não foi avaliado.",
+    ]);
+    expect(notasAvaliacao("sem_base", "avaliado", null, 2022)).toEqual([
+      "Ainda não importamos a data de abertura das empresas (Receita Federal): empresa recém-aberta não foi avaliada.",
+    ]);
+    expect(notasAvaliacao("avaliado", "sem_base", "2026-10", 2022)).toEqual([
+      "Ainda não importamos as despesas de campanha de 2022 (TSE): ciclo com a campanha não foi avaliado.",
+    ]);
+    expect(notasAvaliacao("avaliado", "avaliado", "2026-10", 2022)).toEqual([]);
+  });
+});
+
+describe("fraseSemPix (EDGE-04)", () => {
+  it("concorda com gênero e Casa", () => {
+    expect(fraseSemPix(quemIndicou("camara", "M"))).toBe(
+      "Este deputado não indicou transferências especiais no período",
+    );
+    expect(fraseSemPix(quemIndicou("camara", "F"))).toBe(
+      "Esta deputada não indicou transferências especiais no período",
+    );
+    expect(fraseSemPix(quemIndicou("senado", "M"))).toBe(
+      "Este senador não indicou transferências especiais no período",
+    );
+    expect(fraseSemPix(quemIndicou("senado", "F"))).toBe(
+      "Esta senadora não indicou transferências especiais no período",
+    );
+    expect(fraseSemPix(quemIndicou("camara", null))).toBe(
+      "Este deputado não indicou transferências especiais no período",
+    );
   });
 });

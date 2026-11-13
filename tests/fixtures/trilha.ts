@@ -19,6 +19,8 @@ export const TERCEIRO = BASE + 3;
 export const QUARTO = BASE + 4;
 /** Senador com uma emenda Pix em 15 municípios (12 pagos, 3 sem pagamento) e sem base da Receita nem do TSE. */
 export const QUINTO = BASE + 5;
+/** Ordem esperada por valor pago (600 mil, 560 mil… 160 mil). */
+export const ORDEM_PAGO_QUINTO = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
 export const MUNICIPIOS_QUINTO = [
   "SANTA MARIA",
   "PASSO FUNDO",
@@ -195,7 +197,8 @@ export async function semearTrilha(db: Kysely<Database>) {
       emenda(OUTRO, EMENDA.doOutro, 2025, "SOROCABA - SP", "Saúde", 900_000),
       emenda(TERCEIRO, EMENDA.doTerceiro, 2025, "ITU - SP", "Saúde", 1_000_000),
       ...EMENDA.terceiroGrandes.map((c) => emenda(TERCEIRO, c, 2025, "ITU - SP", "Educação", 2_000_000)),
-      emenda(QUINTO, EMENDA.doQuinto, 2025, "MÚLTIPLO", "Saúde", 16_000_000),
+      // Como no Portal: toda emenda Pix tem a função "Encargos especiais".
+      emenda(QUINTO, EMENDA.doQuinto, 2025, "MÚLTIPLO", "Encargos especiais", 16_000_000),
       emenda(QUARTO, EMENDA.doQuarto, 2025, "ITU - SP", "Saúde", 100_000),
     ])
     .execute();
@@ -276,7 +279,8 @@ export async function semearTrilha(db: Kysely<Database>) {
           EMENDA.doQuinto,
           comDv(`9705${String(i).padStart(4, "0")}0001`),
           `MUNICIPIO DE ${m}`,
-          1_000_000,
+          // Transferido cresce com o índice; o pago (abaixo) segue outra ordem (DENS-03).
+          1_000_000 + i * 10_000,
           "2025-02-01",
         ),
         beneficiario_uf: "RS",
@@ -344,7 +348,7 @@ export async function semearTrilha(db: Kysely<Database>) {
           97051 + i,
           comDv(`5050${String(i).padStart(4, "0")}0001`),
           `FORNECEDORA ${i + 1} PARA OBRAS LTDA`,
-          600_000 - i * 40_000,
+          600_000 - ((i * 7) % 12) * 40_000,
           "2025-04-01",
         ),
       ),

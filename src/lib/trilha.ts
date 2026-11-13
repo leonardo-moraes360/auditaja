@@ -207,3 +207,61 @@ export function nomeLegivel(s: string | null | undefined): string {
     .replace(/\bS\.a\.?$/i, "S.A.")
     .replace(/\bLtda\b/i, "Ltda");
 }
+
+/**
+ * DENS-06: "avaliado"; "sem_base" = a base do sinal não foi importada; "sem_dado" = foi importada, mas não
+ * tem nada deste perfil (nenhuma empresa paga está na Receita; nenhuma despesa de campanha dele no TSE).
+ */
+export type EstadoAvaliacao = "avaliado" | "sem_base" | "sem_dado";
+
+export function estadoAvaliacao(baseImportada: boolean, temDado: boolean): EstadoAvaliacao {
+  if (!baseImportada) return "sem_base";
+  return temDado ? "avaliado" : "sem_dado";
+}
+
+export type QuemIndicou = "deste deputado" | "desta deputada" | "deste senador" | "desta senadora";
+
+export function quemIndicou(casa: "camara" | "senado", sexo: string | null): QuemIndicou {
+  if (casa === "senado") return sexo === "F" ? "desta senadora" : "deste senador";
+  return sexo === "F" ? "desta deputada" : "deste deputado";
+}
+
+/** EDGE-04: frase do perfil sem emenda Pix, com gênero e Casa. */
+export function fraseSemPix(quem: QuemIndicou): string {
+  return `${quem.replace(/^dest/, "Est")} não indicou transferências especiais no período`;
+}
+
+/**
+ * DENS-06: por que um sinal não foi avaliado. "sem_base": a base não foi importada; "sem_dado": foi importada,
+ * mas não tem nada deste perfil.
+ */
+export function notasAvaliacao(
+  recem: EstadoAvaliacao,
+  ciclo: EstadoAvaliacao,
+  receitaBase: string | null,
+  eleicao: number | null,
+): string[] {
+  const campanha = `as despesas de campanha${eleicao ? ` de ${eleicao}` : ""}`;
+  const notas: string[] = [];
+  if (recem === "sem_base" && ciclo === "sem_base")
+    notas.push(
+      `Ainda não importamos a data de abertura das empresas (Receita Federal) nem ${campanha} (TSE): os dois indícios não foram avaliados.`,
+    );
+  else {
+    if (recem === "sem_base")
+      notas.push(
+        "Ainda não importamos a data de abertura das empresas (Receita Federal): empresa recém-aberta não foi avaliada.",
+      );
+    if (ciclo === "sem_base")
+      notas.push(`Ainda não importamos ${campanha} (TSE): ciclo com a campanha não foi avaliado.`);
+  }
+  if (recem === "sem_dado")
+    notas.push(
+      `Nenhuma empresa paga com estas emendas está na base da Receita${receitaBase ? ` de ${receitaBase.slice(5, 7)}/${receitaBase.slice(0, 4)}` : ""}: empresa recém-aberta não foi avaliada.`,
+    );
+  if (ciclo === "sem_dado")
+    notas.push(
+      `O TSE não tem despesas de campanha${eleicao ? ` de ${eleicao}` : ""} com fornecedor pessoa jurídica neste perfil: ciclo com a campanha não foi avaliado.`,
+    );
+  return notas;
+}

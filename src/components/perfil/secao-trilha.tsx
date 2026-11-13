@@ -14,7 +14,15 @@ import { brlMi } from "@/lib/emendas";
 import { brlCompacto, dataBr, dataHoraBr, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 import { formatarCnpj } from "@/lib/privacy";
-import { DIAS_RECEM_ABERTA, nomeLegivel, taxaDeBase } from "@/lib/trilha";
+import {
+  DIAS_RECEM_ABERTA,
+  fraseSemPix,
+  nomeLegivel,
+  notasAvaliacao,
+  quemIndicou,
+  taxaDeBase,
+  type QuemIndicou,
+} from "@/lib/trilha";
 
 /**
  * "Para onde foi o dinheiro das emendas Pix", versão enxuta (artboards SeguirDinheiroEnxuto e
@@ -42,20 +50,12 @@ function plural(n: number, um: string, varios: string) {
   return `${n.toLocaleString("pt-BR")} ${n === 1 ? um : varios}`;
 }
 
-export type QuemIndicou = "deste deputado" | "desta deputada" | "deste senador" | "desta senadora";
-
-export function quemIndicou(casa: "camara" | "senado", sexo: string | null): QuemIndicou {
-  if (casa === "senado") return sexo === "F" ? "desta senadora" : "deste senador";
-  return sexo === "F" ? "desta deputada" : "deste deputado";
-}
-
-/** EDGE-04: "deste deputado" → "Este deputado". */
-function sujeito(quem: QuemIndicou) {
-  return quem.replace(/^dest/, "Est");
-}
+export { quemIndicou, type QuemIndicou };
 
 const ancoraEmenda = (codigo: string) => `trilha-${codigo}`;
 const ancoraMunicipio = (codigo: string, plano: number) => `trilha-${codigo}-${plano}`;
+/** DENS-09: alvo dentro do município; o navegador abre o <details> fechado ao seguir a âncora. */
+const ancoraRecebedores = (codigo: string, plano: number) => `${ancoraMunicipio(codigo, plano)}-pagos`;
 
 /** "MUNICIPIO DE SANTA MARIA" → "Santa Maria"; estados e fundos ficam com o nome inteiro. */
 function nomeMunicipio(p: PlanoTrilha) {
@@ -106,7 +106,7 @@ export function SecaoTrilha({
 
       {trilha.vazio ? (
         <p data-trilha-vazio className="text-muted-foreground">
-          {sujeito(quem)} não indicou transferências especiais no período
+          {fraseSemPix(quem)}
         </p>
       ) : (
         <ConteudoTrilha trilha={trilha} quem={quem} contestar={contestar} />
@@ -174,18 +174,16 @@ function ConteudoTrilha({ trilha, quem, contestar }: { trilha: TrilhaCheia; quem
   const pctPago = pct(totais.pago, totais.transferido);
   const recem = indicios.filter((i): i is IndicioRecemAberta => i.tipo === "recem-aberta");
   const ciclos = indicios.filter((i): i is IndicioCiclo => i.tipo === "ciclo-fechado");
-  const algumAvaliado = avaliacao.recemAberta || avaliacao.ciclo;
-  const faltando = [
-    !avaliacao.recemAberta && "a data de abertura das empresas (Receita Federal)",
-    !avaliacao.ciclo && `as despesas de campanha${trilha.eleicao ? ` de ${trilha.eleicao}` : ""} (TSE)`,
-  ].filter(Boolean) as string[];
+  const avaliados = { recem: avaliacao.recemAberta === "avaliado", ciclo: avaliacao.ciclo === "avaliado" };
+  const algumAvaliado = avaliados.recem || avaliados.ciclo;
+  const notas = notasAvaliacao(avaliacao.recemAberta, avaliacao.ciclo, trilha.receitaBase, trilha.eleicao);
   const detalheIndicios = !algumAvaliado
-    ? "Faltam a base da Receita e as contas de campanha do TSE"
+    ? "Nenhum dos dois sinais pôde ser avaliado"
     : [
-        avaliacao.recemAberta
+        avaliados.recem
           ? plural(recem.length, "empresa recém-aberta", "empresas recém-abertas")
           : "recém-aberta não avaliada",
-        avaliacao.ciclo
+        avaliados.ciclo
           ? `${plural(ciclos.length, "ciclo", "ciclos")} com a campanha`
           : "ciclo com a campanha não avaliado",
       ].join(" · ");
@@ -217,16 +215,18 @@ function ConteudoTrilha({ trilha, quem, contestar }: { trilha: TrilhaCheia; quem
         />
       </div>
 
-      {faltando.length > 0 && (
-        <p
+      {notas.length > 0 && (
+        <div
           role="note"
           data-nao-avaliado
-          className="rounded-[10px] bg-muted px-3 py-3 text-sm leading-normal text-texto-2 sm:rounded-[12px] sm:px-4"
+          className="flex flex-col gap-1 rounded-[10px] bg-muted px-3 py-3 text-sm leading-normal text-texto-2 sm:rounded-[12px] sm:px-4"
         >
-          {!algumAvaliado && <strong className="font-semibold sm:hidden">Indícios não avaliados. </strong>}
-          Ainda não importamos {faltando.join(" nem ")}. Sem {faltando.length > 1 ? "elas" : "isso"} não dá para avaliar{" "}
-          {faltando.length > 1 ? "esses indícios" : "esse indício"}: isso não quer dizer que não haja nenhum.
-        </p>
+          {!algumAvaliado && <strong className="font-semibold sm:hidden">Indícios não avaliados.</strong>}
+          {notas.map((n) => (
+            <p key={n}>{n}</p>
+          ))}
+          <p>Isso não quer dizer que não haja indício.</p>
+        </div>
       )}
 
       {indicios.length > 0 && (
@@ -339,7 +339,7 @@ function enteDoIndicio(i: Indicio) {
 function fraseCaso(i: Indicio) {
   if (i.tipo === "recem-aberta") {
     const filial = i.abertura.origem === "filial" ? " (data da filial; matriz não encontrada)" : "";
-    return `Aberta em ${dataBr(i.abertura.data)}${filial}, ${plural(i.dias, "dia", "dias")} antes do 1º pagamento de ${nomeEnte(i.ente)} com a emenda ${i.emenda}.`;
+    return `Aberta em ${dataBr(i.abertura.data)}${filial} (Receita, base de ${mesAno(i.abertura.baseMes)}), ${plural(i.dias, "dia", "dias")} antes do 1º pagamento de ${nomeEnte(i.ente)} com a emenda ${i.emenda}.`;
   }
   const recebeu = i.direto
     ? `Recebeu do governo federal, em pagamento direto da emenda ${i.emenda}, ${periodoMeses(i.primeiroRecebimento, i.ultimoRecebimento)}.`
@@ -348,7 +348,7 @@ function fraseCaso(i: Indicio) {
 }
 
 function hrefCaso(i: Indicio) {
-  return i.plano != null ? `#${ancoraMunicipio(i.emenda, i.plano)}` : null;
+  return i.plano != null ? `#${ancoraRecebedores(i.emenda, i.plano)}` : null;
 }
 
 function CartaoIndicios({
@@ -432,9 +432,15 @@ function CartaoIndicios({
   );
 }
 
-/** Celular: um cartão só, com uma linha por caso (SeguirDinheiroEnxutoMobile). */
+/**
+ * Celular: um cartão só (SeguirDinheiroEnxutoMobile), com um bloco por sinal: regra com o limiar, taxa de
+ * base (LING-02, LING-07), uma linha por caso e o link da metodologia daquele sinal.
+ */
 function IndiciosCelular({ trilha, contestar }: { trilha: TrilhaCheia; contestar: string }) {
   const { indicios } = trilha;
+  const grupos = (["recem-aberta", "ciclo-fechado"] as const)
+    .map((tipo) => ({ tipo, casos: indicios.filter((i) => i.tipo === tipo) }))
+    .filter((g) => g.casos.length > 0);
   return (
     <div
       role="note"
@@ -446,43 +452,63 @@ function IndiciosCelular({ trilha, contestar }: { trilha: TrilhaCheia; contestar
         {plural(indicios.length, "indício para conferir", "indícios para conferir")}
       </h3>
       <p className="text-sm leading-normal text-texto-2">{NAO_PROVA}</p>
-      <ul className="flex flex-col">
-        {indicios.map((i) => {
-          const href = hrefCaso(i);
-          const recem = i.tipo === "recem-aberta";
-          const conteudo = (
-            <>
-              <span className="text-sm font-bold text-atipico">
-                {recem ? "Empresa aberta pouco antes de receber" : "Empresa da emenda também na campanha"}
-              </span>
-              <span className="flex justify-between gap-2 text-base">
-                <strong className="font-semibold">{nomeLegivel(i.nome)}</strong>
-                <span className="whitespace-nowrap tabular-nums">{brlMi(i.recebido)}</span>
-              </span>
-              <span className="text-sm text-texto-2">
-                {recem
-                  ? `Aberta ${plural(i.dias, "dia", "dias")} antes do 1º pagamento de ${enteDoIndicio(i)} (Receita, base de ${mesAno(i.abertura.baseMes)}).`
-                  : `Nas despesas declaradas da campanha de ${i.eleicao}: ${brlMi(i.despesaCampanha)}. Regra: despesa com data até o pagamento.`}
-              </span>
-            </>
-          );
-          return (
-            <li key={`${i.tipo}-${i.emenda}-${i.cnpj}`} className="border-t border-atipico-borda">
-              {href ? (
-                <a href={href} className="flex flex-col gap-0.5 py-2.5 text-foreground no-underline">
-                  {conteudo}
-                </a>
-              ) : (
-                <span className="flex flex-col gap-0.5 py-2.5">{conteudo}</span>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      <div className="flex flex-wrap gap-x-4 text-sm font-semibold">
-        <Link href="/metodologia#recem-aberta" className={LINK_AVISO}>
-          Como calculamos
-        </Link>
+      {grupos.map(({ tipo, casos }) => {
+        const recem = tipo === "recem-aberta";
+        const [m, n] = recem ? trilha.taxas.recemAberta : trilha.taxas.ciclo;
+        return (
+          <section
+            key={tipo}
+            data-grupo-celular={tipo}
+            aria-label={recem ? "Empresa aberta pouco antes de receber" : "Empresa da emenda também na campanha"}
+            className="flex flex-col gap-1 border-t border-atipico-borda pt-2"
+          >
+            <h4 className="text-sm font-bold text-atipico">
+              {recem ? "Empresa aberta pouco antes de receber" : "Empresa da emenda também na campanha"}
+            </h4>
+            <p className="text-sm leading-normal text-texto-2">
+              {recem
+                ? `Regra: matriz aberta menos de ${DIAS_RECEM_ABERTA} dias antes do 1º pagamento. ${taxaDeBase(m, n)} das empresas pagas com emendas Pix caem nesta regra.`
+                : `Regra: despesa de campanha com data até o pagamento. ${taxaDeBase(m, n)} dos parlamentares com emenda Pix têm um caso assim.`}
+            </p>
+            <ul className="flex flex-col">
+              {casos.map((i) => {
+                const href = hrefCaso(i);
+                const conteudo = (
+                  <>
+                    <span className="flex justify-between gap-2 text-base">
+                      <strong className="font-semibold">{nomeLegivel(i.nome)}</strong>
+                      <span className="whitespace-nowrap tabular-nums">{brlMi(i.recebido)}</span>
+                    </span>
+                    <span className="text-sm text-texto-2">
+                      {i.tipo === "recem-aberta"
+                        ? `Aberta ${plural(i.dias, "dia", "dias")} antes do 1º pagamento de ${enteDoIndicio(i)} (Receita, base de ${mesAno(i.abertura.baseMes)}).`
+                        : `Nas despesas declaradas da campanha de ${i.eleicao}: ${brlMi(i.despesaCampanha)}.`}
+                    </span>
+                  </>
+                );
+                return (
+                  <li key={`${i.emenda}-${i.cnpj}`} className="border-t border-atipico-borda first:border-t-0">
+                    {href ? (
+                      <a href={href} className="flex flex-col gap-0.5 py-2 text-foreground no-underline">
+                        {conteudo}
+                      </a>
+                    ) : (
+                      <span className="flex flex-col gap-0.5 py-2">{conteudo}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <Link
+              href={recem ? "/metodologia#recem-aberta" : "/metodologia#ciclo-fechado"}
+              className={`${LINK_AVISO} text-sm font-semibold`}
+            >
+              Como calculamos
+            </Link>
+          </section>
+        );
+      })}
+      <div className="flex flex-wrap gap-x-4 border-t border-atipico-borda text-sm font-semibold">
         <Link href={contestar} className={LINK_AVISO}>
           Contestar
         </Link>
@@ -492,7 +518,7 @@ function IndiciosCelular({ trilha, contestar }: { trilha: TrilhaCheia; contestar
   );
 }
 
-function Chevron() {
+function Chevron({ className = "group-open:rotate-180" }: { className?: string }) {
   return (
     <svg
       width="16"
@@ -504,7 +530,8 @@ function Chevron() {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="shrink-0 transition-transform group-open:rotate-180"
+      data-chevron
+      className={`shrink-0 transition-transform ${className}`}
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
@@ -517,6 +544,14 @@ function Barra({ valor }: { valor: number }) {
       <span className="block h-1.5 bg-primary" style={{ width: `${Math.min(100, valor)}%` }} />
     </span>
   );
+}
+
+/**
+ * Toda emenda Pix aparece no Portal como "Encargos especiais" (é a função orçamentária da transferência,
+ * não a área de aplicação): nesse caso a área sai da linha.
+ */
+function areaVisivel(funcao: string) {
+  return !!funcao && !/^encargos especiais$/i.test(funcao.trim());
 }
 
 function LinhaEmenda({ emenda: e, trilha }: { emenda: EmendaTrilha; trilha: TrilhaCheia }) {
@@ -538,7 +573,8 @@ function LinhaEmenda({ emenda: e, trilha }: { emenda: EmendaTrilha; trilha: Tril
       >
         <span className="flex min-w-0 flex-col gap-0.5">
           <strong className="font-semibold">
-            {e.codigo} · {e.funcao}
+            {e.codigo}
+            {areaVisivel(e.funcao) ? ` · ${e.funcao}` : ""}
           </strong>
           <span className="text-sm text-texto-2 sm:hidden">{resumo}</span>
           {e.indicios > 0 && (
@@ -620,14 +656,21 @@ function Elos({ emenda: e }: { emenda: EmendaTrilha }) {
       <li className={card}>
         <span className="text-sm text-muted-foreground">3 · Pago pelos municípios</span>
         <strong className="tabular-nums">
-          {e.pago > 0 ? `${brlCompacto(e.pago)}${quem ? ` a ${quem}` : ""}` : "Sem pagamento registrado"}
+          {e.pago > 0 ? `${brlCompacto(e.pago)}${quem ? ` a ${quem}` : ""}` : brlMi(0)}
         </strong>
-        {e.saldo > 0 && e.pago > 0 && (
+        {e.saldo > 0 && (
           <span data-saldo-emenda className="text-sm text-muted-foreground tabular-nums">
             Sem pagamento registrado: {brlMi(e.saldo)}
           </span>
         )}
-        <span className="text-sm text-muted-foreground">Transferegov · pagamentos, por município abaixo</span>
+        <a
+          href={`${API}/relatorios-gestao-documento-liquidacao-especiais`}
+          rel="noopener noreferrer"
+          target="_blank"
+          className="text-sm"
+        >
+          Transferegov · pagamentos
+        </a>
       </li>
     </ol>
   );
@@ -726,7 +769,9 @@ function Municipio({
       >
         <span className="min-w-0 font-semibold">
           {nome}
-          {p.ente.uf && !e.uf && <span className="font-normal text-muted-foreground"> ({p.ente.uf})</span>}
+          {p.ente.uf && (!e.uf || e.uf === "várias UFs") && (
+            <span className="font-normal text-muted-foreground"> ({p.ente.uf})</span>
+          )}
         </span>
         <span className="hidden text-right tabular-nums sm:inline">{brlMi(p.valor)}</span>
         <span className="text-right whitespace-nowrap tabular-nums">
@@ -741,7 +786,7 @@ function Municipio({
         </span>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[8px] border border-linha">
           <span className="sr-only">{`Recebedores de ${nome}`}</span>
-          <Chevron />
+          <Chevron className="group-open/mun:rotate-180" />
         </span>
       </summary>
       <Recebedores emenda={e} plano={p} indicios={indicios} trilha={trilha} />
@@ -791,7 +836,7 @@ function Recebedores({
   const pfTexto =
     p.pf.pagamentos > 0 ? plural(p.pf.pagamentos, "pagamento a pessoa física", "pagamentos a pessoas físicas") : null;
   return (
-    <div className="flex flex-col gap-2 px-3 pb-3 sm:pl-6">
+    <div id={ancoraRecebedores(e.codigo, p.id)} className="flex scroll-mt-24 flex-col gap-2 px-3 pb-3 sm:pl-6">
       <ul data-recebedores-cartoes className="flex flex-col sm:hidden">
         {p.recebedores.map((r) => (
           <li key={r.cnpj} className="flex flex-col gap-1 border-t border-borda-suave py-2">

@@ -5,6 +5,7 @@ import { TIPO_TRANSFERENCIA_ESPECIAL, type PeriodoEmendas } from "@/lib/emendas"
 import { soDigitos } from "@/lib/privacy";
 import {
   aberturaConsiderada,
+  estadoAvaliacao,
   cicloFechado,
   dataDoAnoMes,
   DIAS_RECEM_ABERTA,
@@ -420,6 +421,16 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
           .where("parlamentar_id", "=", id)
           .where("ano_eleicao", "=", eleicao)
           .execute();
+  // DENS-06: o TSE da eleição do mandato foi importado (para qualquer candidato)?
+  const tseImportado =
+    eleicao !== null &&
+    (despesasRows.length > 0 ||
+      !!(await db
+        .selectFrom("campanha_despesa")
+        .select("id")
+        .where("ano_eleicao", "=", eleicao)
+        .limit(1)
+        .executeTakeFirst()));
   const despesas: (DespesaCampanha & { coleta: number })[] = despesasRows.map((d) => ({
     cnpj: d.fornecedor_cnpj,
     parlamentarId: id,
@@ -524,9 +535,11 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
      * entes públicos) com data de abertura na Receita; despesas de campanha da eleição do mandato no TSE.
      */
     avaliacao: {
-      recemAberta:
-        receitaBase !== null && todosPlanos.some((p) => p.recebedores.some((r) => !r.entePublico && r.abertura)),
-      ciclo: despesasRows.length > 0,
+      recemAberta: estadoAvaliacao(
+        receitaBase !== null,
+        todosPlanos.some((p) => p.recebedores.some((r) => !r.entePublico && r.abertura)),
+      ),
+      ciclo: estadoAvaliacao(tseImportado, despesasRows.length > 0),
     },
     emendas,
     indicios,

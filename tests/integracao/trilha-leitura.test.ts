@@ -3,7 +3,19 @@ import { createDb } from "@/db/client";
 import { migrateToLatest } from "@/db/migrate";
 import { SEED, semear } from "@/db/seed";
 import type { TrilhaCheia } from "@/data/trilha";
-import { CNPJ, EMENDA, limparTrilha, OUTRO, QUARTO, QUINTO, RITA, semearTrilha, TERCEIRO } from "../fixtures/trilha";
+import {
+  CNPJ,
+  EMENDA,
+  limparTrilha,
+  MUNICIPIOS_QUINTO,
+  ORDEM_PAGO_QUINTO,
+  OUTRO,
+  QUARTO,
+  QUINTO,
+  RITA,
+  semearTrilha,
+  TERCEIRO,
+} from "../fixtures/trilha";
 
 /** TRI-04, TRI-05, TRI-07, CNPJ-03..06, CICLO-03, CICLO-04, EDGE-03..05, LING-06, LING-07, LING-09. */
 const URL_TESTE = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_trilha_test";
@@ -316,26 +328,24 @@ describe("trilhaDoParlamentar", () => {
     expect(q.indicios).toEqual([]);
   });
 
-  it("DENS-06: sinais avaliados só com a base de cada um para o perfil", async (ctx) => {
+  it("DENS-06: base importada sem dado do perfil é 'sem_dado', não 'sem_base'", async (ctx) => {
     if (!disponivel) ctx.skip();
-    expect((await cheia(RITA)).avaliacao).toEqual({ recemAberta: true, ciclo: true });
-    // Quinto: empresas fora da base da Receita e nenhuma despesa de campanha de 2018 importada.
+    expect((await cheia(RITA)).avaliacao).toEqual({ recemAberta: "avaliado", ciclo: "avaliado" });
+    // Quinto: a Receita e o TSE de 2018 foram importados, mas nenhuma empresa dele está na Receita e não há
+    // despesa de campanha dele.
     const q = await cheia(QUINTO);
     expect(q.eleicao).toBe(2018);
-    expect(q.avaliacao).toEqual({ recemAberta: false, ciclo: false });
+    expect(q.avaliacao).toEqual({ recemAberta: "sem_dado", ciclo: "sem_dado" });
   });
 
-  it("DENS-01, DENS-03: municípios em ordem de valor pago, com a UF; os sem pagamento por último", async (ctx) => {
+  it("DENS-01, DENS-03: municípios em ordem de valor pago (não de transferido), com a UF; sem pagamento por último", async (ctx) => {
     if (!disponivel) ctx.skip();
     const [e] = (await cheia(QUINTO)).emendas;
-    expect(e).toMatchObject({ codigo: EMENDA.doQuinto, uf: "RS", transferido: 15_000_000 });
+    expect(e).toMatchObject({ codigo: EMENDA.doQuinto, uf: "RS", transferido: 16_050_000 });
     expect(e.planos.map((p) => [p.ente.nome, p.pago])).toEqual([
-      ...Array.from({ length: 12 }, (_, i) => [expect.stringContaining("MUNICIPIO DE"), 600_000 - i * 40_000]),
-      [expect.any(String), 0],
-      [expect.any(String), 0],
-      [expect.any(String), 0],
+      ...ORDEM_PAGO_QUINTO.map((i, k) => [`MUNICIPIO DE ${MUNICIPIOS_QUINTO[i]}`, 600_000 - k * 40_000]),
+      ...[14, 13, 12].map((i) => [`MUNICIPIO DE ${MUNICIPIOS_QUINTO[i]}`, 0]),
     ]);
-    expect(e.planos[0].ente.nome).toBe("MUNICIPIO DE SANTA MARIA");
   });
 
   it("DENS-09: cada indício traz o plano (município) do primeiro pagamento ligado a ele", async (ctx) => {
@@ -352,5 +362,21 @@ describe("trilhaDoParlamentar", () => {
     const nova = outro.indicios.find((i) => i.cnpj === CNPJ.novaDoisPlanos)!;
     // O primeiro pagamento da emenda veio do plano 97032 (01/03/2025), não do 97031.
     expect(nova.plano).toBe(97032);
+  });
+
+  it("DENS-06: sem a base importada é 'sem_base' (Receita e TSE da eleição)", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    await db.deleteFrom("cnpj_abertura").execute();
+    await db.deleteFrom("campanha_despesa").where("ano_eleicao", "=", 2022).execute();
+    try {
+      const t = await cheia(RITA);
+      expect(t.avaliacao).toEqual({ recemAberta: "sem_base", ciclo: "sem_base" });
+      expect(t.indicios).toEqual([]);
+      // O TSE de 2018 continua importado: Quinto segue "sem_dado" no ciclo.
+      expect((await cheia(QUINTO)).avaliacao).toEqual({ recemAberta: "sem_base", ciclo: "sem_dado" });
+    } finally {
+      await limparTrilha(db);
+      await semearTrilha(db);
+    }
   });
 });

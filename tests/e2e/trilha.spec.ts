@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator } from "@playwright/test";
 import { createDb } from "@/db/client";
-import { CNPJ, EMENDA, QUINTO, RITA, semearTrilha } from "../fixtures/trilha";
+import { nomeLegivel } from "@/lib/trilha";
+import { CNPJ, EMENDA, MUNICIPIOS_QUINTO, ORDEM_PAGO_QUINTO, QUINTO, RITA, semearTrilha } from "../fixtures/trilha";
 
 // Dados fictícios: tests/fixtures/trilha.ts (Rita: 6 emendas Pix com 5 indícios; Quinto: 15 municípios, sem base).
 const URL_TESTE = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
@@ -45,6 +46,9 @@ test("DENS-08, DENS-05, LING-01, LING-02, LING-07: CSV e Contestar no topo; ind�
     `/parlamentares/${RITA}/contestar?secao=trilha`,
   );
   await visivel(s.locator('[data-indicador="transferido"]'), "R$ 8,1 mi");
+  // DENS-07: CSV e Contestar acima dos indicadores.
+  const yTopo = (await topo.boundingBox())!.y;
+  expect(yTopo).toBeLessThan((await s.locator('[data-indicador="transferido"]').boundingBox())!.y);
 
   if (celular(info.project.name)) {
     const c = s.locator("[data-indicios-celular]");
@@ -52,9 +56,27 @@ test("DENS-08, DENS-05, LING-01, LING-02, LING-07: CSV e Contestar no topo; ind�
     await expect(c.getByRole("heading", { name: "5 indícios para conferir" })).toBeVisible();
     await visivel(c, "Indício não é prova de irregularidade.");
     await visivel(c, "Aberta 41 dias antes do 1º pagamento de Sorocaba (Receita, base de 10/2026).");
-    await visivel(
-      c,
-      "Nas despesas declaradas da campanha de 2022: R$ 32 mil. Regra: despesa com data até o pagamento.",
+    await visivel(c, "Nas despesas declaradas da campanha de 2022: R$ 32 mil.");
+    // LING-02, LING-07 também no celular: regra com o limiar, taxa de base e metodologia de cada sinal.
+    const gr = c.locator('[data-grupo-celular="recem-aberta"]');
+    const gc = c.locator('[data-grupo-celular="ciclo-fechado"]');
+    await expect(
+      gr.getByText(
+        "Regra: matriz aberta menos de 180 dias antes do 1º pagamento. 3 de 10 (30,0%) das empresas pagas com emendas Pix caem nesta regra.",
+      ),
+    ).toBeVisible();
+    await expect(
+      gc.getByText(
+        "Regra: despesa de campanha com data até o pagamento. 2 de 6 (33,3%) dos parlamentares com emenda Pix têm um caso assim.",
+      ),
+    ).toBeVisible();
+    await expect(gr.getByRole("link", { name: "Como calculamos" })).toHaveAttribute(
+      "href",
+      "/metodologia#recem-aberta",
+    );
+    await expect(gc.getByRole("link", { name: "Como calculamos" })).toHaveAttribute(
+      "href",
+      "/metodologia#ciclo-fechado",
     );
     await expect(s.locator("[data-indicio]").first()).toBeHidden();
     expect(await c.textContent()).not.toMatch(/fraude|corrup|desvi|suspeit|ilegal|crime/i);
@@ -69,6 +91,8 @@ test("DENS-08, DENS-05, LING-01, LING-02, LING-07: CSV e Contestar no topo; ind�
   await expect(
     recem.getByRole("heading", { name: "Indício: empresa aberta pouco antes de receber · 2 casos" }),
   ).toBeVisible();
+  await expect(recem.locator("[data-taxa]")).toBeVisible();
+  await expect(ciclo.locator("[data-taxa]")).toBeVisible();
   await expect(recem.locator("[data-taxa]")).toHaveText(
     "3 de 10 (30,0%) das empresas pagas com emendas Pix na base, com data de abertura conhecida, caem nesta regra",
   );
@@ -79,11 +103,11 @@ test("DENS-08, DENS-05, LING-01, LING-02, LING-07: CSV e Contestar no topo; ind�
   await expect(construtora).toContainText("Construtora Ilustrativa Ltda");
   await expect(construtora).toContainText("R$ 1,2 mi");
   await expect(construtora).toContainText(
-    `Aberta em 12/02/2025, 41 dias antes do 1º pagamento de Sorocaba com a emenda ${EMENDA.sorocaba}.`,
+    `Aberta em 12/02/2025 (Receita, base de 10/2026), 41 dias antes do 1º pagamento de Sorocaba com a emenda ${EMENDA.sorocaba}.`,
   );
   await expect(construtora.getByRole("link", { name: "Ver na trilha" })).toHaveAttribute(
     "href",
-    `#trilha-${EMENDA.sorocaba}-97001`,
+    `#trilha-${EMENDA.sorocaba}-97001-pagos`,
   );
 
   await expect(
@@ -158,6 +182,7 @@ test("DENS-01, DENS-02, TRI-04, TRI-05: emendas em linhas; a com indício abre c
   expect(await elos.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href")))).toEqual([
     "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
     `${API}/planos-acao-especiais?numero_emenda_parlamentar_plano_acao=${EMENDA.sorocaba}`,
+    `${API}/relatorios-gestao-documento-liquidacao-especiais`,
   ]);
   // Fecha e abre pelo resumo (teclado e clique).
   await t.locator(":scope > summary").click();
@@ -207,51 +232,84 @@ test("DENS-04, TRI-07, CNPJ-05, CNPJ-06, EDGE-05: município abre quem ele pagou
   }
 });
 
-test("DENS-03, DENS-06: 10 municípios à vista, os outros atrás de um botão, sem pagamento numa linha; não avaliados", async ({
+test("DENS-03, DENS-06: 10 municípios à vista em ordem de valor pago, os outros atrás de um botão; não avaliados", async ({
   page,
 }, info) => {
   await page.goto(`/parlamentares/${QUINTO}`);
   const s = page.locator("section#trilha");
   const e = s.locator(`[data-trilha-emenda="${EMENDA.doQuinto}"]`);
   await expect(e).not.toHaveAttribute("open", "");
+  // Toda emenda Pix vem do Portal como "Encargos especiais": a área sai da linha.
+  await expect(e.locator(":scope > summary")).not.toContainText("Encargos");
   await e.locator(":scope > summary").click();
   const mun = e.locator("[data-municipios]");
   const visiveis = mun.locator(":scope > [data-municipio]");
   await expect(visiveis).toHaveCount(10);
-  await expect(visiveis.first()).toContainText("Santa Maria");
+  const nomes = ORDEM_PAGO_QUINTO.map((i) => nomeLegivel(MUNICIPIOS_QUINTO[i]));
+  expect(await visiveis.locator(":scope > summary > span:first-child").allTextContents()).toEqual(nomes.slice(0, 10));
   await expect(visiveis.first()).toContainText("R$ 600 mil");
   const outros = mun.locator("[data-outros-municipios]");
   await expect(outros.locator(":scope > summary")).toHaveText("Ver os outros 2 municípios com pagamento");
   await expect(outros.locator("[data-municipio]").first()).toBeHidden();
   await outros.locator(":scope > summary").click();
-  await expect(outros.locator("[data-municipio]")).toHaveCount(2);
+  expect(await outros.locator("[data-municipio] > summary > span:first-child").allTextContents()).toEqual(
+    nomes.slice(10),
+  );
   await expect(outros.locator("[data-municipio]").first()).toBeVisible();
-  await expect(mun.locator("[data-sem-pagamento]")).toHaveText("3 municípios sem pagamento registrado · R$ 3,0 mi");
-  // Razão social com "PARA" não vira "Pará" (DENS-10).
-  const primeiro = mun.locator("[data-municipio]").first();
+  await expect(mun.locator("[data-sem-pagamento]")).toHaveText("3 municípios sem pagamento registrado · R$ 3,4 mi");
+
+  // Chevron do município acompanha o próprio município, não a emenda.
+  const primeiro = visiveis.first();
+  const giro = () =>
+    primeiro.locator(":scope > summary [data-chevron]").evaluate((el) => getComputedStyle(el).rotate);
   await expect(primeiro).not.toHaveAttribute("open", "");
+  expect(await giro()).toBe("none");
   await primeiro.locator(":scope > summary").click();
+  await expect.poll(giro).toBe("180deg");
+  // Razão social com "PARA" não vira "Pará" (DENS-10).
   await visivel(primeiro, "Fornecedora 1 Para Obras Ltda");
 
-  // DENS-06: sem base da Receita nem despesas de campanha de 2018, nada de "0 indícios".
-  await expect(s.locator("[data-nao-avaliado]")).toHaveText(
-    /Ainda não importamos a data de abertura das empresas \(Receita Federal\) nem as despesas de campanha de 2018 \(TSE\)\. Sem elas não dá para avaliar esses indícios: isso não quer dizer que não haja nenhum\./,
+  // DENS-06: Receita e TSE de 2018 importados, mas sem dado deste perfil: não é "ainda não importamos".
+  const nota = s.locator("[data-nao-avaliado]");
+  await expect(nota).toContainText(
+    "Nenhuma empresa paga com estas emendas está na base da Receita de 10/2026: empresa recém-aberta não foi avaliada.",
   );
+  await expect(nota).toContainText(
+    "O TSE não tem despesas de campanha de 2018 com fornecedor pessoa jurídica neste perfil: ciclo com a campanha não foi avaliado.",
+  );
+  await expect(nota).toContainText("Isso não quer dizer que não haja indício.");
+  await expect(nota).not.toContainText("Ainda não importamos");
   await expect(s.locator("[data-indicio]")).toHaveCount(0);
   if (!celular(info.project.name)) await visivel(s.locator('[data-indicador="indicios"]'), "Não avaliados");
-  else await visivel(s.locator("[data-nao-avaliado]"), "Indícios não avaliados.");
+  else await visivel(nota, "Indícios não avaliados.");
 });
 
-test("DENS-09: Ver na trilha leva ao município da empresa, aberto", async ({ page }, info) => {
+test("DENS-08: notas de pessoa física, matriz e fontes uma vez por seção", async ({ page }) => {
   await page.goto(`/parlamentares/${RITA}`);
-  const link = celular(info.project.name)
-    ? page.locator(`section#trilha [data-indicios-celular] a[href="#trilha-${EMENDA.campinas}-97002"]`).first()
-    : page.locator(`section#trilha [data-caso="${CNPJ.grafica}"]`).getByRole("link", { name: "Ver na trilha" });
-  await link.click();
-  await expect(page).toHaveURL(new RegExp(`#trilha-${EMENDA.campinas}-97002$`));
+  const s = page.locator("section#trilha");
+  await s.waitFor();
+  await page.evaluate(() =>
+    document.querySelectorAll("section#trilha details").forEach((d) => d.setAttribute("open", "")),
+  );
+  const texto = (await s.textContent())!;
+  expect(texto.split("Pagamentos a pessoas físicas aparecem somados").length - 1).toBe(1);
+  expect(texto.split("A data de abertura é a da matriz").length - 1).toBe(1);
+});
+
+test("DENS-09: Ver na trilha leva ao município da empresa e o abre, mesmo se foi fechado", async ({ page }, info) => {
+  await page.goto(`/parlamentares/${RITA}`);
   const alvo = page.locator(`#trilha-${EMENDA.campinas}-97002`);
   await expect(alvo).toHaveAttribute("open", "");
-  await expect(alvo).toBeInViewport();
+  await alvo.locator(":scope > summary").click();
+  await expect(alvo).not.toHaveAttribute("open", "");
+  const href = `#trilha-${EMENDA.campinas}-97002-pagos`;
+  const link = celular(info.project.name)
+    ? page.locator(`section#trilha [data-indicios-celular] a[href="${href}"]`).first()
+    : page.locator(`section#trilha [data-caso="${CNPJ.grafica}"]`).getByRole("link", { name: "Ver na trilha" });
+  await link.click();
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
+  await expect(alvo).toHaveAttribute("open", "");
+  await expect(page.locator(href)).toBeInViewport();
 });
 
 test("EDGE-04: sem emenda Pix, frase de vazio com gênero e sem trilha", async ({ page }) => {
