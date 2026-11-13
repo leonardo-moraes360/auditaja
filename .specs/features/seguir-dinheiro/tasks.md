@@ -261,12 +261,13 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Fixture montada a partir do cabeçalho real (colunas registradas no commit)
-- [ ] Fornecedor PF e doador não são gravados
-- [ ] Candidato fora de `candidatura` é ignorado
-- [ ] Full gate passa
+- [x] Fixture montada a partir do cabeçalho real (colunas registradas no commit)
+- [x] Fornecedor PF e doador não são gravados
+- [x] Candidato fora de `candidatura` é ignorado
+- [x] Full gate passa
 
 **Tests**: integration
+**Status**: ✅ Done
 **Gate**: full
 
 ---
