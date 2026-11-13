@@ -17,6 +17,7 @@ import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
 import { indiceDeParlamentares, resumoDoParlamentar, ultimaColetaPorCasa } from "@/data/seo";
 import { caminhoDoPerfil, descricaoDoPerfil, jsonLdDoPerfil, tituloDoPerfil } from "@/lib/seo-perfil";
 import { jsonLd, metadataDaPagina, siteUrl } from "@/lib/site";
+import { parlamentarExiste } from "@/data/existe";
 import { SecaoEmendas } from "@/components/perfil/secao-emendas";
 import { LateralTrilha, quemIndicou, SecaoTrilha } from "@/components/perfil/secao-trilha";
 import { trilhaDoParlamentar } from "@/data/trilha";
@@ -81,14 +82,26 @@ export default function PaginaPerfil({ params, searchParams }: PageProps<"/parla
         </div>
       }
     >
-      <Perfil params={params} searchParams={searchParams} />
+      <PerfilComVerificacao params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">) {
+async function PerfilComVerificacao({ params, searchParams }: PageProps<"/parlamentares/[id]">) {
   const id = idValido((await params).id);
   if (!id) notFound();
+  const existe = await parlamentarExiste(id);
+  if (!existe) notFound();
+  return <Perfil id={id} searchParams={searchParams} />;
+}
+
+async function Perfil({
+  id,
+  searchParams,
+}: {
+  id: number;
+  searchParams: PageProps<"/parlamentares/[id]">["searchParams"];
+}) {
   const sp = await searchParams;
   const periodo: PeriodoCeap | undefined =
     sp.ano === "mandato"
@@ -98,8 +111,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
         : undefined;
   const filtro = sp.votos === "divergiu" || sp.votos === "ausencias" ? sp.votos : "todas";
   const completo = sp.lista === "completa";
-  const perfil = await perfilParlamentar(id, periodo);
-  if (!perfil) notFound();
+  const perfil = (await perfilParlamentar(id, periodo))!;
   // Emendas e sanções (CGU) valem para as duas Casas; a coleta liga cada emenda a um único perfil.
   const anosCeap = perfil.mandato ? perfil.anosDisponiveis : [perfil.ano];
   const anosTodos = perfil.anosDisponiveis;
