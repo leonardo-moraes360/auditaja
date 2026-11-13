@@ -3,6 +3,7 @@ FROM nginx:1.27-alpine
 WORKDIR /usr/share/nginx/html
 
 COPY favicon.ico .
+COPY styles.css .
 COPY manutencao.html /usr/share/nginx/html/manutencao.html
 COPY judicial.html /usr/share/nginx/html/judicial.html
 COPY nginx-manutencao.conf /etc/nginx/templates/manutencao.conf.template

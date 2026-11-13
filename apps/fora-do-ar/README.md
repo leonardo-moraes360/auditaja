@@ -136,5 +136,6 @@ apps/fora-do-ar/
 ├── manutencao.html         # Página para modo manutenção (503)
 ├── nginx-judicial.conf     # Config nginx para modo judicial
 ├── nginx-manutencao.conf   # Config nginx para modo manutenção
+├── styles.css              # Estilos compartilhados
 └── README.md               # Esta documentação
 ```
