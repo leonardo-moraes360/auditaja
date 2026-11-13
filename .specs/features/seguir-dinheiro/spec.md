@@ -51,6 +51,7 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 | D9. Onde aparece | Nova seção "Para onde foi o dinheiro" no perfil, dentro do bloco de emendas, com trilha por emenda e os avisos no topo da seção | Mantém o padrão de perfil único; sem página nova | n |
 | D10. Coleta do Transferegov | Pelo `ClienteEducado`, paginada, uma página por vez, com cache em `.cache/ingest`; sem `robots.txt` (404) conta como permitido | AD-001, R7. Volume a medir no Design | n |
 | D13. Indício calculado na leitura ou congelado | Calculado na leitura, como o padrão atípico; cada aviso cita os `coleta_id` (com SHA-256) de todos os elos usados | Reproduz o cálculo a partir dos arquivos publicados (AD-003) sem tabela nova; congelar histórico de avisos fica para quando houver contestação pública | n |
+| D14. Onde fica o CSV da trilha (LING-05) | Rota própria `/parlamentares/{id}/trilha.csv`, ligada pelo "Baixar CSV da trilha" da seção; o CSV de emendas do perfil não muda | Uma linha por elo (recebedor de cada plano) não cabe no CSV de emendas, que é uma linha por emenda | y (Execute, 2026-11-13) |
 | D11. Versão da metodologia | Sobe para a próxima livre na data do merge (hoje 1.10 → 1.11) | Regras novas e públicas | n |
 
 **Open questions:** none - D1, D3 e D4 decididos pelo usuário; o resto é padrão registrado acima.

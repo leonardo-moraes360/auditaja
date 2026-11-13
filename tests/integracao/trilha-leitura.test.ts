@@ -214,11 +214,11 @@ describe("trilhaDoParlamentar", () => {
   it("LING-07: taxa de base na base inteira, com o universo de cada sinal", async (ctx) => {
     if (!disponivel) ctx.skip();
     const t = await cheia(RITA);
-    // Recém-aberta: 9 empresas com abertura conhecida, fora os 3 entes públicos (CNAE 84 próprio, CNAE 84 da
+    // Recém-aberta: 10 empresas com abertura conhecida, fora os 3 entes públicos (CNAE 84 próprio, CNAE 84 da
     // matriz e CNPJ beneficiário de plano) e a sem abertura; 3 com indício (construtora, 179 dias, dois planos).
     // Ciclo: 5 parlamentares com emenda Pix (deputada do seed, Rita, Outro, Terceiro, Quarto); só Rita e Outro
     // fecham ciclo: a despesa do Terceiro é posterior aos pagamentos (LING-06) e o Quarto só tem campanha de 2018 (D8).
-    expect(t.taxas).toEqual({ recemAberta: [3, 9], ciclo: [2, 5] });
+    expect(t.taxas).toEqual({ recemAberta: [3, 10], ciclo: [2, 5] });
   });
 
   it("período de um ano só leva as emendas e os favorecidos diretos desse ano", async (ctx) => {
@@ -242,6 +242,8 @@ describe("trilhaDoParlamentar", () => {
     expect(recem.map((i) => [i.cnpj, i.emenda, i.primeiroPagamento, i.dias, i.recebido, i.ente])).toEqual([
       [CNPJ.novaDoisPlanos, EMENDA.doTerceiro, "2025-03-01", 59, 100_000, "MUNICIPIO DE CAMPINAS"],
     ]);
+    // Primeiro pagamento da emenda antes da abertura: sem indício, embora outro plano pague 30 dias depois.
+    expect(t.indicios.map((i) => i.cnpj)).not.toContain(CNPJ.pagaAntesDeAbrir);
     // A linha do plano que pagou depois de 180 dias também leva o indício da emenda.
     const linhas = emendaDe(t, EMENDA.doTerceiro).planos.flatMap((p) =>
       p.recebedores.filter((r) => r.cnpj === CNPJ.novaDoisPlanos),

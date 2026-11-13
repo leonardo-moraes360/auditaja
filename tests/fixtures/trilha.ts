@@ -44,6 +44,8 @@ export const CNPJ = {
   /** Filial sem CNAE cuja matriz é da administração pública (CNAE 84). */
   enteFilial: comDv("840840840002"),
   enteMatriz: comDv("840840840001"),
+  /** Primeiro pagamento da emenda é anterior à abertura; outro plano paga 30 dias depois dela. */
+  pagaAntesDeAbrir: comDv("101010100001"),
 };
 
 export const EMENDA = {
@@ -270,6 +272,10 @@ export async function semearTrilha(db: Kysely<Database>) {
       pj(97032, CNPJ.enteX, "MUNICIPIO DE ITU", 20_000, "2025-03-02"),
       // EDGE-03: filial sem CNAE, matriz com CNAE 84 aberta há pouco.
       pj(97032, CNPJ.enteFilial, "CONSORCIO PUBLICO FICTICIO", 10_000, "2025-03-03"),
+      // LING-06: o primeiro pagamento da emenda (plano 97031) é anterior à abertura: sem indício,
+      // mesmo com o plano 97032 pagando 30 dias depois dela.
+      pj(97031, CNPJ.pagaAntesDeAbrir, "PAGA ANTES DE ABRIR LTDA", 5_000, "2025-03-15"),
+      pj(97032, CNPJ.pagaAntesDeAbrir, "PAGA ANTES DE ABRIR LTDA", 5_000, "2025-05-01"),
       pj(97041, CNPJ.associacao, "ASSOCIACAO BENEFICENTE EXEMPLO", 50_000, "2025-05-01"),
     ])
     .execute();
@@ -297,6 +303,7 @@ export async function semearTrilha(db: Kysely<Database>) {
       ab(CNPJ.limiar180, true, "2024-01-01"),
       ab(CNPJ.grafica, true, "2001-01-01", "1813001"),
       ab(CNPJ.novaDoisPlanos, true, "2025-01-01"),
+      ab(CNPJ.pagaAntesDeAbrir, true, "2025-04-01"),
       ab(CNPJ.enteX, true, "2025-01-01", "4120400"),
       { ...ab(CNPJ.enteFilial, false, "2025-01-01"), cnae_principal: null },
       ab(CNPJ.enteMatriz, true, "2025-01-01", "8411600"),

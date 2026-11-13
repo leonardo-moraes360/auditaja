@@ -50,13 +50,13 @@ test("TRUI-01, LING-01, LING-02, LING-07: avisos com regra, limiar, taxa de base
     await visivel(recem, "Aberta 41 dias antes do primeiro pagamento");
     await visivel(recem, "abriu em 12/02/2025 (Receita, base de 10/2026)");
     await visivel(recem, "matriz aberta menos de 180 dias antes");
-    await visivel(recem, "3 de 9 (33,3%) empresas pagas com emendas Pix");
+    await visivel(recem, "3 de 10 (30,0%) empresas pagas com emendas Pix");
   } else {
     await visivel(recem, "Indício: empresa aberta 41 dias antes do primeiro pagamento");
     await visivel(recem, "começou a funcionar em 12/02/2025, segundo a Receita Federal (base de 10/2026)");
     await visivel(recem, "em 25/03/2025");
     await visivel(recem, "menos de 180 dias antes do primeiro pagamento");
-    await visivel(recem, "3 de 9 (33,3%) empresas pagas com emendas Pix na base, com data de abertura conhecida");
+    await visivel(recem, "3 de 10 (30,0%) empresas pagas com emendas Pix na base, com data de abertura conhecida");
   }
   await expect(recem.getByRole("link", { name: /Como calculamos/ })).toHaveAttribute(
     "href",
