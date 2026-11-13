@@ -37,8 +37,8 @@ test("TRUI-01, LING-01, LING-02, LING-07: avisos com regra, limiar, taxa de base
   await expect(s.getByRole("heading", { level: 2, name: "Para onde foi o dinheiro das emendas Pix" })).toBeVisible();
   await visivel(s.locator("[data-indicador]").first(), "R$ 8,1 mi");
   const avisos = s.locator("[data-indicio]");
-  await expect(avisos).toHaveCount(4);
-  for (let i = 0; i < 4; i++) {
+  await expect(avisos).toHaveCount(5);
+  for (let i = 0; i < 5; i++) {
     await visivel(avisos.nth(i), "Indício não é prova de irregularidade.");
     // LING-01: só "indício" ou "padrão atípico"; nada de termo de acusação.
     expect(await avisos.nth(i).textContent()).not.toMatch(/fraude|corrup|desvi|suspeit|ilegal|crime/i);
@@ -249,7 +249,7 @@ test("LING-03, LING-08: metodologia 1.11 com uma seção por sinal e as âncoras
   // Os links "Como calculamos" dos avisos apontam para essas âncoras.
   await page.goto(`/parlamentares/${RITA}`);
   const links = page.locator("section#trilha [data-indicio]").getByRole("link", { name: /Como calculamos/ });
-  await expect(links).toHaveCount(4);
+  await expect(links).toHaveCount(5);
   const hrefs = await links.evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))].sort());
   expect(hrefs).toEqual(["/metodologia#ciclo-fechado", "/metodologia#recem-aberta"]);
   await expect(links.first()).toContainText("metodologia 1.11");

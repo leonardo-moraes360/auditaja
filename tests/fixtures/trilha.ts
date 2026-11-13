@@ -56,6 +56,8 @@ export const EMENDA = {
   bauru: "202570010005",
   semPlano: "202570010006",
   direta: "202570010007",
+  /** Favorecido direto de 2024: some quando o período é 2025. */
+  direta2024: "202470010008",
   doOutro: "202570020001",
   doTerceiro: "202570030001",
   doQuarto: "202570040001",
@@ -165,6 +167,7 @@ export async function semearTrilha(db: Kysely<Database>) {
       emenda(RITA, EMENDA.bauru, 2025, "BAURU - SP", "Cultura", 300_000),
       emenda(RITA, EMENDA.semPlano, 2025, "JUNDIAÍ - SP", "Saúde", 250_000),
       emenda(RITA, EMENDA.direta, 2025, "SOROCABA - SP", "Saúde", 40_000, FD),
+      emenda(RITA, EMENDA.direta2024, 2024, "SOROCABA - SP", "Saúde", 10_000, FD),
       emenda(OUTRO, EMENDA.doOutro, 2025, "SOROCABA - SP", "Saúde", 900_000),
       emenda(TERCEIRO, EMENDA.doTerceiro, 2025, "ITU - SP", "Saúde", 1_000_000),
       emenda(QUARTO, EMENDA.doQuarto, 2025, "ITU - SP", "Saúde", 100_000),
@@ -172,20 +175,36 @@ export async function semearTrilha(db: Kysely<Database>) {
     .execute();
   await db
     .insertInto("emenda_favorecido")
-    .values({
-      codigo_emenda: EMENDA.direta,
-      parlamentar_id: RITA,
-      ano_emenda: 2025,
-      ano_mes: "202506",
-      favorecido_nome: "Comunicação Direta Fictícia Ltda",
-      favorecido_doc: `${CNPJ.comunicacao.slice(0, 2)}.${CNPJ.comunicacao.slice(2, 5)}.${CNPJ.comunicacao.slice(5, 8)}/${CNPJ.comunicacao.slice(8, 12)}-${CNPJ.comunicacao.slice(12)}`,
-      tipo_favorecido: "Pessoa Jurídica",
-      natureza_juridica: "Sociedade Empresária Limitada",
-      uf: "SP",
-      municipio: "SOROCABA",
-      valor: 40_000,
-      coleta_id: cCgu,
-    })
+    .values([
+      {
+        codigo_emenda: EMENDA.direta,
+        parlamentar_id: RITA,
+        ano_emenda: 2025,
+        ano_mes: "202506",
+        favorecido_nome: "Comunicação Direta Fictícia Ltda",
+        favorecido_doc: `${CNPJ.comunicacao.slice(0, 2)}.${CNPJ.comunicacao.slice(2, 5)}.${CNPJ.comunicacao.slice(5, 8)}/${CNPJ.comunicacao.slice(8, 12)}-${CNPJ.comunicacao.slice(12)}`,
+        tipo_favorecido: "Pessoa Jurídica",
+        natureza_juridica: "Sociedade Empresária Limitada",
+        uf: "SP",
+        municipio: "SOROCABA",
+        valor: 40_000,
+        coleta_id: cCgu,
+      },
+      {
+        codigo_emenda: EMENDA.direta2024,
+        parlamentar_id: RITA,
+        ano_emenda: 2024,
+        ano_mes: "202406",
+        favorecido_nome: "Comunicação Direta Fictícia Ltda",
+        favorecido_doc: `${CNPJ.comunicacao.slice(0, 2)}.${CNPJ.comunicacao.slice(2, 5)}.${CNPJ.comunicacao.slice(5, 8)}/${CNPJ.comunicacao.slice(8, 12)}-${CNPJ.comunicacao.slice(12)}`,
+        tipo_favorecido: "Pessoa Jurídica",
+        natureza_juridica: "Sociedade Empresária Limitada",
+        uf: "SP",
+        municipio: "SOROCABA",
+        valor: 10_000,
+        coleta_id: cCgu,
+      },
+    ])
     .execute();
 
   const plano = (

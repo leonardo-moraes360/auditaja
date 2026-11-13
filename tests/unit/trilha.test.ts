@@ -96,6 +96,16 @@ describe("cicloFechado (CICLO-03, CICLO-04, LING-06)", () => {
     const c = cicloFechado(receb, [{ cnpj: "12345678000190", parlamentarId: P, data: "2024-05-01", valor: 7 }]);
     expect(c.map((x) => [x.recebido, x.primeiroRecebimento])).toEqual([[36_000, "2024-09-02"]]);
   });
+  it("LING-06: no valor e nas datas da campanha só entram despesas até a data do pagamento", () => {
+    const so = [{ cnpj: "12345678000190", parlamentarId: P, data: "2024-04-10", valor: 50_000 }];
+    const c = cicloFechado(so, [
+      { cnpj: "12345678000190", parlamentarId: P, data: "2022-09-15", valor: 20 },
+      { cnpj: "12345678000190", parlamentarId: P, data: "2024-06-01", valor: 7 },
+    ]);
+    expect(c.map((x) => [x.despesaCampanha, x.primeiraDespesa, x.ultimaDespesa])).toEqual([
+      [20, "2022-09-15", "2022-09-15"],
+    ]);
+  });
   it("despesa sem data não é avaliada", () => {
     expect(cicloFechado(receb, [{ cnpj: "12345678000190", parlamentarId: P, data: null, valor: 1 }])).toEqual([]);
   });

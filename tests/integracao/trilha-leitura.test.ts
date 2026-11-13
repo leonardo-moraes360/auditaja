@@ -175,6 +175,18 @@ describe("trilhaDoParlamentar", () => {
         "2022-08-10",
         "2022-08-10",
       ],
+      [
+        CNPJ.comunicacao,
+        EMENDA.direta2024,
+        true,
+        null,
+        10_000,
+        "2024-06-01",
+        "2024-06-01",
+        8_000,
+        "2022-08-10",
+        "2022-08-10",
+      ],
     ]);
     // A construtora está na campanha do outro deputado; serviços tem despesa depois do pagamento;
     // a associação só está na campanha de 2018.
@@ -231,6 +243,8 @@ describe("trilhaDoParlamentar", () => {
       ["recem-aberta", CNPJ.construtora],
       ["ciclo-fechado", CNPJ.comunicacao],
     ]);
+    // O favorecido direto de 2024 some no período 2025.
+    expect(t.indicios.map((i) => i.emenda)).not.toContain(EMENDA.direta2024);
     const vazio = await (await carregar()).trilhaDoParlamentar(RITA, 2023);
     expect(vazio.vazio).toBe(true);
   });
