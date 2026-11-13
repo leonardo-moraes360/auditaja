@@ -1,0 +1,9 @@
+import { createDb } from "../src/client";
+import { migrateToLatest } from "../src/migrate";
+
+const db = createDb();
+migrateToLatest(db)
+  .then((r) => {
+    console.log(r.length ? r.map((x) => `${x.migrationName}: ${x.status}`).join("\n") : "Banco já atualizado.");
+  })
+  .finally(() => db.destroy());
