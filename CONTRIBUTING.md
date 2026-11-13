@@ -10,6 +10,7 @@ Obrigado pelo interesse em contribuir com o Auditaja! Este guia explica como par
 - [Checks obrigatórios](#checks-obrigatórios)
 - [Padrões de código](#padrões-de-código)
 - [Acessibilidade](#acessibilidade)
+- [Contribuições com IA](#contribuições-com-ia)
 - [Contribuindo com dados](#contribuindo-com-dados)
 - [Processo de revisão](#processo-de-revisão)
 - [Licenças](#licenças)
@@ -150,6 +151,49 @@ O Auditaja deve ser acessível a todas as pessoas. Ao contribuir com mudanças v
 - **Semântica.** Use elementos HTML corretos (`<button>`, `<a>`, `<nav>`, `<main>`, `<h1>`–`<h6>`).
 
 Se tiver dúvidas, consulte as [Diretrizes de Acessibilidade para Conteúdo Web (WCAG) 2.2](https://www.w3.org/WAI/standards-guidelines/wcag/).
+
+## Contribuições com IA
+
+O uso de ferramentas de IA (assistentes de código, chatbots, agentes) é permitido, desde que você siga estas regras:
+
+### Responsabilidade é sua
+
+Quem abre o PR é responsável por todo o código, independentemente de como foi escrito. Isso significa:
+
+- **Entenda cada linha.** Não submeta código que você não compreende. Se a IA gerou algo, leia, entenda e teste antes de commitar.
+- **Revise criticamente.** Ferramentas de IA cometem erros, inventam APIs que não existem e escrevem código inseguro. Você precisa verificar.
+- **Responda às perguntas.** Na revisão, você deve ser capaz de explicar por que o código foi escrito daquela forma.
+
+### Divulgue o uso significativo
+
+Quando a IA teve papel significativo na contribuição (gerou boa parte do código, da documentação ou dos testes), marque o checkbox "Uso de IA" no [template de PR](.github/PULL_REQUEST_TEMPLATE.md). Não precisa listar cada sugestão de autocomplete — a ideia é transparência quando a IA foi mais do que um auxiliar pontual.
+
+### Dados nunca vêm de IA
+
+Valores, estatísticas, fontes, links e qualquer informação factual **devem vir de fonte oficial verificada**, nunca de IA. Ferramentas de IA inventam dados ("alucinações") com confiança. No Auditaja, um número errado pode difamar um parlamentar ou enganar o cidadão.
+
+- ✅ Coletar o valor do Portal da Transparência e citar a URL
+- ❌ Pedir para a IA "gerar dados de exemplo" ou "completar os valores que faltam"
+
+### Privacidade e segredos
+
+Nunca cole em ferramentas de IA:
+
+- Segredos, tokens, senhas ou variáveis de ambiente (`.env`)
+- Dados pessoais de terceiros (CPF, e-mail, endereço)
+- Pedidos de correção ou contestações recebidos pelo site
+
+### Compatibilidade de licença
+
+Conteúdo gerado por IA deve ser compatível com as licenças do projeto (AGPL-3.0 para código, CC BY 4.0 para dados/docs). Não cole trechos de código de projetos com licença incompatível, nem peça para a IA "copiar" implementações de outros lugares.
+
+### Qualidade, não quantidade
+
+PRs e issues em massa, de baixa qualidade ou claramente não revisados — gerados por IA ou não — podem ser fechados sem revisão detalhada. Prefira contribuições menores e bem feitas a muitas contribuições superficiais.
+
+### Agentes automatizados
+
+Agentes de IA que interagem diretamente com o repositório (abrindo PRs, respondendo issues) devem seguir as instruções do [AGENTS.md](AGENTS.md). Automações que não sigam essas diretrizes podem ter o acesso bloqueado.
 
 ## Contribuindo com dados
 
