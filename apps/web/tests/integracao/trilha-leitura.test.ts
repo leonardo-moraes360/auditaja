@@ -8,6 +8,7 @@ import {
   EMENDA,
   limparTrilha,
   MUNICIPIOS_QUINTO,
+  OBS_TRILHA,
   ORDEM_PAGO_QUINTO,
   OUTRO,
   QUARTO,
@@ -388,5 +389,52 @@ describe("trilhaDoParlamentar", () => {
       ["MUNICIPIO DE SOROCABA", "SP"],
       ["MUNICIPIO DE UBERABA", "MG"],
     ]);
+  });
+});
+
+describe("cache de taxasDeBase", () => {
+  it("retorna o mesmo resultado em chamadas consecutivas sem mudança de coleta", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { taxasDeBase, invalidarCacheTaxasDeBase } = await carregar();
+    invalidarCacheTaxasDeBase();
+    const t1 = await taxasDeBase();
+    const t2 = await taxasDeBase();
+    expect(t1).toEqual(t2);
+    expect(t1).toEqual({ recemAberta: [3, 10], ciclo: [2, 6] });
+  });
+
+  it("invalida o cache quando invalidarCacheTaxasDeBase é chamada", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { taxasDeBase, invalidarCacheTaxasDeBase } = await carregar();
+    invalidarCacheTaxasDeBase();
+    const t1 = await taxasDeBase();
+    invalidarCacheTaxasDeBase();
+    const t2 = await taxasDeBase();
+    expect(t1).toEqual(t2);
+  });
+
+  it("invalida o cache quando uma nova coleta é inserida", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { taxasDeBase, invalidarCacheTaxasDeBase } = await carregar();
+    invalidarCacheTaxasDeBase();
+    const t1 = await taxasDeBase();
+    await db
+      .insertInto("coleta")
+      .values({
+        fonte: "transferegov_especiais",
+        url: "https://test-cache-invalidation",
+        coletado_em: new Date().toISOString(),
+        sha256: "cache_test".padEnd(64, "0"),
+        bytes: 0,
+        licenca: "teste",
+        observacao: `${OBS_TRILHA} · teste cache`,
+      })
+      .execute();
+    try {
+      const t2 = await taxasDeBase();
+      expect(t1).toEqual(t2);
+    } finally {
+      await db.deleteFrom("coleta").where("url", "=", "https://test-cache-invalidation").execute();
+    }
   });
 });
