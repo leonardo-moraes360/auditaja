@@ -74,7 +74,7 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 4. WHEN o perfil tem emenda Pix com pagamento coletado THEN the system SHALL mostrar a trilha emenda → ente → empresas pagas, com valor por empresa e link para a fonte de cada elo. <!-- TRI-04 -->
 5. WHEN a soma dos pagamentos de um plano é menor que o valor transferido THEN the system SHALL mostrar o saldo como "Sem pagamento registrado: R$ X". <!-- TRI-05 -->
 6. IF a API do Transferegov responder erro ou 429 THEN the system SHALL parar a coleta com `ColetaBloqueada`, sem apagar dados da coleta anterior. <!-- TRI-06 -->
-7. The system SHALL agregar favorecidos PF do segundo salto numa linha "Pessoas físicas (N)" com o valor somado. <!-- TRI-07 -->
+7. The system SHALL agregar favorecidos PF do segundo salto numa linha "N pagamentos a pessoas físicas" com o valor somado, sem nome nem documento (texto revisto em 13/11: N conta pagamentos, não pessoas). <!-- TRI-07 -->
 
 **Independent Test**: semear uma emenda Pix com plano, dois pagamentos a PJ e um a PF; o perfil mostra as duas empresas, a linha de PF sem nome e o saldo.
 
@@ -139,6 +139,29 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 
 ---
 
+### P1: Versão enxuta (densidade de informação) ⭐ MVP
+
+> Aprovada pelo usuário em 13/11/2026 (artboards `SeguirDinheiroEnxuto.dc.html` e `SeguirDinheiroEnxutoMobile.dc.html` no canvas do protótipo, x=2470, y=19460), depois da ronda de UX, design e copy (`pesquisa/2026-11-13-ronda-trilha/`). Com dados reais, uma emenda Pix chega a 96 municípios e a seção aprovada ocupava 34 telas no desktop.
+
+**User Story**: Como cidadão, quero ver para onde foi o dinheiro de cada emenda sem rolar dezenas de telas, abrindo só o que me interessa.
+
+**Acceptance Criteria**:
+
+1. The system SHALL mostrar cada emenda Pix numa linha com código, área, número de municípios ou estados (com a UF), valor transferido e porcentagem paga; WHEN a emenda tem indício THEN ela abre aberta e vem antes das outras; as demais vêm fechadas. <!-- DENS-01 -->
+2. WHEN uma emenda está aberta THEN the system SHALL mostrar os três elos uma vez, cada um com o seu valor: reservado no Orçamento (empenhado, Portal da Transparência), transferido a N municípios ou estados (Transferegov) e pago pelos municípios (Transferegov), com o saldo "Sem pagamento registrado: R$ X" quando houver (TRI-05). <!-- DENS-02 -->
+3. The system SHALL listar os municípios ou estados da emenda em ordem de valor pago, mostrar no máximo 10 com pagamento e oferecer "Ver os outros N municípios com pagamento"; os que não têm pagamento ficam numa linha só, "N municípios sem pagamento registrado · R$ X". <!-- DENS-03 -->
+4. WHEN o cidadão abre um município THEN the system SHALL mostrar quem ele pagou (nome, CNPJ, abertura, 1º pagamento, valor), os pagamentos a pessoas físicas numa linha somada e um selo em cada empresa com indício ("recém-aberta" ou "também na campanha"). <!-- DENS-04 -->
+5. The system SHALL agrupar os indícios num cartão por sinal, com título, número de casos, taxa de base, regra e "Indício não é prova de irregularidade." uma vez por cartão, e uma linha por empresa com nome, CNPJ, valor, uma frase com as datas e "Ver na trilha"; os arquivos usados com data e SHA-256 ficam ao abrir. <!-- DENS-05 -->
+6. IF a base da Receita não foi importada THEN the system SHALL tratar "empresa recém-aberta" como não avaliado; IF as despesas de campanha da eleição do mandato não foram importadas THEN "ciclo fechado" também; WHEN nenhum sinal foi avaliado THEN o indicador mostra "Não avaliados", nunca "0", com uma nota que diz que isso não quer dizer que não haja indício. <!-- DENS-06 -->
+7. The system SHALL mostrar "Baixar CSV" e "Contestar" no topo da seção. <!-- DENS-07 -->
+8. The system SHALL mostrar as notas sobre pessoas físicas, matriz, base da Receita e fontes uma vez por seção, não por município. <!-- DENS-08 -->
+9. WHEN o cidadão segue "Ver na trilha" THEN the system SHALL levar ao município que pagou a empresa, já aberto. <!-- DENS-09 -->
+10. The system SHALL descrever o ciclo fechado só com o que o dado mostra ("aparece nas despesas declaradas da campanha"), usar "município ou estado" nos rótulos de quem recebeu e não acentuar razão social com palavras ambíguas (por exemplo, "para" nunca vira "Pará"). <!-- DENS-10 -->
+
+**Independent Test**: perfil fictício com uma emenda de 15 municípios (12 com pagamento, 3 sem) e um perfil sem base da Receita nem do TSE; a seção mostra 10 municípios, o botão dos outros 2, a linha dos 3 sem pagamento e "Não avaliados".
+
+---
+
 ## Edge Cases
 
 - IF um plano de ação de emenda Pix não traz código de emenda THEN the system SHALL não ligá-lo a nenhum parlamentar e contar o caso no log da coleta. <!-- EDGE-01 -->
@@ -146,7 +169,7 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 - WHEN o favorecido do segundo salto é outro ente público THEN the system SHALL mostrá-lo na trilha sem avaliar "empresa recém-aberta". <!-- EDGE-03 -->
 - WHEN a matriz do CNPJ básico não está no lote THEN the system SHALL usar a data do próprio estabelecimento e dizer "data da filial; matriz não encontrada". <!-- EDGE-05 -->
 - IF o lote importado é de um mês anterior ao lote vigente THEN the system SHALL recusar a importação com mensagem que cita os dois meses. <!-- EDGE-06 -->
-- WHEN o parlamentar não tem emenda Pix THEN the system SHALL mostrar "Este parlamentar não indicou transferências especiais no período" e esconder a trilha. <!-- EDGE-04 -->
+- WHEN o parlamentar não tem emenda Pix THEN the system SHALL mostrar "{Este deputado|Esta deputada|Este senador|Esta senadora} não indicou transferências especiais no período" e esconder a trilha (gênero e Casa revistos em 13/11). <!-- EDGE-04 -->
 
 ## Implicit-requirement sweep
 
@@ -201,8 +224,17 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 | EDGE-04 | Edge cases | Execute | Implemented |
 | EDGE-05 | Edge cases | Execute | Implemented |
 | EDGE-06 | Edge cases | Execute | Implemented |
-
-**Coverage:** 33 total, 33 mapped to tasks (T1–T14), 0 unmapped
+| DENS-01 | P1: Versão enxuta | Execute | Pending |
+| DENS-02 | P1: Versão enxuta | Execute | Pending |
+| DENS-03 | P1: Versão enxuta | Execute | Pending |
+| DENS-04 | P1: Versão enxuta | Execute | Pending |
+| DENS-05 | P1: Versão enxuta | Execute | Pending |
+| DENS-06 | P1: Versão enxuta | Execute | Pending |
+| DENS-07 | P1: Versão enxuta | Execute | Pending |
+| DENS-08 | P1: Versão enxuta | Execute | Pending |
+| DENS-09 | P1: Versão enxuta | Execute | Pending |
+| DENS-10 | P1: Versão enxuta | Execute | Pending |
+**Coverage:** 43 total, 33 mapped to tasks (T1–T14), 10 mapped to T15–T18
 
 ---
 

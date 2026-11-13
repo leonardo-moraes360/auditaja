@@ -61,6 +61,13 @@ T3 → T4 → T5 → T6 → T7 → T8 → T9
 T10 → T11 → T12 → T13 → T14
 ```
 
+
+### Phase 4: Versão enxuta (aprovada em 13/11)
+
+```
+T15 → T16 → T17
+```
+
 ---
 
 ## Task Breakdown
@@ -420,6 +427,80 @@ T10 → T11 → T12 → T13 → T14
 **Tests**: e2e
 **Status**: ✅ Done
 **Gate**: full
+
+
+---
+
+### T15: Leitura da versão enxuta
+
+**What**: `trilhaDoParlamentar` passa a dizer quais sinais foram avaliados (base da Receita importada; despesas de campanha da eleição do mandato importadas), a UF dos municípios de cada emenda, o plano de cada indício (para "Ver na trilha") e os CNPJs com ciclo fechado por emenda (selo); `nomeLegivel` vai para `src/lib/trilha.ts` sem o bug do "Pará".
+**Where**: `src/data/trilha.ts`, `src/lib/trilha.ts`, `tests/fixtures/trilha.ts`
+**Depends on**: None
+**Reuses**: leitura atual
+**Requirement**: DENS-01, DENS-04, DENS-06, DENS-09, DENS-10
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Perfil sem base da Receita nem do TSE devolve os dois sinais como não avaliados
+- [ ] Emenda com 15 municípios na fixture (12 pagos, 3 sem pagamento) com UF
+- [ ] Cada indício traz o plano do primeiro pagamento ligado a ele
+- [ ] `nomeLegivel("SHARK MAQUINAS PARA CONSTRUCAO LTDA")` não troca "para" por "Pará"
+- [ ] Full gate passa
+
+**Tests**: integration
+**Gate**: full
+
+---
+
+### T16: Seção enxuta
+
+**What**: Reescrever a seção pelo artboard aprovado: emendas em linhas, emenda com indício aberta, elos uma vez, municípios em ordem de valor pago (10 + "Ver os outros N" + linha dos sem pagamento), município abre os recebedores com selos, indícios agrupados por sinal, "Não avaliados", CSV e Contestar no topo, notas uma vez; textos revistos (TRI-07, EDGE-04, DENS-10).
+**Where**: `src/components/perfil/secao-trilha.tsx`, `src/app/parlamentares/[id]/page.tsx`
+**Depends on**: T15
+**Reuses**: tokens do design system, `<details>` nativo
+**Requirement**: DENS-01..DENS-10, TRI-04, TRI-05, TRI-07, EDGE-04, LING-01, LING-02, LING-04, LING-07, LING-09
+
+**Tools**:
+
+- MCP: NONE
+- Skill: NONE
+
+**Done when**:
+
+- [ ] Textos exatos da spec ("Indício não é prova de irregularidade.", "Sem pagamento registrado: R$ X", "N municípios sem pagamento registrado", "Não avaliados", frase de vazio com gênero)
+- [ ] Desktop e celular conferidos no e2e por projeto; 320 px sem rolagem; axe sem violações
+- [ ] "Ver na trilha" abre o município da empresa
+- [ ] Full gate passa
+
+**Tests**: e2e
+**Gate**: full
+
+---
+
+### T17: Verificação da versão enxuta
+
+**What**: Verificador independente: ACs DENS e os já existentes, injeção de falhas e paridade com os artboards da versão enxuta (≥ 95%).
+**Where**: `.specs/features/seguir-dinheiro/validation.md`
+**Depends on**: T16
+**Reuses**: método da validação anterior
+**Requirement**: todos
+
+**Tools**:
+
+- MCP: NONE
+- Skill: tlc-spec-driven
+
+**Done when**:
+
+- [ ] Veredito PASS e `validate_state.py` sai com 0
+
+**Tests**: none
+**Gate**: build
 
 ---
 
