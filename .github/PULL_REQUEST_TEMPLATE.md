@@ -34,6 +34,14 @@ Vulnerabilidade? Não abra PR nem issue: use o reporte privado em Security → R
 - [ ] `CHANGELOG.md` atualizado em `## [Não publicado]`, quando a mudança é visível no site
 - [ ] Mudança visual conferida no celular, no tema escuro e com teclado/leitor de tela
 
+## Uso de IA
+
+<!-- Marque se ferramentas de IA (assistentes de código, chatbots, agentes) tiveram papel significativo nesta contribuição. Ver CONTRIBUTING.md#contribuições-com-ia. -->
+
+- [ ] Esta contribuição teve uso significativo de IA (explique brevemente abaixo, se quiser)
+- [ ] Revisei e entendo cada linha do código gerado
+- [ ] Nenhum dado (valor, fonte, link) foi gerado por IA — todos vêm de fonte oficial verificada
+
 ## Banco de dados
 
 - [ ] Sem migração
