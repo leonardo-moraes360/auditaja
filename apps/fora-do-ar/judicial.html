@@ -24,18 +24,14 @@
         </p>
 
         <div class="detalhes">
-          <!-- AUTORIDADE: autoridade que determinou (ex: "Tribunal de Justiça do Estado de São Paulo") -->
-          <p><strong>Autoridade:</strong> <!-- AUTORIDADE --></p>
-          <!-- NUMERO_PROCESSO: número do processo ou referência (ex: "Processo nº 0000000-00.0000.0.00.0000") -->
-          <p><strong>Referência:</strong> <!-- NUMERO_PROCESSO --></p>
-          <!-- DATA_DETERMINACAO: data da determinação (ex: "13/11/2026") -->
-          <p><strong>Data:</strong> <!-- DATA_DETERMINACAO --></p>
+          {{LINHA_AUTORIDADE}}
+          {{LINHA_PROCESSO}}
+          {{LINHA_DATA}}
         </div>
       </div>
 
       <div class="contato">
-        <!-- CONTATO_EMAIL: e-mail de contato -->
-        <p>Dúvidas? Entre em contato: <!-- CONTATO_EMAIL --></p>
+        {{LINHA_CONTATO}}
       </div>
     </div>
   </main>

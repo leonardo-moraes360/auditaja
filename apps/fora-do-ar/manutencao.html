@@ -24,16 +24,13 @@
         </p>
 
         <div class="detalhes">
-          <!-- PREVISAO_RETORNO: data/hora prevista para retorno (ex: "14/11/2026 às 18:00") -->
-          <p><strong>Previsão de retorno:</strong> <!-- PREVISAO_RETORNO --></p>
-          <!-- MOTIVO_MANUTENCAO: motivo breve (ex: "Atualização de infraestrutura") -->
-          <p><strong>Motivo:</strong> <!-- MOTIVO_MANUTENCAO --></p>
+          {{LINHA_PREVISAO}}
+          {{LINHA_MOTIVO}}
         </div>
       </div>
 
       <div class="contato">
-        <!-- CONTATO_EMAIL: e-mail de contato -->
-        <p>Dúvidas? Entre em contato: <!-- CONTATO_EMAIL --></p>
+        {{LINHA_CONTATO}}
       </div>
     </div>
   </main>
