@@ -3,6 +3,8 @@ import { CAMINHO_LICENCA, LICENCA_CODIGO, LICENCA_DADOS, REPOSITORIO_URL } from 
 import { responsavel } from "@/lib/responsavel";
 import { versaoDoSite } from "@/lib/versao";
 
+const LICENSE_DATA_URL = `${REPOSITORIO_URL}/blob/main/LICENSE-DATA`;
+
 /**
  * R13: identificação pública do controlador e do encarregado (LGPD).
  * Desktop: faixa escura em duas colunas (Main.dc.html:279-284). Celular: nota clara no fim do
@@ -11,7 +13,6 @@ import { versaoDoSite } from "@/lib/versao";
 export function Rodape() {
   const { controlador, doc, encarregado, email } = responsavel();
   const { versao, commit } = versaoDoSite();
-  // Versão e commit lidos no build (next.config.ts). Sem git, só a versão.
   const marcaVersao = (
     <span className="tabular-nums" data-testid="versao-site">
       <span className="sr-only">
@@ -29,7 +30,6 @@ export function Rodape() {
       </span>
     </span>
   );
-  // Licença do que o Auditaja publica (dados e textos) e do código; detalhes em /sobre#licenca.
   const linkLicenca = (
     <>
       <Link href={CAMINHO_LICENCA} className="sm:text-rodape-link sm:hover:text-white">
@@ -41,6 +41,18 @@ export function Rodape() {
       </a>
     </>
   );
+  const linkLicencaCompleto = (
+    <>
+      <a href={LICENCA_CODIGO.url} className="sm:text-rodape-link sm:hover:text-white">
+        {LICENCA_CODIGO.curto}
+      </a>{" "}
+      (código) ·{" "}
+      <a href={LICENSE_DATA_URL} className="sm:text-rodape-link sm:hover:text-white">
+        {LICENCA_DADOS.nome}
+      </a>{" "}
+      (dados)
+    </>
+  );
   return (
     <footer className="bg-background text-muted-foreground sm:border-t sm:border-borda sm:bg-rodape-fundo sm:text-rodape-texto">
       <div className="mx-auto flex max-w-[1248px] flex-wrap gap-x-12 gap-y-2 px-4 pt-2 pb-6 text-xs leading-relaxed sm:gap-y-5 sm:px-6 sm:py-7 sm:text-sm">
@@ -48,8 +60,12 @@ export function Rodape() {
           <p className="hidden sm:block">
             <span className="font-bold text-white">Auditaja</span> {marcaVersao}
           </p>
-          <p className="hidden sm:block">{linkLicenca}</p>
-          {/* LGPD art. 41, § 1º: identidade e contato do encarregado também no celular. */}
+          <p className="hidden sm:block">
+            <a href={REPOSITORIO_URL} className="text-rodape-link hover:text-white">
+              Código-fonte
+            </a>{" "}
+            · {linkLicencaCompleto}
+          </p>
           <p className="sm:hidden">
             Controlador: {controlador} · Encarregado (LGPD): {encarregado} · {email}
           </p>
@@ -60,23 +76,28 @@ export function Rodape() {
             Encarregado (LGPD): {encarregado} · {email}
           </p>
         </div>
-        <p className="flex-[1_1_280px]">
-          Indicadores são pontos de partida para verificação, não acusações.{" "}
-          <Link href="/metodologia" className="sm:text-rodape-link sm:hover:text-white">
-            Metodologia
-          </Link>{" "}
-          ·{" "}
-          <Link href="/privacidade" className="sm:text-rodape-link sm:hover:text-white">
-            Política de privacidade
-          </Link>
-          <span className="hidden sm:inline">
-            {" "}
-            ·{" "}
-            <Link href="/fontes" className="text-rodape-link hover:text-white">
-              Licenças dos dados
+        <div className="flex-[1_1_280px] space-y-1">
+          <p>
+            Os dados exibidos são públicos e vêm de{" "}
+            <Link href="/fontes" className="sm:text-rodape-link sm:hover:text-white">
+              fontes oficiais
             </Link>
-          </span>
-        </p>
+            . Indicadores são pontos de partida para verificação, não acusações.
+          </p>
+          <p>
+            <Link href="/metodologia" className="sm:text-rodape-link sm:hover:text-white">
+              Metodologia
+            </Link>{" "}
+            ·{" "}
+            <Link href="/privacidade" className="sm:text-rodape-link sm:hover:text-white">
+              Política de privacidade
+            </Link>{" "}
+            ·{" "}
+            <Link href="/termos" className="sm:text-rodape-link sm:hover:text-white">
+              Termos de uso
+            </Link>
+          </p>
+        </div>
         <p className="sm:hidden">
           Auditaja {marcaVersao} · {linkLicenca}
         </p>

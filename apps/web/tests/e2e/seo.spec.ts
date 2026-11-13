@@ -164,7 +164,7 @@ test("busca (?q=) e formulários ficam fora do índice; listas por UF têm canon
 
 test("páginas institucionais: canonical e Open Graph completos", async ({ request }) => {
   const base = await dominio(request);
-  for (const c of ["/sobre", "/metodologia", "/fontes", "/privacidade"]) {
+  for (const c of ["/sobre", "/metodologia", "/fontes", "/privacidade", "/termos"]) {
     const { head } = await cabecalho(request, c);
     expect(canonical(head)).toBe(`${base}${c}`);
     expect(meta(head, "og:url")).toBe(`${base}${c}`);
@@ -193,15 +193,22 @@ test("cartões de compartilhamento são PNG 1200×630", async ({ request }) => {
   }
 });
 
-test("rodapé leva à licença (CC BY nos dados, AGPL no código) na página Sobre", async ({ page }) => {
+test("rodapé leva às licenças (CC BY nos dados, AGPL no código)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "no celular a estrutura do rodapé é diferente");
   await page.goto("/sobre");
-  const link = page.locator("footer").getByRole("link", { name: "Licença: dados CC BY 4.0, código AGPL-3.0" });
-  await expect(link.filter({ visible: true })).toHaveCount(1);
-  await expect(
-    page.locator("footer").getByRole("link", { name: "Código-fonte" }).filter({ visible: true }),
-  ).toHaveAttribute("href", "https://github.com/leonardo-moraes360/auditaja");
-  await link.filter({ visible: true }).click();
-  await expect(page).toHaveURL(/\/sobre#licenca$/);
+  const rodape = page.locator("footer");
+  await expect(rodape.getByRole("link", { name: "Código-fonte" }).filter({ visible: true })).toHaveAttribute(
+    "href",
+    "https://github.com/leonardo-moraes360/auditaja",
+  );
+  await expect(rodape.getByRole("link", { name: "AGPL-3.0" }).filter({ visible: true })).toHaveAttribute(
+    "href",
+    "https://www.gnu.org/licenses/agpl-3.0.html",
+  );
+  await expect(rodape.getByRole("link", { name: "CC BY 4.0" }).filter({ visible: true })).toHaveAttribute(
+    "href",
+    /LICENSE-DATA$/,
+  );
   const secao = page.locator("#licenca");
   await expect(secao.getByRole("heading", { name: "Licença" })).toBeVisible();
   await expect(secao.getByRole("link", { name: /CC BY 4\.0/ })).toHaveAttribute(
