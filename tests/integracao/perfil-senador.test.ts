@@ -175,6 +175,27 @@ describe("busca por Casa (Postgres)", () => {
     expect((await buscarParlamentares({ q: "otavio" })).map((r) => r.id)).toEqual([SEED.senador]);
     expect((await buscarParlamentares({ q: "MG" })).map((r) => r.id)).toEqual([SEED.senador]);
   });
+
+  it("nome do estado filtra pela UF; sigla não procura pedaço de nome; palavras em qualquer ordem", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { buscarParlamentares, ufDaBusca } = await import("@/data/perfil");
+    expect(ufDaBusca("Bahia")).toBe("BA");
+    expect(ufDaBusca("são paulo")).toBe("SP");
+    expect(ufDaBusca("estado do Rio de Janeiro")).toBe("RJ");
+    expect(ufDaBusca("sp")).toBe("SP");
+    expect(ufDaBusca("Maria")).toBeNull();
+    expect((await buscarParlamentares({ q: "Minas Gerais" })).map((r) => r.id)).toEqual([SEED.senador]);
+    expect((await buscarParlamentares({ q: "modelo otavio" })).map((r) => r.id)).toEqual([SEED.senador]);
+  });
+
+  it("sem resultado, sugere nomes parecidos (grafia aproximada)", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { buscarParlamentares, buscarParecidos } = await import("@/data/perfil");
+    expect(await buscarParlamentares({ q: "otavyo modelo" })).toEqual([]);
+    expect((await buscarParecidos({ q: "otavyo modelo" })).map((r) => r.id)[0]).toBe(SEED.senador);
+    expect((await buscarParecidos({ q: "ottavio" })).map((r) => r.id)).toContain(SEED.senador);
+    expect(await buscarParecidos({ q: "xyz" })).toEqual([]);
+  });
 });
 
 describe("lista do Senado inteira (meta: 81 senadores)", () => {

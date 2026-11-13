@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { buscarParlamentares, casaDoFiltro, contarPorCasa, ufsDisponiveis, type Casa } from "@/data/perfil";
+import {
+  buscarParecidos,
+  buscarParlamentares,
+  casaDoFiltro,
+  contarPorCasa,
+  ufsDisponiveis,
+  type Casa,
+} from "@/data/perfil";
 import { cargoParlamentar } from "@/lib/rotulos";
 import { FotoParlamentar } from "@/components/perfil/foto";
 import { Esqueleto } from "@/components/esqueleto";
@@ -26,11 +33,16 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
   const q = typeof sp.q === "string" ? sp.q : "";
   const uf = typeof sp.uf === "string" && /^[A-Z]{2}$/.test(sp.uf) ? sp.uf : "";
   const casa = casaDoFiltro(sp.casa);
-  const [lista, ufs, contagem] = await Promise.all([
-    buscarParlamentares({ q, uf, casa }),
+  const [encontrados, ufs, contagem] = await Promise.all([
+    buscarParlamentares({ q, uf, casa, limite: 1000 }),
     ufsDisponiveis(),
     contarPorCasa(),
   ]);
+  // O Senado cabe inteiro; nas outras listas mostramos 60 e dizemos quantos há.
+  const porPagina = casa === "senado" ? 100 : 60;
+  const lista = encontrados.slice(0, porPagina);
+  // Busca sem resultado: nomes parecidos (erro de digitação, "nicolas" → Nikolas).
+  const parecidos = q && encontrados.length === 0 ? await buscarParecidos({ q, uf, casa }) : [];
   const filtrosCasa: { valor: Casa | null; rotulo: string; n: number }[] = [
     { valor: null, rotulo: "Todos", n: contagem.camara + contagem.senado },
     { valor: "camara", rotulo: "Câmara dos Deputados", n: contagem.camara },
@@ -76,14 +88,14 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
         {casa && <input type="hidden" name="casa" value={casa} />}
         <div className="flex min-w-60 flex-1 flex-col gap-1">
           <label htmlFor="q" className="text-sm font-medium">
-            Nome ou UF
+            Nome ou estado
           </label>
           <input
             id="q"
             name="q"
             defaultValue={q}
             type="search"
-            placeholder="Ex.: Maria, Silva ou SP"
+            placeholder="Ex.: Maria, Silva ou Bahia"
             className="h-11 rounded-[8px] border border-input bg-superficie px-3 text-sm"
           />
         </div>
@@ -114,13 +126,17 @@ async function Resultados({ searchParams }: Pick<PageProps<"/parlamentares">, "s
       </form>
 
       <p className="text-sm text-muted-foreground" aria-live="polite">
-        {lista.length === 0
-          ? "Nenhum parlamentar encontrado com esses filtros."
-          : `${lista.length}${lista.length === 60 ? "+" : ""} resultado(s). Fonte: ${fonte}.`}
+        {encontrados.length === 0
+          ? parecidos.length
+            ? `Nenhum nome igual a “${q}”. Você quis dizer:`
+            : "Nenhum parlamentar encontrado com esses filtros."
+          : encontrados.length > lista.length
+            ? `Mostrando ${lista.length} de ${encontrados.length}. Use a busca ou o estado para achar os outros. Fonte: ${fonte}.`
+            : `${encontrados.length} ${encontrados.length === 1 ? "parlamentar" : "parlamentares"}. Fonte: ${fonte}.`}
       </p>
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {lista.map((p) => (
+        {(lista.length ? lista : parecidos).map((p) => (
           <li key={p.id}>
             <Link
               href={`/parlamentares/${p.id}`}

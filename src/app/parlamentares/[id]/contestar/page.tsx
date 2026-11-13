@@ -5,7 +5,7 @@ import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
-import { SECOES } from "./secoes";
+import { SECOES, secoesDaCasa } from "./secoes";
 import { FormularioPedido } from "./formulario";
 
 export const metadata: Metadata = { title: "Pedir correção" };
@@ -30,7 +30,7 @@ async function ConteudoContestar({ params, searchParams }: PageProps<"/parlament
   if (!/^\d{1,9}$/.test(raw)) notFound();
   const p = await getDb()
     .selectFrom("parlamentar")
-    .select(["id", "nome"])
+    .select(["id", "nome", "casa"])
     .where("id", "=", Number(raw))
     .executeTakeFirst();
   if (!p) notFound();
@@ -57,7 +57,7 @@ async function ConteudoContestar({ params, searchParams }: PageProps<"/parlament
             Perfil de <strong className="text-foreground">{p.nome}</strong>. O próprio parlamentar, a assessoria ou
             qualquer pessoa pode pedir correção. Também atendemos pedidos de direito de resposta.
           </p>
-          <FormularioPedido parlamentarId={p.id} secaoInicial={secao} secoes={SECOES} />
+          <FormularioPedido parlamentarId={p.id} secaoInicial={secao} secoes={secoesDaCasa(p.casa)} />
         </>
       )}
     </div>

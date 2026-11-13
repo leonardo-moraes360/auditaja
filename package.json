@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test --trace off",
     "format": "prettier --write .",
-    "format:check": "prettier --check src tests scripts"
+    "format:check": "prettier --check src tests scripts",
+    "versao": "tsx scripts/versao.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

@@ -45,6 +45,16 @@ Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `
 - **R10:** partido só de parlamentares; nada de listas de filiados.
 - **R13:** rodapé e política de privacidade (`/privacidade`) com controlador e encarregado (variáveis `NEXT_PUBLIC_*`, hoje placeholders).
 
+## Versão (semver)
+
+A versão do site fica no `package.json` e segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/). O rodapé mostra `vX.Y.Z · <hash curto>`, lidos no build pelo `next.config.ts` (hash: `NEXT_PUBLIC_COMMIT`, depois `SOURCE_COMMIT` do Coolify, depois `git rev-parse --short HEAD`). Sem git, aparece só a versão.
+
+Enquanto o site não for lançado, fica em 0.x. Para publicar uma versão:
+
+1. Anote as mudanças em `## [Não publicado]` no `CHANGELOG.md` ao longo do trabalho.
+2. Rode `pnpm versao patch` (correção), `minor` (funcionalidade nova) ou `major` (mudança incompatível, ou o lançamento 1.0.0).
+3. O script sobe o `package.json`, move as notas para a seção da nova versão e imprime o `git commit` e o `git tag` para você revisar.
+
 ## Verificação
 
 ```bash

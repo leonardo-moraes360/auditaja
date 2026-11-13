@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 /** No celular, menu e busca do topo ficam atrás dos botões de ícone (protótipo, Mobile.dc.html). */
@@ -158,9 +160,9 @@ test("BUSCA-05: campos de busca indicam por onde buscar", async ({ page, isMobil
   await abrirTopo(page, isMobile, "Buscar");
   await expect(page.getByRole("searchbox", { name: "Buscar parlamentar" })).toHaveAttribute(
     "placeholder",
-    "Buscar deputado ou senador por nome ou UF", // SUI-08 substitui o texto de BUSCA-05
+    "Buscar parlamentar ou estado", // SUI-08 substitui o texto de BUSCA-05
   );
-  await expect(page.getByLabel("Nome ou UF")).toHaveAttribute("placeholder", "Ex.: Maria, Silva ou SP");
+  await expect(page.getByLabel("Nome ou estado")).toHaveAttribute("placeholder", "Ex.: Maria, Silva ou Bahia");
 });
 
 test("BUSCA-04: buscar pela UF no topo lista os deputados da UF", async ({ page, isMobile }) => {
@@ -330,4 +332,16 @@ test("PRES-05: sem histórico coletado, a presença avisa que pode incluir licen
   if (isMobile) await expect(ind.getByText("0 de 5 votações · pode incluir licenças", { exact: true })).toBeVisible();
   else await expect(ind.getByText("Pode incluir períodos de licença", { exact: true })).toBeVisible();
   await expect(page.locator("#periodos")).toHaveCount(0);
+});
+
+test("VER-01: versão semver e hash curto do commit no rodapé", async ({ page }) => {
+  const { version } = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as { version: string };
+  await page.goto("/metodologia");
+  const marca = page.locator("footer").getByTestId("versao-site").filter({ visible: true });
+  await expect(marca).toHaveCount(1);
+  // O build do e2e roda dentro do git, então o hash curto tem de aparecer depois da versão.
+  await expect(marca.locator('[aria-hidden="true"]')).toHaveText(
+    new RegExp(`^v${version.replaceAll(".", "\\.")} · [0-9a-f]{7,}$`),
+  );
+  await expect(marca.locator(".sr-only")).toHaveText(/^Versão \S+, commit [0-9a-f]{7,}$/);
 });
