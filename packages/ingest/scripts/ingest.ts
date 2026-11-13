@@ -31,6 +31,11 @@
  * depois de `transferegov-pix`, `emendas` e `tse-contas`: só entram CNPJs que já estão no banco.
  *
  * Todos usam o ClienteEducado (R7): robots.txt, 1 req/s por host, User-Agent identificado.
+ *
+ * Revalidação automática:
+ *   Após a coleta, se REVALIDATE_URL e REVALIDATE_SECRET estiverem definidos, o script chama
+ *   POST /api/revalidate no site para atualizar o cache das páginas de perfil. Sem essas variáveis
+ *   a revalidação é pulada (aviso no console). Use --no-revalidate para pular intencionalmente.
  */
 import { createDb } from "@auditaja/db/client";
 import { coletarBlocos, coletarCeap, coletarDeputados, coletarOrgaos, coletarVotacoes } from "../src/camara";
@@ -43,6 +48,43 @@ import { coletarTransferegovPix } from "../src/transferegov";
 import { coletarEmendas, coletarSancoes } from "../src/transparencia";
 
 const [cmd, anoArg] = process.argv.slice(2);
+const noRevalidate = process.argv.includes("--no-revalidate");
+
+async function revalidarCache(): Promise<void> {
+  const url = process.env.REVALIDATE_URL;
+  const secret = process.env.REVALIDATE_SECRET;
+
+  if (noRevalidate) {
+    console.log("revalidação: pulada (--no-revalidate)");
+    return;
+  }
+
+  if (!url || !secret) {
+    console.log("revalidação: pulada (defina REVALIDATE_URL e REVALIDATE_SECRET para atualizar o cache após a coleta)");
+    return;
+  }
+
+  console.log("revalidação: chamando", url);
+  try {
+    const res = await fetch(`${url}/api/revalidate`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = (await res.json()) as { revalidated?: boolean; parlamentares?: number; error?: string };
+
+    if (res.ok && data.revalidated) {
+      console.log(`revalidação: ${data.parlamentares ?? "?"} perfis atualizados`);
+    } else {
+      console.error("revalidação: falhou", data.error ?? res.status);
+    }
+  } catch (err) {
+    console.error("revalidação: erro de rede", err instanceof Error ? err.message : err);
+  }
+}
 
 /** Valor de `--nome <valor>` ou `--nome=<valor>`. */
 function opcao(nome: string): string | undefined {
@@ -60,36 +102,47 @@ async function main() {
     switch (cmd) {
       case "deputados":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);
+        await revalidarCache();
         break;
       case "orgaos":
         console.log(`órgãos: ${await coletarOrgaos(db, cli)}`);
+        await revalidarCache();
         break;
       case "blocos":
         console.log("blocos:", await coletarBlocos(db, cli));
+        await revalidarCache();
         break;
       case "historico":
         console.log("histórico:", await coletarHistorico(db, cli, { soFaltantes: anoArg === "faltantes" }));
+        await revalidarCache();
         break;
       case "ceap":
         console.log(`despesas ${ano}: ${await coletarCeap(db, cli, ano)}`);
+        await revalidarCache();
         break;
       case "votacoes":
         console.log(`votações ${ano}:`, await coletarVotacoes(db, cli, ano));
+        await revalidarCache();
         break;
       case "bens":
         console.log(`bens ${ano}:`, await coletarBens(db, cli, ano));
+        await revalidarCache();
         break;
       case "tse-contas":
         console.log(`despesas de campanha ${ano}:`, await coletarDespesasCampanha(db, cli, ano));
+        await revalidarCache();
         break;
       case "emendas":
         console.log("emendas:", await coletarEmendas(db, cli));
+        await revalidarCache();
         break;
       case "sancoes":
         console.log("sanções:", await coletarSancoes(db, cli));
+        await revalidarCache();
         break;
       case "transferegov-pix":
         console.log("Transferegov, emendas Pix:", await coletarTransferegovPix(db, cli));
+        await revalidarCache();
         break;
       case "receita": {
         const arquivo = opcao("arquivo");
@@ -102,21 +155,26 @@ async function main() {
           break;
         }
         console.log("Receita, Estabelecimentos:", await importarEstabelecimentos(db, arquivo));
+        await revalidarCache();
         break;
       }
       case "senadores":
         console.log("senadores:", await coletarSenadores(db, cli));
+        await revalidarCache();
         break;
       case "ceaps":
         console.log(`CEAPS ${ano}:`, await coletarCeaps(db, cli, ano));
+        await revalidarCache();
         break;
       case "votacoes-senado":
         console.log(`votações do Senado ${ano}:`, await coletarVotacoesSenado(db, cli, ano));
+        await revalidarCache();
         break;
       case "senado":
         console.log("senadores:", await coletarSenadores(db, cli));
         console.log(`CEAPS ${ano}:`, await coletarCeaps(db, cli, ano));
         console.log(`votações do Senado ${ano}:`, await coletarVotacoesSenado(db, cli, ano));
+        await revalidarCache();
         break;
       case "tudo":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);
@@ -126,6 +184,7 @@ async function main() {
         console.log(`despesas ${ano}: ${await coletarCeap(db, cli, ano)}`);
         console.log(`votações ${ano}:`, await coletarVotacoes(db, cli, ano));
         for (const a of [2018, 2022, 2026]) console.log(`bens ${a}:`, await coletarBens(db, cli, a));
+        await revalidarCache();
         break;
       default:
         console.error("comando desconhecido; veja o cabeçalho de packages/ingest/scripts/ingest.ts");
