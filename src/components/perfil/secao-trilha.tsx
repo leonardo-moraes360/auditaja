@@ -17,9 +17,11 @@ import { formatarCnpj } from "@/lib/privacy";
 import { DIAS_RECEM_ABERTA, nomeLegivel, taxaDeBase } from "@/lib/trilha";
 
 /**
- * "Para onde foi o dinheiro das emendas Pix" (artboards SeguirDinheiro e SeguirDinheiroMobile).
- * R4: os avisos dizem só "indício", com regra, limiar, dados comparados, taxa de base, fontes e a
- * frase de não imputação. Terceiros (empresas) só aparecem no perfil de quem indicou a emenda.
+ * "Para onde foi o dinheiro das emendas Pix", versão enxuta (artboards SeguirDinheiroEnxuto e
+ * SeguirDinheiroEnxutoMobile, aprovados em 13/11/2026). Uma linha por emenda; a emenda abre os três
+ * elos e os municípios em ordem de valor pago; cada município abre quem ele pagou. Indícios agrupados
+ * por sinal (R4: "indício", regra, limiar, taxa de base, fontes e a frase de não imputação).
+ * Tudo com <details> nativo: funciona sem JavaScript e com teclado.
  */
 
 const CARTAO = "flex scroll-mt-4 flex-col rounded-[14px] border bg-superficie p-4 sm:rounded-[16px]";
@@ -27,28 +29,17 @@ const H2 = "font-heading text-lg font-bold leading-[1.3] sm:text-[1.375rem]";
 const API = "https://api-publica.transferegov.gestao.gov.br/especiais";
 const PORTAL_EMENDAS = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares";
 const PAGINA_RECEITA = "https://dados.gov.br/dados/conjuntos-dados/cadastro-nacional-da-pessoa-juridica---cnpj";
-/** Trilhas exibidas antes de "Mostrar as outras N emendas Pix". */
-export const LIMITE_TRILHAS = 3;
+/** DENS-03: municípios com pagamento à vista antes de "Ver os outros N". */
+export const LIMITE_MUNICIPIOS = 10;
 const LINK_AVISO = "inline-flex min-h-11 items-center text-atipico sm:min-h-6";
+const NAO_PROVA = "Indício não é prova de irregularidade.";
+const SUMMARY = "cursor-pointer list-none [&::-webkit-details-marker]:hidden";
 
-function ente(p: PlanoTrilha) {
-  const nome = nomeLegivel(p.ente.nome) || "Ente não informado";
-  return p.ente.uf ? `${nome} (${p.ente.uf})` : nome;
-}
-
-/** "2025-02" → "02/2025". */
+/** "2025-02" ou "2025-02-10" → "02/2025". */
 const mesAno = (iso: string | null | undefined) => (iso ? `${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "");
 
 function plural(n: number, um: string, varios: string) {
   return `${n.toLocaleString("pt-BR")} ${n === 1 ? um : varios}`;
-}
-
-/** Quem pagou: "4 empresas e 3 pessoas". */
-function recebedoresTexto(empresas: number, pessoas: number) {
-  const partes = [];
-  if (empresas) partes.push(plural(empresas, "empresa", "empresas"));
-  if (pessoas) partes.push(plural(pessoas, "pessoa", "pessoas"));
-  return partes.join(" e ");
 }
 
 export type QuemIndicou = "deste deputado" | "desta deputada" | "deste senador" | "desta senadora";
@@ -58,7 +49,24 @@ export function quemIndicou(casa: "camara" | "senado", sexo: string | null): Que
   return sexo === "F" ? "desta deputada" : "deste deputado";
 }
 
-const ancora = (codigo: string) => `trilha-${codigo}`;
+/** EDGE-04: "deste deputado" → "Este deputado". */
+function sujeito(quem: QuemIndicou) {
+  return quem.replace(/^dest/, "Est");
+}
+
+const ancoraEmenda = (codigo: string) => `trilha-${codigo}`;
+const ancoraMunicipio = (codigo: string, plano: number) => `trilha-${codigo}-${plano}`;
+
+/** "MUNICIPIO DE SANTA MARIA" → "Santa Maria"; estados e fundos ficam com o nome inteiro. */
+function nomeMunicipio(p: PlanoTrilha) {
+  const n = nomeLegivel(p.ente.nome) || "Ente não informado";
+  return n.replace(/^Munic[ií]pio de /, "");
+}
+
+function nomeEnte(nome: string | null) {
+  const n = nomeLegivel(nome);
+  return n ? n.replace(/^Munic[ií]pio de /, "") : "ente não informado";
+}
 
 export function SecaoTrilha({
   trilha,
@@ -72,51 +80,39 @@ export function SecaoTrilha({
   const contestar = `/parlamentares/${parlamentarId}/contestar?secao=trilha`;
   return (
     <section id="trilha" data-trilha aria-labelledby="trilha-titulo" className={`${CARTAO} gap-3.5 sm:gap-5 sm:p-6`}>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-4 sm:gap-y-2">
         <h2 id="trilha-titulo" className={H2}>
           Para onde foi o dinheiro das emendas Pix
         </h2>
-        <p className="hidden text-sm leading-normal text-texto-2 sm:block">
-          Na transferência especial (“emenda Pix”) o dinheiro vai para o caixa do município ou do estado, que depois
-          paga empresas e entidades. O município informa esses pagamentos no Transferegov. Aqui ligamos cada emenda aos
-          pagamentos feitos com ela, pelo código da emenda e pelo CNPJ de quem recebeu. Nunca pelo nome.
-        </p>
-        <p className="text-sm leading-normal text-texto-2 sm:hidden">
-          O dinheiro vai para o caixa do município, que depois paga empresas e entidades. Ligamos cada emenda aos
-          pagamentos pelo código da emenda e pelo CNPJ, nunca pelo nome.
-        </p>
+        <span
+          data-acoes-topo
+          className="flex gap-4 text-base sm:text-sm [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center sm:[&_a]:min-h-0"
+        >
+          {!trilha.vazio && (
+            <a href={`/parlamentares/${parlamentarId}/trilha.csv`} download>
+              Baixar CSV
+            </a>
+          )}
+          <Link href={contestar}>Contestar</Link>
+        </span>
       </div>
+      <p className="text-base leading-normal text-texto-2">
+        <span className="hidden sm:inline">
+          O dinheiro da emenda Pix cai no caixa do município, que informa no Transferegov quem pagou com ele. Ligamos
+          tudo pelo código da emenda e pelo CNPJ.
+        </span>
+        <span className="sm:hidden">O município recebe a emenda Pix e informa no Transferegov quem pagou com ela.</span>
+      </p>
 
       {trilha.vazio ? (
         <p data-trilha-vazio className="text-muted-foreground">
-          Este parlamentar não indicou transferências especiais no período
+          {sujeito(quem)} não indicou transferências especiais no período
         </p>
       ) : (
         <ConteudoTrilha trilha={trilha} quem={quem} contestar={contestar} />
       )}
 
       <ComoSeguimos className="lg:hidden" />
-
-      <div className="flex flex-col gap-1 border-t border-borda-suave pt-2.5 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:justify-between sm:gap-x-4 sm:gap-y-2 sm:pt-3">
-        <span className="hidden sm:inline">
-          Fontes: Transferegov (emendas Pix, API pública) · Receita Federal (Estabelecimentos
-          {trilha.receitaBase ? `, base de ${mesAno(trilha.receitaBase)}` : ""}, importado à mão) · TSE (prestação de
-          contas{trilha.eleicao ? ` ${trilha.eleicao}` : ""}) · Portal da Transparência (emendas)
-        </span>
-        <span className="sm:hidden">
-          Fontes: Transferegov · Receita Federal{trilha.receitaBase ? ` (base de ${mesAno(trilha.receitaBase)})` : ""} ·
-          TSE{trilha.eleicao ? ` (contas ${trilha.eleicao})` : ""} · Portal da Transparência
-        </span>
-        <span className="flex gap-4 text-sm sm:text-xs [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center sm:[&_a]:min-h-0">
-          {!trilha.vazio && (
-            <a href={`/parlamentares/${parlamentarId}/trilha.csv`} download>
-              <span className="hidden sm:inline">Baixar CSV da trilha</span>
-              <span className="sm:hidden">Baixar CSV</span>
-            </a>
-          )}
-          <Link href={contestar}>Contestar</Link>
-        </span>
-      </div>
     </section>
   );
 }
@@ -129,6 +125,7 @@ function Indicador({
   detalheCurto,
   progresso,
   className = "",
+  dado,
 }: {
   titulo: string;
   tituloCurto?: string;
@@ -137,27 +134,28 @@ function Indicador({
   detalheCurto?: string;
   progresso?: number | null;
   className?: string;
+  dado?: string;
 }) {
   return (
     <div
-      data-indicador
+      data-indicador={dado ?? ""}
       className={`flex flex-col gap-1 rounded-[10px] bg-background p-3 sm:gap-1.5 sm:rounded-[12px] sm:p-4 ${className}`}
     >
-      <p className="text-xs text-muted-foreground sm:text-sm">
+      <p className="text-sm text-muted-foreground">
         <span className="hidden sm:inline">{titulo}</span>
         <span className="sm:hidden">{tituloCurto ?? titulo}</span>
       </p>
-      <p className="font-heading text-xl font-bold sm:text-[1.625rem]">{valor}</p>
+      <p className="font-heading text-xl font-bold tabular-nums sm:text-[1.625rem]">{valor}</p>
       {progresso != null && (
         <div
-          className="hidden h-2 overflow-hidden rounded bg-border sm:block"
+          className="hidden h-2 overflow-hidden rounded bg-muted sm:block"
           role="img"
           aria-label={`${progresso}% do valor transferido tem pagamento informado`}
         >
           <div className="h-2 bg-primary" style={{ width: `${Math.min(100, progresso)}%` }} />
         </div>
       )}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         <span className="hidden sm:inline">{detalhe}</span>
         <span className="sm:hidden">{detalheCurto ?? detalhe}</span>
       </p>
@@ -165,115 +163,114 @@ function Indicador({
   );
 }
 
-function ConteudoTrilha({ trilha, quem, contestar }: { trilha: TrilhaCheia; quem: QuemIndicou; contestar: string }) {
-  const { totais, indicios, emendas } = trilha;
-  const pctPago = pct(totais.pago, totais.transferido);
-  const recem = indicios.filter((i) => i.tipo === "recem-aberta").length;
-  const ciclos = indicios.length - recem;
-  const visiveis = emendas.slice(0, LIMITE_TRILHAS);
-  const resto = emendas.slice(LIMITE_TRILHAS);
-  return (
-    <>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] sm:gap-3">
-        <Indicador
-          titulo="Transferido por emendas Pix"
-          tituloCurto="Transferido"
-          valor={brlMi(totais.transferido)}
-          detalhe={`${plural(totais.emendas, "emenda", "emendas")} para ${plural(totais.entes, "município ou estado", "municípios ou estados")}`}
-          detalheCurto={plural(totais.emendas, "emenda", "emendas")}
-        />
-        <Indicador
-          titulo="Pagamentos informados pelos municípios"
-          tituloCurto="Pagamento informado"
-          valor={brlMi(totais.pago)}
-          progresso={pctPago}
-          detalhe={`${pctPago ?? 0}% do transferido · ${plural(totais.recebedoresPj, "empresa ou entidade", "empresas e entidades")}`}
-          detalheCurto={`${pctPago ?? 0}% · ${plural(totais.recebedoresPj, "recebedor", "recebedores")}`}
-        />
-        <Indicador
-          className="hidden sm:flex"
-          titulo="Indícios encontrados"
-          valor={String(indicios.length)}
-          detalhe={
-            indicios.length
-              ? [
-                  recem && plural(recem, "empresa recém-aberta", "empresas recém-abertas"),
-                  ciclos && `${plural(ciclos, "ciclo fechado", "ciclos fechados")} com a campanha`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")
-              : "Nenhum pelas regras da metodologia"
-          }
-        />
-      </div>
-
-      {indicios.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h3 className="sr-only text-base font-bold sm:not-sr-only">Indícios</h3>
-          {indicios.map((i) => (
-            <AvisoIndicio
-              key={`${i.tipo}-${i.emenda}-${i.cnpj}`}
-              indicio={i}
-              trilha={trilha}
-              quem={quem}
-              contestar={contestar}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3">
-        <h3 className="sr-only text-base font-bold sm:not-sr-only">Trilha por emenda</h3>
-        {visiveis.map((e, i) => (
-          <TrilhaEmenda key={e.codigo} emenda={e} aberta={i === 0 || e.indicios > 0} receitaBase={trilha.receitaBase} />
-        ))}
-        {resto.length > 0 && (
-          <details data-outras-emendas className="group flex flex-col gap-3">
-            <summary className="inline-flex min-h-11 cursor-pointer items-center self-start rounded-[8px] border border-linha bg-superficie px-3.5 text-sm text-texto-2 group-open:mb-3">
-              <span className="hidden sm:inline">
-                Mostrar as outras {plural(resto.length, "emenda Pix", "emendas Pix")}
-              </span>
-              <span className="sm:hidden">Ver as outras {plural(resto.length, "emenda Pix", "emendas Pix")}</span>
-            </summary>
-            <div className="flex flex-col gap-3">
-              {resto.map((e) => (
-                <TrilhaEmenda key={e.codigo} emenda={e} aberta={false} receitaBase={trilha.receitaBase} />
-              ))}
-            </div>
-          </details>
-        )}
-      </div>
-    </>
-  );
+/** UF dos municípios de todas as emendas (uma só) ou nada. */
+function ufUnica(t: TrilhaCheia) {
+  const ufs = new Set(t.emendas.flatMap((e) => e.planos.flatMap((p) => (p.ente.uf ? [p.ente.uf] : []))));
+  return ufs.size === 1 ? ` (${[...ufs][0]})` : "";
 }
 
-function Icone({ tipo }: { tipo: Indicio["tipo"] }) {
+function ConteudoTrilha({ trilha, quem, contestar }: { trilha: TrilhaCheia; quem: QuemIndicou; contestar: string }) {
+  const { totais, indicios, emendas, avaliacao } = trilha;
+  const pctPago = pct(totais.pago, totais.transferido);
+  const recem = indicios.filter((i): i is IndicioRecemAberta => i.tipo === "recem-aberta");
+  const ciclos = indicios.filter((i): i is IndicioCiclo => i.tipo === "ciclo-fechado");
+  const algumAvaliado = avaliacao.recemAberta || avaliacao.ciclo;
+  const faltando = [
+    !avaliacao.recemAberta && "a data de abertura das empresas (Receita Federal)",
+    !avaliacao.ciclo && `as despesas de campanha${trilha.eleicao ? ` de ${trilha.eleicao}` : ""} (TSE)`,
+  ].filter(Boolean) as string[];
+  const detalheIndicios = !algumAvaliado
+    ? "Faltam a base da Receita e as contas de campanha do TSE"
+    : [
+        avaliacao.recemAberta
+          ? plural(recem.length, "empresa recém-aberta", "empresas recém-abertas")
+          : "recém-aberta não avaliada",
+        avaliacao.ciclo
+          ? `${plural(ciclos.length, "ciclo", "ciclos")} com a campanha`
+          : "ciclo com a campanha não avaliado",
+      ].join(" · ");
   return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="mt-0.5 hidden shrink-0 text-atipico-traco sm:block"
-    >
-      {tipo === "recem-aberta" ? (
+    <>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+        <Indicador
+          dado="transferido"
+          titulo="Transferido"
+          valor={brlMi(totais.transferido)}
+          detalhe={`${plural(totais.emendas, "emenda", "emendas")}, ${plural(totais.entes, "município", "municípios")}${ufUnica(trilha)}`}
+          detalheCurto={`${plural(totais.emendas, "emenda", "emendas")}, ${plural(totais.entes, "município", "municípios")}`}
+        />
+        <Indicador
+          dado="pago"
+          titulo="Pagamento informado"
+          tituloCurto="Pago informado"
+          valor={brlMi(totais.pago)}
+          progresso={pctPago}
+          detalhe={`${pctPago ?? 0}% do transferido, a ${plural(totais.recebedoresPj, "empresa ou entidade", "empresas e entidades")}`}
+          detalheCurto={`${pctPago ?? 0}% do transferido`}
+        />
+        <Indicador
+          dado="indicios"
+          className="hidden sm:flex"
+          titulo="Indícios"
+          valor={algumAvaliado ? String(indicios.length) : "Não avaliados"}
+          detalhe={detalheIndicios}
+        />
+      </div>
+
+      {faltando.length > 0 && (
+        <p
+          role="note"
+          data-nao-avaliado
+          className="rounded-[10px] bg-muted px-3 py-3 text-sm leading-normal text-texto-2 sm:rounded-[12px] sm:px-4"
+        >
+          {!algumAvaliado && <strong className="font-semibold sm:hidden">Indícios não avaliados. </strong>}
+          Ainda não importamos {faltando.join(" nem ")}. Sem {faltando.length > 1 ? "elas" : "isso"} não dá para avaliar{" "}
+          {faltando.length > 1 ? "esses indícios" : "esse indício"}: isso não quer dizer que não haja nenhum.
+        </p>
+      )}
+
+      {indicios.length > 0 && (
         <>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 7v6" />
-          <path d="M12 17h.01" />
-        </>
-      ) : (
-        <>
-          <path d="M21 12a9 9 0 1 1-3-6.7" />
-          <path d="M21 4v5h-5" />
+          <div className="hidden flex-col gap-3 sm:flex">
+            {recem.length > 0 && (
+              <CartaoIndicios tipo="recem-aberta" casos={recem} trilha={trilha} quem={quem} contestar={contestar} />
+            )}
+            {ciclos.length > 0 && (
+              <CartaoIndicios tipo="ciclo-fechado" casos={ciclos} trilha={trilha} quem={quem} contestar={contestar} />
+            )}
+          </div>
+          <IndiciosCelular trilha={trilha} contestar={contestar} />
         </>
       )}
-    </svg>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-base font-bold">Emendas Pix</h3>
+        <div
+          data-emendas
+          className="flex flex-col gap-2 sm:gap-0 sm:overflow-hidden sm:rounded-[12px] sm:border sm:border-borda-suave"
+        >
+          <div
+            aria-hidden="true"
+            className="hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_5.5rem] gap-3 bg-muted px-4 py-2.5 text-sm font-semibold text-texto-2 sm:grid"
+          >
+            <span>Emenda</span>
+            <span>Municípios</span>
+            <span className="text-right">Transferido</span>
+            <span>Pago informado</span>
+            <span />
+          </div>
+          {emendas.map((e) => (
+            <LinhaEmenda key={e.codigo} emenda={e} trilha={trilha} />
+          ))}
+        </div>
+      </div>
+
+      <p data-nota-trilha className="text-sm leading-normal text-muted-foreground">
+        Pagamentos a pessoas físicas aparecem somados, sem nome nem documento. A data de abertura é a da matriz da
+        empresa{trilha.receitaBase ? ` (Receita, base de ${mesAno(trilha.receitaBase)})` : ""}. Fontes: Portal da
+        Transparência, Transferegov, Receita Federal e TSE, com data e SHA-256 no CSV e em cada indício.
+      </p>
+    </>
   );
 }
 
@@ -282,186 +279,51 @@ function sha(c: ColetaCitada) {
 }
 
 /** LING-09: cada arquivo de cada elo com data, SHA-256 e link para a coleta. */
-function rotuloColeta(c: ColetaCitada): { rotulo: string; curto: string; href: string } {
+function rotuloColeta(c: ColetaCitada): string {
   const base = /base de (\d{2}\/\d{4}|\d{2}\/\d{2}\/\d{4})/.exec(c.observacao ?? "")?.[1];
   const quando = dataHoraBr(c.coletado_em).slice(0, 10);
   switch (c.fonte) {
     case "receita_estabelecimentos":
-      return {
-        rotulo: `Receita Federal, Estabelecimentos, base de ${base ?? "mês não informado"}`,
-        curto: `Receita, base de ${base ?? "?"}`,
-        href: PAGINA_RECEITA,
-      };
+      return `Receita Federal, Estabelecimentos, base de ${base ?? "mês não informado"}`;
     case "transferegov_especiais":
-      return {
-        rotulo: `Transferegov, emendas Pix, coletado em ${quando}`,
-        curto: `Transferegov, coletado em ${quando}`,
-        href: c.url,
-      };
-    case "tse_prestacao_contas": {
-      const ano = /candidatos_(\d{4})/.exec(c.url)?.[1] ?? "";
-      return { rotulo: `TSE, prestação de contas de candidatos ${ano}`, curto: `TSE, contas ${ano}`, href: c.url };
-    }
+      return `Transferegov, emendas Pix, coletado em ${quando}`;
+    case "tse_prestacao_contas":
+      return `TSE, prestação de contas de candidatos ${/candidatos_(\d{4})/.exec(c.url)?.[1] ?? ""}`;
     case "cgu_emendas":
-      return {
-        rotulo: `Portal da Transparência, emendas, coletado em ${quando}`,
-        curto: `Portal, coletado em ${quando}`,
-        href: PORTAL_EMENDAS,
-      };
+      return `Portal da Transparência, emendas, coletado em ${quando}`;
     default:
-      return { rotulo: `${c.fonte}, coletado em ${quando}`, curto: c.fonte, href: c.url };
+      return `${c.fonte}, coletado em ${quando}`;
   }
 }
 
-/** Fontes na ordem do texto do aviso: o elo que caracteriza o sinal primeiro, o Transferegov depois. */
+function hrefColeta(c: ColetaCitada) {
+  if (c.fonte === "receita_estabelecimentos") return PAGINA_RECEITA;
+  if (c.fonte === "cgu_emendas") return PORTAL_EMENDAS;
+  return c.url;
+}
+
 const ORDEM_FONTE = ["receita_estabelecimentos", "tse_prestacao_contas", "transferegov_especiais", "cgu_emendas"];
 
-function DadosUsados({ coletas }: { coletas: ColetaCitada[] }) {
-  const cs = coletas.toSorted((a, b) => ORDEM_FONTE.indexOf(a.fonte) - ORDEM_FONTE.indexOf(b.fonte));
-  const completo = (
-    <>
-      Dados usados:{" "}
-      {cs.map((c, i) => {
-        const r = rotuloColeta(c);
-        return (
-          <span key={c.id}>
-            {i > 0 && " · "}
-            <a href={r.href} rel="noopener noreferrer" target="_blank" className="text-muted-foreground underline">
-              {r.rotulo}
+function ArquivosUsados({ indicios, trilha }: { indicios: Indicio[]; trilha: TrilhaCheia }) {
+  const ids = [...new Set(indicios.flatMap((i) => i.coletas))];
+  const cs = ids
+    .map((id) => trilha.coletas[id])
+    .filter(Boolean)
+    .toSorted((a, b) => ORDEM_FONTE.indexOf(a.fonte) - ORDEM_FONTE.indexOf(b.fonte));
+  return (
+    <details data-arquivos className="text-sm">
+      <summary className={`${SUMMARY} ${LINK_AVISO} font-semibold underline`}>Arquivos usados e SHA-256</summary>
+      <ul className="mt-1 flex flex-col gap-1 text-sm leading-normal text-muted-foreground">
+        {cs.map((c) => (
+          <li key={c.id}>
+            <a href={hrefColeta(c)} rel="noopener noreferrer" target="_blank" className="text-muted-foreground">
+              {rotuloColeta(c)}
             </a>{" "}
             (SHA-256 <span title={c.sha256}>{sha(c)}</span>)
-          </span>
-        );
-      })}
-    </>
-  );
-  return (
-    <>
-      <span data-dados-usados className="hidden text-xs leading-normal text-muted-foreground sm:inline">
-        {completo}
-      </span>
-      <details className="text-xs leading-[1.4] text-muted-foreground sm:hidden">
-        <summary className="inline-flex min-h-11 cursor-pointer items-center">
-          {cs.map((c) => rotuloColeta(c).curto).join(" · ")} ·&nbsp;
-          <span className="text-link underline">ver arquivos e SHA-256</span>
-        </summary>
-        <p>{completo}</p>
-      </details>
-    </>
-  );
-}
-
-function LinksAviso({ indicio, contestar }: { indicio: Indicio; contestar: string }) {
-  const metodologia = indicio.tipo === "recem-aberta" ? "/metodologia#recem-aberta" : "/metodologia#ciclo-fechado";
-  const verTrilha = !(indicio.tipo === "ciclo-fechado" && indicio.direto);
-  return (
-    <div className="flex flex-col text-sm font-semibold sm:flex-row sm:flex-wrap sm:gap-4">
-      {verTrilha && (
-        <a href={`#${ancora(indicio.emenda)}`} className={LINK_AVISO}>
-          Ver a trilha
-        </a>
-      )}
-      <Link href={metodologia} className={LINK_AVISO}>
-        <span className="hidden sm:inline">Como calculamos (metodologia {METODOLOGIA_VERSAO})</span>
-        <span className="sm:hidden">Como calculamos</span>
-      </Link>
-      <Link href={contestar} className={LINK_AVISO}>
-        Contestar
-      </Link>
-    </div>
-  );
-}
-
-function AvisoIndicio({
-  indicio,
-  trilha,
-  quem,
-  contestar,
-}: {
-  indicio: Indicio;
-  trilha: TrilhaCheia;
-  quem: QuemIndicou;
-  contestar: string;
-}) {
-  const coletas = indicio.coletas.map((id) => trilha.coletas[id]).filter(Boolean);
-  return (
-    <div
-      data-indicio={indicio.tipo}
-      className="flex items-start gap-3.5 rounded-[10px] border border-atipico-borda bg-atipico-fundo p-3 sm:rounded-[12px] sm:px-[18px] sm:py-4"
-    >
-      <Icone tipo={indicio.tipo} />
-      <div className="flex min-w-0 flex-col gap-2">
-        {indicio.tipo === "recem-aberta" ? (
-          <CorpoRecemAberta i={indicio} taxa={trilha.taxas.recemAberta} />
-        ) : (
-          <CorpoCiclo i={indicio} taxa={trilha.taxas.ciclo} quem={quem} />
-        )}
-        <LinksAviso indicio={indicio} contestar={contestar} />
-        <DadosUsados coletas={coletas} />
-      </div>
-    </div>
-  );
-}
-
-function Titulo({ rotulo, desktop, celular }: { rotulo: string; desktop: string; celular: string }) {
-  return (
-    <>
-      <span className="text-[0.6875rem] font-bold tracking-[0.04em] text-atipico uppercase sm:hidden">{rotulo}</span>
-      <h4 className="text-[0.9375rem] leading-[1.35] font-bold text-atipico-titulo">
-        <span className="hidden sm:inline">{desktop}</span>
-        <span className="sm:hidden">{celular}</span>
-      </h4>
-    </>
-  );
-}
-
-const NAO_PROVA = "Indício não é prova de irregularidade.";
-
-function CorpoRecemAberta({ i, taxa }: { i: IndicioRecemAberta; taxa: [number, number] }) {
-  const nome = nomeLegivel(i.nome);
-  const filial = i.abertura.origem === "filial" ? " (data da filial; matriz não encontrada)" : "";
-  const dias = plural(i.dias, "dia", "dias");
-  return (
-    <>
-      <Titulo
-        rotulo="Indício · empresa recém-aberta"
-        desktop={`Indício: empresa aberta ${dias} antes do primeiro pagamento`}
-        celular={`Aberta ${dias} antes do primeiro pagamento`}
-      />
-      <p className="text-sm leading-normal text-texto-2">
-        <span className="hidden sm:inline">
-          {nome} ({formatarCnpj(i.cnpj)}) começou a funcionar em {dataBr(i.abertura.data)}
-          {filial}, segundo a Receita Federal (base de {mesAno(i.abertura.baseMes)}). Recebeu o primeiro pagamento
-          ligado à emenda {i.emenda} em {dataBr(i.primeiroPagamento)}, pago por{" "}
-          {nomeLegivel(i.ente) || "ente não informado"}. Ao todo, essa emenda pagou {brlMi(i.recebido)} a ela.
-        </span>
-        <span className="sm:hidden">
-          {nome} abriu em {dataBr(i.abertura.data)}
-          {filial} (Receita, base de {mesAno(i.abertura.baseMes)}) e recebeu o primeiro pagamento da emenda {i.emenda}{" "}
-          em {dataBr(i.primeiroPagamento)}, pago por {nomeLegivel(i.ente) || "ente não informado"}. Total:{" "}
-          {brlMi(i.recebido)}.
-        </span>
-      </p>
-      <p className="text-sm leading-normal text-texto-2">
-        <span className="hidden sm:inline">
-          <strong>Regra:</strong> a matriz da empresa abriu menos de {DIAS_RECEM_ABERTA} dias antes do primeiro
-          pagamento ligado à emenda. <strong>Para comparar:</strong> {taxaDeBase(taxa[0], taxa[1])} empresas pagas com
-          emendas Pix na base, com data de abertura conhecida, caem na mesma regra.
-        </span>
-        <span className="sm:hidden">
-          <strong>Regra:</strong> matriz aberta menos de {DIAS_RECEM_ABERTA} dias antes. <strong>Para comparar:</strong>{" "}
-          {taxaDeBase(taxa[0], taxa[1])} empresas pagas com emendas Pix.
-        </span>
-      </p>
-      <p className="text-sm leading-normal text-muted-foreground">
-        {NAO_PROVA}
-        <span className="hidden sm:inline">
-          {" "}
-          Empresa nova pode ser legítima, por exemplo quando é a única do ramo na região. Essa e outras causas
-          conhecidas de falso positivo estão na metodologia.
-        </span>
-      </p>
-    </>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -469,115 +331,172 @@ function periodoMeses(a: string, b: string) {
   return mesAno(a) === mesAno(b) ? `em ${mesAno(a)}` : `entre ${mesAno(a)} e ${mesAno(b)}`;
 }
 
-function CorpoCiclo({ i, taxa, quem }: { i: IndicioCiclo; taxa: [number, number]; quem: QuemIndicou }) {
-  const nome = nomeLegivel(i.nome);
-  const pagador = i.direto ? "do governo federal, em pagamento direto" : `do ${nomeLegivel(i.ente) || "ente"}`;
-  return (
-    <>
-      <Titulo
-        rotulo="Indício · ciclo fechado"
-        desktop="Indício: ciclo fechado entre emenda e campanha"
-        celular="Empresa da emenda também vendeu para a campanha"
-      />
-      <p className="text-sm leading-normal text-texto-2">
-        <span className="hidden sm:inline">
-          {nome} ({formatarCnpj(i.cnpj)}) recebeu {brlMi(i.recebido)} {pagador} com a emenda {i.emenda},{" "}
-          {periodoMeses(i.primeiroRecebimento, i.ultimoRecebimento)}. A mesma empresa aparece como fornecedora da
-          campanha de {i.eleicao} {quem}, com {brlMi(i.despesaCampanha)} em despesas declaradas ao TSE{" "}
-          {periodoMeses(i.primeiraDespesa, i.ultimaDespesa)}.
-        </span>
-        <span className="sm:hidden">
-          {nome} recebeu {brlMi(i.recebido)} {i.direto ? "do governo federal" : `do ${nomeLegivel(i.ente) || "ente"}`}{" "}
-          com a emenda {i.emenda} e aparece com {brlMi(i.despesaCampanha)} nas despesas da campanha de {i.eleicao}{" "}
-          {quem} (TSE).
-        </span>
-      </p>
-      <p className="text-sm leading-normal text-texto-2">
-        <span className="hidden sm:inline">
-          <strong>Regra:</strong> o mesmo CNPJ recebeu dinheiro da emenda e vendeu para a campanha que elegeu quem
-          indicou a emenda, com a despesa de campanha datada até o pagamento. <strong>Para comparar:</strong>{" "}
-        </span>
-        <strong className="sm:hidden">Para comparar: </strong>
-        {taxaDeBase(taxa[0], taxa[1])} parlamentares com emenda Pix na base têm ao menos um caso assim.
-      </p>
-      <p className="text-sm leading-normal text-muted-foreground">
-        {NAO_PROVA}{" "}
-        <span className="hidden sm:inline">
-          Gráficas e serviços de comunicação atendem campanhas e prefeituras com frequência, sobretudo em cidades
-          pequenas.
-        </span>
-        <span className="sm:hidden">Gráficas atendem campanhas e prefeituras com frequência.</span>
-      </p>
-    </>
-  );
+function enteDoIndicio(i: Indicio) {
+  return i.tipo === "ciclo-fechado" && i.direto ? "o governo federal" : nomeEnte(i.ente);
 }
 
-function resumoEmenda(e: EmendaTrilha) {
-  if (!e.planos.length) return "Sem plano de ação publicado no Transferegov";
-  const entes = [...new Set(e.planos.map(ente))].join(", ");
-  const empresas = new Set(e.planos.flatMap((p) => p.recebedores.map((r) => r.cnpj))).size;
-  const pago =
-    e.pago > 0
-      ? `${brlMi(e.pago)} pagos${empresas ? ` a ${plural(empresas, "empresa", "empresas")}` : ""}`
-      : "sem pagamento registrado";
-  const ind = e.indicios ? ` · ${plural(e.indicios, "indício", "indícios")}` : "";
-  return `${entes} · ${brlMi(e.transferido)} transferidos · ${pago}${ind}`;
+/** Frase com as datas de um caso (desktop). */
+function fraseCaso(i: Indicio) {
+  if (i.tipo === "recem-aberta") {
+    const filial = i.abertura.origem === "filial" ? " (data da filial; matriz não encontrada)" : "";
+    return `Aberta em ${dataBr(i.abertura.data)}${filial}, ${plural(i.dias, "dia", "dias")} antes do 1º pagamento de ${nomeEnte(i.ente)} com a emenda ${i.emenda}.`;
+  }
+  const recebeu = i.direto
+    ? `Recebeu do governo federal, em pagamento direto da emenda ${i.emenda}, ${periodoMeses(i.primeiroRecebimento, i.ultimoRecebimento)}.`
+    : `Recebeu de ${nomeEnte(i.ente)} com a emenda ${i.emenda} ${periodoMeses(i.primeiroRecebimento, i.ultimoRecebimento)}.`;
+  return `${recebeu} Na campanha de ${i.eleicao}: ${brlMi(i.despesaCampanha)} em despesas declaradas ao TSE ${periodoMeses(i.primeiraDespesa, i.ultimaDespesa)}.`;
 }
 
-function TrilhaEmenda({
-  emenda: e,
-  aberta,
-  receitaBase,
+function hrefCaso(i: Indicio) {
+  return i.plano != null ? `#${ancoraMunicipio(i.emenda, i.plano)}` : null;
+}
+
+function CartaoIndicios({
+  tipo,
+  casos,
+  trilha,
+  quem,
+  contestar,
 }: {
-  emenda: EmendaTrilha;
-  aberta: boolean;
-  receitaBase: string | null;
+  tipo: Indicio["tipo"];
+  casos: Indicio[];
+  trilha: TrilhaCheia;
+  quem: QuemIndicou;
+  contestar: string;
 }) {
+  const recem = tipo === "recem-aberta";
+  const [m, n] = recem ? trilha.taxas.recemAberta : trilha.taxas.ciclo;
+  const titulo = recem
+    ? "Indício: empresa aberta pouco antes de receber"
+    : "Indício: empresa da emenda também na campanha";
+  const id = `indicios-${tipo}`;
   return (
-    <details
-      id={ancora(e.codigo)}
-      data-trilha-emenda={e.codigo}
-      open={aberta}
-      className="group scroll-mt-4 rounded-[10px] border border-borda-suave p-3 sm:rounded-[12px] sm:p-4"
+    <div
+      role="note"
+      aria-labelledby={id}
+      data-indicio={tipo}
+      className="flex flex-col gap-2.5 rounded-[12px] border border-atipico-borda bg-atipico-fundo px-4 py-4"
     >
-      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-2 [&::-webkit-details-marker]:hidden">
-        <span className="flex min-w-0 flex-col gap-0.5 sm:gap-1">
-          <h4 className="text-[0.9375rem] font-bold">
-            Emenda {e.codigo} · {e.funcao}
-          </h4>
-          <span className="text-xs text-muted-foreground group-open:hidden sm:text-sm">{resumoEmenda(e)}</span>
-          {e.mesTransferencia && (
-            <span className="hidden text-xs text-muted-foreground group-open:inline sm:text-sm">
-              Transferido em {mesAno(e.mesTransferencia)}
-            </span>
-          )}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 id={id} className="text-base leading-[1.35] font-bold text-atipico-titulo">
+          {titulo} · {plural(casos.length, "caso", "casos")}
+        </h3>
+        <span data-taxa className="text-sm text-texto-2">
+          {recem
+            ? `${taxaDeBase(m, n)} das empresas pagas com emendas Pix na base, com data de abertura conhecida, caem nesta regra`
+            : `${taxaDeBase(m, n)} dos parlamentares com emenda Pix na base têm um caso assim`}
         </span>
-        <span
-          aria-hidden="true"
-          className="inline-flex min-h-11 items-center rounded-[8px] border border-linha bg-superficie px-3.5 text-sm text-texto-2 group-open:hidden"
-        >
-          Ver a trilha
-        </span>
-      </summary>
-      <div className="mt-3.5 flex flex-col gap-3.5">
-        {e.planos.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            O Transferegov ainda não publicou plano de ação para esta emenda; não há pagamento a seguir. Valor reservado
-            no Orçamento: {brlMi(e.empenhado)}.
-          </p>
-        ) : (
-          e.planos.map((p) => <PlanoEmenda key={p.id} emenda={e} plano={p} receitaBase={receitaBase} />)
-        )}
       </div>
-    </details>
+      <p className="text-sm leading-normal text-texto-2">
+        {recem
+          ? `A matriz da empresa abriu menos de ${DIAS_RECEM_ABERTA} dias antes do primeiro pagamento ligado à emenda.`
+          : `O mesmo CNPJ recebeu dinheiro da emenda e aparece nas despesas declaradas da campanha de ${casos[0].tipo === "ciclo-fechado" ? casos[0].eleicao : ""} ${quem}, com data até o pagamento.`}{" "}
+        {NAO_PROVA}
+      </p>
+      <ul className="flex flex-col">
+        {casos.map((i) => {
+          const href = hrefCaso(i);
+          return (
+            <li
+              key={`${i.emenda}-${i.cnpj}`}
+              data-caso={i.cnpj}
+              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-4 gap-y-1 border-t border-atipico-borda py-2.5"
+            >
+              <span className="text-base">
+                <strong className="font-semibold">{nomeLegivel(i.nome)}</strong>{" "}
+                <span className="text-sm text-muted-foreground tabular-nums">{formatarCnpj(i.cnpj)}</span>
+              </span>
+              <span className="text-base tabular-nums">{brlMi(i.recebido)}</span>
+              {href ? (
+                <a href={href} className="text-sm font-semibold text-atipico">
+                  Ver na trilha
+                </a>
+              ) : (
+                <span />
+              )}
+              <span className="col-span-3 text-sm text-texto-2">{fraseCaso(i)}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="flex flex-wrap gap-x-4 text-sm font-semibold">
+        <Link href={recem ? "/metodologia#recem-aberta" : "/metodologia#ciclo-fechado"} className={LINK_AVISO}>
+          Como calculamos (metodologia {METODOLOGIA_VERSAO})
+        </Link>
+        <Link href={contestar} className={LINK_AVISO}>
+          Contestar
+        </Link>
+        <ArquivosUsados indicios={casos} trilha={trilha} />
+      </div>
+    </div>
   );
 }
 
-function Seta() {
+/** Celular: um cartão só, com uma linha por caso (SeguirDinheiroEnxutoMobile). */
+function IndiciosCelular({ trilha, contestar }: { trilha: TrilhaCheia; contestar: string }) {
+  const { indicios } = trilha;
+  return (
+    <div
+      role="note"
+      aria-labelledby="indicios-celular"
+      data-indicios-celular
+      className="flex flex-col gap-2 rounded-[10px] border border-atipico-borda bg-atipico-fundo p-3 sm:hidden"
+    >
+      <h3 id="indicios-celular" className="text-base leading-[1.35] font-bold text-atipico-titulo">
+        {plural(indicios.length, "indício para conferir", "indícios para conferir")}
+      </h3>
+      <p className="text-sm leading-normal text-texto-2">{NAO_PROVA}</p>
+      <ul className="flex flex-col">
+        {indicios.map((i) => {
+          const href = hrefCaso(i);
+          const recem = i.tipo === "recem-aberta";
+          const conteudo = (
+            <>
+              <span className="text-sm font-bold text-atipico">
+                {recem ? "Empresa aberta pouco antes de receber" : "Empresa da emenda também na campanha"}
+              </span>
+              <span className="flex justify-between gap-2 text-base">
+                <strong className="font-semibold">{nomeLegivel(i.nome)}</strong>
+                <span className="whitespace-nowrap tabular-nums">{brlMi(i.recebido)}</span>
+              </span>
+              <span className="text-sm text-texto-2">
+                {recem
+                  ? `Aberta ${plural(i.dias, "dia", "dias")} antes do 1º pagamento de ${enteDoIndicio(i)} (Receita, base de ${mesAno(i.abertura.baseMes)}).`
+                  : `Nas despesas declaradas da campanha de ${i.eleicao}: ${brlMi(i.despesaCampanha)}. Regra: despesa com data até o pagamento.`}
+              </span>
+            </>
+          );
+          return (
+            <li key={`${i.tipo}-${i.emenda}-${i.cnpj}`} className="border-t border-atipico-borda">
+              {href ? (
+                <a href={href} className="flex flex-col gap-0.5 py-2.5 text-foreground no-underline">
+                  {conteudo}
+                </a>
+              ) : (
+                <span className="flex flex-col gap-0.5 py-2.5">{conteudo}</span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="flex flex-wrap gap-x-4 text-sm font-semibold">
+        <Link href="/metodologia#recem-aberta" className={LINK_AVISO}>
+          Como calculamos
+        </Link>
+        <Link href={contestar} className={LINK_AVISO}>
+          Contestar
+        </Link>
+        <ArquivosUsados indicios={indicios} trilha={trilha} />
+      </div>
+    </div>
+  );
+}
+
+function Chevron() {
   return (
     <svg
-      width="20"
-      height="20"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -585,47 +504,248 @@ function Seta() {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="hidden shrink-0 self-center text-borda-campo sm:block"
+      className="shrink-0 transition-transform group-open:rotate-180"
     >
-      <path d="M5 12h14" />
-      <path d="M13 6l6 6-6 6" />
+      <path d="m6 9 6 6 6-6" />
     </svg>
   );
 }
 
-function Elo({
-  n,
-  rotulo,
-  valor,
-  href,
-  fonte,
-  fonteCurta,
-}: {
-  n: number;
-  rotulo: string;
-  valor: string;
-  href: string;
-  fonte: string;
-  fonteCurta: string;
-}) {
+function Barra({ valor }: { valor: number }) {
   return (
-    <li className="flex justify-between gap-2 rounded-[8px] bg-background p-2.5 text-[0.8125rem] sm:flex-[1_1_160px] sm:flex-col sm:justify-start sm:gap-1 sm:rounded-[10px] sm:p-3">
-      <span className="flex flex-col gap-0.5 sm:gap-1">
-        <span className="text-xs text-muted-foreground">
-          {n} · {rotulo}
-        </span>
-        <strong className="text-sm">{valor}</strong>
-      </span>
-      <a
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-        className="inline-flex min-h-11 items-center self-center text-xs sm:min-h-0 sm:self-start"
+    <span aria-hidden="true" className="block h-1.5 overflow-hidden rounded-[3px] bg-muted">
+      <span className="block h-1.5 bg-primary" style={{ width: `${Math.min(100, valor)}%` }} />
+    </span>
+  );
+}
+
+function LinhaEmenda({ emenda: e, trilha }: { emenda: EmendaTrilha; trilha: TrilhaCheia }) {
+  const pctPago = pct(e.pago, e.transferido) ?? 0;
+  const municipios = e.planos.length;
+  const munic = municipios ? `${plural(municipios, "município", "municípios")}${e.uf ? ` (${e.uf})` : ""}` : "—";
+  const resumo = municipios
+    ? `${munic} · ${brlMi(e.transferido)} · ${pctPago}% pago`
+    : "Sem plano de ação publicado no Transferegov";
+  return (
+    <details
+      id={ancoraEmenda(e.codigo)}
+      data-trilha-emenda={e.codigo}
+      open={e.indicios > 0}
+      className="group scroll-mt-4 rounded-[10px] border border-borda-suave sm:rounded-none sm:border-0 sm:border-t sm:open:bg-background"
+    >
+      <summary
+        className={`${SUMMARY} flex min-h-14 items-center justify-between gap-2 px-3 py-2.5 sm:grid sm:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_5.5rem] sm:gap-3 sm:px-4`}
       >
-        <span className="hidden sm:inline">{fonte}</span>
-        <span className="sm:hidden">{fonteCurta}</span>
-      </a>
-    </li>
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <strong className="font-semibold">
+            {e.codigo} · {e.funcao}
+          </strong>
+          <span className="text-sm text-texto-2 sm:hidden">{resumo}</span>
+          {e.indicios > 0 && (
+            <span className="text-sm font-semibold text-atipico">{plural(e.indicios, "indício", "indícios")}</span>
+          )}
+        </span>
+        <span className="hidden tabular-nums sm:inline">
+          {municipios ? `${municipios}${e.uf ? ` (${e.uf})` : ""}` : "—"}
+        </span>
+        <span className="hidden text-right tabular-nums sm:inline">{municipios ? brlMi(e.transferido) : "—"}</span>
+        <span className="hidden flex-col gap-1 sm:flex">
+          {municipios ? (
+            <>
+              <span className="tabular-nums">
+                {brlMi(e.pago)} · {pctPago}%
+              </span>
+              <Barra valor={pctPago} />
+            </>
+          ) : (
+            <span className="text-sm text-muted-foreground">Sem plano no Transferegov</span>
+          )}
+        </span>
+        <span className="flex items-center justify-center gap-1.5 text-sm font-semibold sm:min-h-11 sm:rounded-[8px] sm:border sm:border-linha sm:bg-superficie">
+          <span className="hidden sm:inline sm:group-open:hidden">Abrir</span>
+          <span className="hidden sm:group-open:inline">Fechar</span>
+          <Chevron />
+        </span>
+      </summary>
+      <div className="flex flex-col gap-3 px-3 pb-3 sm:px-4 sm:pb-4">
+        {municipios === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            O Transferegov ainda não publicou plano de ação para esta emenda; não há pagamento a seguir. Valor reservado
+            no Orçamento: {brlMi(e.empenhado)}.
+          </p>
+        ) : (
+          <>
+            <Elos emenda={e} />
+            <Municipios emenda={e} trilha={trilha} />
+          </>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function Elos({ emenda: e }: { emenda: EmendaTrilha }) {
+  const empresas = new Set(e.planos.flatMap((p) => p.recebedores.map((r) => r.cnpj))).size;
+  const pf = e.planos.reduce((t, p) => t + p.pf.pagamentos, 0);
+  const quem = [
+    empresas ? plural(empresas, "empresa ou entidade", "empresas e entidades") : "",
+    pf ? plural(pf, "pagamento a pessoa física", "pagamentos a pessoas físicas") : "",
+  ]
+    .filter(Boolean)
+    .join(" e ");
+  const card = "flex flex-col gap-0.5 rounded-[10px] border border-borda-suave bg-superficie px-3 py-2.5 text-base";
+  return (
+    <ol aria-label="Elos da trilha" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <li className={card}>
+        <span className="text-sm text-muted-foreground">1 · Reservado no Orçamento</span>
+        <strong className="tabular-nums">{brlMi(e.empenhado)}</strong>
+        <a href={PORTAL_EMENDAS} rel="noopener noreferrer" target="_blank" className="text-sm">
+          Portal da Transparência
+        </a>
+      </li>
+      <li className={card}>
+        <span className="text-sm text-muted-foreground">
+          2 · Transferido a {plural(e.planos.length, "município ou estado", "municípios ou estados")}
+        </span>
+        <strong className="tabular-nums">{brlMi(e.transferido)}</strong>
+        <a
+          href={`${API}/planos-acao-especiais?numero_emenda_parlamentar_plano_acao=${e.codigo}`}
+          rel="noopener noreferrer"
+          target="_blank"
+          className="text-sm"
+        >
+          Transferegov · planos de ação
+        </a>
+      </li>
+      <li className={card}>
+        <span className="text-sm text-muted-foreground">3 · Pago pelos municípios</span>
+        <strong className="tabular-nums">
+          {e.pago > 0 ? `${brlCompacto(e.pago)}${quem ? ` a ${quem}` : ""}` : "Sem pagamento registrado"}
+        </strong>
+        {e.saldo > 0 && e.pago > 0 && (
+          <span data-saldo-emenda className="text-sm text-muted-foreground tabular-nums">
+            Sem pagamento registrado: {brlMi(e.saldo)}
+          </span>
+        )}
+        <span className="text-sm text-muted-foreground">Transferegov · pagamentos, por município abaixo</span>
+      </li>
+    </ol>
+  );
+}
+
+const GRADE_MUNICIPIO =
+  "sm:grid sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2.5rem] sm:items-center sm:gap-3";
+
+function Municipios({ emenda: e, trilha }: { emenda: EmendaTrilha; trilha: TrilhaCheia }) {
+  const pagos = e.planos.filter((p) => p.pago > 0);
+  const semPagamento = e.planos.filter((p) => p.pago <= 0);
+  const visiveis = pagos.slice(0, LIMITE_MUNICIPIOS);
+  const outros = pagos.slice(LIMITE_MUNICIPIOS);
+  const daEmenda = trilha.indicios.filter((i) => i.emenda === e.codigo);
+  const planosComIndicio = new Set(daEmenda.map((i) => i.plano));
+  const totalSem = semPagamento.reduce((t, p) => t + Math.round(p.valor * 100), 0) / 100;
+  return (
+    <div
+      data-municipios
+      role="group"
+      aria-label={`Municípios da emenda ${e.codigo}`}
+      className="overflow-hidden rounded-[10px] border border-borda-suave bg-superficie"
+    >
+      <div
+        aria-hidden="true"
+        className={`hidden border-b border-borda-suave px-3 py-2 text-sm font-semibold text-texto-2 ${GRADE_MUNICIPIO}`}
+      >
+        <span>Município ou estado</span>
+        <span className="text-right">Recebeu</span>
+        <span className="text-right">Pagou</span>
+        <span>Recebedores</span>
+        <span />
+      </div>
+      {visiveis.map((p) => (
+        <Municipio
+          key={p.id}
+          emenda={e}
+          plano={p}
+          indicios={daEmenda}
+          aberto={planosComIndicio.has(p.id)}
+          trilha={trilha}
+        />
+      ))}
+      {outros.length > 0 && (
+        <details data-outros-municipios open={outros.some((p) => planosComIndicio.has(p.id))} className="group/outros">
+          <summary
+            className={`${SUMMARY} m-3 inline-flex min-h-11 items-center rounded-[8px] border border-linha bg-superficie px-3.5 text-sm font-semibold group-open/outros:hidden`}
+          >
+            Ver os outros {plural(outros.length, "município com pagamento", "municípios com pagamento")}
+          </summary>
+          {outros.map((p) => (
+            <Municipio
+              key={p.id}
+              emenda={e}
+              plano={p}
+              indicios={daEmenda}
+              aberto={planosComIndicio.has(p.id)}
+              trilha={trilha}
+            />
+          ))}
+        </details>
+      )}
+      {semPagamento.length > 0 && (
+        <p data-sem-pagamento className="px-3 py-2.5 text-sm text-texto-2 tabular-nums">
+          {plural(semPagamento.length, "município", "municípios")} sem pagamento registrado · {brlMi(totalSem)}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Municipio({
+  emenda: e,
+  plano: p,
+  indicios,
+  aberto,
+  trilha,
+}: {
+  emenda: EmendaTrilha;
+  plano: PlanoTrilha;
+  indicios: Indicio[];
+  aberto: boolean;
+  trilha: TrilhaCheia;
+}) {
+  const comIndicio = p.recebedores.filter((r) => indicios.some((i) => i.cnpj === r.cnpj)).length;
+  const nome = nomeMunicipio(p);
+  return (
+    <details
+      id={ancoraMunicipio(e.codigo, p.id)}
+      data-municipio={p.id}
+      open={aberto}
+      className="group/mun scroll-mt-4 border-b border-borda-suave"
+    >
+      <summary
+        className={`${SUMMARY} flex min-h-11 items-center justify-between gap-2 px-3 py-1.5 text-base ${GRADE_MUNICIPIO}`}
+      >
+        <span className="min-w-0 font-semibold">
+          {nome}
+          {p.ente.uf && !e.uf && <span className="font-normal text-muted-foreground"> ({p.ente.uf})</span>}
+        </span>
+        <span className="hidden text-right tabular-nums sm:inline">{brlMi(p.valor)}</span>
+        <span className="text-right whitespace-nowrap tabular-nums">
+          <span className="sm:hidden">pagou </span>
+          {brlMi(p.pago)}
+        </span>
+        <span className="hidden text-sm text-texto-2 sm:inline">
+          {p.recebedores.length + (p.pf.pagamentos ? 1 : 0)}
+          {comIndicio > 0 && (
+            <span className="font-semibold text-atipico"> · {plural(comIndicio, "indício", "indícios")}</span>
+          )}
+        </span>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-[8px] border border-linha">
+          <span className="sr-only">{`Recebedores de ${nome}`}</span>
+          <Chevron />
+        </span>
+      </summary>
+      <Recebedores emenda={e} plano={p} indicios={indicios} trilha={trilha} />
+    </details>
   );
 }
 
@@ -633,132 +753,93 @@ function Elo({
  * CNPJ-05, CNPJ-06, EDGE-05. `comBase`: cita o mês da base ao lado da data (celular); na tabela do desktop o
  * mês vai no cabeçalho da coluna e só aparece na célula quando difere do lote vigente.
  */
-function abertura(r: RecebedorTrilha, receitaBase: string | null, comBase: boolean) {
-  if (!r.abertura)
-    return receitaBase
-      ? `Data de abertura não encontrada na base da Receita de ${mesAno(receitaBase)}`
-      : "Data de abertura ainda não importada da Receita";
+function abertura(r: RecebedorTrilha, receitaBase: string | null, comBase = false) {
+  if (!receitaBase) return "—";
+  if (!r.abertura) return `Data de abertura não encontrada na base da Receita de ${mesAno(receitaBase)}`;
+  const d = dataBr(r.abertura.data);
   const notas = [
     ...(r.abertura.origem === "filial" ? ["data da filial; matriz não encontrada"] : []),
     ...(comBase || r.abertura.baseMes !== receitaBase ? [`base de ${mesAno(r.abertura.baseMes)}`] : []),
   ];
-  const d = dataBr(r.abertura.data);
   return notas.length ? `${d} (${notas.join("; ")})` : d;
 }
 
-function SeloRecem() {
-  return (
-    <span className="rounded-full border border-atipico-borda bg-atipico-fundo px-2 py-[3px] text-xs font-semibold whitespace-nowrap text-atipico">
-      Indício: recém-aberta
+function Selos({ cnpj, indicios }: { cnpj: string; indicios: Indicio[] }) {
+  const tipos = [...new Set(indicios.filter((i) => i.cnpj === cnpj).map((i) => i.tipo))];
+  return tipos.map((t) => (
+    <span
+      key={t}
+      data-selo={t}
+      className="rounded-full border border-atipico-borda bg-atipico-fundo px-2 py-px text-sm font-semibold whitespace-nowrap text-atipico"
+    >
+      {t === "recem-aberta" ? "Indício: recém-aberta" : "Indício: também na campanha"}
     </span>
-  );
+  ));
 }
 
-function PlanoEmenda({
+function Recebedores({
   emenda: e,
   plano: p,
-  receitaBase,
+  indicios,
+  trilha,
 }: {
   emenda: EmendaTrilha;
   plano: PlanoTrilha;
-  receitaBase: string | null;
+  indicios: Indicio[];
+  trilha: TrilhaCheia;
 }) {
-  const pagos = recebedoresTexto(p.recebedores.length, p.pf.pagamentos);
+  const pfTexto =
+    p.pf.pagamentos > 0 ? plural(p.pf.pagamentos, "pagamento a pessoa física", "pagamentos a pessoas físicas") : null;
   return (
-    <>
-      <ol
-        aria-label="Elos da trilha"
-        className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-stretch sm:gap-2"
-      >
-        <Elo
-          n={1}
-          rotulo="Emenda"
-          valor={brlMi(e.empenhado)}
-          href={PORTAL_EMENDAS}
-          fonte="Portal da Transparência"
-          fonteCurta="Portal"
-        />
-        <Seta />
-        <Elo
-          n={2}
-          rotulo="Quem recebeu"
-          valor={ente(p)}
-          href={`${API}/planos-acao-especiais?id_plano_acao=${p.id}`}
-          fonte="Transferegov · plano de ação"
-          fonteCurta="Transferegov"
-        />
-        <Seta />
-        <Elo
-          n={3}
-          rotulo="Quem o município pagou"
-          valor={p.pago > 0 ? `${brlCompacto(p.pago)}${pagos ? ` a ${pagos}` : ""}` : "Sem pagamento registrado"}
-          href={`${API}/relatorios-gestao-novos-especiais?id_plano_acao=${p.id}`}
-          fonte="Transferegov · pagamentos"
-          fonteCurta="Transferegov"
-        />
-      </ol>
-
-      {/* Celular: uma linha por recebedor, com o valor à vista. */}
+    <div className="flex flex-col gap-2 px-3 pb-3 sm:pl-6">
       <ul data-recebedores-cartoes className="flex flex-col sm:hidden">
         {p.recebedores.map((r) => (
-          <li key={r.cnpj} className="flex flex-col gap-1 border-t border-borda-suave py-2.5">
-            <span className="flex justify-between gap-2 text-sm">
-              <span className="min-w-0 font-semibold break-words">{nomeLegivel(r.nome)}</span>
+          <li key={r.cnpj} className="flex flex-col gap-1 border-t border-borda-suave py-2">
+            <span className="flex justify-between gap-2 text-base">
+              <span className="min-w-0 break-words">{nomeLegivel(r.nome)}</span>
               <span className="whitespace-nowrap tabular-nums">{brlMi(r.valor)}</span>
             </span>
-            {r.recemAberta?.indicio && (
-              <span className="self-start">
-                <SeloRecem />
-              </span>
-            )}
-            <span className="text-xs break-words text-muted-foreground tabular-nums">
+            <span className="flex flex-wrap gap-1.5">
+              <Selos cnpj={r.cnpj} indicios={indicios} />
+            </span>
+            <span className="text-sm break-words text-muted-foreground tabular-nums">
               {formatarCnpj(r.cnpj)}
-              {r.entePublico ? " · ente público" : ""} ·{" "}
-              {r.abertura ? `abriu em ${abertura(r, receitaBase, true)}` : abertura(r, receitaBase, true)} · 1º
-              pagamento {dataBr(r.primeiroPagamento)}
+              {r.entePublico ? " · ente público" : ""}
+              {trilha.receitaBase
+                ? ` · ${r.abertura ? `aberta em ${abertura(r, trilha.receitaBase, true)}` : abertura(r, trilha.receitaBase)}`
+                : ""}{" "}
+              · 1º pagamento {dataBr(r.primeiroPagamento)}
             </span>
           </li>
         ))}
-        {p.pf.pagamentos > 0 && (
-          <li className="flex justify-between gap-2 border-t border-borda-suave py-2.5 text-sm">
-            <span>Pessoas físicas ({p.pf.pagamentos})</span>
+        {pfTexto && (
+          <li data-pf className="flex justify-between gap-2 border-t border-borda-suave py-2 text-base">
+            <span>{pfTexto}</span>
             <span className="tabular-nums">{brlMi(p.pf.valor)}</span>
           </li>
         )}
-        {p.saldo > 0 && (
-          <li
-            data-saldo
-            className="flex justify-between gap-2 border-t border-linha py-2.5 text-[0.8125rem] text-muted-foreground"
-          >
-            <span>Sem pagamento registrado:</span>
-            <span className="tabular-nums">{brlMi(p.saldo)}</span>
-          </li>
-        )}
       </ul>
-
-      <div
-        className="hidden overflow-x-auto sm:block"
-        tabIndex={0}
-        role="region"
-        aria-label={`Pagamentos da emenda ${e.codigo}`}
-      >
-        <table className="w-full border-collapse text-[0.8125rem]">
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full border-collapse text-sm">
+          <caption className="sr-only">
+            Quem {nomeMunicipio(p)} pagou com a emenda {e.codigo}
+          </caption>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th scope="col" className="py-1.5 pr-2 font-semibold">
-                Pago pelo município a
+                Pago a
               </th>
               <th scope="col" className="px-2 py-1.5 font-semibold">
                 CNPJ
               </th>
               <th scope="col" className="px-2 py-1.5 font-semibold">
-                Abertura da matriz{receitaBase ? ` (base de ${mesAno(receitaBase)})` : ""}
+                Aberta em{trilha.receitaBase ? ` (base de ${mesAno(trilha.receitaBase)})` : ""}
               </th>
               <th scope="col" className="px-2 py-1.5 font-semibold">
                 1º pagamento
               </th>
               <th scope="col" className="py-1.5 text-right font-semibold">
-                Recebido
+                Valor
               </th>
             </tr>
           </thead>
@@ -766,76 +847,65 @@ function PlanoEmenda({
             {p.recebedores.map((r) => (
               <tr key={r.cnpj} data-recebedor={r.cnpj} className="border-t border-borda-suave">
                 <td className="py-2 pr-2">
-                  <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span>{nomeLegivel(r.nome)}</span>
-                    {r.recemAberta?.indicio && <SeloRecem />}
-                    {r.entePublico && <span className="text-xs text-muted-foreground">ente público</span>}
+                    <Selos cnpj={r.cnpj} indicios={indicios} />
+                    {r.entePublico && <span className="text-muted-foreground">ente público</span>}
                   </span>
                 </td>
                 <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
                   {formatarCnpj(r.cnpj)}
                 </td>
-                <td
-                  data-abertura
-                  className={`px-2 py-2 text-muted-foreground ${r.abertura?.origem === "matriz" && r.abertura.baseMes === receitaBase ? "whitespace-nowrap" : "min-w-[9rem]"}`}
-                >
-                  {abertura(r, receitaBase, false)}
+                <td data-abertura className="min-w-[7rem] px-2 py-2 text-muted-foreground tabular-nums">
+                  {abertura(r, trilha.receitaBase)}
                 </td>
-                <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{dataBr(r.primeiroPagamento)}</td>
+                <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                  {dataBr(r.primeiroPagamento)}
+                </td>
                 <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlMi(r.valor)}</td>
               </tr>
             ))}
-            {p.pf.pagamentos > 0 && (
-              <tr data-pf className="border-t border-borda-suave">
-                <td className="py-2 pr-2">Pessoas físicas ({p.pf.pagamentos})</td>
-                <td className="px-2 py-2 text-muted-foreground">—</td>
-                <td className="px-2 py-2 text-muted-foreground">—</td>
-                <td className="px-2 py-2 text-muted-foreground">—</td>
-                <td className="py-2 text-right tabular-nums">{brlMi(p.pf.valor)}</td>
-              </tr>
-            )}
-            {p.saldo > 0 && (
-              <tr data-saldo className="border-t border-linha">
-                <td colSpan={4} className="py-2 pr-2 text-muted-foreground">
-                  Sem pagamento registrado:
+            {pfTexto && (
+              <tr data-pf className="border-t border-borda-suave text-texto-2">
+                <td className="py-2 pr-2">{pfTexto}</td>
+                <td colSpan={3} className="px-2 py-2">
+                  somados, sem nome
                 </td>
-                <td className="py-2 text-right text-muted-foreground tabular-nums">{brlMi(p.saldo)}</td>
+                <td className="py-2 text-right tabular-nums">{brlMi(p.pf.valor)}</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-      <span className="text-xs leading-normal text-muted-foreground">
-        Pessoas físicas aparecem somadas, sem nome nem documento. A data de abertura é a da matriz da empresa
-        {receitaBase ? ` (base da Receita de ${mesAno(receitaBase)})` : ""}
-        <span className="hidden sm:inline">
-          : uma filial nova de empresa antiga não conta como recém-aberta. A situação cadastral de hoje (ativa, baixada)
-          não entra na regra, porque não diz como a empresa estava na data do pagamento
-        </span>
-        .
-      </span>
-    </>
+      <a
+        href={`${API}/relatorios-gestao-novos-especiais?id_plano_acao=${p.id}`}
+        rel="noopener noreferrer"
+        target="_blank"
+        className="text-sm text-muted-foreground"
+      >
+        Fonte: Transferegov, plano {p.codigoPlano}
+      </a>
+    </div>
   );
 }
 
-/** Lateral do artboard; no celular vira um <details> no fim da seção (SeguirDinheiroMobile). */
+/** Lateral do artboard; no celular vira um <details> no fim da seção. */
 function ComoSeguimos({ className = "" }: { className?: string }) {
   return (
-    <details className={`border-t border-borda-suave pt-2.5 text-[0.8125rem] leading-normal text-texto-2 ${className}`}>
-      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
-        Como seguimos o dinheiro e o que não mostramos
+    <details className={`border-t border-borda-suave pt-1 text-sm leading-normal text-texto-2 ${className}`}>
+      <summary className={`${SUMMARY} flex min-h-11 items-center text-base font-semibold text-foreground`}>
+        Como seguimos o dinheiro
       </summary>
       <p className="mb-2">
-        Emenda (Portal da Transparência) → plano de ação do município (Transferegov, pelo código da emenda) → pagamentos
-        com CNPJ de quem recebeu. Abertura da empresa vem da Receita; campanha vem do TSE. Cada regra só usa dados com
-        data até o pagamento.
+        Emenda (Portal da Transparência), município que recebeu e quem ele pagou (Transferegov, pelo código da emenda e
+        pelo CNPJ). Abertura da empresa: Receita. Campanha: TSE. Pessoas físicas aparecem somadas, sem nome.
       </p>
-      <p>Não mostramos sócios das empresas, doadores pessoa física, contratos do PNCP nem emendas de convênio.</p>
+      <p>Não mostramos sócios, doadores pessoa física, contratos do PNCP nem emendas de convênio.</p>
     </details>
   );
 }
 
-/** Blocos da lateral do perfil no desktop (SeguirDinheiro.dc.html, aside). */
+/** Blocos da lateral do perfil no desktop (SeguirDinheiroEnxuto.dc.html, aside). */
 export function LateralTrilha() {
   return (
     <>
@@ -844,25 +914,23 @@ export function LateralTrilha() {
           Como seguimos o dinheiro
         </h2>
         <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-sm leading-normal text-texto-2">
-          <li>A emenda vem do Portal da Transparência.</li>
-          <li>O Transferegov liga a emenda ao plano de ação do município, pelo código da emenda.</li>
-          <li>Os pagamentos do plano trazem o CNPJ de quem recebeu.</li>
-          <li>A data de abertura vem da Receita; a campanha vem do TSE. As duas ligações usam o CNPJ.</li>
+          <li>Emenda: Portal da Transparência.</li>
+          <li>Município que recebeu: Transferegov, pelo código da emenda.</li>
+          <li>Quem o município pagou: Transferegov, pelo CNPJ.</li>
+          <li>Abertura da empresa: Receita. Campanha: TSE.</li>
         </ol>
-        <p className="text-[0.8125rem] leading-normal text-muted-foreground">
-          Cada regra só usa dados com data até o dia do pagamento avaliado.
+        <p className="text-sm leading-normal text-muted-foreground">
+          Cada regra só usa dados com data até o pagamento.{" "}
+          <Link href="/metodologia#trilha">Metodologia {METODOLOGIA_VERSAO}</Link>
         </p>
       </section>
       <section aria-labelledby="nao-mostramos-titulo" className={`${CARTAO} hidden gap-2.5 sm:p-5 lg:flex`}>
         <h2 id="nao-mostramos-titulo" className="font-heading text-lg font-bold">
           O que não mostramos
         </h2>
-        <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm leading-normal text-texto-2">
-          <li>Sócios das empresas: são pessoas comuns, não agentes públicos.</li>
-          <li>Doadores pessoa física da campanha.</li>
-          <li>Contratos do PNCP: não dizem com que dinheiro foram pagos.</li>
-          <li>Emendas de convênio: o Transferegov ainda não publica os pagamentos delas na API aberta.</li>
-        </ul>
+        <p className="text-sm leading-normal text-texto-2">
+          Sócios das empresas, doadores pessoa física, contratos do PNCP e emendas de convênio.
+        </p>
       </section>
     </>
   );

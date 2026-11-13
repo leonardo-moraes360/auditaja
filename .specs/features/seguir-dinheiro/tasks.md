@@ -473,12 +473,13 @@ T15 → T16 → T17
 
 **Done when**:
 
-- [ ] Textos exatos da spec ("Indício não é prova de irregularidade.", "Sem pagamento registrado: R$ X", "N municípios sem pagamento registrado", "Não avaliados", frase de vazio com gênero)
-- [ ] Desktop e celular conferidos no e2e por projeto; 320 px sem rolagem; axe sem violações
-- [ ] "Ver na trilha" abre o município da empresa
-- [ ] Full gate passa
+- [x] Textos exatos da spec ("Indício não é prova de irregularidade.", "Sem pagamento registrado: R$ X", "N municípios sem pagamento registrado", "Não avaliados", frase de vazio com gênero)
+- [x] Desktop e celular conferidos no e2e por projeto; 320 px sem rolagem; axe sem violações
+- [x] "Ver na trilha" abre o município da empresa
+- [x] Full gate passa
 
 **Tests**: e2e
+**Status**: ✅ Done
 **Gate**: full
 
 ---
