@@ -77,3 +77,14 @@ describe("SemSancao", () => {
     expect(render([2025])).toBe("");
   });
 });
+
+describe("tipoDespesaCurto", () => {
+  it("encurta as categorias longas do Senado e deixa as outras", async () => {
+    const { tipoDespesaCurto } = await import("@/lib/rotulos");
+    expect(
+      tipoDespesaCurto("Aluguel de imóveis para escritório político, compreendendo despesas concernentes a eles."),
+    ).toBe("Aluguel de escritório");
+    expect(tipoDespesaCurto("Passagens aéreas, aquáticas e terrestres nacionais")).toBe("Passagens");
+    expect(tipoDespesaCurto("Divulgação da atividade parlamentar")).toBeNull();
+  });
+});

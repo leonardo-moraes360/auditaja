@@ -17,6 +17,14 @@ Origem: avaliação UX/design/copy e simulação com três perfis de escolaridad
 9. The system SHALL usar "Pedir correção" e "Receber atualizações" em todos os botões, rótulos simples nos números ("Votou em X de Y votações", "Votou diferente", "O partido pediu: Sim") e um glossário curto na lateral. <!-- AJ-09 -->
 10. The system SHALL apresentar a home para deputados e senadores, com entrada por estado. <!-- AJ-10 -->
 
+## Rodada 2 (13/11/2026)
+
+11. The system SHALL achar o parlamentar com as palavras do nome em qualquer ordem, sem diferenciar acento, e pelo nome do estado ("Bahia"). <!-- AJ-11 -->
+12. WHEN a busca não acha nenhum nome THEN the system SHALL sugerir nomes parecidos (pg_trgm, grafia aproximada: k/c, w/v, y/i, h mudo, letra dobrada), para buscas com 4 letras ou mais. <!-- AJ-12 -->
+13. The system SHALL oferecer "Emendas e sanções" no formulário de correção e chamar a cota do senador de CEAPS. <!-- AJ-13 -->
+14. The system SHALL oferecer o CSV de quem recebeu os pagamentos das emendas (um pagamento por linha, pessoa física sem documento). <!-- AJ-14 -->
+15. The system SHALL mostrar em /fontes o arquivo coletado e o SHA-256 inteiro; a lista diz "Mostrando X de Y"; categorias longas da CEAPS ganham nome curto, com o oficial no `title` e no CSV. <!-- AJ-15 -->
+
 ## Fora
 
 - Resumo simples de cada votação (sem fonte de dados).

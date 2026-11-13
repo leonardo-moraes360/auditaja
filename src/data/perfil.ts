@@ -13,6 +13,7 @@ import {
 } from "@/lib/metrics";
 import { presencaEmExercicio } from "@/lib/exercicio";
 import { DESLOCAMENTO_SENADO, orientacaoDaLideranca, ORGAO_PLENARIO_SENADO, presencaSenado } from "@/lib/senado";
+import { NOME_UF } from "@/lib/rotulos";
 
 export type Casa = "camara" | "senado";
 
@@ -34,11 +35,28 @@ export type ResultadoBusca = {
 
 const UFS = new Set("AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO".split(" "));
 
-/** "sp" ou "SP" na busca também filtra pela UF; nomes continuam valendo. */
+const semAcento = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+/** Nome do estado sem acento → sigla ("bahia" → BA, "sao paulo" → SP). */
+const UF_POR_NOME = new Map(Object.entries(NOME_UF).map(([sigla, nome]) => [semAcento(nome), sigla]));
+
+/**
+ * "sp", "SP", "Bahia" ou "são paulo" na busca filtram pela UF. Com alguém na UF, a sigla não procura
+ * pedaços de nome: "BA" trazia "Barroso" e "Baldy" (avaliação com cidadãos, 12/11/2026).
+ */
 export function ufDaBusca(q: string | undefined): string | null {
-  const t = (q ?? "").trim().toUpperCase();
-  return UFS.has(t) ? t : null;
+  const t = (q ?? "").trim();
+  if (UFS.has(t.toUpperCase())) return t.toUpperCase();
+  return UF_POR_NOME.get(semAcento(t).replace(/^(estado d[aeo]s?|d[aeo]s?)\s+/, "")) ?? null;
 }
+
+/** Similaridade mínima (pg_trgm word_similarity) para sugerir um nome parecido. */
+export const SIMILARIDADE_MINIMA = 0.45;
 
 export async function buscarParlamentares(opts: {
   q?: string;
@@ -59,16 +77,58 @@ export async function buscarParlamentares(opts: {
   if (opts.casa) query = query.where("casa", "=", opts.casa);
   const q = opts.q?.trim();
   if (q) {
-    const padrao = `%${q.replace(/[%_\\]/g, "\\$&")}%`;
     const ufBuscada = ufDaBusca(q);
-    query = query.where(({ or, eb }) =>
-      or([
-        ...(ufBuscada ? [eb("sigla_uf", "=", ufBuscada)] : []),
-        eb(sql`unaccent(lower(nome))`, "like", sql`unaccent(lower(${padrao}))`),
-        eb(sql`unaccent(lower(coalesce(nome_civil, '')))`, "like", sql`unaccent(lower(${padrao}))`),
-      ]),
-    );
+    if (ufBuscada) {
+      // A UF substitui a busca por pedaço de nome; sem ninguém na UF, vale o nome ("ma" → Maria).
+      const daUf = await query.where("sigla_uf", "=", ufBuscada).execute();
+      if (daUf.length) return daUf;
+    }
+    // Cada palavra precisa aparecer no nome parlamentar ou no nome civil, sem diferenciar acento
+    // ("jaques wagner", "wagner jaques" e "Acacio" funcionam).
+    for (const palavra of q.split(/\s+/)) {
+      const padrao = `%${palavra.replace(/[%_\\]/g, "\\$&")}%`;
+      query = query.where(({ or, eb }) =>
+        or([
+          eb(sql`unaccent(lower(nome))`, "like", sql`unaccent(lower(${padrao}))`),
+          eb(sql`unaccent(lower(coalesce(nome_civil, '')))`, "like", sql`unaccent(lower(${padrao}))`),
+        ]),
+      );
+    }
   }
+  return query.execute();
+}
+
+/**
+ * Nomes parecidos quando a busca não acha nada ("nicolas" → Nikolas, "jaques vagner" → Jaques Wagner),
+ * do mais parecido para o menos. Busca curta (menos de 4 letras) não sugere: daria ruído.
+ */
+export async function buscarParecidos(opts: {
+  q: string;
+  uf?: string;
+  casa?: Casa | null;
+  limite?: number;
+}): Promise<ResultadoBusca[]> {
+  const q = opts.q.trim();
+  if (q.replace(/\s/g, "").length < 4) return [];
+  // Grafia aproximada do português: k→c, w→v, y→i, sem h e sem letra dobrada ("Nikolas" ≈ "nicolas",
+  // "Wagner" ≈ "vagner", "Phellipe" ≈ "felipe").
+  const fon = (x: ReturnType<typeof sql>) =>
+    sql`regexp_replace(replace(replace(translate(unaccent(lower(${x})), 'kwy', 'cvi'), 'ph', 'f'), 'h', ''), '(.)\\1', '\\1', 'g')`;
+  const termo = fon(sql`${q}`);
+  const sim = sql<number>`greatest(
+    word_similarity(${termo}, ${fon(sql`nome`)}),
+    word_similarity(${termo}, ${fon(sql`coalesce(nome_civil, '')`)})
+  )`;
+  let query = getDb()
+    .selectFrom("parlamentar")
+    .select(["id", "casa", "sexo", "nome", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
+    .where("em_exercicio", "=", true)
+    .where(sql<boolean>`${sim} >= ${SIMILARIDADE_MINIMA}`)
+    .orderBy(sim, "desc")
+    .orderBy("nome")
+    .limit(opts.limite ?? 8);
+  if (opts.uf) query = query.where("sigla_uf", "=", opts.uf);
+  if (opts.casa) query = query.where("casa", "=", opts.casa);
   return query.execute();
 }
 

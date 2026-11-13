@@ -150,7 +150,7 @@ O Auditaja só mostra deputados. O Senado gasta cota própria (CEAPS), vota em P
 5. WHEN o perfil de um senador abre THEN the system SHALL citar como fonte do cadastro, das votações e da CEAPS o Senado Federal, com data de coleta e link para a resposta original (R1). <!-- SUI-05 -->
 6. WHEN a lista de parlamentares abre THEN the system SHALL exibir os filtros "Todos", "Câmara dos Deputados" e "Senado Federal" com a contagem de parlamentares em exercício de cada um, e `?casa=senado` SHALL listar só senadores. <!-- SUI-06 -->
 7. WHEN a lista mostra um senador THEN the system SHALL exibir no cartão "Senador" ou "Senadora", partido e UF. <!-- SUI-07 -->
-8. The system SHALL exibir no campo de busca do topo o placeholder "Buscar deputado ou senador por nome ou UF". <!-- SUI-08 -->
+8. The system SHALL exibir no campo de busca do topo o placeholder "Buscar parlamentar ou estado" (encurtado em 13/11/2026: o texto anterior era cortado). <!-- SUI-08 -->
 9. IF `?casa=` traz valor diferente de `camara` ou `senado` THEN the system SHALL tratar como "Todos". <!-- SUI-09 -->
 10. WHILE o perfil é de senador the system SHALL manter acompanhar (feed Atom), contestar e baixar CSV funcionando pelo mesmo id. <!-- SUI-10 -->
 11. The system SHALL descrever na página de metodologia as regras de presença e alinhamento do Senado e listar o Senado na página de fontes. <!-- SUI-11 -->

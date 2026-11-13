@@ -320,3 +320,18 @@ test("C22: limites inclusive de de/ate e data inexistente ignorada", async ({ re
   expect(r.status()).toBe(200);
   expect((await r.text()).trim().split("\r\n")).toHaveLength(2);
 });
+
+test("AJ-14: CSV de quem recebeu os pagamentos, sem documento de pessoa física", async ({ page }) => {
+  const r = await page.request.get(`/parlamentares/${ID}/emendas.csv?emendas=mandato&tabela=favorecidos`);
+  expect(r.headers()["content-type"]).toContain("text/csv");
+  const linhas = (await r.text()).replace(/^﻿/, "").trim().split("\r\n");
+  expect(linhas[0]).toBe(
+    "codigo_emenda;ano_emenda;mes_pagamento;favorecido;cnpj_ou_codigo;tipo;natureza_juridica;municipio;uf;valor_recebido",
+  );
+  expect(linhas.some((l) => l.includes("22.222.222/0001-22"))).toBe(true);
+  for (const l of linhas.filter((x) => x.includes("Pessoa Fisica"))) expect(l.split(";")[4]).toBe("");
+  await page.goto(`/parlamentares/${ID}`);
+  await expect(
+    page.locator("section#emendas").getByRole("link", { name: "Baixar quem recebeu (CSV)" }),
+  ).toHaveAttribute("href", `/parlamentares/${ID}/emendas.csv?emendas=mandato&tabela=favorecidos`);
+});

@@ -117,3 +117,19 @@ export function seloParticipacao(participacao: string | null): string | null {
   if (!participacao) return null;
   return /suplente/i.test(participacao) ? `${participacao} em exercício` : participacao;
 }
+
+/**
+ * Nome curto das categorias da CEAPS (o Senado publica o texto do ato normativo inteiro). O nome oficial
+ * continua no CSV e no `title` da lista.
+ */
+const TIPOS_CURTOS: [RegExp, string][] = [
+  [/^aluguel de im[oó]veis para escrit[oó]rio pol[ií]tico/i, "Aluguel de escritório"],
+  [/^aquisi[cç][aã]o de material de consumo/i, "Material de escritório, software e correio"],
+  [/^contrata[cç][aã]o de consultorias/i, "Consultorias e assessorias"],
+  [/^locomo[cç][aã]o, hospedagem, alimenta[cç][aã]o, combust[ií]veis/i, "Locomoção, hospedagem e combustível"],
+  [/^passagens a[eé]reas, aqu[aá]ticas e terrestres nacionais/i, "Passagens"],
+];
+
+export function tipoDespesaCurto(tipo: string): string | null {
+  return TIPOS_CURTOS.find(([re]) => re.test(tipo))?.[1] ?? null;
+}

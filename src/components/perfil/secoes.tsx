@@ -3,7 +3,7 @@ import type { ResumoSancoesAno, SancaoFornecedor } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
 import { brl, brlCompacto, dataBr, dataHoraBr, fraseCase, INICIAIS_MESES, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO, variacaoNominal } from "@/lib/metrics";
-import { LEGISLATURAS, NOME_UF } from "@/lib/rotulos";
+import { LEGISLATURAS, NOME_UF, tipoDespesaCurto } from "@/lib/rotulos";
 import { classificarVotoSenado, codigoSenado, rotuloVotoSenado } from "@/lib/senado";
 import { BOTAO_PRIMARIO, classeFiltro } from "./estilos";
 import { NotaFonte } from "./fonte";
@@ -122,11 +122,14 @@ export function SecaoGastos({
 
   // Por tipo: 6 maiores e "Outros" no desktop; 4 maiores no celular.
   const atipicos = mandato ? new Set<string>() : tiposAtipicos(perfil.atipico[0]);
-  const tipos = ceap.porTipo
-    .slice(0, 6)
-    .map((t) => ({ nome: fraseCase(t.tipo), total: t.total, atipico: atipicos.has(t.tipo) }));
+  const tipos = ceap.porTipo.slice(0, 6).map((t) => ({
+    nome: tipoDespesaCurto(t.tipo) ?? fraseCase(t.tipo),
+    oficial: tipoDespesaCurto(t.tipo) ? t.tipo : undefined,
+    total: t.total,
+    atipico: atipicos.has(t.tipo),
+  }));
   const resto = ceap.porTipo.slice(6).reduce((s, t) => s + t.total, 0);
-  if (resto > 0) tipos.push({ nome: "Outros", total: resto, atipico: false });
+  if (resto > 0) tipos.push({ nome: "Outros", oficial: undefined, total: resto, atipico: false });
   const maiorTipo = tipos[0]?.total ?? 1;
   const href = (q: string) => `/parlamentares/${parlamentar.id}?${q}`;
 
@@ -232,7 +235,9 @@ export function SecaoGastos({
               )}
               {barras.map((b) => (
                 <div key={b.rotulo} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                  <span className="relative z-10 hidden bg-superficie px-0.5 text-xs text-muted-foreground sm:block">{milhar(b.total)}</span>
+                  <span className="relative z-10 hidden bg-superficie px-0.5 text-xs text-muted-foreground sm:block">
+                    {milhar(b.total)}
+                  </span>
                   <div
                     className="w-full rounded-t-[3px] bg-primary sm:max-w-11 sm:rounded-t-[4px]"
                     style={{ height: `${Math.max(1, (b.total / max) * 100)}%` }}
@@ -291,7 +296,10 @@ export function SecaoGastos({
                 {tipos.map((t, i) => (
                   <li key={t.nome} className={`flex flex-col gap-1 ${i >= 4 && !completo ? "max-sm:hidden" : ""}`}>
                     <div className="flex justify-between gap-2 text-sm">
-                      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 break-words">
+                      <span
+                        className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 break-words"
+                        title={t.oficial}
+                      >
                         {t.nome}
                         {t.atipico && (
                           <span className="rounded-full border border-atipico-borda bg-atipico-fundo px-[7px] py-0.5 text-sm font-bold whitespace-nowrap text-atipico">

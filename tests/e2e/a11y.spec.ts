@@ -97,5 +97,5 @@ test("A11Y-05: divergência não depende só da cor", async ({ page }) => {
 
 test("A11Y-06: borda dos campos com contraste ≥ 3:1 (1.4.11)", async ({ page }) => {
   await page.goto("/parlamentares");
-  await expect(page.getByLabel("Nome ou UF")).toHaveCSS("border-top-color", "rgb(128, 133, 142)");
+  await expect(page.getByLabel("Nome ou estado")).toHaveCSS("border-top-color", "rgb(128, 133, 142)");
 });
