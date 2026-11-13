@@ -270,6 +270,37 @@ describe("trilhaDoParlamentar", () => {
     );
   });
 
+  it("emenda com indício vem entre as trilhas abertas, mesmo com valor menor", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const t = await cheia(TERCEIRO);
+    expect(t.emendas.map((e) => [e.codigo, e.transferido, e.indicios])).toEqual([
+      [EMENDA.doTerceiro, 1_000_000, 1],
+      ...EMENDA.terceiroGrandes.map((c) => [c, 2_000_000, 0]),
+    ]);
+  });
+
+  it("LING-05: no CSV só leva indício a linha do CNPJ que cai na regra", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const { linhasCsvTrilha, CABECALHO_CSV_TRILHA } = await import("@/lib/trilha-csv");
+    const linhas = linhasCsvTrilha(await cheia(RITA));
+    const ix = (n: string) => CABECALHO_CSV_TRILHA.indexOf(n);
+    const daEmenda = (codigo: string) => linhas.filter((l) => l[ix("codigo_emenda")] === codigo);
+    const indicio = (codigo: string, cnpj: string) =>
+      daEmenda(codigo).find((l) => l[ix("recebedor_cnpj")] === cnpj)![ix("indicio")];
+    expect(indicio(EMENDA.campinas, CNPJ.limiar180)).toBe("");
+    expect(indicio(EMENDA.campinas, CNPJ.limiar179)).toBe("recem-aberta");
+    expect(indicio(EMENDA.campinas, CNPJ.grafica)).toBe("ciclo-fechado");
+    expect(indicio(EMENDA.sorocaba, CNPJ.construtora)).toBe("recem-aberta");
+    expect(indicio(EMENDA.sorocaba, CNPJ.distribuidoraFilial)).toBe("");
+    // Linhas sem CNPJ (PF somadas, saldo) nunca levam indício.
+    expect(
+      linhas
+        .filter((l) => !l[ix("recebedor_cnpj")] && l[ix("elo")] !== "favorecido_direto")
+        .every((l) => l[ix("indicio")] === ""),
+    ).toBe(true);
+    expect(linhas.every((l) => l[ix("versao_metodologia")] === "1.11")).toBe(true);
+  });
+
   it("EDGE-03: beneficiário de plano sem CNAE 84 e filial cuja matriz é CNAE 84 não são avaliados", async (ctx) => {
     if (!disponivel) ctx.skip();
     const rs = emendaDe(await cheia(TERCEIRO), EMENDA.doTerceiro).planos.flatMap((p) => p.recebedores);

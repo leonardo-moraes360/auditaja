@@ -60,6 +60,8 @@ export const EMENDA = {
   direta2024: "202470010008",
   doOutro: "202570020001",
   doTerceiro: "202570030001",
+  /** Três emendas Pix do Terceiro sem pagamento, maiores que a emenda com indício. */
+  terceiroGrandes: ["202570030002", "202570030003", "202570030004"],
   doQuarto: "202570040001",
 };
 
@@ -170,6 +172,7 @@ export async function semearTrilha(db: Kysely<Database>) {
       emenda(RITA, EMENDA.direta2024, 2024, "SOROCABA - SP", "Saúde", 10_000, FD),
       emenda(OUTRO, EMENDA.doOutro, 2025, "SOROCABA - SP", "Saúde", 900_000),
       emenda(TERCEIRO, EMENDA.doTerceiro, 2025, "ITU - SP", "Saúde", 1_000_000),
+      ...EMENDA.terceiroGrandes.map((c) => emenda(TERCEIRO, c, 2025, "ITU - SP", "Educação", 2_000_000)),
       emenda(QUARTO, EMENDA.doQuarto, 2025, "ITU - SP", "Saúde", 100_000),
     ])
     .execute();
@@ -238,6 +241,9 @@ export async function semearTrilha(db: Kysely<Database>) {
       plano(97009, OUTRO, EMENDA.doOutro, CNPJ.sorocaba, "MUNICIPIO DE SOROCABA", 900_000, "2025-03-01"),
       plano(97031, TERCEIRO, EMENDA.doTerceiro, CNPJ.enteX, "MUNICIPIO DE ITU", 600_000, "2025-02-01"),
       plano(97032, TERCEIRO, EMENDA.doTerceiro, CNPJ.campinas, "MUNICIPIO DE CAMPINAS", 400_000, "2025-02-01"),
+      ...EMENDA.terceiroGrandes.map((c, i) =>
+        plano(97033 + i, TERCEIRO, c, CNPJ.enteX, "MUNICIPIO DE ITU", 2_000_000, "2025-02-01"),
+      ),
       plano(97041, QUARTO, EMENDA.doQuarto, CNPJ.enteX, "MUNICIPIO DE ITU", 100_000, "2025-02-01"),
     ])
     .execute();
