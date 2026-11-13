@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { createDb } from "@/db/client";
-import { EMENDA, RITA, semearTrilha } from "../fixtures/trilha";
+import { CNPJ, EMENDA, RITA, semearTrilha } from "../fixtures/trilha";
 
 // Dados fictícios: tests/fixtures/trilha.ts (6 emendas Pix, 2 recém-abertas, 2 ciclos fechados).
 const URL_TESTE = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
@@ -22,21 +22,42 @@ test.beforeAll(async () => {
   }
 });
 
-test("TRUI-01, LING-01, LING-02, LING-07: avisos com regra, limiar, taxa de base, frase e links", async ({ page }) => {
+const API = "https://api-publica.transferegov.gestao.gov.br/especiais";
+const celular = (nome: string) => nome === "celular";
+/** Texto visível no projeto atual (o DOM tem as versões de desktop e de celular; uma fica escondida). */
+async function visivel(onde: Locator, texto: string | RegExp) {
+  await expect(onde.getByText(texto).filter({ visible: true }).first()).toBeVisible();
+}
+
+test("TRUI-01, LING-01, LING-02, LING-07: avisos com regra, limiar, taxa de base, frase e links", async ({
+  page,
+}, info) => {
   await page.goto(`/parlamentares/${RITA}`);
   const s = page.locator("section#trilha");
   await expect(s.getByRole("heading", { level: 2, name: "Para onde foi o dinheiro das emendas Pix" })).toBeVisible();
-  await expect(s.locator("[data-indicador]").first()).toContainText("R$ 8,1 mi");
+  await visivel(s.locator("[data-indicador]").first(), "R$ 8,1 mi");
   const avisos = s.locator("[data-indicio]");
   await expect(avisos).toHaveCount(4);
-  for (let i = 0; i < 4; i++) await expect(avisos.nth(i)).toContainText("Indício não é prova de irregularidade.");
+  for (let i = 0; i < 4; i++) {
+    await visivel(avisos.nth(i), "Indício não é prova de irregularidade.");
+    // LING-01: só "indício" ou "padrão atípico"; nada de termo de acusação.
+    expect(await avisos.nth(i).textContent()).not.toMatch(/fraude|corrup|desvi|suspeit|ilegal|crime/i);
+  }
 
   const recem = s.locator('[data-indicio="recem-aberta"]').first();
-  await expect(recem).toContainText("Indício: empresa aberta 41 dias antes do primeiro pagamento");
-  await expect(recem).toContainText("começou a funcionar em 12/02/2025");
-  await expect(recem).toContainText("em 25/03/2025");
-  await expect(recem).toContainText("menos de 180 dias antes do primeiro pagamento");
-  await expect(recem).toContainText("2 de 8 (25,0%)");
+  if (celular(info.project.name)) {
+    await visivel(recem, "Indício · empresa recém-aberta");
+    await visivel(recem, "Aberta 41 dias antes do primeiro pagamento");
+    await visivel(recem, "abriu em 12/02/2025 (Receita, base de 10/2026)");
+    await visivel(recem, "matriz aberta menos de 180 dias antes");
+    await visivel(recem, "3 de 9 (33,3%) empresas pagas com emendas Pix");
+  } else {
+    await visivel(recem, "Indício: empresa aberta 41 dias antes do primeiro pagamento");
+    await visivel(recem, "começou a funcionar em 12/02/2025, segundo a Receita Federal (base de 10/2026)");
+    await visivel(recem, "em 25/03/2025");
+    await visivel(recem, "menos de 180 dias antes do primeiro pagamento");
+    await visivel(recem, "3 de 9 (33,3%) empresas pagas com emendas Pix na base, com data de abertura conhecida");
+  }
   await expect(recem.getByRole("link", { name: /Como calculamos/ })).toHaveAttribute(
     "href",
     "/metodologia#recem-aberta",
@@ -48,44 +69,84 @@ test("TRUI-01, LING-01, LING-02, LING-07: avisos com regra, limiar, taxa de base
   await expect(recem.getByRole("link", { name: "Ver a trilha" })).toHaveAttribute("href", `#trilha-${EMENDA.sorocaba}`);
 
   const ciclo = s.locator('[data-indicio="ciclo-fechado"]').first();
-  await expect(ciclo).toContainText("Indício: ciclo fechado entre emenda e campanha");
-  await expect(ciclo).toContainText("campanha de 2022 desta deputada");
-  await expect(ciclo).toContainText("2 de 3 (66,7%) parlamentares com emenda Pix na base");
+  if (celular(info.project.name)) {
+    await visivel(ciclo, "Empresa da emenda também vendeu para a campanha");
+    await visivel(ciclo, "campanha de 2022 desta deputada (TSE)");
+  } else {
+    await visivel(ciclo, "Indício: ciclo fechado entre emenda e campanha");
+    await visivel(ciclo, "campanha de 2022 desta deputada, com R$ 32 mil em despesas declaradas ao TSE em 09/2022");
+  }
+  await visivel(ciclo, "2 de 5 (40,0%) parlamentares com emenda Pix na base");
   await expect(ciclo.getByRole("link", { name: /Como calculamos/ })).toHaveAttribute(
     "href",
     "/metodologia#ciclo-fechado",
   );
 });
 
-test("LING-09: cada aviso cita os arquivos de cada elo com data e SHA-256", async ({ page }) => {
+test("LING-09: cada aviso cita os arquivos de cada elo com data e SHA-256", async ({ page }, info) => {
   await page.goto(`/parlamentares/${RITA}`);
   const recem = page.locator('section#trilha [data-indicio="recem-aberta"]').first();
-  await expect(recem).toContainText("Receita Federal, Estabelecimentos, base de 10/2026");
-  await expect(recem).toContainText("Transferegov, emendas Pix, coletado em 12/11/2026");
-  await expect(recem).toContainText("SHA-256 3f9a…0000");
-  await expect(recem).toContainText("SHA-256 b71d…0000");
   const ciclo = page.locator('section#trilha [data-indicio="ciclo-fechado"]').first();
-  await expect(ciclo).toContainText("TSE, prestação de contas de candidatos 2022");
+  if (celular(info.project.name)) {
+    await visivel(recem, "Receita, base de 10/2026 · Transferegov, coletado em 12/11/2026");
+    await recem.getByText("ver arquivos e SHA-256").click();
+  }
+  await visivel(recem, "Receita Federal, Estabelecimentos, base de 10/2026");
+  await visivel(recem, "Transferegov, emendas Pix, coletado em 12/11/2026");
+  await visivel(recem, "SHA-256 3f9a…0000");
+  await visivel(recem, "SHA-256 b71d…0000");
+  if (celular(info.project.name)) await ciclo.getByText("ver arquivos e SHA-256").click();
+  await visivel(ciclo, "TSE, prestação de contas de candidatos 2022");
 });
 
-test("TRI-04, TRI-05, TRI-07, CNPJ-05, EDGE-05: trilha da emenda com empresas, PF somadas e saldo", async ({
+test("TRI-04, TRI-05, TRI-07, CNPJ-05, CNPJ-06, EDGE-05: trilha da emenda com empresas, PF somadas e saldo", async ({
   page,
-}) => {
+}, info) => {
   await page.goto(`/parlamentares/${RITA}`);
   const t = page.locator(`[data-trilha-emenda="${EMENDA.sorocaba}"]`);
   await expect(t).toHaveAttribute("open", "");
-  await expect(t).toContainText(`Emenda ${EMENDA.sorocaba} · Saúde`);
-  await expect(t).toContainText("Município de Sorocaba (SP)");
-  await expect(t).toContainText("R$ 1,61 mi a 7 empresas e 3 pessoas");
-  await expect(t).toContainText("Construtora Ilustrativa Ltda");
-  await expect(t).toContainText("Pessoas físicas (3)");
-  await expect(t).toContainText("R$ 12 mil");
+  await expect(t.getByRole("heading", { name: `Emenda ${EMENDA.sorocaba} · Saúde` })).toBeVisible();
+  await visivel(t, "Município de Sorocaba (SP)");
+  await visivel(t, "R$ 1,61 mi a 7 empresas e 3 pessoas");
+  // TRI-04: link para a fonte de cada elo.
+  expect(
+    await t.locator('ol[aria-label="Elos da trilha"] a').evaluateAll((as) => as.map((a) => a.getAttribute("href"))),
+  ).toEqual([
+    "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares",
+    `${API}/planos-acao-especiais?id_plano_acao=97001`,
+    `${API}/relatorios-gestao-novos-especiais?id_plano_acao=97001`,
+  ]);
   await expect(t).not.toContainText("LUCIANY");
-  await expect(t.locator("[data-saldo]").first()).toHaveText(/Sem pagamento registrado:\s*R\$ 391 mil/);
-  await expect(t).toContainText("Data de abertura não encontrada na base da Receita de 10/2026");
-  await expect(t).toContainText("05/05/2010 (data da filial; matriz não encontrada)");
-  // Filial nova de distribuidora antiga: vale a data da matriz.
-  await expect(t).toContainText("08/06/2009");
+  if (celular(info.project.name)) {
+    const c = t.locator("[data-recebedores-cartoes]");
+    await visivel(c, "Construtora Ilustrativa Ltda");
+    await visivel(c, "abriu em 12/02/2025 (base de 10/2026)");
+    await visivel(c, "abriu em 08/06/2009 (base de 10/2026)");
+    await visivel(c, "abriu em 05/05/2010 (data da filial; matriz não encontrada; base de 10/2026)");
+    await visivel(c, "Data de abertura não encontrada na base da Receita de 10/2026");
+    await visivel(c, "Pessoas físicas (3)");
+    await expect(c.locator("[data-saldo]")).toHaveText(/Sem pagamento registrado:\s*R\$ 391 mil/);
+    await expect(c.locator("[data-saldo]")).toBeVisible();
+  } else {
+    const tabela = t.locator("table");
+    await expect(tabela.locator("th").nth(2)).toHaveText("Abertura da matriz (base de 10/2026)");
+    const ab = (cnpj: string) => tabela.locator(`[data-recebedor="${cnpj}"] [data-abertura]`);
+    await expect(ab(CNPJ.construtora)).toHaveText("12/02/2025");
+    // Filial nova de distribuidora antiga: vale a data da matriz.
+    await expect(ab(CNPJ.distribuidoraFilial)).toHaveText("08/06/2009");
+    await expect(ab(CNPJ.soFilial)).toHaveText("05/05/2010 (data da filial; matriz não encontrada)");
+    await expect(ab(CNPJ.semAbertura)).toHaveText("Data de abertura não encontrada na base da Receita de 10/2026");
+    await expect(tabela.locator("[data-pf]")).toBeVisible();
+    await expect(tabela.locator("[data-pf]")).toHaveText(/Pessoas físicas \(3\).*R\$ 12 mil/);
+    await expect(tabela.locator("[data-saldo]")).toBeVisible();
+    await expect(tabela.locator("[data-saldo]")).toHaveText(/Sem pagamento registrado:\s*R\$ 391 mil/);
+    // A tabela cabe no cartão (sem rolagem interna) como no artboard.
+    for (const r of await page.locator("section#trilha details[open] [role=region]").all()) {
+      const [sw, cw] = await r.evaluate((el) => [el.scrollWidth, el.clientWidth]);
+      expect(sw).toBeLessThanOrEqual(cw + 1);
+    }
+  }
+  await visivel(t, "base da Receita de 10/2026");
 });
 
 test("L-003: só 3 trilhas à vista; as outras 3 atrás de um botão", async ({ page }) => {

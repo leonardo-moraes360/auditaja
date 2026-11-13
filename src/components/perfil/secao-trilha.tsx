@@ -480,8 +480,9 @@ function CorpoRecemAberta({ i, taxa }: { i: IndicioRecemAberta; taxa: [number, n
         </span>
         <span className="sm:hidden">
           {nome} abriu em {dataBr(i.abertura.data)}
-          {filial} e recebeu o primeiro pagamento da emenda {i.emenda} em {dataBr(i.primeiroPagamento)}, pago por{" "}
-          {nomeLegivel(i.ente) || "ente não informado"}. Total: {brlMi(i.recebido)}.
+          {filial} (Receita, base de {mesAno(i.abertura.baseMes)}) e recebeu o primeiro pagamento da emenda {i.emenda}{" "}
+          em {dataBr(i.primeiroPagamento)}, pago por {nomeLegivel(i.ente) || "ente não informado"}. Total:{" "}
+          {brlMi(i.recebido)}.
         </span>
       </p>
       <p className="text-sm leading-normal text-texto-2">
@@ -584,9 +585,9 @@ function TrilhaEmenda({
     >
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-4 gap-y-2 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 flex-col gap-0.5 sm:gap-1">
-          <span className="text-[0.9375rem] font-bold">
+          <h4 className="text-[0.9375rem] font-bold">
             Emenda {e.codigo} · {e.funcao}
-          </span>
+          </h4>
           <span className="text-xs text-muted-foreground group-open:hidden sm:text-sm">{resumoEmenda(e)}</span>
           {e.mesTransferencia && (
             <span className="hidden text-xs text-muted-foreground group-open:inline sm:text-sm">
@@ -671,13 +672,21 @@ function Elo({
   );
 }
 
-function abertura(r: RecebedorTrilha, receitaBase: string | null) {
+/**
+ * CNPJ-05, CNPJ-06, EDGE-05. `comBase`: cita o mês da base ao lado da data (celular); na tabela do desktop o
+ * mês vai no cabeçalho da coluna e só aparece na célula quando difere do lote vigente.
+ */
+function abertura(r: RecebedorTrilha, receitaBase: string | null, comBase: boolean) {
   if (!r.abertura)
     return receitaBase
       ? `Data de abertura não encontrada na base da Receita de ${mesAno(receitaBase)}`
       : "Data de abertura ainda não importada da Receita";
+  const notas = [
+    ...(r.abertura.origem === "filial" ? ["data da filial; matriz não encontrada"] : []),
+    ...(comBase || r.abertura.baseMes !== receitaBase ? [`base de ${mesAno(r.abertura.baseMes)}`] : []),
+  ];
   const d = dataBr(r.abertura.data);
-  return r.abertura.origem === "filial" ? `${d} (data da filial; matriz não encontrada)` : d;
+  return notas.length ? `${d} (${notas.join("; ")})` : d;
 }
 
 function SeloRecem() {
@@ -748,8 +757,8 @@ function PlanoEmenda({
             <span className="text-xs break-words text-muted-foreground tabular-nums">
               {formatarCnpj(r.cnpj)}
               {r.entePublico ? " · ente público" : ""} ·{" "}
-              {r.abertura ? `abriu em ${abertura(r, receitaBase)}` : abertura(r, receitaBase)} · 1º pagamento{" "}
-              {dataBr(r.primeiroPagamento)}
+              {r.abertura ? `abriu em ${abertura(r, receitaBase, true)}` : abertura(r, receitaBase, true)} · 1º
+              pagamento {dataBr(r.primeiroPagamento)}
             </span>
           </li>
         ))}
@@ -786,7 +795,7 @@ function PlanoEmenda({
                 CNPJ
               </th>
               <th scope="col" className="px-2 py-1.5 font-semibold">
-                Abertura da matriz
+                Abertura da matriz{receitaBase ? ` (base de ${mesAno(receitaBase)})` : ""}
               </th>
               <th scope="col" className="px-2 py-1.5 font-semibold">
                 1º pagamento
@@ -809,8 +818,11 @@ function PlanoEmenda({
                 <td className="px-2 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
                   {formatarCnpj(r.cnpj)}
                 </td>
-                <td className={`px-2 py-2 text-muted-foreground ${r.abertura ? "whitespace-nowrap" : ""}`}>
-                  {abertura(r, receitaBase)}
+                <td
+                  data-abertura
+                  className={`px-2 py-2 text-muted-foreground ${r.abertura?.origem === "matriz" && r.abertura.baseMes === receitaBase ? "whitespace-nowrap" : "min-w-[9rem]"}`}
+                >
+                  {abertura(r, receitaBase, false)}
                 </td>
                 <td className="px-2 py-2 whitespace-nowrap text-muted-foreground">{dataBr(r.primeiroPagamento)}</td>
                 <td className="py-2 text-right whitespace-nowrap tabular-nums">{brlMi(r.valor)}</td>
@@ -838,10 +850,10 @@ function PlanoEmenda({
       </div>
       <span className="text-xs leading-normal text-muted-foreground">
         Pessoas físicas aparecem somadas, sem nome nem documento. A data de abertura é a da matriz da empresa
+        {receitaBase ? ` (base da Receita de ${mesAno(receitaBase)})` : ""}
         <span className="hidden sm:inline">
-          {receitaBase ? ` (base da Receita de ${mesAno(receitaBase)})` : ""}: uma filial nova de empresa antiga não
-          conta como recém-aberta. A situação cadastral de hoje (ativa, baixada) não entra na regra, porque não diz como
-          a empresa estava na data do pagamento
+          : uma filial nova de empresa antiga não conta como recém-aberta. A situação cadastral de hoje (ativa, baixada)
+          não entra na regra, porque não diz como a empresa estava na data do pagamento
         </span>
         .
       </span>
