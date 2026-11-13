@@ -98,6 +98,7 @@ export async function semearTrilha(db: Kysely<Database>) {
         id: id as number,
         casa: "camara" as const,
         nome: nome as string,
+        sexo: id === RITA ? "F" : "M",
         sigla_partido: "PFX",
         sigla_uf: "SP",
         em_exercicio: false,

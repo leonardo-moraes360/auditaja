@@ -232,7 +232,9 @@ export function SecaoGastos({
               )}
               {barras.map((b) => (
                 <div key={b.rotulo} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                  <span className="relative z-10 hidden bg-superficie px-0.5 text-xs text-muted-foreground sm:block">{milhar(b.total)}</span>
+                  <span className="relative z-10 hidden bg-superficie px-0.5 text-xs text-muted-foreground sm:block">
+                    {milhar(b.total)}
+                  </span>
                   <div
                     className="w-full rounded-t-[3px] bg-primary sm:max-w-11 sm:rounded-t-[4px]"
                     style={{ height: `${Math.max(1, (b.total / max) * 100)}%` }}
@@ -902,7 +904,7 @@ function GLOSSARIO(senado: boolean): [string, string][] {
   ];
 }
 
-export function Lateral({ perfil }: { perfil: Perfil }) {
+export function Lateral({ perfil, extra }: { perfil: Perfil; extra?: React.ReactNode }) {
   const { parlamentar: p, orgaos, candidaturas, coletas, suplentes } = perfil;
   const senado = p.casa === "senado";
   const comissoes = orgaos
@@ -1149,6 +1151,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       </section>
 
       <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
+      {extra}
 
       <section aria-labelledby="glossario-titulo" className={`${CARTAO} gap-2.5 sm:p-5`} data-glossario>
         <h2 id="glossario-titulo" className="font-heading text-lg font-bold sm:text-lg">

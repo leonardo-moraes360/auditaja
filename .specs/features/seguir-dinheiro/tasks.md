@@ -338,12 +338,13 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Textos exatos da spec ("Indício não é prova de irregularidade.", "Sem pagamento registrado: R$ X", frase de vazio)
-- [ ] 320 px sem rolagem horizontal; axe sem violações
-- [ ] Contestar leva ao formulário existente
-- [ ] Full gate passa
+- [x] Textos exatos da spec ("Indício não é prova de irregularidade.", "Sem pagamento registrado: R$ X", frase de vazio)
+- [x] 320 px sem rolagem horizontal; axe sem violações
+- [x] Contestar leva ao formulário existente
+- [x] Full gate passa
 
 **Tests**: e2e
+**Status**: ✅ Done
 **Gate**: full
 
 ---
