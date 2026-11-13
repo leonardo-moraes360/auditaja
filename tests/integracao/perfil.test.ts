@@ -268,12 +268,12 @@ describe("buscarParlamentares (Postgres)", () => {
     expect((await buscarParlamentares({ q: "joana", todos: true })).map((r) => r.id)).toEqual([SEED.foraDeExercicio]);
   });
 
-  it("BUSCA-04: sigla de UF também busca pela UF, sem perder o nome", async (ctx) => {
+  it("BUSCA-04: sigla de UF busca pela UF; sem ninguém na UF, vale o nome", async (ctx) => {
     if (!disponivel) ctx.skip();
     const { buscarParlamentares, ufDaBusca } = await import("@/data/perfil");
     expect((await buscarParlamentares({ q: "sp" })).map((r) => r.id)).toEqual([SEED.deputada]);
     expect((await buscarParlamentares({ q: "RJ" })).map((r) => r.id)).toEqual([SEED.deputado]);
-    // "MA" é UF sem deputado no seed, mas "Maria" casa pelo nome: a UF soma, não substitui.
+    // "MA" é UF sem deputado no seed: cai na busca por nome e acha "Maria".
     expect((await buscarParlamentares({ q: "ma" })).map((r) => r.id)).toEqual([SEED.deputada]);
     expect(ufDaBusca(" mg ")).toBe("MG");
     expect(ufDaBusca("XX")).toBeNull();
