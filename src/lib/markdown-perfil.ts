@@ -2,6 +2,7 @@ import type { EmendasDoParlamentar } from "@/data/emendas";
 import type { Perfil } from "@/data/perfil";
 import { brl, dataHoraBr, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
+import { CAMINHO_LICENCA, LICENCA_DADOS } from "@/lib/licenca";
 import { cargoParlamentar, partidoPorExtenso, periodoLegislatura, periodoMandato, ufPorExtenso } from "@/lib/rotulos";
 import { caminhoDoPerfil, markdownEmLinha, perfilOficial, tituloDoPerfil } from "@/lib/seo-perfil";
 import { rotuloVotoSenado } from "@/lib/senado";
@@ -131,6 +132,11 @@ export function markdownDoPerfil(perfil: Perfil, emendas: EmendasDoParlamentar, 
   }
   add("", `Atualizações (Atom): ${url}/feed.xml`);
   add(`Pedir correção: ${url}/contestar`);
+  add(
+    "",
+    `Licença deste resumo e dos CSVs: ${LICENCA_DADOS.nome} (${LICENCA_DADOS.url}). Cite "${SITE_NOME}", ${url} e a data da coleta. ` +
+      `Os dados de origem seguem a licença de cada fonte, listada acima. Detalhes: ${urlAbsoluta(CAMINHO_LICENCA, base)}`,
+  );
   add("", `---`, `${SITE_NOME} · ${urlAbsoluta("/", base)} · Guia para agentes: ${urlAbsoluta("/llms.txt", base)}`, "");
   return linhas.join("\n");
 }

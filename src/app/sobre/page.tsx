@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { metadataDaPagina } from "@/lib/site";
 import Link from "next/link";
+import { LICENCA_CODIGO, LICENCA_DADOS } from "@/lib/licenca";
 
 export const metadata: Metadata = metadataDaPagina({
   titulo: "Sobre",
@@ -65,6 +66,30 @@ export default function Sobre() {
           <li>Deputados estaduais, vereadores, contratos, licitações e outros gastos públicos.</li>
         </ul>
         <p>Cada etapa nova sai com a metodologia publicada antes.</p>
+      </section>
+      <section id="licenca" className="space-y-2">
+        <h2 className="font-heading text-xl font-bold">Licença</h2>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            Os dados e textos que o Auditaja produz (planilhas CSV, perfis, totais e indicadores, a trilha do dinheiro e
+            a metodologia) estão sob a licença{" "}
+            <a href={LICENCA_DADOS.resumo}>Creative Commons Atribuição 4.0 ({LICENCA_DADOS.nome})</a>. Você pode copiar,
+            adaptar e republicar, inclusive com fins comerciais, desde que cite &quot;Auditaja&quot;, o link da página
+            ou do arquivo e a data da coleta.
+          </li>
+          <li>
+            Os dados de origem continuam sob a licença de cada órgão (Câmara, Senado, TSE, CGU, Transferegov, Receita
+            Federal), listada nas <Link href="/fontes">fontes e licenças</Link>.
+          </li>
+          <li>
+            O código-fonte está sob a <a href={LICENCA_CODIGO.url}>{LICENCA_CODIGO.nome}</a> (ou versão posterior): quem
+            colocar no ar uma versão modificada precisa publicar o código dela.
+          </li>
+          <li>O nome Auditaja e o logo não estão licenciados: identificam o projeto.</li>
+          <li>
+            Ao reusar um indicador, mantenha o aviso de que ele é ponto de partida para verificação, não acusação.
+          </li>
+        </ul>
       </section>
       <p>
         Veja a <Link href="/metodologia">metodologia</Link>, as <Link href="/fontes">fontes e licenças</Link> e a{" "}

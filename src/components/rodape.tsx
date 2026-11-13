@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CAMINHO_LICENCA, LICENCA_CODIGO, LICENCA_DADOS } from "@/lib/licenca";
 import { responsavel } from "@/lib/responsavel";
 import { versaoDoSite } from "@/lib/versao";
 
@@ -28,6 +29,12 @@ export function Rodape() {
       </span>
     </span>
   );
+  // Licença do que o Auditaja publica (dados e textos) e do código; detalhes em /sobre#licenca.
+  const linkLicenca = (
+    <Link href={CAMINHO_LICENCA} className="sm:text-rodape-link sm:hover:text-white">
+      Licença: dados {LICENCA_DADOS.nome}, código {LICENCA_CODIGO.curto}
+    </Link>
+  );
   return (
     <footer className="bg-background text-muted-foreground sm:border-t sm:border-borda sm:bg-rodape-fundo sm:text-rodape-texto">
       <div className="mx-auto flex max-w-[1248px] flex-wrap gap-x-12 gap-y-2 px-4 pt-2 pb-6 text-xs leading-relaxed sm:gap-y-5 sm:px-6 sm:py-7 sm:text-sm">
@@ -35,6 +42,7 @@ export function Rodape() {
           <p className="hidden sm:block">
             <span className="font-bold text-white">Auditaja</span> {marcaVersao}
           </p>
+          <p className="hidden sm:block">{linkLicenca}</p>
           {/* LGPD art. 41, § 1º: identidade e contato do encarregado também no celular. */}
           <p className="sm:hidden">
             Controlador: {controlador} · Encarregado (LGPD): {encarregado} · {email}
@@ -63,7 +71,9 @@ export function Rodape() {
             </Link>
           </span>
         </p>
-        <p className="sm:hidden">Auditaja {marcaVersao}</p>
+        <p className="sm:hidden">
+          Auditaja {marcaVersao} · {linkLicenca}
+        </p>
       </div>
     </footer>
   );

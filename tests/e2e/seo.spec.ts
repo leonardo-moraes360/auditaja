@@ -102,6 +102,10 @@ test("JSON-LD do perfil e do site é válido e descreve a pessoa", async ({ requ
     sameAs: ["https://www25.senado.leg.br/web/senadores/senador/-/perfil/9001"],
   });
   expect(JSON.stringify(blocos)).not.toMatch(/1968-02-03|OTÁVIO MODELO PEREIRA/);
+  const grafo = blocos.flatMap((b) => b["@graph"]) as { "@type": string; license?: string }[];
+  const ccBy = "https://creativecommons.org/licenses/by/4.0/";
+  expect(grafo.find((g) => g["@type"] === "WebSite")?.license).toBe(ccBy);
+  expect(grafo.filter((g) => g["@type"] === "Dataset").every((d) => d.license === ccBy)).toBe(true);
 });
 
 test("perfil em Markdown: /{id}.md responde text/markdown sem concorrer no índice", async ({ request }) => {
@@ -114,6 +118,7 @@ test("perfil em Markdown: /{id}.md responde text/markdown sem concorrer no índi
   expect(md).toMatch(/^# Maria Exemplo \(PFX-SP\), deputada federal$/m);
   expect(md).toContain("## Gastos da cota parlamentar (CEAP) em 2026");
   expect(md).toContain("Prestadores pessoa física (somados)");
+  expect(md).toContain("Licença deste resumo e dos CSVs: CC BY 4.0");
   const inexistente = await request.get("/parlamentares/1.md");
   expect(inexistente.status()).toBe(404);
 });
@@ -125,6 +130,7 @@ test("llms.txt e llms-full.txt: guia e índice de todos os perfis", async ({ req
   const t = await curto.text();
   expect(t.startsWith("# Auditaja\n\n> ")).toBe(true);
   expect(t).toContain(`[Metodologia](${base}/metodologia)`);
+  expect(t).toContain(`[Licença](${base}/sobre#licenca)`);
   const completo = await (await request.get("/llms-full.txt")).text();
   expect(completo).toContain(`- [Maria Exemplo](${base}/parlamentares/${DEPUTADA}.md): Deputada federal, PFX-SP`);
   expect(completo).toMatch(/### Fora de exercício\n\n- \[/);
@@ -170,4 +176,19 @@ test("cartões de compartilhamento são PNG 1200×630", async ({ request }) => {
     expect(png.readUInt32BE(16)).toBe(1200);
     expect(png.readUInt32BE(20)).toBe(630);
   }
+});
+
+test("rodapé leva à licença (CC BY nos dados, AGPL no código) na página Sobre", async ({ page }) => {
+  await page.goto("/sobre");
+  const link = page.locator("footer").getByRole("link", { name: "Licença: dados CC BY 4.0, código AGPL-3.0" });
+  await expect(link.filter({ visible: true })).toHaveCount(1);
+  await link.filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/sobre#licenca$/);
+  const secao = page.locator("#licenca");
+  await expect(secao.getByRole("heading", { name: "Licença" })).toBeVisible();
+  await expect(secao.getByRole("link", { name: /CC BY 4\.0/ })).toHaveAttribute(
+    "href",
+    "https://creativecommons.org/licenses/by/4.0/deed.pt-br",
+  );
+  await expect(secao.getByText("O nome Auditaja e o logo não estão licenciados")).toBeVisible();
 });

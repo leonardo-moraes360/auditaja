@@ -81,6 +81,17 @@ pnpm build && pnpm test:e2e
 
 Se o Chromium do Playwright não estiver na versão esperada, defina `PW_CHROME` com o caminho de um Chrome/Chromium.
 
+## Licença
+
+- **Código:** [GNU AGPL-3.0 ou posterior](LICENSE) (`AGPL-3.0-or-later`). Quem colocar no ar uma versão modificada precisa oferecer o código dela aos usuários.
+- **Dados e textos que o Auditaja produz** (CSVs, perfis em HTML e Markdown, trilha, metodologia, llms.txt): [CC BY 4.0](LICENSE-DATA). Reuso livre, inclusive comercial, citando "Auditaja", o link e a data da coleta.
+- **Dados de origem:** seguem a licença de cada órgão (Câmara, Senado, TSE, CGU, Transferegov, Receita), gravada em cada coleta e listada em `/fontes`.
+- **Nome e logo:** ficam fora das duas licenças.
+
+No site, a licença aparece no rodapé, na seção `/sobre#licenca`, no campo `license` do JSON-LD (`WebSite` e `Dataset`), no `llms.txt` e no fim de cada perfil em Markdown. As constantes ficam em `src/lib/licenca.ts`.
+
+Contribuições entram sob as mesmas licenças. Para relicenciar no futuro, será preciso adotar um termo de contribuição (DCO ou CLA) antes de aceitar código de terceiros.
+
 ## Pendências conhecidas
 
 - **Teto da CEAP por UF:** o Ato da Mesa nº 244/2026 atualizou os valores, mas a tabela não está na página do ato. `src/data/teto-ceap.ts` só aceita valores conferidos; até lá a interface não compara com o teto.
