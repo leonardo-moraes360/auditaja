@@ -43,6 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: u("/metodologia"), changeFrequency: "monthly", priority: 0.5 },
     { url: u("/fontes"), lastModified: geral, changeFrequency: "weekly", priority: 0.4 },
     { url: u("/privacidade"), changeFrequency: "yearly", priority: 0.2 },
+    { url: u("/termos"), changeFrequency: "yearly", priority: 0.2 },
   ];
   const perfis: MetadataRoute.Sitemap = parlamentares.map((p) => ({
     url: u(caminhoDoPerfil(p.id)),
