@@ -37,6 +37,17 @@ export default function Fontes() {
   );
 }
 
+/** Nome do arquivo ou recurso coletado: "Ano-2025.csv.zip", "despesas_ceaps/2025". */
+function arquivoDaUrl(url: string): string {
+  try {
+    const partes = new URL(url).pathname.split("/").filter(Boolean);
+    const ultimo = partes.at(-1) ?? url;
+    return /^\d+$/.test(ultimo) && partes.length > 1 ? `${partes.at(-2)}/${ultimo}` : decodeURIComponent(ultimo);
+  } catch {
+    return url;
+  }
+}
+
 async function TabelaColetas() {
   await connection();
   const coletas = await getDb()
@@ -59,6 +70,9 @@ async function TabelaColetas() {
                   Fonte
                 </th>
                 <th scope="col" className="p-3 font-medium">
+                  Arquivo
+                </th>
+                <th scope="col" className="p-3 font-medium">
                   Coletado em
                 </th>
                 <th scope="col" className="p-3 font-medium">
@@ -77,10 +91,10 @@ async function TabelaColetas() {
                       {c.fonte}
                     </a>
                   </td>
+                  <td className="p-3 break-all">{arquivoDaUrl(c.url)}</td>
                   <td className="p-3 whitespace-nowrap">{dataHoraBr(c.coletado_em)}</td>
-                  <td className="p-3 font-mono text-xs" title={c.sha256}>
-                    {c.sha256.slice(0, 16)}…
-                  </td>
+                  {/* Hash inteiro: truncado não servia para conferir o arquivo baixado. */}
+                  <td className="max-w-[18ch] p-3 font-mono text-xs break-all">{c.sha256}</td>
                   <td className="p-3 text-muted-foreground">{c.licenca}</td>
                 </tr>
               ))}

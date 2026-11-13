@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PadraoAtipico } from "@/data/atipico";
 import { PISO_REAIS, type AlertaColegas, type AlertaSalto } from "@/lib/atipico";
 import { brl, fraseCase, MESES } from "@/lib/format";
+import { tipoDespesaCurto } from "@/lib/rotulos";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 
 /** Avisos abertos antes do "Ver mais". */
@@ -75,6 +76,8 @@ function este(ctx: Ctx) {
 
 /** Nome curto do tipo para frases: "HOSPEDAGEM ,EXCETO DO PARLAMENTAR NO DF." → "hospedagem". */
 function tipoCurto(tipo: string) {
+  const curto = tipoDespesaCurto(tipo);
+  if (curto) return curto.toLowerCase();
   return fraseCase(tipo)
     .split(/,\s*exceto/i)[0]
     .toLowerCase();
@@ -219,7 +222,7 @@ function AvisoColegas({ a, ctx }: { a: AlertaColegas; ctx: Ctx }) {
   return (
     <Moldura
       selo="acima dos colegas"
-      titulo={`${fraseCase(a.tipo)}: gasto mensal muito acima do comum entre os ${rotulo} em ${ctx.ano}`}
+      titulo={`${tipoDespesaCurto(a.tipo) ?? fraseCase(a.tipo)}: gasto mensal muito acima do comum entre os ${rotulo} em ${ctx.ano}`}
       tituloCurto={`${fraseCase(tipoCurto(a.tipo))} muito acima do comum entre os ${rotulo}`}
       tipo={a.tipo}
       notasLongo={`Baixar ${rotuloNotas(a.notas)} de ${tipoCurto(a.tipo)}`}
@@ -267,7 +270,7 @@ function AvisoSalto({ a, ctx }: { a: AlertaSalto; ctx: Ctx }) {
   return (
     <Moldura
       selo={`salto em relação a ${ctx.ano - 1}`}
-      titulo={`${fraseCase(a.tipo)}: gasto ${vezes(a.razao)} maior que no ano anterior`}
+      titulo={`${tipoDespesaCurto(a.tipo) ?? fraseCase(a.tipo)}: gasto ${vezes(a.razao)} maior que no ano anterior`}
       tituloCurto={`${fraseCase(tipoCurto(a.tipo))}: ${vezes(a.razao)} mais que em ${ctx.ano - 1}`}
       tipo={a.tipo}
       notasLongo={`Baixar ${rotuloNotas(a.notas)} de ${ctx.ano}`}

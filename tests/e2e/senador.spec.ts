@@ -194,7 +194,7 @@ test("SUI-06/07: lista com filtros por Casa e cargo no cartão", async ({ page }
   await casas.getByRole("link", { name: "Senado Federal (2)" }).click();
   await expect(page).toHaveURL(/\/parlamentares\?casa=senado$/);
   await expect(casas.getByRole("link", { name: "Senado Federal (2)" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("2 resultado(s). Fonte: Senado Federal, Dados Abertos.")).toBeVisible();
+  await expect(page.getByText("2 parlamentares. Fonte: Senado Federal, Dados Abertos.")).toBeVisible();
   await expect(page.getByRole("link", { name: /Otávio Modelo\s*Senador · PFX · MG/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Lúcia Fictícia\s*Senadora · PFY · AC/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Maria Exemplo/ })).toHaveCount(0);
@@ -206,7 +206,7 @@ test("SUI-06: o filtro de Casa vale junto com nome e UF", async ({ page }) => {
   await page.goto("/parlamentares?casa=camara");
   await expect(page.getByRole("link", { name: /Deputada federal · PFX · SP/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toHaveCount(0);
-  await page.getByLabel("Nome ou UF").fill("mg");
+  await page.getByLabel("Nome ou estado").fill("mg");
   await page.getByRole("button", { name: "Filtrar" }).click();
   await expect(page).toHaveURL(/casa=camara/);
   await expect(page.getByText("Nenhum parlamentar encontrado com esses filtros.")).toBeVisible();
@@ -336,4 +336,19 @@ test("EMDSEN-08: senadora sem emendas mostra o estado vazio com o ano da posse",
       "Nenhuma emenda individual desta senadora foi encontrada no Portal da Transparência a partir do orçamento de 2024.",
     ),
   ).toBeVisible();
+});
+
+test("AJ-11/12: busca pelo nome do estado e sugestão de nome parecido", async ({ page }) => {
+  await page.goto("/parlamentares?q=Minas%20Gerais");
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
+  await page.goto("/parlamentares?q=otavyo%20modelo");
+  await expect(page.getByText("Nenhum nome igual a “otavyo modelo”. Você quis dizer:")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
+});
+
+test("AJ-13: formulário de correção do senador fala em CEAPS e tem Emendas", async ({ page }) => {
+  await page.goto(`/parlamentares/${SENADOR}/contestar?secao=emendas`);
+  const secao = page.getByLabel("Qual parte do perfil?");
+  await expect(secao).toHaveValue("emendas");
+  await expect(secao.locator("option", { hasText: "Gastos da cota (CEAPS)" })).toHaveCount(1);
 });

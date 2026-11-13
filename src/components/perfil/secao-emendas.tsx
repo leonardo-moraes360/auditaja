@@ -145,6 +145,11 @@ export function SecaoEmendas({
                   href: `/parlamentares/${parlamentarId}/emendas.csv?emendas=${parametro}`,
                   download: true,
                 },
+                {
+                  rotulo: "Baixar quem recebeu (CSV)",
+                  href: `/parlamentares/${parlamentarId}/emendas.csv?emendas=${parametro}&tabela=favorecidos`,
+                  download: true,
+                },
               ]
         }
         parlamentarId={parlamentarId}
