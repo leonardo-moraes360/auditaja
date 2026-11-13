@@ -3,6 +3,8 @@ import {
   aberturaConsiderada,
   cicloFechado,
   cnpjValido,
+  dataDoAnoMes,
+  eleicaoDoMandato,
   DIAS_RECEM_ABERTA,
   ehEntePublico,
   recebedorPublicavel,
@@ -159,5 +161,28 @@ describe("ehEntePublico (EDGE-03)", () => {
   it("outros CNAE e ausência de CNAE não são", () => {
     expect(ehEntePublico("4120400")).toBe(false);
     expect(ehEntePublico(null)).toBe(false);
+  });
+});
+
+describe("eleicaoDoMandato (D8)", () => {
+  it("deputado da 57ª legislatura: eleição de 2022; 58ª: 2026", () => {
+    expect(eleicaoDoMandato({ casa: "camara", id_legislatura: 57, mandato_inicio: null })).toBe(2022);
+    expect(eleicaoDoMandato({ casa: "camara", id_legislatura: 58, mandato_inicio: null })).toBe(2026);
+  });
+  it("senador: ano anterior à posse", () => {
+    expect(eleicaoDoMandato({ casa: "senado", id_legislatura: 57, mandato_inicio: "2019-02-01" })).toBe(2018);
+    expect(eleicaoDoMandato({ casa: "senado", id_legislatura: 57, mandato_inicio: "2023-02-01" })).toBe(2022);
+  });
+  it("sem dado do mandato, sem eleição", () => {
+    expect(eleicaoDoMandato({ casa: "camara", id_legislatura: null, mandato_inicio: null })).toBeNull();
+    expect(eleicaoDoMandato({ casa: "senado", id_legislatura: 57, mandato_inicio: null })).toBeNull();
+  });
+});
+
+describe("dataDoAnoMes", () => {
+  it("ano/mês vira o primeiro dia do mês; formato inválido vira null", () => {
+    expect(dataDoAnoMes("202603")).toBe("2026-03-01");
+    expect(dataDoAnoMes("202613")).toBeNull();
+    expect(dataDoAnoMes("")).toBeNull();
   });
 });

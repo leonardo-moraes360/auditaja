@@ -140,3 +140,25 @@ export function recebedorPublicavel(tipoDoc: string, identificacao: string, nome
 export function ehEntePublico(cnae: string | null | undefined): boolean {
   return soDigitos(cnae).startsWith("84");
 }
+
+/**
+ * D8: eleição que deu o mandato da emenda. Deputado: a da legislatura (57ª → 2022, de 4 em 4 anos).
+ * Senador: o ano anterior à posse (posse em 2019 → 2018; 2023 → 2022). Sem dado, não há eleição.
+ */
+export function eleicaoDoMandato(p: {
+  casa: "camara" | "senado";
+  id_legislatura: number | null;
+  mandato_inicio: string | null;
+}): number | null {
+  if (p.casa === "senado") {
+    const ano = Number((p.mandato_inicio ?? "").slice(0, 4));
+    return ano > 0 ? ano - 1 : null;
+  }
+  return p.id_legislatura ? 2022 + 4 * (p.id_legislatura - 57) : null;
+}
+
+/** "202603" (ano/mês do Portal) → "2026-03-01": data do pagamento direto, no primeiro dia do mês. */
+export function dataDoAnoMes(anoMes: string): string | null {
+  const m = /^(\d{4})(0[1-9]|1[0-2])$/.exec(anoMes.trim());
+  return m ? `${m[1]}-${m[2]}-01` : null;
+}

@@ -311,13 +311,14 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Soma dos pagamentos + saldo = valor transferido, centavo a centavo
-- [ ] Ente público como recebedor não é avaliado como recém-aberta
-- [ ] Cada indício traz os `coleta_id` com data e SHA-256
-- [ ] Seed acima dos limites de listagem (L-003)
-- [ ] Full gate passa
+- [x] Soma dos pagamentos + saldo = valor transferido, centavo a centavo
+- [x] Ente público como recebedor não é avaliado como recém-aberta
+- [x] Cada indício traz os `coleta_id` com data e SHA-256
+- [x] Seed acima dos limites de listagem (L-003)
+- [x] Full gate passa
 
 **Tests**: integration
+**Status**: ✅ Done
 **Gate**: full
 
 ---
