@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { responsavel } from "@/lib/responsavel";
+import { versaoDoSite } from "@/lib/versao";
 
 /**
  * R13: identificação pública do controlador e do encarregado (LGPD).
@@ -8,11 +9,32 @@ import { responsavel } from "@/lib/responsavel";
  */
 export function Rodape() {
   const { controlador, doc, encarregado, email } = responsavel();
+  const { versao, commit } = versaoDoSite();
+  // Versão e commit lidos no build (next.config.ts). Sem git, só a versão.
+  const marcaVersao = (
+    <span className="tabular-nums" data-testid="versao-site">
+      <span className="sr-only">
+        Versão {versao}
+        {commit ? `, commit ${commit}` : ""}
+      </span>
+      <span aria-hidden="true">
+        v{versao}
+        {commit ? (
+          <>
+            {" "}
+            · <code className="font-mono">{commit}</code>
+          </>
+        ) : null}
+      </span>
+    </span>
+  );
   return (
     <footer className="bg-background text-muted-foreground sm:border-t sm:border-borda sm:bg-rodape-fundo sm:text-rodape-texto">
       <div className="mx-auto flex max-w-[1248px] flex-wrap gap-x-12 gap-y-2 px-4 pt-2 pb-6 text-xs leading-relaxed sm:gap-y-5 sm:px-6 sm:py-7 sm:text-sm">
         <div className="flex-[1_1_280px]">
-          <p className="hidden font-bold text-white sm:block">Auditaja</p>
+          <p className="hidden sm:block">
+            <span className="font-bold text-white">Auditaja</span> {marcaVersao}
+          </p>
           {/* LGPD art. 41, § 1º: identidade e contato do encarregado também no celular. */}
           <p className="sm:hidden">
             Controlador: {controlador} · Encarregado (LGPD): {encarregado} · {email}
@@ -41,6 +63,7 @@ export function Rodape() {
             </Link>
           </span>
         </p>
+        <p className="sm:hidden">Auditaja {marcaVersao}</p>
       </div>
     </footer>
   );
