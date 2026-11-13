@@ -14,6 +14,7 @@ Todas as mudanças relevantes do site ficam aqui. O formato segue o [Keep a Chan
 - Cartões de compartilhamento (Open Graph e X) gerados para o site e para cada perfil.
 - Licenças: código sob GNU AGPL-3.0 ou posterior (`LICENSE`) e dados e textos derivados sob CC BY 4.0 (`LICENSE-DATA`), com nota sobre as licenças das fontes oficiais. Nome e logo ficam fora. A licença e o link do código-fonte aparecem no rodapé, na seção Licença de `/sobre`, no JSON-LD (`WebSite` e `Dataset`), no `llms.txt` e nos perfis em Markdown.
 - Para agentes de IA: `/llms.txt`, `/llms-full.txt` e o perfil em Markdown em `/parlamentares/{id}.md`, anunciado no `<head>`; robôs de IA recebem a metadata no `<head>` sem streaming.
+- Política de segurança (`SECURITY.md`): relato privado pelo GitHub, prazos de melhor esforço, escopo (inclui exposição de dado pessoal e injeção nos Markdown, JSON-LD e CSVs), divulgação coordenada e safe harbor. O site publica `/.well-known/security.txt` (RFC 9116) apontando para ela.
 
 ### Alterado
 
