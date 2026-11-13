@@ -1,0 +1,81 @@
+name: Correção de dado
+description: Um número ou informação de parlamentar está diferente da fonte oficial.
+title: "[Dado] "
+labels: ["correcao-de-dado"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cada informação do site vem de uma fonte oficial, mostrada com a data da coleta em cada seção. Use este modelo quando o site estiver diferente dessa fonte.
+
+        **Esta issue é pública.** Se a correção envolve CPF, endereço, dado de familiar ou de outra pessoa física, **não abra issue**: use o botão **Pedir correção** no perfil do parlamentar no site (endereço `/parlamentares/{id}/contestar`). Esse pedido não é publicado e o e-mail é opcional.
+
+        Se a fonte oficial também está errada, o caminho é pedir a correção ao órgão que publica o dado; aqui registramos o que mostramos.
+  - type: input
+    id: perfil
+    attributes:
+      label: Perfil do parlamentar
+      description: Link do perfil no site.
+      placeholder: https://<endereço do site>/parlamentares/123
+    validations:
+      required: true
+  - type: dropdown
+    id: secao
+    attributes:
+      label: Parte do perfil
+      options:
+        - Gastos da cota (CEAP/CEAPS)
+        - Emendas e sanções
+        - Votações
+        - Bens declarados
+        - Para onde foi o dinheiro (indícios das emendas Pix)
+        - Mandato e comissões
+        - Outro
+    validations:
+      required: true
+  - type: textarea
+    id: mostrado
+    attributes:
+      label: O que o site mostra
+      description: Copie o valor, a linha ou o texto como aparece.
+      placeholder: "Gastos com divulgação em 2025: R$ 120.000,00"
+    validations:
+      required: true
+  - type: textarea
+    id: correto
+    attributes:
+      label: Qual é o valor correto
+      placeholder: "R$ 12.000,00"
+    validations:
+      required: true
+  - type: textarea
+    id: fonte
+    attributes:
+      label: Fonte oficial que comprova
+      description: Link do documento ou da página oficial (Câmara, Senado, Portal da Transparência, TSE, Transferegov, Receita). Se o dado está num arquivo, diga qual e onde.
+      placeholder: https://dadosabertos.camara.leg.br/...
+    validations:
+      required: true
+  - type: input
+    id: consulta
+    attributes:
+      label: Quando você consultou a fonte
+      placeholder: 2026-11-13
+    validations:
+      required: false
+  - type: textarea
+    id: detalhes
+    attributes:
+      label: Mais detalhes
+      description: Ano, mês, número do documento ou da emenda, o que ajudar a achar o registro.
+    validations:
+      required: false
+  - type: checkboxes
+    id: confirmacoes
+    attributes:
+      label: Confirmações
+      options:
+        - label: Conferi a data de coleta mostrada na seção; a fonte não mudou depois dela, ou informo acima quando mudou
+          required: false
+        - label: A issue não traz dado pessoal (CPF, endereço, telefone, e-mail, dado de familiar ou de pessoa física que não seja o parlamentar)
+          required: true
