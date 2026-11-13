@@ -120,6 +120,10 @@ No site, a licença aparece no rodapé, na seção `/sobre#licenca`, no campo `l
 
 Contribuições entram sob as mesmas licenças. Para relicenciar no futuro, será preciso adotar um termo de contribuição (DCO ou CLA) antes de aceitar código de terceiros.
 
+## Segurança
+
+Vulnerabilidades se relatam em particular, pelo [relato privado do GitHub](https://github.com/leonardo-moraes360/auditaja/security/advisories/new), nunca em issue pública. Escopo, prazos, divulgação coordenada e safe harbor estão no [SECURITY.md](SECURITY.md). O site publica o mesmo contato em `/.well-known/security.txt` (RFC 9116), com `Expires` 180 dias depois do build (`apps/web/src/lib/seguranca.ts`).
+
 ## Pendências conhecidas
 
 - **Teto da CEAP por UF:** o Ato da Mesa nº 244/2026 atualizou os valores, mas a tabela não está na página do ato. `apps/web/src/data/teto-ceap.ts` só aceita valores conferidos; até lá a interface não compara com o teto.

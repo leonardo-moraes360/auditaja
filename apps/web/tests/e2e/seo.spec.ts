@@ -136,6 +136,21 @@ test("llms.txt e llms-full.txt: guia e índice de todos os perfis", async ({ req
   expect(completo).toMatch(/### Fora de exercício\n\n- \[/);
 });
 
+test("security.txt (RFC 9116): relato privado, política e validade a partir do build", async ({ request }) => {
+  const base = await dominio(request);
+  const r = await request.get("/.well-known/security.txt");
+  expect(r.status()).toBe(200);
+  expect(r.headers()["content-type"]).toBe("text/plain; charset=utf-8");
+  const t = await r.text();
+  expect(t).toMatch(/^Contact: https:\/\/github\.com\/leonardo-moraes360\/auditaja\/security\/advisories\/new$/m);
+  expect(t).toMatch(/^Policy: https:\/\/github\.com\/leonardo-moraes360\/auditaja\/blob\/main\/SECURITY\.md$/m);
+  expect(t).toContain(`Canonical: ${base}/.well-known/security.txt`);
+  const expira = new Date(t.match(/^Expires: (\S+)$/m)![1]);
+  const dias = (expira.getTime() - Date.now()) / 86_400_000;
+  expect(dias).toBeGreaterThan(0);
+  expect(dias).toBeLessThan(365);
+});
+
 test("busca (?q=) e formulários ficam fora do índice; listas por UF têm canonical próprio", async ({ request }) => {
   const base = await dominio(request);
   const busca = await cabecalho(request, "/parlamentares?q=maria");
