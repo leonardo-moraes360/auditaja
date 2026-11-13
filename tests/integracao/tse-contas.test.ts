@@ -107,6 +107,8 @@ const CSV = [
   despesa("seed-22", "PESSOA FÍSICA", "12345678909", "JOANA CABO ELEITORAL", "16/09/2022", "800,00"),
   // CNPJ com dígito verificador errado.
   despesa("seed-22", "PESSOA JURÍDICA", "12345678000100", "DV ERRADO LTDA", "16/09/2022", "1,00"),
+  // Candidatura de outra eleição (2026) da mesma parlamentar: não vale para 2022.
+  despesa("seed-26", "PESSOA JURÍDICA", GRAFICA, "GRÁFICA EXEMPLO LTDA", "16/09/2022", "7,00"),
   // Candidato fora de `candidatura`.
   despesa("99999999999", "PESSOA JURÍDICA", GRAFICA, "GRÁFICA EXEMPLO LTDA", "16/09/2022", "5,00"),
 ].join("\r\n");
@@ -160,7 +162,7 @@ describe("coletarDespesasCampanha", () => {
   it("CICLO-01: grava só fornecedor PJ dos candidatos casados, ligado por sq_candidato, com CNPJ, valor e data", async (ctx) => {
     if (!disponivel) ctx.skip();
     const r = await coletarDespesasCampanha(db, cliente(), 2022);
-    expect(r).toEqual({ despesas: 2, fornecedorPf: 1, foraDaBase: 1, cnpjInvalido: 1 });
+    expect(r).toEqual({ despesas: 2, fornecedorPf: 1, foraDaBase: 2, cnpjInvalido: 1 });
     expect(pedidos.filter((u) => u === urlContas(2022))).toHaveLength(1);
     const c = await db
       .selectFrom("coleta")

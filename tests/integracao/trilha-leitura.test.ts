@@ -3,7 +3,7 @@ import { createDb } from "@/db/client";
 import { migrateToLatest } from "@/db/migrate";
 import { SEED, semear } from "@/db/seed";
 import type { TrilhaCheia } from "@/data/trilha";
-import { CNPJ, EMENDA, limparTrilha, OUTRO, RITA, semearTrilha } from "../fixtures/trilha";
+import { CNPJ, EMENDA, limparTrilha, OUTRO, QUARTO, RITA, semearTrilha, TERCEIRO } from "../fixtures/trilha";
 
 /** TRI-04, TRI-05, TRI-07, CNPJ-03..06, CICLO-03, CICLO-04, EDGE-03..05, LING-06, LING-07, LING-09. */
 const URL_TESTE = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_trilha_test";
@@ -214,9 +214,11 @@ describe("trilhaDoParlamentar", () => {
   it("LING-07: taxa de base na base inteira, com o universo de cada sinal", async (ctx) => {
     if (!disponivel) ctx.skip();
     const t = await cheia(RITA);
-    // Recém-aberta: 8 empresas com abertura conhecida (fora o ente público e a sem abertura); 2 com indício.
-    // Ciclo: 3 parlamentares com emenda Pix (deputada do seed, Rita, Outro); Rita e Outro com ciclo.
-    expect(t.taxas).toEqual({ recemAberta: [2, 8], ciclo: [2, 3] });
+    // Recém-aberta: 9 empresas com abertura conhecida, fora os 3 entes públicos (CNAE 84 próprio, CNAE 84 da
+    // matriz e CNPJ beneficiário de plano) e a sem abertura; 3 com indício (construtora, 179 dias, dois planos).
+    // Ciclo: 5 parlamentares com emenda Pix (deputada do seed, Rita, Outro, Terceiro, Quarto); só Rita e Outro
+    // fecham ciclo: a despesa do Terceiro é posterior aos pagamentos (LING-06) e o Quarto só tem campanha de 2018 (D8).
+    expect(t.taxas).toEqual({ recemAberta: [3, 9], ciclo: [2, 5] });
   });
 
   it("período de um ano só leva as emendas e os favorecidos diretos desse ano", async (ctx) => {
@@ -231,5 +233,39 @@ describe("trilhaDoParlamentar", () => {
     ]);
     const vazio = await (await carregar()).trilhaDoParlamentar(RITA, 2023);
     expect(vazio.vazio).toBe(true);
+  });
+
+  it("CNPJ-03: primeiro pagamento conta pela emenda inteira, somando os planos, com um só aviso", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const t = await cheia(TERCEIRO);
+    const recem = t.indicios.filter((i) => i.tipo === "recem-aberta");
+    expect(recem.map((i) => [i.cnpj, i.emenda, i.primeiroPagamento, i.dias, i.recebido, i.ente])).toEqual([
+      [CNPJ.novaDoisPlanos, EMENDA.doTerceiro, "2025-03-01", 59, 100_000, "MUNICIPIO DE CAMPINAS"],
+    ]);
+    // A linha do plano que pagou depois de 180 dias também leva o indício da emenda.
+    const linhas = emendaDe(t, EMENDA.doTerceiro).planos.flatMap((p) =>
+      p.recebedores.filter((r) => r.cnpj === CNPJ.novaDoisPlanos),
+    );
+    expect(linhas.map((r) => [r.primeiroPagamento, r.recemAberta])).toEqual(
+      expect.arrayContaining([
+        ["2025-08-01", { dias: 59, indicio: true }],
+        ["2025-03-01", { dias: 59, indicio: true }],
+      ]),
+    );
+  });
+
+  it("EDGE-03: beneficiário de plano sem CNAE 84 e filial cuja matriz é CNAE 84 não são avaliados", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const rs = emendaDe(await cheia(TERCEIRO), EMENDA.doTerceiro).planos.flatMap((p) => p.recebedores);
+    for (const c of [CNPJ.enteX, CNPJ.enteFilial])
+      expect(rs.find((r) => r.cnpj === c)).toMatchObject({ entePublico: true, recemAberta: null });
+  });
+
+  it("LING-06, D8: despesa posterior e campanha de outra eleição não fecham ciclo", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    expect((await cheia(TERCEIRO)).indicios.filter((i) => i.tipo === "ciclo-fechado")).toEqual([]);
+    const q = await cheia(QUARTO);
+    expect(q.eleicao).toBe(2022);
+    expect(q.indicios).toEqual([]);
   });
 });

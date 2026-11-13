@@ -13,6 +13,10 @@ import { comDv } from "./cnpj";
 const BASE = 970_000_000;
 export const RITA = BASE + 1;
 export const OUTRO = BASE + 2;
+/** Emenda Pix com dois planos (CNPJ-03 por emenda), entes sem CNAE 84 e despesa de campanha tardia. */
+export const TERCEIRO = BASE + 3;
+/** Só tem campanha de 2018 (D8): não entra no ciclo nem na taxa de base. */
+export const QUARTO = BASE + 4;
 export const OBS_TRILHA = "seed trilha do dinheiro";
 
 export const CNPJ = {
@@ -35,6 +39,11 @@ export const CNPJ = {
   limiar180: comDv("180180180001"),
   grafica: comDv("123456780001"),
   comunicacao: comDv("246246240001"),
+  /** Paga por dois planos da mesma emenda. */
+  novaDoisPlanos: comDv("590590590001"),
+  /** Filial sem CNAE cuja matriz é da administração pública (CNAE 84). */
+  enteFilial: comDv("840840840002"),
+  enteMatriz: comDv("840840840001"),
 };
 
 export const EMENDA = {
@@ -46,6 +55,8 @@ export const EMENDA = {
   semPlano: "202570010006",
   direta: "202570010007",
   doOutro: "202570020001",
+  doTerceiro: "202570030001",
+  doQuarto: "202570040001",
 };
 
 const ESP = "Emenda Individual - Transferências Especiais";
@@ -102,6 +113,8 @@ export async function semearTrilha(db: Kysely<Database>) {
       [
         [RITA, "Rita Trilha Fictícia"],
         [OUTRO, "Outro Trilha Fictício"],
+        [TERCEIRO, "Terceiro Trilha Fictício"],
+        [QUARTO, "Quarto Trilha Fictício"],
       ].map(([id, nome]) => ({
         id: id as number,
         casa: "camara" as const,
@@ -151,6 +164,8 @@ export async function semearTrilha(db: Kysely<Database>) {
       emenda(RITA, EMENDA.semPlano, 2025, "JUNDIAÍ - SP", "Saúde", 250_000),
       emenda(RITA, EMENDA.direta, 2025, "SOROCABA - SP", "Saúde", 40_000, FD),
       emenda(OUTRO, EMENDA.doOutro, 2025, "SOROCABA - SP", "Saúde", 900_000),
+      emenda(TERCEIRO, EMENDA.doTerceiro, 2025, "ITU - SP", "Saúde", 1_000_000),
+      emenda(QUARTO, EMENDA.doQuarto, 2025, "ITU - SP", "Saúde", 100_000),
     ])
     .execute();
   await db
@@ -200,6 +215,9 @@ export async function semearTrilha(db: Kysely<Database>) {
       plano(97004, RITA, EMENDA.itu, CNPJ.enteX, "MUNICIPIO DE ITU", 500_000, "2025-03-01"),
       plano(97005, RITA, EMENDA.bauru, CNPJ.enteX, "MUNICIPIO DE ITU", 300_000, "2025-03-01"),
       plano(97009, OUTRO, EMENDA.doOutro, CNPJ.sorocaba, "MUNICIPIO DE SOROCABA", 900_000, "2025-03-01"),
+      plano(97031, TERCEIRO, EMENDA.doTerceiro, CNPJ.enteX, "MUNICIPIO DE ITU", 600_000, "2025-02-01"),
+      plano(97032, TERCEIRO, EMENDA.doTerceiro, CNPJ.campinas, "MUNICIPIO DE CAMPINAS", 400_000, "2025-02-01"),
+      plano(97041, QUARTO, EMENDA.doQuarto, CNPJ.enteX, "MUNICIPIO DE ITU", 100_000, "2025-02-01"),
     ])
     .execute();
 
@@ -245,6 +263,14 @@ export async function semearTrilha(db: Kysely<Database>) {
       pj(97004, CNPJ.associacao, "ASSOCIACAO BENEFICENTE EXEMPLO", 500_000, "2025-07-01"),
       pj(97005, CNPJ.servicos, "SERVICOS MEDICOS FICTICIOS LTDA", 100_000, "2025-08-01"),
       pj(97009, CNPJ.construtora, "CONSTRUTORA ILUSTRATIVA LTDA", 300_000, "2025-04-01"),
+      // Plano 97031 paga depois de 180 dias; o 97032, da mesma emenda, antes: vale o primeiro da emenda.
+      pj(97031, CNPJ.novaDoisPlanos, "NOVA DOIS PLANOS LTDA", 70_000, "2025-08-01"),
+      pj(97032, CNPJ.novaDoisPlanos, "NOVA DOIS PLANOS LTDA", 30_000, "2025-03-01"),
+      // EDGE-03: recebedor que é ente beneficiário de plano, sem CNAE 84, aberto há pouco.
+      pj(97032, CNPJ.enteX, "MUNICIPIO DE ITU", 20_000, "2025-03-02"),
+      // EDGE-03: filial sem CNAE, matriz com CNAE 84 aberta há pouco.
+      pj(97032, CNPJ.enteFilial, "CONSORCIO PUBLICO FICTICIO", 10_000, "2025-03-03"),
+      pj(97041, CNPJ.associacao, "ASSOCIACAO BENEFICENTE EXEMPLO", 50_000, "2025-05-01"),
     ])
     .execute();
 
@@ -270,6 +296,10 @@ export async function semearTrilha(db: Kysely<Database>) {
       ab(CNPJ.limiar179, true, "2024-01-01"),
       ab(CNPJ.limiar180, true, "2024-01-01"),
       ab(CNPJ.grafica, true, "2001-01-01", "1813001"),
+      ab(CNPJ.novaDoisPlanos, true, "2025-01-01"),
+      ab(CNPJ.enteX, true, "2025-01-01", "4120400"),
+      { ...ab(CNPJ.enteFilial, false, "2025-01-01"), cnae_principal: null },
+      ab(CNPJ.enteMatriz, true, "2025-01-01", "8411600"),
     ])
     .execute();
 
@@ -280,6 +310,8 @@ export async function semearTrilha(db: Kysely<Database>) {
         [RITA, "trilha-rita-22", 2022],
         [RITA, "trilha-rita-18", 2018],
         [OUTRO, "trilha-outro-22", 2022],
+        [TERCEIRO, "trilha-terceiro-22", 2022],
+        [QUARTO, "trilha-quarto-18", 2018],
       ].map(([pid, sq, ano]) => ({
         ano_eleicao: ano as number,
         sq_candidato: sq as string,
@@ -313,12 +345,16 @@ export async function semearTrilha(db: Kysely<Database>) {
       desp(RITA, "trilha-rita-18", 2018, CNPJ.associacao, 5_000, "2018-09-01"),
       // CICLO-04: a construtora da Rita na campanha do outro deputado.
       desp(OUTRO, "trilha-outro-22", 2022, CNPJ.construtora, 7_000, "2022-09-01"),
+      // LING-06 na taxa de base: despesa depois de todos os pagamentos.
+      desp(TERCEIRO, "trilha-terceiro-22", 2022, CNPJ.novaDoisPlanos, 1_000, "2025-12-01"),
+      // D8 na taxa de base: só a campanha de 2018, que não deu o mandato atual.
+      desp(QUARTO, "trilha-quarto-18", 2018, CNPJ.associacao, 2_000, "2018-09-01"),
     ])
     .execute();
 }
 
 export async function limparTrilha(db: Kysely<Database>) {
-  await db.deleteFrom("parlamentar").where("id", "in", [RITA, OUTRO]).execute();
+  await db.deleteFrom("parlamentar").where("id", "in", [RITA, OUTRO, TERCEIRO, QUARTO]).execute();
   await db.deleteFrom("cnpj_abertura").where("cnpj", "in", Object.values(CNPJ)).execute();
   await db.deleteFrom("coleta").where("observacao", "like", `${OBS_TRILHA}%`).execute();
 }

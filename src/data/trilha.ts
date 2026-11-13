@@ -279,86 +279,99 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
   const recebimentosPix: (Recebimento & { emenda: string; ente: string | null; nome: string; coleta: number })[] = [];
 
   const emendas: EmendaTrilha[] = emendasPix.map((e) => {
-    const planosDaEmenda: PlanoTrilha[] = planos
-      .filter((p) => p.codigo_emenda === e.codigo)
-      .map((p) => {
-        const pgs = pagamentosDoPlano.get(p.id_plano_acao) ?? [];
-        const porRecebedor = new Map<string, typeof pgs>();
-        for (const pg of pgs) {
-          if (pg.tipo !== "pj" || !pg.recebedor_cnpj) continue;
-          porRecebedor.set(pg.recebedor_cnpj, [...(porRecebedor.get(pg.recebedor_cnpj) ?? []), pg]);
-        }
-        const recebedores: RecebedorTrilha[] = [...porRecebedor].map(([cnpj, lista]) => {
-          const propria = porCnpj.get(cnpj) ?? null;
-          const matriz = matrizDe.get(cnpj.slice(0, 8)) ?? null;
-          const ab = aberturaConsiderada(
-            matriz && { inicio: matriz.inicio_atividade },
-            propria && { inicio: propria.inicio_atividade },
-          );
-          const fonteAb = ab.origem === "matriz" ? matriz : propria;
-          const entePublico =
-            cnpjsDeEnte.has(cnpj) || ehEntePublico(propria?.cnae_principal ?? matriz?.cnae_principal ?? null);
-          const primeiro = lista[0].data_pagamento;
-          const abertura: Abertura | null =
-            ab.data && ab.origem && fonteAb ? { data: ab.data, origem: ab.origem, baseMes: fonteAb.base_mes } : null;
-          const ra = abertura && !entePublico ? recemAberta(abertura.data, primeiro) : null;
-          const nome = moda(lista.map((x) => x.recebedor_nome ?? ""));
-          const valor = reais(lista.reduce((t, x) => t + cents(Number(x.valor)), 0));
-          if (ra?.indicio && abertura && fonteAb) {
-            indicios.push({
-              tipo: "recem-aberta",
-              emenda: e.codigo,
-              ente: p.beneficiario_nome,
-              cnpj,
-              nome,
-              abertura,
-              primeiroPagamento: primeiro,
-              dias: ra.dias,
-              recebido: valor,
-              coletas: [...new Set([...lista.map((x) => x.coleta_id), fonteAb.coleta_id])],
-            });
-          }
-          if (!entePublico) {
-            for (const x of lista)
-              recebimentosPix.push({
-                cnpj,
-                parlamentarId: id,
-                data: x.data_pagamento,
-                valor: Number(x.valor),
-                emenda: e.codigo,
-                ente: p.beneficiario_nome,
-                nome,
-                coleta: x.coleta_id,
-              });
-          }
-          return {
+    const planosDe = planos.filter((p) => p.codigo_emenda === e.codigo);
+    // CNPJ-03: o primeiro pagamento conta por emenda (todos os planos dela), não por plano.
+    const daEmenda = new Map<string, { pg: (typeof pagamentos)[number]; ente: string | null }[]>();
+    for (const p of planosDe)
+      for (const pg of pagamentosDoPlano.get(p.id_plano_acao) ?? [])
+        if (pg.tipo === "pj" && pg.recebedor_cnpj)
+          daEmenda.set(pg.recebedor_cnpj, [
+            ...(daEmenda.get(pg.recebedor_cnpj) ?? []),
+            { pg, ente: p.beneficiario_nome },
+          ]);
+    for (const l of daEmenda.values())
+      l.sort((a, b) => a.pg.data_pagamento.localeCompare(b.pg.data_pagamento) || a.pg.id - b.pg.id);
+    const avisados = new Set<string>();
+    const planosDaEmenda: PlanoTrilha[] = planosDe.map((p) => {
+      const pgs = pagamentosDoPlano.get(p.id_plano_acao) ?? [];
+      const porRecebedor = new Map<string, typeof pgs>();
+      for (const pg of pgs) {
+        if (pg.tipo !== "pj" || !pg.recebedor_cnpj) continue;
+        porRecebedor.set(pg.recebedor_cnpj, [...(porRecebedor.get(pg.recebedor_cnpj) ?? []), pg]);
+      }
+      const recebedores: RecebedorTrilha[] = [...porRecebedor].map(([cnpj, lista]) => {
+        const propria = porCnpj.get(cnpj) ?? null;
+        const matriz = matrizDe.get(cnpj.slice(0, 8)) ?? null;
+        const ab = aberturaConsiderada(
+          matriz && { inicio: matriz.inicio_atividade },
+          propria && { inicio: propria.inicio_atividade },
+        );
+        const fonteAb = ab.origem === "matriz" ? matriz : propria;
+        const entePublico =
+          cnpjsDeEnte.has(cnpj) || ehEntePublico(propria?.cnae_principal ?? matriz?.cnae_principal ?? null);
+        const primeiro = lista[0].data_pagamento;
+        const abertura: Abertura | null =
+          ab.data && ab.origem && fonteAb ? { data: ab.data, origem: ab.origem, baseMes: fonteAb.base_mes } : null;
+        const naEmenda = daEmenda.get(cnpj)!;
+        const ra = abertura && !entePublico ? recemAberta(abertura.data, naEmenda[0].pg.data_pagamento) : null;
+        const nome = moda(lista.map((x) => x.recebedor_nome ?? ""));
+        const valor = reais(lista.reduce((t, x) => t + cents(Number(x.valor)), 0));
+        if (ra?.indicio && abertura && fonteAb && !avisados.has(cnpj)) {
+          avisados.add(cnpj);
+          indicios.push({
+            tipo: "recem-aberta",
+            emenda: e.codigo,
+            ente: naEmenda[0].ente,
             cnpj,
             nome,
-            valor,
-            pagamentos: lista.length,
-            primeiroPagamento: primeiro,
-            entePublico,
             abertura,
-            recemAberta: ra,
-          };
-        });
-        recebedores.sort((a, b) => b.valor - a.valor || a.nome.localeCompare(b.nome));
-        const pfs = pgs.filter((x) => x.tipo === "pf");
-        const pagoC = pgs.reduce((t, x) => t + cents(Number(x.valor)), 0);
-        const valorC = cents(Number(p.valor));
+            primeiroPagamento: naEmenda[0].pg.data_pagamento,
+            dias: ra.dias,
+            recebido: reais(naEmenda.reduce((t, x) => t + cents(Number(x.pg.valor)), 0)),
+            coletas: [...new Set([...naEmenda.map((x) => x.pg.coleta_id), fonteAb.coleta_id])],
+          });
+        }
+        if (!entePublico) {
+          for (const x of lista)
+            recebimentosPix.push({
+              cnpj,
+              parlamentarId: id,
+              data: x.data_pagamento,
+              valor: Number(x.valor),
+              emenda: e.codigo,
+              ente: p.beneficiario_nome,
+              nome,
+              coleta: x.coleta_id,
+            });
+        }
         return {
-          id: p.id_plano_acao,
-          codigoPlano: p.codigo_plano,
-          ente: { nome: p.beneficiario_nome, cnpj: p.beneficiario_cnpj, uf: p.beneficiario_uf },
-          valor: reais(valorC),
-          dataAceite: p.data_aceite,
-          recebedores,
-          pf: { pagamentos: pfs.length, valor: reais(pfs.reduce((t, x) => t + cents(Number(x.valor)), 0)) },
-          pago: reais(pagoC),
-          saldo: reais(Math.max(0, valorC - pagoC)),
-          coletaId: p.coleta_id,
+          cnpj,
+          nome,
+          valor,
+          pagamentos: lista.length,
+          primeiroPagamento: primeiro,
+          entePublico,
+          abertura,
+          recemAberta: ra,
         };
       });
+      recebedores.sort((a, b) => b.valor - a.valor || a.nome.localeCompare(b.nome));
+      const pfs = pgs.filter((x) => x.tipo === "pf");
+      const pagoC = pgs.reduce((t, x) => t + cents(Number(x.valor)), 0);
+      const valorC = cents(Number(p.valor));
+      return {
+        id: p.id_plano_acao,
+        codigoPlano: p.codigo_plano,
+        ente: { nome: p.beneficiario_nome, cnpj: p.beneficiario_cnpj, uf: p.beneficiario_uf },
+        valor: reais(valorC),
+        dataAceite: p.data_aceite,
+        recebedores,
+        pf: { pagamentos: pfs.length, valor: reais(pfs.reduce((t, x) => t + cents(Number(x.valor)), 0)) },
+        pago: reais(pagoC),
+        saldo: reais(Math.max(0, valorC - pagoC)),
+        coletaId: p.coleta_id,
+      };
+    });
     const transferidoC = planosDaEmenda.reduce((t, p) => t + cents(p.valor), 0);
     const pagoC = planosDaEmenda.reduce((t, p) => t + cents(p.pago), 0);
     const saldoC = planosDaEmenda.reduce((t, p) => t + cents(p.saldo), 0);
