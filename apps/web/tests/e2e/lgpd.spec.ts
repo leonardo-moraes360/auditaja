@@ -56,8 +56,9 @@ test("/termos: conteúdo acessível e links funcionais", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 2, name: "Uso proibido" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "Privacidade" })).toBeVisible();
 
-  await expect(page.getByText(/Controlador:/).filter({ visible: true })).toBeVisible();
-  await expect(page.getByText(/Encarregado pelo tratamento/).filter({ visible: true })).toBeVisible();
+  const conteudo = page.locator("main");
+  await expect(conteudo.getByText(/Controlador:/).filter({ visible: true })).toBeVisible();
+  await expect(conteudo.getByText(/Encarregado pelo tratamento/).filter({ visible: true })).toBeVisible();
 
   const linkPrivacidade = page.getByRole("link", { name: "política de privacidade" });
   await expect(linkPrivacidade).toHaveAttribute("href", "/privacidade");
