@@ -11,7 +11,7 @@
     "db:migrate": "tsx --env-file=.env packages/db/scripts/migrate.ts",
     "db:seed:test": "DATABASE_URL=postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test tsx packages/db/scripts/seed.ts",
     "ingest": "tsx --env-file=.env packages/ingest/scripts/ingest.ts",
-    "test": "pnpm -r --workspace-concurrency=1 test",
+    "test": "pnpm -r --workspace-concurrency=1 --no-bail test",
     "test:e2e": "pnpm --filter @auditaja/web test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check apps/web/src apps/web/tests apps/web/scripts packages/core/src packages/core/tests packages/db/src packages/db/tests packages/db/scripts packages/ingest/src packages/ingest/tests packages/ingest/scripts",
@@ -21,6 +21,7 @@
     "@types/node": "^20",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "next": "16.4.6",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^5"

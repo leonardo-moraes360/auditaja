@@ -24,6 +24,7 @@ Dependências: `db ← core ← ingest` e `web → core, db`. Os pacotes exporta
 ```bash
 pnpm install
 cp .env.example .env && cp .env.example apps/web/.env.local
+# o Next lê só apps/web/.env*; o .env da raiz é dos scripts de banco e coleta
 pnpm db:up          # Postgres em 127.0.0.1:5436 (cria também o banco auditaja_test)
 pnpm db:migrate
 pnpm ingest tudo 2026   # coleta real: ~80 MB, alguns minutos

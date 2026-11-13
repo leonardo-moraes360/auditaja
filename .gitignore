@@ -11,14 +11,17 @@ node_modules/
 !.yarn/versions
 
 # testing
-coverage/
+/coverage/
+/apps/*/coverage/
+/packages/*/coverage/
 
 # next.js
-.next/
-out/
+/apps/*/.next/
+/apps/*/out/
 
 # production
-build/
+/build
+/apps/*/build/
 
 # misc
 .DS_Store
@@ -42,6 +45,7 @@ yarn-error.log*
 next-env.d.ts
 
 # coletas baixadas
-.cache/
-test-results/
-playwright-report/
+/.cache/
+/packages/*/.cache/
+/apps/*/test-results/
+/apps/*/playwright-report/
