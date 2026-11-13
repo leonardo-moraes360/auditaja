@@ -44,6 +44,8 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_VERSAO: version,
     NEXT_PUBLIC_COMMIT: hashCurto(),
+    // Base do Expires do /.well-known/security.txt (RFC 9116): vence 180 dias após o deploy.
+    AUDITAJA_BUILD_EM: new Date().toISOString(),
   },
   async rewrites() {
     // Resumo em Markdown do perfil, para agentes: /parlamentares/123.md → /parlamentares/123/perfil.md.
