@@ -1,0 +1,65 @@
+# Atualizações semanais de dependências (npm do monorepo pnpm e GitHub Actions).
+# O Dependabot só lê este arquivo na branch padrão (main).
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    # Raiz do workspace: o pnpm-lock.yaml cobre apps/* e packages/*.
+    directory: /
+    target-branch: main
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    # Espera 7 dias após a publicação de uma versão antes de propor (versões recém-saídas
+    # são as mais retiradas ou comprometidas).
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # next e eslint-config-next andam juntos (mesma versão fixa nos package.json).
+      next:
+        patterns:
+          - next
+          - eslint-config-next
+      # react e react-dom também são fixados na mesma versão.
+      react:
+        patterns:
+          - react
+          - react-dom
+      # Demais minor/patch num PR só; majors ficam em PRs separados.
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # @types/node acompanha a versão do Node em produção; o major sobe junto com a troca do Node.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    # "/" lê .github/workflows; a action composta precisa do próprio diretório.
+    directories:
+      - /
+      - /.github/actions/setup
+    target-branch: main
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch

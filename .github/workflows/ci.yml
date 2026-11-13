@@ -1,0 +1,152 @@
+# Checks de PR e da main. Sem deploy: o Coolify continua com o próprio gatilho.
+# Os nomes dos jobs (static, test, e2e (...)) são contrato: são eles que entram como
+# "required status checks" na proteção da main. Ao renomear, atualize a regra no GitHub.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# PR: um push novo cancela o run anterior (só o último commit importa).
+# Push na main: um grupo por run, cada merge roda até o fim e salva os caches da main,
+# que são os únicos que as PRs conseguem ler.
+concurrency:
+  group: ci-${{ github.event_name == 'push' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Telemetria do Next desligada; o build não precisa de banco.
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  static:
+    name: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: static
+          cache-paths: |
+            node_modules/.cache
+            apps/web/.next/cache
+
+      - name: Auditoria de dependências de produção
+        run: pnpm audit --prod --audit-level high
+
+      - name: Lint
+        run: pnpm lint --cache --cache-location node_modules/.cache/eslint/
+
+      - name: Formatação
+        run: pnpm format:check --cache
+
+      - name: Type-check
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        # Mesma versão e porta do docker-compose.yml: os testes usam os padrões de lá.
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: auditaja
+          POSTGRES_PASSWORD: auditaja
+          POSTGRES_DB: auditaja_test
+        ports:
+          - 5436:5432
+        options: >-
+          --health-cmd "pg_isready -U auditaja"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: test
+
+      # Os testes de integração se pulam quando não alcançam o banco. Migrar e semear antes
+      # faz o job falhar alto se o Postgres não estiver de pé, em vez de passar sem testar.
+      - name: Migrar e semear o banco de teste
+        run: pnpm db:seed:test
+
+      - name: Vitest (todos os pacotes)
+        run: pnpm test
+
+  e2e:
+    name: e2e (${{ matrix.projeto }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Os dois projetos do playwright.config.ts, um job cada.
+        projeto: [desktop, celular]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: auditaja
+          POSTGRES_PASSWORD: auditaja
+          POSTGRES_DB: auditaja_test
+        ports:
+          - 5436:5432
+        options: >-
+          --health-cmd "pg_isready -U auditaja"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: e2e-${{ matrix.projeto }}
+          cache-paths: |
+            ~/.cache/ms-playwright
+            apps/web/.next/cache
+
+      - name: Instalar o Chromium do Playwright
+        run: pnpm --filter @auditaja/web exec playwright install --with-deps chromium
+
+      - name: Migrar e semear o banco de teste
+        run: pnpm db:seed:test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Playwright
+        run: pnpm test:e2e --project=${{ matrix.projeto }}
+
+      - name: Guardar evidências da falha
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-${{ matrix.projeto }}-test-results
+          path: apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
