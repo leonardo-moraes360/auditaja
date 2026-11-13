@@ -1,0 +1,41 @@
+name: Preparar ambiente
+description: pnpm + Node com cache do store, install congelado e cache das ferramentas do job.
+
+inputs:
+  cache-name:
+    description: Família de cache do job (uma por job, para não disputarem a mesma chave).
+    required: true
+  cache-paths:
+    description: Caminhos das ferramentas a guardar entre runs (um por linha). Vazio desliga o cache.
+    required: false
+    default: ""
+  node-version:
+    description: Versão do Node.
+    required: false
+    default: "22"
+
+runs:
+  using: composite
+  steps:
+    # A versão do pnpm vem do campo packageManager do package.json da raiz.
+    - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+
+    - name: Instalar dependências
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    # Chave por commit + restauração pelo prefixo: caches do GitHub são imutáveis por chave,
+    # então cada run salva um novo e o próximo parte do mais recente.
+    - if: inputs.cache-paths != ''
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.cache-paths }}
+        key: ${{ inputs.cache-name }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+        restore-keys: |
+          ${{ inputs.cache-name }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+          ${{ inputs.cache-name }}-${{ runner.os }}-

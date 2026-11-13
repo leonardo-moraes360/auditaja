@@ -93,6 +93,18 @@ pnpm build && pnpm test:e2e
 
 Se o Chromium do Playwright não estiver na versão esperada, defina `PW_CHROME` com o caminho de um Chrome/Chromium.
 
+### CI (GitHub Actions)
+
+`.github/workflows/ci.yml` roda os mesmos comandos em toda PR e em todo push na `main`, em jobs paralelos:
+
+| Job                              | O que faz                                                                                                 |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `static`                         | `pnpm audit --prod --audit-level high`, lint, `format:check`, typecheck e build                           |
+| `test`                           | `pnpm db:seed:test` num Postgres 16 do job (falha se o banco não subir) e `pnpm test` em todos os pacotes |
+| `e2e (desktop)`, `e2e (celular)` | build, seed e Playwright de um projeto cada; em falha, `test-results/` fica como artefato por 7 dias      |
+
+Os nomes dos jobs são os que a proteção da `main` exige como checks obrigatórios: renomear um job pede atualizar a regra no GitHub. As actions são fixadas por SHA e atualizadas pelo Dependabot (`.github/dependabot.yml`, toda segunda às 06:00, npm e GitHub Actions, minor/patch agrupados e 7 dias de espera após cada versão).
+
 ## Deploy (Coolify)
 
 O build continua sendo `pnpm install` e `pnpm build` na raiz do repositório, e o start, `pnpm start`. Os dois delegam para `@auditaja/web`, e a saída fica em `apps/web/.next`. O diretório base do deploy precisa ser a raiz, não `apps/web`, para o pnpm enxergar os pacotes do workspace. `NEXT_PUBLIC_SITE_URL` continua sendo lido no build.
