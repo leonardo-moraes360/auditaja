@@ -4,6 +4,11 @@ Todas as mudanças relevantes do site ficam aqui. O formato segue o [Keep a Chan
 
 ## [Não publicado]
 
+### Adicionado
+
+- "Para onde foi o dinheiro das emendas Pix" no perfil: emenda, ente e empresas pagas pelo ente (Transferegov), com os indícios "empresa recém-aberta" (menos de 180 dias entre a abertura da matriz e o primeiro pagamento) e "ciclo fechado" (empresa da emenda também fornecedora da campanha), cada um com regra, taxa de base e arquivos de origem. Metodologia 1.11 e CSV da trilha.
+- Coletas `transferegov-pix`, `tse-contas` e importação local do lote Estabelecimentos da Receita (`receita --arquivo`).
+
 ## [0.1.0] - 2026-11-12
 
 Primeira versão numerada. Reúne o que já estava na `main` até o PR #16.

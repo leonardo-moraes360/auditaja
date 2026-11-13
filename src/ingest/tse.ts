@@ -1,7 +1,10 @@
 import type { Insertable, Kysely } from "kysely";
-import type { BemDeclaradoTable, CandidaturaTable, Database } from "@/db/types";
+import type { BemDeclaradoTable, CampanhaDespesaTable, CandidaturaTable, Database } from "@/db/types";
+import { valorBr } from "@/lib/emendas";
 import { numeroBr } from "@/lib/format";
-import { dataBrParaIso, extrairDoZip, lerCsv, normalizarNome, type Linha } from "./arquivos";
+import { soDigitos } from "@/lib/privacy";
+import { cnpjValido } from "@/lib/trilha";
+import { dataBrParaIso, extrairDoZip, lerCsv, linhasCsvDoZip, normalizarNome, type Linha } from "./arquivos";
 import { inserirEmBlocos, LICENCA_TSE, registrarColeta } from "./coleta";
 import type { ClienteEducado } from "./http";
 
@@ -13,6 +16,8 @@ import type { ClienteEducado } from "./http";
 const CDN = "https://cdn.tse.jus.br/estatistica/sead/odsele";
 export const urlCandidatos = (ano: number) => `${CDN}/consulta_cand/consulta_cand_${ano}.zip`;
 export const urlBens = (ano: number) => `${CDN}/bem_candidato/bem_candidato_${ano}.zip`;
+export const urlContas = (ano: number) =>
+  `${CDN}/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_${ano}.zip`;
 
 export type ParlamentarParaCasar = {
   id: number;
@@ -137,4 +142,96 @@ export async function coletarBens(db: Kysely<Database>, cli: ClienteEducado, ano
     await inserirEmBlocos(trx, "bem_declarado", bens);
   });
   return { candidaturas: candidaturas.length, bens: bens.length };
+}
+
+const UFS = "AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO".split(" ");
+
+/** Linhas das despesas contratadas: o arquivo nacional, ou os arquivos por UF quando ele não existe. */
+async function* despesasContratadas(zip: Buffer, ano: number): AsyncGenerator<Linha> {
+  const prefixo = `despesas_contratadas_candidatos_${ano}`;
+  try {
+    yield* linhasCsvDoZip(zip, `${prefixo}_BRASIL.csv`);
+    return;
+  } catch (e) {
+    if (!(e instanceof Error) || !e.message.includes("entrada não encontrada")) throw e;
+  }
+  for (const uf of UFS) {
+    try {
+      yield* linhasCsvDoZip(zip, `${prefixo}_${uf}.csv`);
+    } catch (e) {
+      if (!(e instanceof Error) || !e.message.includes("entrada não encontrada")) throw e;
+    }
+  }
+}
+
+export type ResumoCampanha = {
+  despesas: number;
+  /** CICLO-02: fornecedor pessoa física, nunca gravado. */
+  fornecedorPf: number;
+  /** Candidato que não está em `candidatura` (não é parlamentar da base). */
+  foraDaBase: number;
+  /** Fornecedor PJ com CNPJ de dígito verificador inválido. */
+  cnpjInvalido: number;
+};
+
+/**
+ * CICLO-01, CICLO-02: despesas de campanha com fornecedor pessoa jurídica dos candidatos já casados
+ * em `candidatura`, ligadas por SQ_CANDIDATO. Fonte: "despesas_contratadas_candidatos_{ano}_BRASIL.csv"
+ * da prestação de contas (colunas conferidas no ZIP de 2022: SQ_CANDIDATO, DS_TIPO_FORNECEDOR,
+ * NR_CPF_CNPJ_FORNECEDOR, SQ_DESPESA, DT_DESPESA, VR_DESPESA_CONTRATADA). Nome e CPF do candidato,
+ * do vice e de fornecedor PF nunca são lidos para o banco; de fornecedor PJ só o CNPJ.
+ */
+export async function coletarDespesasCampanha(
+  db: Kysely<Database>,
+  cli: ClienteEducado,
+  ano: number,
+): Promise<ResumoCampanha> {
+  const zip = await cli.baixar(urlContas(ano), ".cache/ingest");
+  const coletaId = await registrarColeta(db, {
+    fonte: "tse_prestacao_contas",
+    url: urlContas(ano),
+    sha256: zip.sha256,
+    bytes: zip.bytes,
+    licenca: LICENCA_TSE,
+    observacao: `despesas contratadas de candidatos, eleição de ${ano}`,
+  });
+  const candidaturas = await db
+    .selectFrom("candidatura")
+    .select(["sq_candidato", "parlamentar_id"])
+    .where("ano_eleicao", "=", ano)
+    .execute();
+  const porSq = new Map(candidaturas.map((c) => [c.sq_candidato, c.parlamentar_id]));
+  const resumo: ResumoCampanha = { despesas: 0, fornecedorPf: 0, foraDaBase: 0, cnpjInvalido: 0 };
+  const linhas: Insertable<CampanhaDespesaTable>[] = [];
+  for await (const l of despesasContratadas(zip.buf, ano)) {
+    const pid = porSq.get(l.SQ_CANDIDATO);
+    if (pid === undefined) {
+      resumo.foraDaBase++;
+      continue;
+    }
+    const doc = soDigitos(l.NR_CPF_CNPJ_FORNECEDOR);
+    if (!/JUR[IÍ]DICA/i.test(l.DS_TIPO_FORNECEDOR ?? "") || doc.length !== 14) {
+      resumo.fornecedorPf++;
+      continue;
+    }
+    if (!cnpjValido(doc)) {
+      resumo.cnpjInvalido++;
+      continue;
+    }
+    linhas.push({
+      ano_eleicao: ano,
+      sq_candidato: l.SQ_CANDIDATO,
+      parlamentar_id: pid,
+      fornecedor_cnpj: doc,
+      valor: valorBr(l.VR_DESPESA_CONTRATADA),
+      data_despesa: dataBrParaIso(l.DT_DESPESA),
+      coleta_id: coletaId,
+    });
+  }
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom("campanha_despesa").where("ano_eleicao", "=", ano).execute();
+    await inserirEmBlocos(trx, "campanha_despesa", linhas);
+  });
+  resumo.despesas = linhas.length;
+  return resumo;
 }
