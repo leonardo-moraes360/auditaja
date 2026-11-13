@@ -71,6 +71,7 @@ export type EmendaTrilha = {
   funcao: string;
   localidade: string;
   empenhado: number;
+  uf: string | null;
   planos: PlanoTrilha[];
   transferido: number;
   pago: number;
@@ -83,6 +84,8 @@ export type EmendaTrilha = {
 export type IndicioRecemAberta = {
   tipo: "recem-aberta";
   emenda: string;
+  /** DENS-09: plano (município) do primeiro pagamento, para "Ver na trilha". */
+  plano: number;
   ente: string | null;
   cnpj: string;
   nome: string;
@@ -96,6 +99,8 @@ export type IndicioRecemAberta = {
 
 export type IndicioCiclo = {
   tipo: "ciclo-fechado";
+  /** DENS-09: plano do primeiro recebimento; null no pagamento direto da União. */
+  plano: number | null;
   /** Código da emenda; `direto` quando o favorecido foi pago direto pela União (Portal da Transparência). */
   emenda: string;
   direto: boolean;
@@ -276,7 +281,13 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
     pagamentosDoPlano.set(p.id_plano_acao, [...(pagamentosDoPlano.get(p.id_plano_acao) ?? []), p]);
 
   const indicios: Indicio[] = [];
-  const recebimentosPix: (Recebimento & { emenda: string; ente: string | null; nome: string; coleta: number })[] = [];
+  const recebimentosPix: (Recebimento & {
+    emenda: string;
+    plano: number;
+    ente: string | null;
+    nome: string;
+    coleta: number;
+  })[] = [];
 
   const emendas: EmendaTrilha[] = emendasPix.map((e) => {
     const planosDe = planos.filter((p) => p.codigo_emenda === e.codigo);
@@ -322,6 +333,7 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
             tipo: "recem-aberta",
             emenda: e.codigo,
             ente: naEmenda[0].ente,
+            plano: naEmenda[0].pg.id_plano_acao,
             cnpj,
             nome,
             abertura,
@@ -342,6 +354,7 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
               ente: p.beneficiario_nome,
               nome,
               coleta: x.coleta_id,
+              plano: p.id_plano_acao,
             });
         }
         return {
@@ -372,6 +385,9 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
         coletaId: p.coleta_id,
       };
     });
+    // DENS-03: municípios em ordem de valor pago (depois o transferido).
+    planosDaEmenda.sort((a, b) => b.pago - a.pago || b.valor - a.valor || a.id - b.id);
+    const ufs = planosDaEmenda.flatMap((p) => (p.ente.uf ? [p.ente.uf] : []));
     const transferidoC = planosDaEmenda.reduce((t, p) => t + cents(p.valor), 0);
     const pagoC = planosDaEmenda.reduce((t, p) => t + cents(p.pago), 0);
     const saldoC = planosDaEmenda.reduce((t, p) => t + cents(p.saldo), 0);
@@ -382,6 +398,8 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
       funcao: e.funcao,
       localidade: e.localidade,
       empenhado: Number(e.empenhado),
+      /** UF mais frequente dos entes; "várias" quando há mais de uma. */
+      uf: new Set(ufs).size > 1 ? "várias UFs" : (ufs[0] ?? null),
       planos: planosDaEmenda,
       transferido: reais(transferidoC),
       pago: reais(pagoC),
@@ -416,10 +434,11 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
     for (const r of recebimentosPix) grupos.set(r.emenda, [...(grupos.get(r.emenda) ?? []), r]);
     for (const [emenda, rs] of grupos) {
       for (const c of cicloFechado(rs, despesas)) {
-        const r0 = rs.find((r) => r.cnpj === c.cnpj)!;
+        const r0 = rs.find((r) => r.cnpj === c.cnpj && r.data === c.primeiroRecebimento)!;
         indicios.push({
           tipo: "ciclo-fechado",
           emenda,
+          plano: r0.plano,
           direto: false,
           ente: r0.ente,
           nome: r0.nome,
@@ -461,6 +480,7 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
         indicios.push({
           tipo: "ciclo-fechado",
           emenda,
+          plano: null,
           direto: true,
           ente: null,
           nome: r0.nome,
@@ -499,6 +519,15 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
     eleicao,
     taxas,
     receitaBase,
+    /**
+     * DENS-06: um sinal só é avaliado quando a base dele existe para este perfil: alguma empresa paga (fora
+     * entes públicos) com data de abertura na Receita; despesas de campanha da eleição do mandato no TSE.
+     */
+    avaliacao: {
+      recemAberta:
+        receitaBase !== null && todosPlanos.some((p) => p.recebedores.some((r) => !r.entePublico && r.abertura)),
+      ciclo: despesasRows.length > 0,
+    },
     emendas,
     indicios,
     coletas: Object.fromEntries(coletas.map((c) => [c.id, c])) as Record<number, ColetaCitada>,

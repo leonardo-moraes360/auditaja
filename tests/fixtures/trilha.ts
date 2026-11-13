@@ -17,6 +17,25 @@ export const OUTRO = BASE + 2;
 export const TERCEIRO = BASE + 3;
 /** Só tem campanha de 2018 (D8): não entra no ciclo nem na taxa de base. */
 export const QUARTO = BASE + 4;
+/** Senador com uma emenda Pix em 15 municípios (12 pagos, 3 sem pagamento) e sem base da Receita nem do TSE. */
+export const QUINTO = BASE + 5;
+export const MUNICIPIOS_QUINTO = [
+  "SANTA MARIA",
+  "PASSO FUNDO",
+  "IJUI",
+  "SANTA CRUZ DO SUL",
+  "ERECHIM",
+  "CRUZ ALTA",
+  "LAJEADO",
+  "SANTO ANGELO",
+  "CANGUCU",
+  "CANDELARIA",
+  "CARAZINHO",
+  "FREDERICO WESTPHALEN",
+  "ALEGRETE",
+  "BAGE",
+  "URUGUAIANA",
+];
 export const OBS_TRILHA = "seed trilha do dinheiro";
 
 export const CNPJ = {
@@ -63,6 +82,7 @@ export const EMENDA = {
   /** Três emendas Pix do Terceiro sem pagamento, maiores que a emenda com indício. */
   terceiroGrandes: ["202570030002", "202570030003", "202570030004"],
   doQuarto: "202570040001",
+  doQuinto: "202570050001",
 };
 
 const ESP = "Emenda Individual - Transferências Especiais";
@@ -121,9 +141,11 @@ export async function semearTrilha(db: Kysely<Database>) {
         [OUTRO, "Outro Trilha Fictício"],
         [TERCEIRO, "Terceiro Trilha Fictício"],
         [QUARTO, "Quarto Trilha Fictício"],
+        [QUINTO, "Quinto Trilha Fictício"],
       ].map(([id, nome]) => ({
         id: id as number,
-        casa: "camara" as const,
+        casa: (id === QUINTO ? "senado" : "camara") as "camara" | "senado",
+        mandato_inicio: id === QUINTO ? "2019-02-01" : null,
         nome: nome as string,
         sexo: id === RITA ? "F" : "M",
         sigla_partido: "PFX",
@@ -173,6 +195,7 @@ export async function semearTrilha(db: Kysely<Database>) {
       emenda(OUTRO, EMENDA.doOutro, 2025, "SOROCABA - SP", "Saúde", 900_000),
       emenda(TERCEIRO, EMENDA.doTerceiro, 2025, "ITU - SP", "Saúde", 1_000_000),
       ...EMENDA.terceiroGrandes.map((c) => emenda(TERCEIRO, c, 2025, "ITU - SP", "Educação", 2_000_000)),
+      emenda(QUINTO, EMENDA.doQuinto, 2025, "MÚLTIPLO", "Saúde", 16_000_000),
       emenda(QUARTO, EMENDA.doQuarto, 2025, "ITU - SP", "Saúde", 100_000),
     ])
     .execute();
@@ -245,6 +268,19 @@ export async function semearTrilha(db: Kysely<Database>) {
         plano(97033 + i, TERCEIRO, c, CNPJ.enteX, "MUNICIPIO DE ITU", 2_000_000, "2025-02-01"),
       ),
       plano(97041, QUARTO, EMENDA.doQuarto, CNPJ.enteX, "MUNICIPIO DE ITU", 100_000, "2025-02-01"),
+      // Quinto: 15 municípios do RS, R$ 1 mi cada; os 3 últimos sem pagamento.
+      ...MUNICIPIOS_QUINTO.map((m, i) => ({
+        ...plano(
+          97051 + i,
+          QUINTO,
+          EMENDA.doQuinto,
+          comDv(`9705${String(i).padStart(4, "0")}0001`),
+          `MUNICIPIO DE ${m}`,
+          1_000_000,
+          "2025-02-01",
+        ),
+        beneficiario_uf: "RS",
+      })),
     ])
     .execute();
 
@@ -302,6 +338,16 @@ export async function semearTrilha(db: Kysely<Database>) {
       pj(97031, CNPJ.pagaAntesDeAbrir, "PAGA ANTES DE ABRIR LTDA", 5_000, "2025-03-15"),
       pj(97032, CNPJ.pagaAntesDeAbrir, "PAGA ANTES DE ABRIR LTDA", 5_000, "2025-05-01"),
       pj(97041, CNPJ.associacao, "ASSOCIACAO BENEFICENTE EXEMPLO", 50_000, "2025-05-01"),
+      // Quinto: 12 municípios pagam valores diferentes (o 1º paga mais) a empresas fora da base da Receita.
+      ...MUNICIPIOS_QUINTO.slice(0, 12).map((_, i) =>
+        pj(
+          97051 + i,
+          comDv(`5050${String(i).padStart(4, "0")}0001`),
+          `FORNECEDORA ${i + 1} PARA OBRAS LTDA`,
+          600_000 - i * 40_000,
+          "2025-04-01",
+        ),
+      ),
     ])
     .execute();
 
@@ -386,7 +432,7 @@ export async function semearTrilha(db: Kysely<Database>) {
 }
 
 export async function limparTrilha(db: Kysely<Database>) {
-  await db.deleteFrom("parlamentar").where("id", "in", [RITA, OUTRO, TERCEIRO, QUARTO]).execute();
+  await db.deleteFrom("parlamentar").where("id", "in", [RITA, OUTRO, TERCEIRO, QUARTO, QUINTO]).execute();
   await db.deleteFrom("cnpj_abertura").where("cnpj", "in", Object.values(CNPJ)).execute();
   await db.deleteFrom("coleta").where("observacao", "like", `${OBS_TRILHA}%`).execute();
 }

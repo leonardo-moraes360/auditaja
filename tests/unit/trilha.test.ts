@@ -7,6 +7,7 @@ import {
   eleicaoDoMandato,
   DIAS_RECEM_ABERTA,
   ehEntePublico,
+  nomeLegivel,
   recebedorPublicavel,
   recemAberta,
   taxaDeBase,
@@ -194,5 +195,17 @@ describe("dataDoAnoMes", () => {
     expect(dataDoAnoMes("202603")).toBe("2026-03-01");
     expect(dataDoAnoMes("202613")).toBeNull();
     expect(dataDoAnoMes("")).toBeNull();
+  });
+});
+
+describe("nomeLegivel (DENS-10)", () => {
+  it("põe em caixa de título com acentos de palavras sem ambiguidade", () => {
+    expect(nomeLegivel("MUNICIPIO DE SAO PAULO")).toBe("Município de São Paulo");
+  });
+  it('não troca "para" por "Pará" na razão social', () => {
+    expect(nomeLegivel("SHARK MAQUINAS PARA CONSTRUCAO LTDA")).toBe("Shark Maquinas Para Construcao Ltda");
+  });
+  it("mantém siglas societárias", () => {
+    expect(nomeLegivel("DISTRIBUIDORA MODELO S.A.")).toBe("Distribuidora Modelo S.A.");
   });
 });

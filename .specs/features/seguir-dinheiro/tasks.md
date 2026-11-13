@@ -446,13 +446,14 @@ T15 → T16 → T17
 
 **Done when**:
 
-- [ ] Perfil sem base da Receita nem do TSE devolve os dois sinais como não avaliados
-- [ ] Emenda com 15 municípios na fixture (12 pagos, 3 sem pagamento) com UF
-- [ ] Cada indício traz o plano do primeiro pagamento ligado a ele
-- [ ] `nomeLegivel("SHARK MAQUINAS PARA CONSTRUCAO LTDA")` não troca "para" por "Pará"
-- [ ] Full gate passa
+- [x] Perfil sem base da Receita nem do TSE devolve os dois sinais como não avaliados
+- [x] Emenda com 15 municípios na fixture (12 pagos, 3 sem pagamento) com UF
+- [x] Cada indício traz o plano do primeiro pagamento ligado a ele
+- [x] `nomeLegivel("SHARK MAQUINAS PARA CONSTRUCAO LTDA")` não troca "para" por "Pará"
+- [x] Full gate passa
 
 **Tests**: integration
+**Status**: ✅ Done
 **Gate**: full
 
 ---

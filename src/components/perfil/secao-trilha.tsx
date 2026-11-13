@@ -14,7 +14,7 @@ import { brlMi } from "@/lib/emendas";
 import { brlCompacto, dataBr, dataHoraBr, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 import { formatarCnpj } from "@/lib/privacy";
-import { DIAS_RECEM_ABERTA, taxaDeBase } from "@/lib/trilha";
+import { DIAS_RECEM_ABERTA, nomeLegivel, taxaDeBase } from "@/lib/trilha";
 
 /**
  * "Para onde foi o dinheiro das emendas Pix" (artboards SeguirDinheiro e SeguirDinheiroMobile).
@@ -30,49 +30,6 @@ const PAGINA_RECEITA = "https://dados.gov.br/dados/conjuntos-dados/cadastro-naci
 /** Trilhas exibidas antes de "Mostrar as outras N emendas Pix". */
 export const LIMITE_TRILHAS = 3;
 const LINK_AVISO = "inline-flex min-h-11 items-center text-atipico sm:min-h-6";
-
-const ACENTOS: Record<string, string> = {
-  municipio: "Município",
-  sao: "São",
-  saude: "Saúde",
-  educacao: "Educação",
-  assistencia: "Assistência",
-  associacao: "Associação",
-  servicos: "Serviços",
-  medicos: "Médicos",
-  ficticios: "Fictícios",
-  grafica: "Gráfica",
-  comunicacao: "Comunicação",
-  joao: "João",
-  goias: "Goiás",
-  para: "Pará",
-  amapa: "Amapá",
-  piaui: "Piauí",
-  ceara: "Ceará",
-  maranhao: "Maranhão",
-  parana: "Paraná",
-  rondonia: "Rondônia",
-  espirito: "Espírito",
-};
-const MINUSCULAS = new Set(["de", "da", "do", "das", "dos", "e"]);
-const SIGLAS = /^(ltda|me|epp|eireli|s\.?a\.?|s\/a|mei)$/i;
-
-/** "MUNICIPIO DE SOROCABA" → "Município de Sorocaba"; siglas societárias ficam como estão. */
-export function nomeLegivel(s: string | null | undefined): string {
-  return (s ?? "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p, i) => {
-      if (SIGLAS.test(p)) return p.length <= 4 ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p.toUpperCase();
-      const min = p.toLowerCase();
-      if (i > 0 && MINUSCULAS.has(min)) return min;
-      return ACENTOS[min] ?? min.charAt(0).toUpperCase() + min.slice(1);
-    })
-    .join(" ")
-    .replace(/\bS\.a\.?$/i, "S.A.")
-    .replace(/\bLtda\b/i, "Ltda");
-}
 
 function ente(p: PlanoTrilha) {
   const nome = nomeLegivel(p.ente.nome) || "Ente não informado";

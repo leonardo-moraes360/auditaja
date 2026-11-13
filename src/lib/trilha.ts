@@ -162,3 +162,48 @@ export function dataDoAnoMes(anoMes: string): string | null {
   const m = /^(\d{4})(0[1-9]|1[0-2])$/.exec(anoMes.trim());
   return m ? `${m[1]}-${m[2]}-01` : null;
 }
+
+const ACENTOS: Record<string, string> = {
+  municipio: "Município",
+  sao: "São",
+  saude: "Saúde",
+  educacao: "Educação",
+  assistencia: "Assistência",
+  associacao: "Associação",
+  servicos: "Serviços",
+  medicos: "Médicos",
+  ficticios: "Fictícios",
+  grafica: "Gráfica",
+  comunicacao: "Comunicação",
+  joao: "João",
+  goias: "Goiás",
+  amapa: "Amapá",
+  piaui: "Piauí",
+  ceara: "Ceará",
+  maranhao: "Maranhão",
+  parana: "Paraná",
+  rondonia: "Rondônia",
+  espirito: "Espírito",
+};
+const MINUSCULAS = new Set(["de", "da", "do", "das", "dos", "e"]);
+const SIGLAS = /^(ltda|me|epp|eireli|s\.?a\.?|s\/a|mei)$/i;
+
+/**
+ * "MUNICIPIO DE SOROCABA" → "Município de Sorocaba"; siglas societárias ficam como estão. DENS-10: só acentua
+ * palavras sem outro sentido (nunca "para" → "Pará", que estragava razões sociais).
+ */
+export function nomeLegivel(s: string | null | undefined): string {
+  return (s ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((p, i) => {
+      if (SIGLAS.test(p)) return p.length <= 4 ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : p.toUpperCase();
+      const min = p.toLowerCase();
+      if (i > 0 && MINUSCULAS.has(min)) return min;
+      return ACENTOS[min] ?? min.charAt(0).toUpperCase() + min.slice(1);
+    })
+    .join(" ")
+    .replace(/\bS\.a\.?$/i, "S.A.")
+    .replace(/\bLtda\b/i, "Ltda");
+}
