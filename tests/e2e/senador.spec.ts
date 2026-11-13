@@ -225,7 +225,7 @@ test("SUI-08: busca do topo cita deputado e senador e acha senadores", async ({ 
   await page.goto("/metodologia");
   if (isMobile) await page.getByRole("button", { name: "Buscar" }).click();
   const busca = page.getByRole("searchbox", { name: "Buscar parlamentar" });
-  await expect(busca).toHaveAttribute("placeholder", "Buscar deputado ou senador por nome ou UF");
+  await expect(busca).toHaveAttribute("placeholder", "Buscar parlamentar ou estado");
   await busca.fill("otavio");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("link", { name: /Otávio Modelo/ })).toBeVisible();
