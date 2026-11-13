@@ -499,9 +499,10 @@ T15 → T16 → T17
 
 **Done when**:
 
-- [ ] Veredito PASS e `validate_state.py` sai com 0
+- [x] Veredito PASS e `validate_state.py` sai com 0
 
 **Tests**: none
+**Status**: ✅ Done
 **Gate**: build
 
 ---

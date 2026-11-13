@@ -399,7 +399,7 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
       funcao: e.funcao,
       localidade: e.localidade,
       empenhado: Number(e.empenhado),
-      /** UF mais frequente dos entes; "várias" quando há mais de uma. */
+      /** UF dos entes quando é uma só; "várias UFs" quando há mais de uma. */
       uf: new Set(ufs).size > 1 ? "várias UFs" : (ufs[0] ?? null),
       planos: planosDaEmenda,
       transferido: reais(transferidoC),

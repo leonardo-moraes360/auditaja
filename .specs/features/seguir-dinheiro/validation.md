@@ -1,22 +1,27 @@
-# Seguir o dinheiro das emendas Validation (checagem final)
+# Seguir o dinheiro das emendas Validation (versão enxuta, checagem final)
 
-**Date**: 2026-11-12
-**Spec**: `.specs/features/seguir-dinheiro/spec.md`
-**Diff range**: `main...claude/project-thread-xvyvww` (e67bae2..34a8984: specs + T1–T14 + correções caaf8e6, 245de02, be4af05, 90a39ab e 34a8984)
+**Date**: 2026-11-13
+**Spec**: `.specs/features/seguir-dinheiro/spec.md` (DENS-01..DENS-10; DENS-01, DENS-06 e DENS-08 revistos; TRI-07 e EDGE-04 revistos)
+**Diff range**: `a542207..cc56ec1` (spec 0de0ed8, leitura 3eca0e0, tela d73445c, correções 7db6cb6 e cc56ec1; o merge b80c111 é só da main)
 **Verifier**: sub-agente independente (autor ≠ verificador)
 
 **Verdict**: PASS
 
-Checagem final, só de S1 e S4, depois da 4ª rodada (decisão do coordenador). Os dois mutantes agora morrem:
+Checagem final (rodada 3 de 3), feita só sobre os pontos abertos na rodada 2. Todos foram fechados.
 
-- **S4** (LING-05): a montagem do CSV foi para `linhasCsvTrilha` (`src/lib/trilha-csv.ts:30`), com teste de linhas positivas e negativas.
-- **S1**: a ordem "emendas com indício primeiro" passou a ser travada por um caso em que a emenda com indício tem valor menor.
+1. **Nome de município sobreposto ao valor pago no celular: corrigido.**
+   - Na linha do município, o `<summary>` passou a quebrar linha (`flex-wrap`, `src/components/perfil/secao-trilha.tsx:768`). O nome ganhou `flex-1 break-words` (`:770`) e o valor vai para baixo do nome no celular (`order-last basis-full`, `:778`).
+   - Medi a sobreposição com um detector próprio (transbordo de cada filho do `<summary>`, interseção entre filhos e texto do nome além da própria caixa). Calibrado no 7db6cb6, ele acusa 125 linhas a 320 px e 10 a 390 px no perfil 10001186.
+   - Em cc56ec1, o mesmo detector acusa **0** em 126 municípios do 10001186 e em 38 do 204494, a 320, 390 e 1440 px.
+   - O e2e novo (`tests/e2e/trilha.spec.ts:339`) checa que nada transborda a 320 e a 390 px, com um nome longo na fixture.
+2. **N07 (TRI-05) morto** por `tests/e2e/trilha.spec.ts:323`: `"Sem pagamento registrado: R$ 1,8 mi"`, visível, na emenda `fundo`, que tem pago 0.
+3. **N10 (DENS-01) morto** por `tests/e2e/trilha.spec.ts:331`: `toHaveText(["Sorocaba (SP)", "Uberaba (MG)"])`. A integração cobre o mesmo caso em `tests/integracao/trilha-leitura.test.ts:389`.
+4. **Spec**:
+   - DENS-01 agora diz de onde vem a área.
+   - O link do elo 3 diz que é a base completa.
+   - O teste de `tests/integracao/transferegov.test.ts:228` deixou de olhar `coleta_id` e não falha mais por acaso.
 
-Todos os 33 ACs têm evidência que discrimina; gates verdes; paridade com o canvas 100% (sem mudança de tela desde 245de02).
-
-Sobreviventes acumulados nas 5 rodadas: todos mortos (rodada 1: 10; rodada 2: N10; rodada 3: R3, R4; rodada 4: S1, S4).
-
-Fora dos ACs e pendente antes do merge: medir o desempenho de `taxasDeBase()` (`src/data/trilha.ts:138`) no banco real com a migração.
+Paridade com os artboards enxutos: **56/56 = 100%**, contando as divergências deliberadas aceitas.
 
 ---
 
@@ -24,85 +29,144 @@ Fora dos ACs e pendente antes do merge: medir o desempenho de `taxasDeBase()` (`
 
 | Task | Status | Notes |
 | ---- | ------ | ----- |
-| T1–T14 | ✅ Done | correções da rodada 1 em caaf8e6 (lógica) e 245de02 (tela e e2e) |
+| T15 | ✅ Done | `avaliacao` em três estados (`src/lib/trilha.ts:217`, `src/data/trilha.ts:425,538-542`) |
+| T16 | ✅ Done | correções em 7db6cb6 e cc56ec1 |
+| T17 | ✅ Done | este relatório: PASS; `validate_state.py` sai com 0 |
 
 ---
 
 ## Spec-Anchored Acceptance Criteria
 
+Cada linha do DOM tem versões de desktop e de celular, e uma delas fica escondida por CSS. O e2e roda nos dois projetos (`desktop` e `celular` a 390 px), e as asserções de texto exigem visibilidade.
+
+### DENS (versão enxuta)
+
 | AC | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| TRI-01 | liquidações com CNPJ, valor, data, `coleta_id` | `tests/integracao/transferegov.test.ts:218` - `expect(pg.map(...)).toEqual([[1,501,"pj","19681377000181",...,"587900.00","2026-04-01"],...])` | ✅ PASS |
-| TRI-02 | liga pelo código, nunca pelo nome | `tests/integracao/transferegov.test.ts:184` - só o plano 501 é gravado (o 503 tem o mesmo nome de autor) | ✅ PASS |
-| TRI-03 | nada de banco/agência/conta/nome/doc PF | `tests/integracao/transferegov.test.ts:229` - `not.toContain(...)`; `:234` - colunas proibidas `toEqual([])` | ✅ PASS |
-| TRI-04 | emenda → ente → empresas, valor por empresa, link de cada elo | `tests/integracao/trilha-leitura.test.ts:77`; `tests/e2e/trilha.spec.ts:112` - hrefs dos 3 elos `toEqual([portal, planos-acao-especiais?id_plano_acao=97001, relatorios-gestao-novos-especiais?...])` | ✅ PASS |
-| TRI-05 | "Sem pagamento registrado: R$ X" | `tests/integracao/trilha-leitura.test.ts:94` - `[1_609_000, 391_000]`; `tests/e2e/trilha.spec.ts:128,142` - `table [data-saldo]` e cartões visíveis com `/Sem pagamento registrado:\s*R\$ 391 mil/` | ✅ PASS |
-| TRI-06 | erro/429 → `ColetaBloqueada`, coleta anterior intacta | `tests/integracao/transferegov-paginas.test.ts:57`; `tests/integracao/transferegov.test.ts:246` | ✅ PASS |
-| TRI-07 | "Pessoas físicas (N)" com valor somado | `tests/integracao/trilha-leitura.test.ts:86`; `tests/e2e/trilha.spec.ts:127,140` - `toHaveText(/Pessoas físicas \(3\).*R\$ 12 mil/)`, visível por projeto | ✅ PASS |
-| CNPJ-01 | só CNPJs do banco, `coleta_id` e SHA-256 | `tests/integracao/receita.test.ts:156,197` | ✅ PASS |
-| CNPJ-02 | nada de sócios/endereço/telefone/e-mail | `tests/integracao/receita.test.ts:217` | ✅ PASS |
-| CNPJ-03 | matriz < 180 dias antes do 1º pagamento **ligado à emenda** | `tests/unit/trilha.test.ts:23`; `tests/integracao/trilha-leitura.test.ts:127`; `:238` - dois planos: `[novaDoisPlanos, doTerceiro, "2025-03-01", 59, 100_000, "MUNICIPIO DE CAMPINAS"]`, um só aviso | ✅ PASS |
-| CNPJ-04 | ≥ 180 não marca | `tests/unit/trilha.test.ts:26`; `tests/integracao/trilha-leitura.test.ts:132` | ✅ PASS |
-| CNPJ-05 | "Data de abertura não encontrada na base da Receita de {mês}" | `tests/e2e/trilha.spec.ts:126,138` - por projeto; no desktop, célula `[data-abertura]` com o texto exato | ✅ PASS |
-| CNPJ-06 | "base de MM/AAAA" ao lado de toda data de abertura | `tests/e2e/trilha.spec.ts:132` - cabeçalho `"Abertura da matriz (base de 10/2026)"`; `:123-125` - cartões `"abriu em 12/02/2025 (base de 10/2026)"`; `:51,56` - avisos do celular e do desktop | ✅ PASS |
-| CNPJ-07 | importador só lê arquivo local | `tests/integracao/receita.test.ts:249,258` | ✅ PASS |
-| CICLO-01 | despesas PJ por `sq_candidato` | `tests/integracao/tse-contas.test.ts:165` - `foraDaBase: 2` (inclui a candidatura de 2026 da linha `:111`) e linhas `toEqual` | ✅ PASS |
-| CICLO-02 | nunca nome/CPF de PF | `tests/integracao/tse-contas.test.ts:205` | ✅ PASS |
-| CICLO-03 | dois valores, duas datas, duas fontes | `tests/integracao/trilha-leitura.test.ts:140` | ✅ PASS |
-| CICLO-04 | campanha de outro parlamentar não marca | `tests/unit/trilha.test.ts:80`; `tests/integracao/trilha-leitura.test.ts:186` | ✅ PASS |
-| LING-01 | só "indício"/"padrão atípico" + frase | `tests/e2e/trilha.spec.ts:42,44` - frase visível e `not.toMatch(/fraude|corrup|desvi|suspeit|ilegal|crime/i)` | ✅ PASS |
-| LING-02 | regra, limiar, dados, link metodologia | `tests/e2e/trilha.spec.ts:52-64,80` | ✅ PASS |
-| LING-03 | seção por sinal, v1.11 | `tests/e2e/trilha.spec.ts:231` | ✅ PASS |
-| LING-04 | "Contestar" no fluxo existente | `tests/e2e/trilha.spec.ts:189` | ✅ PASS |
-| LING-05 | colunas `indicio` e `versao_metodologia`; D14: CSV em rota própria `trilha.csv` | `tests/e2e/trilha.spec.ts:203` - `col` contém `indicio` e `versao_metodologia`; `:218` linha da construtora; `tests/integracao/trilha-leitura.test.ts:290-301` - `indicio(campinas, limiar180)` = `""`, `limiar179` = `"recem-aberta"`, `grafica` = `"ciclo-fechado"`, `distribuidoraFilial` = `""`, linhas sem CNPJ vazias, `versao_metodologia` = `"1.11"` | ✅ PASS |
-| LING-06 | só fatos datados até o pagamento | `tests/unit/trilha.test.ts:33,85,95,99` (`:99` - `despesaCampanha: 20`, `ultimaDespesa: "2022-09-15"`); `tests/integracao/trilha-leitura.test.ts:264`, `:221` e `:246` | ✅ PASS |
-| LING-07 | "M de N" com universo explícito | `tests/integracao/trilha-leitura.test.ts:221` - `{recemAberta: [3, 10], ciclo: [2, 5]}`; `tests/e2e/trilha.spec.ts:53,59` - "3 de 10 (30,0%)" | ✅ PASS |
-| LING-08 | causas de falso positivo | `tests/e2e/trilha.spec.ts:231` ("MEI", "gráficas") | ✅ PASS |
-| LING-09 | data e SHA-256 de cada elo | `tests/integracao/trilha-leitura.test.ts:195`; `tests/e2e/trilha.spec.ts:86` (no celular, abre o `<details>`) | ✅ PASS |
-| EDGE-01 | sem código: não liga e conta no log | `tests/integracao/transferegov.test.ts:161` - `semCodigo: 1` | ✅ PASS |
-| EDGE-02 | DV inválido descartado | `tests/unit/trilha.test.ts:121`; `tests/integracao/transferegov.test.ts:161` | ✅ PASS |
-| EDGE-03 | outro ente público, sem avaliar | `tests/integracao/trilha-leitura.test.ts:116` (CNAE 84) e `:257` (beneficiário sem CNAE 84; filial com matriz CNAE 84) | ✅ PASS |
-| EDGE-04 | frase exata, trilha escondida | `tests/integracao/trilha-leitura.test.ts:44`; `tests/e2e/trilha.spec.ts:161` | ✅ PASS |
-| EDGE-05 | data da filial + aviso | `tests/unit/trilha.test.ts:47`; `tests/e2e/trilha.spec.ts:125,137` | ✅ PASS |
-| EDGE-06 | recusa lote anterior citando os dois meses | `tests/integracao/receita.test.ts:231` | ✅ PASS |
+| DENS-01 | código, área (só se a função não for "Encargos especiais"), nº de municípios com UF, transferido, % pago; emenda com indício aberta e primeiro | `tests/e2e/trilha.spec.ts:154`: `abertas` `toEqual([campinas, sorocaba])`, resumo do celular `"1 município (SP) · R$ 1,8 mi · 0% pago"`; `:243`: `not.toContainText("Encargos")`; `:331`: `["Sorocaba (SP)", "Uberaba (MG)"]`; `tests/integracao/trilha-leitura.test.ts:50,273,389` | ✅ PASS (N06 e N10 mortos) |
+| DENS-02 | três elos uma vez, com valor, fonte e saldo | `tests/e2e/trilha.spec.ts:154`: `[data-saldo-emenda]` `"Sem pagamento registrado: R$ 391 mil"`, hrefs dos 3 elos `toEqual([...])` | ✅ PASS |
+| DENS-03 | ordem por valor pago; no máximo 10; "Ver os outros N"; "N municípios sem pagamento registrado · R$ X" | `tests/e2e/trilha.spec.ts:235`: nomes `toEqual(nomes.slice(0, 10))` pela `ORDEM_PAGO_QUINTO`; `"3 municípios sem pagamento registrado · R$ 3,4 mi"`; `tests/integracao/trilha-leitura.test.ts:341` | ✅ PASS (R02 morto) |
+| DENS-04 | município abre quem pagou; PF numa linha; selo por indício | `tests/e2e/trilha.spec.ts:192`; `:339` (linha legível a 320 e 390 px); `tests/integracao/trilha-leitura.test.ts:77` | ✅ PASS |
+| DENS-05 | cartão por sinal: título, casos, taxa, regra, frase uma vez, linha por empresa, arquivos | `tests/e2e/trilha.spec.ts:33`: taxa `toBeVisible()`, frase uma vez por cartão (`toBe(1)`), href `#…-97001-pagos`; `:140` | ✅ PASS (R19 morto) |
+| DENS-06 | "Ainda não importamos…" só sem a base; sem dado do perfil, dizer isso com o mês ou o ano da base; "Não avaliados"; "Isso não quer dizer que não haja indício." | `tests/unit/trilha.test.ts:217`; `tests/integracao/trilha-leitura.test.ts:331,367`; `tests/e2e/trilha.spec.ts:235`: nota exata, `not.toContainText("Ainda não importamos")` | ✅ PASS (N01, N02b, N03 e N11 mortos) |
+| DENS-07 | "Baixar CSV" e "Contestar" no topo | `tests/e2e/trilha.spec.ts:33`: `yTopo` `toBeLessThan` o y do indicador | ✅ PASS (R11 morto) |
+| DENS-08 | notas de PF, matriz e fontes uma vez; base da Receita ao lado de cada data | `tests/e2e/trilha.spec.ts:287`: `toBe(1)` com tudo aberto | ✅ PASS (R16 morto) |
+| DENS-09 | "Ver na trilha" leva ao município, já aberto | `tests/e2e/trilha.spec.ts:299`: fecha o município, clica, `open` e `toBeInViewport` | ✅ PASS (N05 morto) |
+| DENS-10 | "aparece nas despesas declaradas"; "município ou estado"; "para" sem acento | `tests/e2e/trilha.spec.ts:33`; `tests/unit/trilha.test.ts:206` | ✅ PASS |
 
-**Status**: ✅ 33/33 com evidência que discrimina.
+### Antigos que a reescrita podia quebrar
+
+| AC | Spec-defined outcome | `file:line` + assertion | Result |
+| -- | -------------------- | ----------------------- | ------ |
+| TRI-04 | link de cada elo | `tests/e2e/trilha.spec.ts:154`: 3 hrefs `toEqual([...])` | ✅ PASS |
+| TRI-05 | "Sem pagamento registrado: R$ X" | `tests/e2e/trilha.spec.ts:154` (pago > 0) e `:323` (pago = 0, `"Sem pagamento registrado: R$ 1,8 mi"`); `tests/integracao/trilha-leitura.test.ts:90` | ✅ PASS (N07 morto) |
+| TRI-07 | "N pagamentos a pessoas físicas" | `tests/e2e/trilha.spec.ts:192` | ✅ PASS |
+| CNPJ-05 | "Data de abertura não encontrada na base da Receita de {mês}" | `tests/e2e/trilha.spec.ts:192` | ✅ PASS |
+| CNPJ-06 | "base de MM/AAAA" ao lado de toda data de abertura | `tests/e2e/trilha.spec.ts:33` (frase do caso), `:192` (cabeçalho e celular) | ✅ PASS (N08 morto) |
+| EDGE-04 | 4 formas, com gênero e Casa | `tests/unit/trilha.test.ts:242`; `tests/e2e/trilha.spec.ts:356` | ✅ PASS (R21 morto) |
+| EDGE-05 | data da filial, com aviso | `tests/e2e/trilha.spec.ts:192`; `tests/integracao/trilha-leitura.test.ts:105` | ✅ PASS |
+| LING-01 | só "indício"; frase de não imputação | `tests/e2e/trilha.spec.ts:33` | ✅ PASS |
+| LING-02 | regra, limiar, dados e link da metodologia em cada aviso | `tests/e2e/trilha.spec.ts:33` (desktop e celular, href por sinal) | ✅ PASS (R20 e N12 mortos) |
+| LING-04 | Contestar em cada aviso | `tests/e2e/trilha.spec.ts:33`, e o teste "LING-04" no fim do arquivo | ✅ PASS |
+| LING-07 | taxa "M de N" ao lado de cada sinal | `tests/e2e/trilha.spec.ts:33` (visível nos dois projetos) | ✅ PASS (R19 e N09 mortos) |
+| LING-09 | data e SHA-256, com link | `tests/e2e/trilha.spec.ts:140`; `tests/integracao/trilha-leitura.test.ts:207` | ✅ PASS |
+
+Os ACs que a reescrita não tocou (TRI-01..03, TRI-06, CNPJ-01..04, CNPJ-07, CICLO-*, LING-03, LING-05, LING-06, LING-08, EDGE-01..03, EDGE-06) mantêm a evidência da validação anterior e passam no gate.
+
+**Status**: ✅ Todos os ACs têm evidência que discrimina.
 
 ---
 
 ## Discrimination Sensor
 
-Checagem final: worktree temporária `git worktree add --detach <scratchpad>/mutantes 34a8984` com `node_modules` copiado; testes com `vitest` em `tests/integracao/trilha-leitura.test.ts`; removida com `git worktree remove --force`. `git status --porcelain` da worktree real igual ao de antes (só `?? .specs/features/seguir-dinheiro/validation.md`), HEAD 34a8984, porta 3405 livre.
+**Isolamento**, nas três rodadas:
+
+- worktree temporária com `git worktree add --detach <scratchpad>/mutantes2 <HEAD da rodada>`, com `node_modules` copiado;
+- para cada mutante: seed, `pnpm build` e e2e da trilha na porta 3405; os mutantes da leitura passaram antes pelo vitest de `tests/unit/trilha.test.ts` e `tests/integracao/trilha-leitura.test.ts`;
+- `git checkout -- src tests` entre mutantes;
+- no fim, `git worktree remove --force` e `git worktree prune`.
+
+O `git status --porcelain` da worktree real ficou igual antes e depois em cada rodada (só ` M validation.md`). HEAD continua cc56ec1. A porta 3405 ficou livre e os servidores 3406 e 3410 não foram tocados.
+
+### Rodada 3 (cc56ec1)
 
 | # | File:line | Mutação | Killed? |
 | - | --------- | ------- | ------- |
-| S1 | `src/data/trilha.ts:479` | emendas com indício deixam de vir primeiro | ✅ (`tests/integracao/trilha-leitura.test.ts:273`) |
-| S4 | `src/lib/trilha-csv.ts:34` | CSV marca o indício da emenda em todos os recebedores | ✅ (`tests/integracao/trilha-leitura.test.ts:282`) |
+| F07 | `src/components/perfil/secao-trilha.tsx:661` | saldo do elo 3 só com pago > 0 (o N07 de novo) | ✅ (`tests/e2e/trilha.spec.ts:323`) |
+| F10 | `src/components/perfil/secao-trilha.tsx:772` | UF de cada município escondida quando a emenda tem várias UFs (o N10 de novo) | ✅ (`:331`) |
+| FW1 | `src/components/perfil/secao-trilha.tsx:768` | sem `flex-wrap` no `<summary>` do município | ✅ (`:339`) |
+| FW2 | `src/components/perfil/secao-trilha.tsx:778` | sem `order-last basis-full` no valor | ➖ equivalente na prática (ver abaixo) |
+| FW3 | `src/components/perfil/secao-trilha.tsx:770` | nome sem `flex-1 break-words` | ➖ equivalente na prática (ver abaixo) |
 
-Histórico das rodadas (mortos/injetados): rodada 1, 24/34; rodada 2, 20/21; rodada 3, 3/5; rodada 4, 4/6; checagem final, 2/2. Cada sobrevivente de uma rodada foi reaplicado na seguinte e morreu. Total de mutações distintas: 53 (68 injeções, 15 delas reaplicações).
+**Por que FW2 e FW3 são equivalentes na prática.** Cada um tira só uma das camadas da correção; as outras duas continuam lá. Com um build de cada mutante sobre a cópia do banco real (`auditaja_trilha_medida`), o detector, que acusa o defeito original (125 e 10 linhas), deu 0 transbordos e 0 sobreposições nos 126 municípios do perfil 10001186, a 320, 390 e 1440 px. FW1 também deu 0 ali. Ele só aparece com o nome muito longo da fixture, e o e2e o pega. Nenhum comportamento observável muda, então não abro tarefa de correção.
 
-**Sensor depth**: P0-full manual
-**Result**: 2/2 killed na checagem final; nenhum sobrevivente em aberto - PASS ✅
+### Histórico
+
+- **Rodada 1 (d73445c)**: 15/21 mortos. Sobreviveram M02, M11, M16, M19, M20 e M21.
+- **Rodada 2 (7db6cb6)**: 16/18 mortos (1 equivalente descartado). Os 6 da rodada 1 morreram; sobreviveram N07 e N10.
+- **Rodada 3 (cc56ec1)**: N07 e N10 mortos, e FW1 morto. FW2 e FW3 são equivalentes na prática.
+
+Nenhum sobrevivente com efeito observável está em aberto.
+
+**Sensor depth**: P0-full manual (45 injeções nas 3 rodadas)
+**Result**: PASS ✅
 
 ---
 
-## Paridade com o canvas
+## Paridade com os artboards enxutos
 
-Sem mudança de tela desde 245de02 (be4af05, 90a39ab e 34a8984 só mexem em fixture, testes, spec e na rota do CSV); medição da rodada 2 mantida. O e2e conta 5 avisos.
+Conferida em builds isolados na porta 3405, sobre `auditaja_trilha_test` (fixture) e `auditaja_trilha_medida` (cópia do banco real).
 
-60 elementos (34 no desktop a 1440 px, 26 no celular a 390 px).
+**Desktop (35/35)**. Presentes e fiéis:
 
-- **Corrigido desde a rodada 1**:
-  - a tabela da emenda de Sorocaba agora cabe (`scrollWidth` = `clientWidth` = 748 em todas as `[role=region]` abertas, a 1440 px);
-  - "Emenda X · Área" voltou a ser `<h4>` (10 títulos na seção).
-- **Divergência deliberada aceita**: o celular mostra 3 trilhas antes de "Ver as outras"; o canvas mostra 1. É aceitável: os avisos apontam por âncora para as trilhas com indício, que precisam estar abertas no DOM, e dentro de um `<details>` fechado a âncora não abre o conteúdo em todos os navegadores. O custo é só altura de página.
-- As demais divergências deliberadas já conhecidas continuam aceitas: 12 dígitos, cartão irmão, texto do saldo, texto da taxa, "Ver a trilha" em `<details>`, tokens do DS.
+- título, CSV e Contestar no topo;
+- os três indicadores, inclusive "Não avaliados";
+- a nota de não avaliado;
+- os cartões por sinal;
+- a tabela de emendas e os três elos (o 3 com link);
+- municípios com o chevron certo;
+- recebedores com selo e a linha de PF;
+- "Ver os outros N" e a linha dos sem pagamento;
+- nota de rodapé e lateral.
 
-**Paridade**: 60/60 = **100%** (59/60 = 98,3% se a divergência deliberada do celular for contada).
+Divergências deliberadas, aceitas:
 
-- 320 px: `scrollWidth` = 320 com todos os `<details>` abertos.
-- axe (wcag2a/aa, 21a/aa, 22aa, best-practice) na seção, com todos os `<details>` abertos, a 1440, 390 e 320 px: 0 violações.
-- Lateral "Como seguimos o dinheiro" e "O que não mostramos" visíveis a 1440 px.
+- saldo no elo 3;
+- base da Receita no cabeçalho da coluna e na frase;
+- área omitida quando é "Encargos especiais";
+- textos da taxa mais explícitos.
+
+**Celular (21/21)**. Presentes:
+
+- título, CSV e Contestar;
+- dois indicadores, sem o de indícios;
+- cartão de indícios, com um bloco por sinal (divergência exigida por LING-02 e LING-07);
+- emendas com resumo;
+- municípios em `<details>` com "pagou R$ X" em linha própria, sem sobreposição;
+- "Ver os outros N" e a linha dos sem pagamento;
+- "Como seguimos o dinheiro".
+
+**Paridade**: 56/56 = **100%**.
+
+**Altura da seção**, no estado inicial (a 1440 px, a seção fica na coluna de 832 px):
+
+| Perfil | 1440 px | 390 px |
+| ------ | ------- | ------ |
+| 970000001 | 3.216 px | 4.448 px |
+| 970000005 | 720 px | 946 px |
+| 10001186 | 1.064 px | 1.374 px |
+| 204494 | 1.064 px | 1.414 px |
+
+Os dois perfis da fixture foram medidos na rodada 2. A cc56ec1 só muda a linha de município, que já nasce fechada.
+
+**320 px, tudo aberto**: `scrollWidth` = 320 nos perfis 10001186 e 204494 (cc56ec1) e nos 970000001 e 970000005 (rodada 2 e e2e `tests/e2e/trilha.spec.ts:339` em cc56ec1). Temas claro e escuro. Sem sobreposição.
+
+**axe** (wcag2a/aa, 21a/aa, 22aa, best-practice), com tudo aberto, a 320, 390 e 1440 px, temas claro e escuro: **0 violações**.
+
+- Em cc56ec1: 10001186 e 204494, e os perfis da fixture pelo e2e.
+- Na rodada 2: 970000001 e 970000005.
+
+**Tema escuro**: aplicado por `localStorage.tema = "escuro"`; a classe `dark` foi conferida.
 
 ---
 
@@ -113,41 +177,34 @@ Sem mudança de tela desde 245de02 (be4af05, 90a39ab e 34a8984 só mexem em fixt
 | Minimum code | ✅ |
 | Surgical changes | ✅ |
 | No scope creep | ✅ |
-| Matches patterns | ✅ |
-| Spec-anchored outcome check | ✅ (LING-05 sinalizado) |
-| Per-layer Coverage Expectation | ✅ (e2e por projeto, com texto visível) |
+| Matches patterns | ✅ (nota: o comentário "UF mais frequente" em `src/data/trilha.ts` ainda diz outra coisa que o código; é cosmético) |
+| Spec-anchored outcome check | ✅ |
+| Per-layer Coverage Expectation | ✅ |
 | Every test maps to a spec requirement | ✅ |
 | Documented guidelines followed: `AGENTS.md` | ✅ |
-
-Pendente, fora dos ACs: `taxasDeBase()` (`src/data/trilha.ts:138`) roda duas agregações sobre a base inteira a cada visita de perfil. Medir no banco real com a migração antes do merge.
 
 ---
 
 ## Edge Cases
 
-- [x] EDGE-01 a EDGE-06
+- [x] EDGE-01..06
 
 ---
 
 ## Gate Check
 
-- **Comandos**: `pnpm lint`, `pnpm typecheck`, `TEST_DATABASE_URL=… pnpm test`, seed, `pnpm build`, `E2E_PORT=3405 PW_CHROME=/usr/bin/google-chrome pnpm test:e2e`
+Lint, typecheck e vitest rodaram na worktree real (cc56ec1). O e2e completo rodou numa cópia isolada de cc56ec1, para não reconstruir o `.next` dos servidores 3406 e 3410.
+
 - **Lint**: 0 problemas. **Typecheck**: ok.
-- **Vitest**: 401 passaram, 0 falharam, 0 pulados (33 arquivos), em 34a8984
-- **Playwright**: 218 passaram, 0 falharam, 8 pulados (já existiam em `perfil.spec.ts` e `senador.spec.ts`), em 34a8984 (suíte completa)
-- **Testes antes da feature**: 321 vitest / 198 e2e
-- **Testes depois da feature**: 401 vitest / 218 e2e
-- **Delta**: +80 vitest, +20 e2e
+- **Vitest**: 421 passaram, 0 falharam (34 arquivos).
+- **Playwright**: 242 passaram, 0 falharam, 8 pulados. Os pulados já existiam (`test.skip(isMobile …)` em `tests/e2e/perfil.spec.ts` e `tests/e2e/senador.spec.ts`) e são justificados.
+- **Contagem**: 401 vitest e 218 e2e em 34a8984; 421 vitest e 242 e2e agora. Delta: +20 / +24, parte vinda do merge da main. Nenhum teste foi removido sem substituto.
 
 ---
 
 ## Fix Plans
 
-Nenhum fix de AC em aberto.
-
-### Pendente (fora dos ACs, antes do merge)
-
-- Desempenho de `taxasDeBase()` (`src/data/trilha.ts:138`): duas agregações sobre a base inteira a cada visita de perfil. Medir no banco real com a migração.
+Nenhum em aberto.
 
 ---
 
@@ -155,20 +212,23 @@ Nenhum fix de AC em aberto.
 
 | Requirement | Previous Status | New Status |
 | ----------- | --------------- | ---------- |
-| CNPJ-06 | ❌ Needs Fix | ✅ Verified |
-| EDGE-03 | ⚠️ | ✅ Verified |
-| LING-07 | ⚠️ | ✅ Verified |
-| LING-06, CICLO-03 | ⚠️ | ✅ Verified |
-| LING-05 | ❌ | ✅ Verified |
-| demais 30 | Implemented | ✅ Verified |
+| DENS-01..DENS-10 | Pending / Needs Fix | ✅ Verified |
+| TRI-05, LING-02, LING-07, EDGE-04, CNPJ-06 | Needs Fix / ⚠️ | ✅ Verified |
+| TRI-04, TRI-07, CNPJ-05, EDGE-05, LING-01, LING-04, LING-09 | Implemented | ✅ Verified |
 
 ---
 
 ## Summary
 
-**Overall**: ✅ Ready (com a medição de desempenho pendente antes do merge)
+**Overall**: ✅ Ready
 
-**Spec-anchored check**: 33/33 com evidência que discrimina
-**Sensor**: checagem final 2/2 killed; nenhum sobrevivente em aberto
-**Gate**: lint ok, typecheck ok, 401 vitest, 218 e2e (8 pulados antigos)
-**Paridade com o canvas**: 100% (98,3% contando a divergência deliberada do celular)
+- **Spec-anchored check**: todos os ACs com evidência que discrimina.
+- **Sensor**: rodada 3 com F07, F10 e FW1 mortos e FW2 e FW3 equivalentes na prática; nenhum sobrevivente com efeito em aberto nas 3 rodadas.
+- **Gate**: lint ok, typecheck ok, 421 vitest, 242 e2e (8 pulados antigos).
+- **Paridade**: 100%.
+
+**What works**: a versão enxuta inteira, com estas medidas:
+
+- seção do perfil real 10001186 com 1.064 px a 1440 e 1.374 px a 390;
+- 320 px sem rolagem e sem sobreposição;
+- axe limpo nos dois temas.
