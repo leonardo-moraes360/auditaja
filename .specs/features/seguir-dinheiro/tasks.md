@@ -364,10 +364,11 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Link "Contestar" de um aviso abre o formulário com a seção preenchida
-- [ ] Full gate passa
+- [x] Link "Contestar" de um aviso abre o formulário com a seção preenchida
+- [x] Full gate passa
 
 **Tests**: e2e
+**Status**: ✅ Done
 **Gate**: full
 
 ---

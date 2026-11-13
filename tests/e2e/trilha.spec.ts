@@ -133,5 +133,8 @@ test("LING-04: Contestar leva ao formulário de correção existente", async ({ 
     .getByRole("link", { name: "Contestar" })
     .click();
   await expect(page).toHaveURL(new RegExp(`/parlamentares/${RITA}/contestar\\?secao=trilha`));
-  await expect(page.locator("select#secao")).toBeVisible();
+  await expect(page.locator("select#secao")).toHaveValue("trilha");
+  await expect(page.locator("select#secao option:checked")).toHaveText(
+    "Para onde foi o dinheiro (indícios das emendas Pix)",
+  );
 });
