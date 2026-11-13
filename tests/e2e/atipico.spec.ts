@@ -71,7 +71,7 @@ test("ATPUI-04: mandato todo lista os anos com aviso", async ({ page }) => {
 
 test("ATPUI-05: metodologia descreve os dois avisos", async ({ page }) => {
   await page.goto("/metodologia#atipico");
-  await expect(page.getByText("Versão 1.10.")).toBeVisible();
+  await expect(page.getByText("Versão 1.11.")).toBeVisible();
   const s = page.locator("section#atipico");
   await expect(s.getByRole("heading", { name: "Acima dos colegas" })).toBeVisible();
   await expect(s.getByRole("heading", { name: "Salto em relação ao ano anterior" })).toBeVisible();

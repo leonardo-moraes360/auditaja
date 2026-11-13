@@ -6,6 +6,8 @@ Todas as mudanças relevantes do site ficam aqui. O formato segue o [Keep a Chan
 
 ### Adicionado
 
+- "Para onde foi o dinheiro das emendas Pix" no perfil: emenda, ente e empresas pagas pelo ente (Transferegov), com os indícios "empresa recém-aberta" (menos de 180 dias entre a abertura da matriz e o primeiro pagamento) e "ciclo fechado" (empresa da emenda também fornecedora da campanha), cada um com regra, taxa de base e arquivos de origem. Metodologia 1.11 e CSV da trilha.
+- Coletas `transferegov-pix`, `tse-contas` e importação local do lote Estabelecimentos da Receita (`receita --arquivo`).
 - SEO: `robots.txt` (libera todos os robôs, inclusive de IA), `sitemap.xml` com todos os perfis, canonical em todas as páginas, `noindex` na busca e nos formulários, title e description por perfil e por lista (Casa e UF).
 - Dados estruturados (JSON-LD): `WebSite` com busca e `Organization` no site; `ProfilePage`, `Person`, `BreadcrumbList` e `Dataset` (CSVs) no perfil.
 - Cartões de compartilhamento (Open Graph e X) gerados para o site e para cada perfil.

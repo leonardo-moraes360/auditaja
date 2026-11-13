@@ -227,6 +227,79 @@ export default function Metodologia() {
           não indica irregularidade do parlamentar.
         </p>
       </section>
+
+      <section id="trilha" className="scroll-mt-4 space-y-2">
+        <h2 className="font-heading text-xl font-bold">Para onde foi o dinheiro das emendas Pix</h2>
+        <p>
+          Na transferência especial (&quot;emenda Pix&quot;) o dinheiro vai para o caixa do município ou do estado, que
+          depois paga empresas e entidades. O ente informa esses pagamentos no Transferegov. Seguimos o dinheiro em três
+          elos, sempre por identificador e nunca pelo nome: a emenda (Portal da Transparência) liga-se ao plano de ação
+          pelo código da emenda; o plano liga-se aos relatórios de gestão e aos documentos de liquidação, que trazem o
+          CNPJ, o valor e a data de cada pagamento. A API pública do Transferegov é lida uma página por vez, a uma
+          requisição por segundo. Banco, agência e conta nunca são guardados; pagamento a pessoa física aparece somado,
+          sem nome nem documento. CNPJ com dígito verificador inválido é descartado. O que o ente não informou aparece
+          como &quot;Sem pagamento registrado&quot;.
+        </p>
+        <p>
+          Os dois sinais abaixo são indícios, calculados a cada exibição do perfil com regras fixas e públicas. Cada
+          regra só usa fatos datados até a data do pagamento avaliado. Ao lado de cada aviso mostramos a taxa de base
+          (quantos casos a mesma regra encontra na base inteira) e os arquivos usados, com data e SHA-256. Indício não é
+          prova de irregularidade.
+        </p>
+      </section>
+
+      <section id="recem-aberta" className="scroll-mt-4 space-y-2">
+        <h2 className="font-heading text-xl font-bold">Indício: empresa recém-aberta</h2>
+        <p>
+          <strong>Fonte:</strong> data de início de atividade e CNAE principal do lote &quot;Estabelecimentos&quot; do
+          CNPJ, publicado pela Receita Federal. O robots.txt do servidor da Receita não permite robôs: o arquivo é
+          baixado à mão pelo navegador e importado localmente, e só entram CNPJs que já estão no Auditaja. Não lemos
+          sócios, endereço, telefone nem e-mail.
+        </p>
+        <p>
+          <strong>Regra e limiar:</strong> a matriz da empresa (os 8 primeiros dígitos do CNPJ) começou a funcionar
+          menos de 180 dias antes do primeiro pagamento que a empresa recebeu ligado à emenda. Com 180 dias ou mais, não
+          há indício. Uma filial nova de empresa antiga vale pela data da matriz; se a matriz não está no lote, usamos a
+          data da filial e dizemos isso. Outro ente público (CNAE da divisão 84 ou CNPJ de ente que recebe
+          transferências) não é avaliado. A situação cadastral de hoje (ativa, baixada) não entra, porque não diz como a
+          empresa estava na data do pagamento.
+        </p>
+        <p>
+          <strong>Exemplo:</strong> empresa aberta em 12/02/2025 que recebeu o primeiro pagamento ligado à emenda em
+          25/03/2025: 41 dias, indício. Aberta 180 dias antes do pagamento: sem indício.
+        </p>
+        <p>
+          <strong>Causas conhecidas de falso positivo:</strong> empresa nova legítima, criada para atender uma demanda
+          real; MEI ou pequena empresa aberta para formalizar um prestador que já trabalhava; fornecedor único da
+          região; reorganização societária, em que um CNPJ novo continua o negócio de um antigo.
+        </p>
+      </section>
+
+      <section id="ciclo-fechado" className="scroll-mt-4 space-y-2">
+        <h2 className="font-heading text-xl font-bold">Indício: ciclo fechado entre emenda e campanha</h2>
+        <p>
+          <strong>Fonte:</strong> despesas contratadas da prestação de contas de candidatos do TSE (download em lote).
+          Guardamos só despesas com fornecedor pessoa jurídica (CNPJ, valor e data) dos candidatos já ligados a um
+          parlamentar pelo número sequencial do candidato. Doação de pessoa jurídica é proibida desde 2015 e doador
+          pessoa física não é cruzado.
+        </p>
+        <p>
+          <strong>Regra:</strong> o mesmo CNPJ recebeu dinheiro de emenda do parlamentar (pago pelo ente com a emenda
+          Pix, ou favorecido direto do Portal da Transparência) e aparece como fornecedor da campanha que deu o mandato
+          a esse parlamentar (eleição de 2022 para deputados da 57ª legislatura; para senadores, a eleição anterior à
+          posse). A despesa de campanha precisa ter data até a data do pagamento avaliado. CNPJ que aparece na campanha
+          de outro parlamentar não gera indício no perfil de quem indicou a emenda. Não há limiar de valor.
+        </p>
+        <p>
+          <strong>Exemplo:</strong> gráfica que vendeu R$ 32 mil à campanha de 2022 e recebeu R$ 86 mil do município com
+          a emenda em 2024: indício.
+        </p>
+        <p>
+          <strong>Causas conhecidas de falso positivo:</strong> gráficas, agências de comunicação e serviços comuns
+          atendem campanhas e prefeituras com frequência, sobretudo em cidades pequenas; fornecedor único da região;
+          pagamento direto da União, em que o parlamentar não escolhe quem o ente contrata.
+        </p>
+      </section>
     </article>
   );
 }

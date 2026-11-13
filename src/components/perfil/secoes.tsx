@@ -910,7 +910,7 @@ function GLOSSARIO(senado: boolean): [string, string][] {
   ];
 }
 
-export function Lateral({ perfil }: { perfil: Perfil }) {
+export function Lateral({ perfil, extra }: { perfil: Perfil; extra?: React.ReactNode }) {
   const { parlamentar: p, orgaos, candidaturas, coletas, suplentes } = perfil;
   const senado = p.casa === "senado";
   const comissoes = orgaos
@@ -1157,6 +1157,7 @@ export function Lateral({ perfil }: { perfil: Perfil }) {
       </section>
 
       <ComoLigamosEmendas senado={senado} sexo={p.sexo} />
+      {extra}
 
       <section aria-labelledby="glossario-titulo" className={`${CARTAO} gap-2.5 sm:p-5`} data-glossario>
         <h2 id="glossario-titulo" className="font-heading text-lg font-bold sm:text-lg">

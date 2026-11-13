@@ -38,6 +38,7 @@ Como ler os dados:
 - Perfil em Markdown: \`${u("/parlamentares/{id}.md")}\`, mesmo conteúdo em texto, ideal para agentes
 - Notas da cota em CSV: \`${u("/parlamentares/{id}/gastos.csv")}\` (\`?ano=AAAA\` ou \`?ano=mandato\`; separador ";", UTF-8 com BOM)
 - Emendas em CSV: \`${u("/parlamentares/{id}/emendas.csv")}\` (\`?tabela=favorecidos\` para quem recebeu)
+- Trilha do dinheiro das emendas Pix em CSV: \`${u("/parlamentares/{id}/trilha.csv")}\` (ente, empresas pagas e indícios, que não são acusação)
 - Atualizações em Atom: \`${u("/parlamentares/{id}/feed.xml")}\`
 - [Índice completo com todos os perfis](${u("/llms-full.txt")})
 

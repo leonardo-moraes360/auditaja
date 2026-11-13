@@ -19,6 +19,8 @@ import { resumoDoParlamentar, ultimaColetaPorCasa } from "@/data/seo";
 import { caminhoDoPerfil, descricaoDoPerfil, jsonLdDoPerfil, tituloDoPerfil } from "@/lib/seo-perfil";
 import { jsonLd, metadataDaPagina, siteUrl } from "@/lib/site";
 import { SecaoEmendas } from "@/components/perfil/secao-emendas";
+import { LateralTrilha, quemIndicou, SecaoTrilha } from "@/components/perfil/secao-trilha";
+import { trilhaDoParlamentar } from "@/data/trilha";
 import { FotoParlamentar } from "@/components/perfil/foto";
 import { AbasSecoes } from "@/components/perfil/abas";
 import { Indicador, Lateral, SecaoBens, SecaoGastos, SecaoVotacoes } from "@/components/perfil/secoes";
@@ -106,6 +108,7 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
     ultimaColetaPorCasa(),
   ]);
   const pontos = pontosParaVerificar(id, resumoSancoes, atipicosTodos);
+  const trilha = await trilhaDoParlamentar(id, emendas.periodo);
   const periodoPontos =
     anosTodos.length > 1
       ? `em ${Math.min(...anosTodos)}–${Math.max(...anosTodos)}`
@@ -392,10 +395,11 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
                 : undefined
             }
           />
+          <SecaoTrilha trilha={trilha} parlamentarId={p.id} quem={quemIndicou(p.casa, p.sexo)} />
           <SecaoVotacoes perfil={perfil} filtro={filtro} completo={completo} />
           <SecaoBens perfil={perfil} />
         </div>
-        <Lateral perfil={perfil} />
+        <Lateral perfil={perfil} extra={trilha.vazio ? null : <LateralTrilha />} />
       </div>
     </div>
   );
