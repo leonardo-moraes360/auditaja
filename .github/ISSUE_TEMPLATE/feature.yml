@@ -1,0 +1,63 @@
+name: Sugestão de melhoria
+description: Ideia de funcionalidade, dado novo ou mudança que ajude a fiscalizar políticos e gastos públicos.
+title: "[Sugestão] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Conte o problema antes da solução: o que você tentou descobrir no site e não conseguiu.
+        Este repositório é público: não inclua dados pessoais.
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema isso resolve
+      description: O que você quer saber ou fazer hoje e o site não permite.
+      placeholder: Quero comparar quanto dois deputados do meu estado gastaram com passagens, mas preciso abrir um perfil de cada vez.
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Como você imagina a solução
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - Perfil do parlamentar
+        - Busca e listas
+        - Gastos da cota (CEAP/CEAPS)
+        - Emendas e transferências
+        - Votações e presença
+        - Bens e campanha (TSE)
+        - Para onde foi o dinheiro (trilha e grafo)
+        - Dados abertos (CSV, Markdown, API)
+        - Acessibilidade
+        - Outra
+    validations:
+      required: true
+  - type: textarea
+    id: fonte
+    attributes:
+      label: Fonte oficial dos dados
+      description: Se a ideia depende de dado novo, de onde ele viria (portal, API ou arquivo oficial, com link).
+      placeholder: https://dadosabertos.camara.leg.br/...
+    validations:
+      required: false
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas ou exemplos
+      description: Como você resolve isso hoje, ou outro site que já faz algo parecido.
+    validations:
+      required: false
+  - type: checkboxes
+    id: cuidados
+    attributes:
+      label: Cuidados
+      options:
+        - label: A ideia não depende de expor dado pessoal de quem não é parlamentar (familiares, assessores, fornecedores pessoa física, eleitores)
+          required: true

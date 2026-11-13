@@ -1,0 +1,84 @@
+name: Erro no site
+description: Algo não funciona como deveria (página quebrada, botão sem efeito, gráfico errado, problema de acessibilidade).
+title: "[Erro] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por avisar. Este repositório é público: **não inclua dados pessoais** (seu e-mail, CPF, telefone ou endereço) nem prints que os mostrem.
+
+        - Um número ou informação de parlamentar está errado? Use o modelo **Correção de dado**.
+        - Encontrou uma falha de segurança? Não abra issue: reporte em privado em **Security → Report a vulnerability**.
+  - type: input
+    id: endereco
+    attributes:
+      label: Página onde aconteceu
+      description: Endereço completo ou caminho da página.
+      placeholder: /parlamentares/123
+    validations:
+      required: true
+  - type: textarea
+    id: o-que-aconteceu
+    attributes:
+      label: O que aconteceu
+      description: Descreva o problema. Se houver mensagem de erro, copie o texto.
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que você esperava
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como reproduzir
+      description: Passo a passo para chegar ao problema.
+      placeholder: |
+        1. Abrir a página...
+        2. Clicar em...
+        3. Ver que...
+    validations:
+      required: false
+  - type: dropdown
+    id: dispositivo
+    attributes:
+      label: Dispositivo
+      multiple: true
+      options:
+        - Computador
+        - Celular
+        - Tablet
+    validations:
+      required: true
+  - type: input
+    id: navegador
+    attributes:
+      label: Navegador e sistema
+      placeholder: Chrome 140 no Android 15
+    validations:
+      required: false
+  - type: checkboxes
+    id: contexto
+    attributes:
+      label: Contexto
+      options:
+        - label: Uso leitor de tela, ampliação ou navegação só por teclado
+        - label: Estava no tema escuro
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do site
+      description: Aparece no rodapé, no formato vX.Y.Z · hash.
+      placeholder: v0.1.0 · abc1234
+    validations:
+      required: false
+  - type: textarea
+    id: anexos
+    attributes:
+      label: Prints ou vídeo
+      description: Arraste os arquivos aqui. Confira se não aparecem dados pessoais.
+    validations:
+      required: false
