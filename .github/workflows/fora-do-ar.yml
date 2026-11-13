@@ -1,0 +1,91 @@
+name: Fora do Ar
+
+on:
+  pull_request:
+    paths:
+      - "apps/fora-do-ar/**"
+  push:
+    branches: [main]
+    paths:
+      - "apps/fora-do-ar/**"
+  workflow_dispatch:
+
+concurrency:
+  group: fora-do-ar-${{ github.event_name == 'push' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: fora-do-ar
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build da imagem Docker
+        run: docker build -t auditaja-fora-do-ar apps/fora-do-ar
+
+      - name: Testar modo manutenção (503)
+        run: |
+          docker run -d --name fora-manutencao -p 8080:80 -e TIPO=manutencao -e RETRY_AFTER=3600 auditaja-fora-do-ar
+          sleep 2
+          
+          echo "Testando raiz..."
+          STATUS=$(curl -sI http://localhost:8080/ | head -1 | awk '{print $2}')
+          [ "$STATUS" = "503" ] || (echo "Esperado 503, recebeu $STATUS" && exit 1)
+          
+          RETRY=$(curl -sI http://localhost:8080/ | grep -i "Retry-After" | awk '{print $2}' | tr -d '\r')
+          [ "$RETRY" = "3600" ] || (echo "Esperado Retry-After: 3600, recebeu $RETRY" && exit 1)
+          
+          ROBOTS=$(curl -sI http://localhost:8080/ | grep -i "X-Robots-Tag" | awk '{print $2,$3}' | tr -d '\r')
+          echo "X-Robots-Tag: $ROBOTS"
+          
+          echo "Testando /parlamentares/123..."
+          STATUS=$(curl -sI http://localhost:8080/parlamentares/123 | head -1 | awk '{print $2}')
+          [ "$STATUS" = "503" ] || (echo "Esperado 503, recebeu $STATUS" && exit 1)
+          
+          echo "Testando /api/deputados..."
+          STATUS=$(curl -sI http://localhost:8080/api/deputados | head -1 | awk '{print $2}')
+          [ "$STATUS" = "503" ] || (echo "Esperado 503, recebeu $STATUS" && exit 1)
+          
+          echo "Testando /sitemap.xml..."
+          STATUS=$(curl -sI http://localhost:8080/sitemap.xml | head -1 | awk '{print $2}')
+          [ "$STATUS" = "503" ] || (echo "Esperado 503, recebeu $STATUS" && exit 1)
+          
+          docker stop fora-manutencao && docker rm fora-manutencao
+          echo "Modo manutenção OK"
+
+      - name: Testar modo judicial (451)
+        run: |
+          docker run -d --name fora-judicial -p 8080:80 -e TIPO=judicial -e BLOCKED_BY_URL=https://www.tjsp.jus.br auditaja-fora-do-ar
+          sleep 2
+          
+          echo "Testando raiz..."
+          STATUS=$(curl -sI http://localhost:8080/ | head -1 | awk '{print $2}')
+          [ "$STATUS" = "451" ] || (echo "Esperado 451, recebeu $STATUS" && exit 1)
+          
+          LINK=$(curl -sI http://localhost:8080/ | grep -i "^Link:" | grep -o 'rel="blocked-by"')
+          [ -n "$LINK" ] || (echo "Header Link rel=blocked-by não encontrado" && exit 1)
+          
+          ROBOTS=$(curl -sI http://localhost:8080/ | grep -i "X-Robots-Tag" | awk '{print $2,$3}' | tr -d '\r')
+          echo "X-Robots-Tag: $ROBOTS"
+          
+          echo "Testando /parlamentares/456..."
+          STATUS=$(curl -sI http://localhost:8080/parlamentares/456 | head -1 | awk '{print $2}')
+          [ "$STATUS" = "451" ] || (echo "Esperado 451, recebeu $STATUS" && exit 1)
+          
+          echo "Testando /llms.txt..."
+          STATUS=$(curl -sI http://localhost:8080/llms.txt | head -1 | awk '{print $2}')
+          [ "$STATUS" = "451" ] || (echo "Esperado 451, recebeu $STATUS" && exit 1)
+          
+          docker stop fora-judicial && docker rm fora-judicial
+          echo "Modo judicial OK"
+
+      - name: Verificar HTML válido
+        run: |
+          docker run --rm -v "$PWD/apps/fora-do-ar:/html:ro" validator/validator:latest /vnu-runtime-image/bin/vnu --errors-only /html/manutencao.html /html/judicial.html || true
