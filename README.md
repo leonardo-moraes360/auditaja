@@ -1,132 +1,97 @@
 # Auditaja
 
-Plataforma para que a população brasileira possa auditar seus políticos e as contas públicas.
+**Audite seu país, exerça sua cidadania!**
 
-O MVP é o **perfil do deputado federal**: gastos da cota parlamentar (CEAP), votações nominais no Plenário, alinhamento com a orientação do partido e bens declarados ao TSE. Cada número mostra a fonte, a data de coleta e o link para o original.
+O Auditaja é uma plataforma aberta que reúne e organiza informações públicas sobre parlamentares brasileiros. Nosso objetivo é facilitar o acompanhamento cidadão dos gastos, votos e patrimônios dos representantes eleitos — tudo com fonte, data e link para o documento original.
 
-## Stack
+## O que você encontra aqui
 
-Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, shadcn/ui, PostgreSQL 16, Kysely, Vitest e Playwright. Gerenciador: pnpm, em monorepo com workspaces.
+O site mostra, para cada **deputado federal**:
 
-## Estrutura
+- **Gastos da cota parlamentar (CEAP):** viagens, alimentação, combustível, consultorias e outros reembolsos pagos pela Câmara.
+- **Votações nominais no Plenário:** como o parlamentar votou em cada projeto, e se seguiu ou não a orientação do partido.
+- **Bens declarados ao TSE:** patrimônio informado nas candidaturas (2018, 2022 e 2026).
+- **Emendas parlamentares:** para onde foram os recursos indicados pelo deputado, incluindo a "trilha do dinheiro" das emendas Pix.
 
-| Pacote             | Caminho           | O que tem                                                                                   |
-| ------------------ | ----------------- | ------------------------------------------------------------------------------------------- |
-| `@auditaja/web`    | `apps/web`        | Site Next.js: páginas, componentes, leituras do banco (`src/data`), SEO, e2e com Playwright |
-| `@auditaja/db`     | `packages/db`     | Esquema Kysely, cliente PostgreSQL, migrações, seed de teste e `db-init` do Docker          |
-| `@auditaja/core`   | `packages/core`   | Regras de domínio puras: métricas, privacidade, emendas, trilha, Senado, padrão atípico     |
-| `@auditaja/ingest` | `packages/ingest` | Coletores das fontes públicas e o CLI `pnpm ingest`                                         |
+Cada número vem com a fonte oficial e a data em que foi coletado. Os indicadores (como "alinhamento com o partido" ou "padrão atípico") são pontos de partida para investigação — não são acusações. Se algo parecer errado, há um formulário para contestar o dado.
 
-Dependências: `db ← core ← ingest` e `web → core, db`. Os pacotes exportam TypeScript direto (`@auditaja/core/metrics`, `@auditaja/db/client`...), sem etapa de build: o Next compila via `transpilePackages`, e tsx e Vitest leem o código-fonte. Os comandos abaixo rodam na raiz; para um pacote só, use `pnpm --filter @auditaja/<pacote> <script>`.
+## De onde vêm os dados
 
-## Como rodar
+Todas as informações são coletadas de portais públicos oficiais:
+
+| Fonte                                                            | O que fornece                                          |
+| ---------------------------------------------------------------- | ------------------------------------------------------ |
+| [Câmara dos Deputados](https://dadosabertos.camara.leg.br/)      | Perfis, gastos CEAP, votações, orientações partidárias |
+| [TSE](https://dadosabertos.tse.jus.br/)                          | Bens declarados nas candidaturas                       |
+| [Portal da Transparência](https://portaldatransparencia.gov.br/) | Emendas parlamentares                                  |
+| [Transferegov](https://transferegov.gestao.gov.br/)              | Pagamentos das emendas Pix                             |
+
+A licença de cada fonte está registrada em `/fontes` no site.
+
+### Limitações conhecidas
+
+- **Senado:** fora do MVP atual (apenas deputados federais).
+- **Presença:** inclui períodos de licença, pois os arquivos da Câmara não informam o período de exercício.
+- **Teto da CEAP:** o Ato da Mesa nº 244/2026 atualizou os valores, mas não estão na página do ato — então a comparação com o teto está desativada.
+- **Orientação de blocos:** a Câmara publica nomes truncados; partidos que não aparecem na abreviação ficam sem orientação.
+
+## Status do projeto
+
+**Versão atual: 0.x (pré-lançamento)**
+
+O site ainda não foi lançado publicamente. Estamos desenvolvendo e validando as funcionalidades. A versão e o commit aparecem no rodapé.
+
+## Para desenvolvedores
+
+Quer rodar o projeto localmente ou contribuir? Veja o [guia técnico em AGENTS.md](AGENTS.md#como-rodar).
+
+Resumo rápido:
 
 ```bash
 pnpm install
 cp .env.example .env && cp .env.example apps/web/.env.local
-# o Next lê só apps/web/.env*; o .env da raiz é dos scripts de banco e coleta
-pnpm db:up          # Postgres em 127.0.0.1:5436 (cria também o banco auditaja_test)
+pnpm db:up           # Postgres em 127.0.0.1:5436
 pnpm db:migrate
-pnpm ingest tudo 2026   # coleta real: ~80 MB, alguns minutos
+pnpm db:seed:test    # dados fictícios para desenvolvimento
 pnpm dev
 ```
 
-Sem rede, use os dados fictícios do banco de teste: `pnpm db:seed:test` e aponte `DATABASE_URL` para `auditaja_test`.
+A stack é **Next.js 16**, **React 19**, **Tailwind CSS 4**, **PostgreSQL 16** e **Kysely**, em monorepo com pnpm.
 
-## Coleta (`pnpm ingest <comando> [ano]`)
+## Como contribuir
 
-| Comando     | Fonte                                                            |
-| ----------- | ---------------------------------------------------------------- |
-| `deputados` | Câmara, API v2 `/deputados` + arquivo `deputados.csv`            |
-| `orgaos`    | Câmara, arquivo `orgaosDeputados-L57.csv`                        |
-| `ceap`      | Câmara, arquivo anual `cotas/Ano-AAAA.csv.zip`                   |
-| `votacoes`  | Câmara, arquivos anuais de votações, votos e orientações         |
-| `bens`      | TSE, `consulta_cand` e `bem_candidato` (download em lote no CDN) |
-| `tudo`      | Todos acima; bens de 2018, 2022 e 2026                           |
+Contribuições são bem-vindas! Antes de começar:
 
-Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `ClienteEducado` (`packages/ingest/src/http.ts`): User-Agent identificado, leitura do `robots.txt` antes de cada host, no máximo 1 requisição por segundo (ou o `Crawl-delay`), backoff em 429/5xx e parada em 401/403. A API CKAN do TSE fica de fora porque o `robots.txt` dela proíbe `/api/`.
+1. Leia o [guia técnico](AGENTS.md) para entender a estrutura do projeto.
+2. Confira as [issues abertas](https://github.com/leonardo-moraes360/auditaja/issues) ou proponha uma melhoria.
+3. Siga o padrão de commits convencionais (`feat:`, `fix:`, `docs:`...).
+4. Rode `pnpm lint && pnpm typecheck && pnpm format:check` antes de abrir o PR.
 
-## Regras legais aplicadas (R1–R13)
+### Encontrou um erro nos dados?
 
-- **R1 proveniência:** tabela `coleta` (URL, data, SHA-256, licença); todo registro aponta para ela e a interface mostra a fonte em cada seção.
-- **R2 minimização:** não guardamos CPF do parlamentar, nome de passageiros da CEAP, nem a descrição livre dos bens (pode ter endereço).
-- **R3 mascaramento:** CPF de fornecedor PF vira `***.XXX.XXX-**` na gravação e o nome vira "Prestador pessoa física".
-- **R4 linguagem:** indicadores descritos como pontos de partida para verificação; o alerta de "padrão atípico" ficou para depois.
-- **R6 contestação:** formulário por perfil grava em `pedido_correcao`.
-- **R7 coleta não invasiva:** ver acima.
-- **R10:** partido só de parlamentares; nada de listas de filiados.
-- **R13:** rodapé e política de privacidade (`/privacidade`) com controlador e encarregado (variáveis `NEXT_PUBLIC_*`, hoje placeholders).
+Use o formulário "Contestar" no perfil do parlamentar. A correção será verificada e aplicada.
 
-## SEO e agentes de IA
+### Encontrou uma vulnerabilidade?
 
-O domínio público vem de `NEXT_PUBLIC_SITE_URL`, lido no build: sem ele, canonical, sitemap e cartões apontam para `http://localhost:3000`.
-
-| Endereço                          | Para quê                                                                 |
-| --------------------------------- | ------------------------------------------------------------------------ |
-| `/robots.txt`                     | Libera todos os robôs, inclusive de IA e de treino; bloqueia formulários |
-| `/sitemap.xml`                    | Páginas fixas, listas por Casa e UF e todos os perfis                    |
-| `/llms.txt`, `/llms-full.txt`     | Guia do site para agentes e índice de perfis em Markdown                 |
-| `/parlamentares/{id}.md`          | Perfil em Markdown (`noindex`, canonical para o HTML)                    |
-| `opengraph-image`/`twitter-image` | Cartões 1200×630 do site e de cada perfil                                |
-
-Cada página define title, description e canonical por `metadataDaPagina` (`apps/web/src/lib/site.ts`). O perfil traz JSON-LD (`Person`, `ProfilePage`, `BreadcrumbList`, `Dataset`) montado em `apps/web/src/lib/seo-perfil.ts`, só com o que a página já mostra (R2). Robôs de IA (lista em `ROBOS_DE_IA`) recebem a metadata no `<head>` sem streaming (`htmlLimitedBots` no `apps/web/next.config.ts`).
-
-Limite conhecido: o conteúdo dos perfis e das listas chega por streaming (Suspense). Quem executa JavaScript, como o Googlebot, vê tudo; um robô sem JavaScript recebe o texto num bloco oculto do HTML, e por isso o perfil também sai em Markdown.
-
-## Versão (semver)
-
-A versão do site fica no `apps/web/package.json` e segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/). O rodapé mostra `vX.Y.Z · <hash curto>`, lidos no build pelo `apps/web/next.config.ts` (hash: `NEXT_PUBLIC_COMMIT`, depois `SOURCE_COMMIT` do Coolify, depois `git rev-parse --short HEAD`). Sem git, aparece só a versão.
-
-Enquanto o site não for lançado, fica em 0.x. Para publicar uma versão:
-
-1. Anote as mudanças em `## [Não publicado]` no `CHANGELOG.md` ao longo do trabalho.
-2. Rode `pnpm versao patch` (correção), `minor` (funcionalidade nova) ou `major` (mudança incompatível, ou o lançamento 1.0.0).
-3. O script sobe o `apps/web/package.json`, move as notas para a seção da nova versão e imprime o `git commit` e o `git tag` para você revisar.
-
-## Verificação
-
-```bash
-pnpm lint && pnpm typecheck && pnpm format:check
-pnpm test            # unitários + integração (pula a integração se o Postgres não estiver no ar)
-pnpm build && pnpm test:e2e
-```
-
-Se o Chromium do Playwright não estiver na versão esperada, defina `PW_CHROME` com o caminho de um Chrome/Chromium.
-
-### CI (GitHub Actions)
-
-`.github/workflows/ci.yml` roda os mesmos comandos em toda PR e em todo push na `main`, em jobs paralelos:
-
-| Job                              | O que faz                                                                                                 |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `static`                         | `pnpm audit --prod --audit-level high`, lint, `format:check`, typecheck e build                           |
-| `test`                           | `pnpm db:seed:test` num Postgres 16 do job (falha se o banco não subir) e `pnpm test` em todos os pacotes |
-| `e2e (desktop)`, `e2e (celular)` | build, seed e Playwright de um projeto cada; em falha, `test-results/` fica como artefato por 7 dias      |
-
-Os nomes dos jobs são os que a proteção da `main` exige como checks obrigatórios: renomear um job pede atualizar a regra no GitHub. As actions são fixadas por SHA e atualizadas pelo Dependabot (`.github/dependabot.yml`, toda segunda às 06:00, npm e GitHub Actions, minor/patch agrupados e 7 dias de espera após cada versão).
-
-## Deploy (Coolify)
-
-O build continua sendo `pnpm install` e `pnpm build` na raiz do repositório, e o start, `pnpm start`. Os dois delegam para `@auditaja/web`, e a saída fica em `apps/web/.next`. O diretório base do deploy precisa ser a raiz, não `apps/web`, para o pnpm enxergar os pacotes do workspace. `NEXT_PUBLIC_SITE_URL` continua sendo lido no build.
-
-## Licença
-
-- **Código:** [GNU AGPL-3.0 ou posterior](LICENSE) (`AGPL-3.0-or-later`), público em https://github.com/leonardo-moraes360/auditaja. Quem colocar no ar uma versão modificada precisa oferecer o código dela aos usuários.
-- **Dados e textos que o Auditaja produz** (CSVs, perfis em HTML e Markdown, trilha, metodologia, llms.txt): [CC BY 4.0](LICENSE-DATA). Reuso livre, inclusive comercial, citando "Auditaja", o link e a data da coleta.
-- **Dados de origem:** seguem a licença de cada órgão (Câmara, Senado, TSE, CGU, Transferegov, Receita), gravada em cada coleta e listada em `/fontes`.
-- **Nome e logo:** ficam fora das duas licenças.
-
-No site, a licença aparece no rodapé, na seção `/sobre#licenca`, no campo `license` do JSON-LD (`WebSite` e `Dataset`), no `llms.txt` (com o link do repositório) e no fim de cada perfil em Markdown. As constantes ficam em `apps/web/src/lib/licenca.ts`.
-
-Contribuições entram sob as mesmas licenças. Para relicenciar no futuro, será preciso adotar um termo de contribuição (DCO ou CLA) antes de aceitar código de terceiros.
+**Não abra issue pública.** Veja [SECURITY.md](SECURITY.md) e use o [relato privado do GitHub](https://github.com/leonardo-moraes360/auditaja/security/advisories/new).
 
 ## Segurança
 
-Vulnerabilidades se relatam em particular, pelo [relato privado do GitHub](https://github.com/leonardo-moraes360/auditaja/security/advisories/new), nunca em issue pública. Escopo, prazos, divulgação coordenada e safe harbor estão no [SECURITY.md](SECURITY.md). O site publica o mesmo contato em `/.well-known/security.txt` (RFC 9116), com `Expires` 180 dias depois do build (`apps/web/src/lib/seguranca.ts`).
+O projeto trata dados de interesse público e dados pessoais de terceiros (fornecedores, por exemplo). Falhas de segurança devem ser relatadas em particular.
 
-## Pendências conhecidas
+Detalhes completos em [SECURITY.md](SECURITY.md), incluindo escopo, prazos e safe harbor para pesquisadores de boa-fé.
 
-- **Teto da CEAP por UF:** o Ato da Mesa nº 244/2026 atualizou os valores, mas a tabela não está na página do ato. `apps/web/src/data/teto-ceap.ts` só aceita valores conferidos; até lá a interface não compara com o teto.
-- **Orientação de blocos:** a Câmara publica nomes de bloco truncados ("Bl UniPpPsd..."). Partidos que não aparecem na abreviação ficam sem orientação.
-- **Presença:** inclui períodos de licença, porque os arquivos não trazem o período de exercício.
-- **Senado:** fora do MVP.
+## Licenças
+
+| O quê                                   | Licença                                                                                                         |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Código-fonte                            | [GNU AGPL-3.0 ou posterior](LICENSE) — quem colocar no ar uma versão modificada precisa disponibilizar o código |
+| Dados e textos produzidos pelo Auditaja | [CC BY 4.0](LICENSE-DATA) — reuso livre, inclusive comercial, citando "Auditaja", o link e a data               |
+| Dados de origem                         | Seguem a licença de cada órgão (Câmara, Senado, TSE, CGU), listada em `/fontes`                                 |
+| Nome e logo                             | Não estão licenciados                                                                                           |
+
+Contribuições entram sob as mesmas licenças. Relicenciamento futuro exigirá DCO ou CLA.
+
+---
+
+Feito com dados públicos, código aberto e vontade de transparência.
