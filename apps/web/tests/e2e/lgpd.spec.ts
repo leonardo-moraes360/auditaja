@@ -60,13 +60,13 @@ test("/termos: conteúdo acessível e links funcionais", async ({ page }) => {
   await expect(conteudo.getByText(/Controlador:/).filter({ visible: true })).toBeVisible();
   await expect(conteudo.getByText(/Encarregado pelo tratamento/).filter({ visible: true })).toBeVisible();
 
-  const linkPrivacidade = page.getByRole("link", { name: "política de privacidade" });
-  await expect(linkPrivacidade).toHaveAttribute("href", "/privacidade");
+  const linkPrivacidade = conteudo.getByRole("link", { name: "política de privacidade" });
+  await expect(linkPrivacidade.first()).toHaveAttribute("href", "/privacidade");
 
-  const linkFontes = page.getByRole("link", { name: "fontes e licenças" });
-  await expect(linkFontes).toHaveAttribute("href", "/fontes");
+  const linkFontes = conteudo.getByRole("link", { name: "fontes e licenças" });
+  await expect(linkFontes.first()).toHaveAttribute("href", "/fontes");
 
-  const linkMetodologia = page.getByRole("link", { name: "metodologia" });
+  const linkMetodologia = conteudo.getByRole("link", { name: "metodologia" });
   await expect(linkMetodologia.first()).toHaveAttribute("href", "/metodologia");
 });
 
