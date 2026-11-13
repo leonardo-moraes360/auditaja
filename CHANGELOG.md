@@ -16,6 +16,7 @@ Todas as mudanças relevantes do site ficam aqui. O formato segue o [Keep a Chan
 ### Alterado
 
 - Sem o `loading.tsx` da raiz, as páginas estáticas (início, metodologia, privacidade) chegam com o texto no HTML, legível por robôs sem JavaScript.
+- Repositório em monorepo com pnpm workspaces: `apps/web` (site), `packages/db`, `packages/core` e `packages/ingest`. Os comandos na raiz continuam os mesmos; o `.env.local` do Next passa para `apps/web/`.
 
 ## [0.1.0] - 2026-11-12
 
