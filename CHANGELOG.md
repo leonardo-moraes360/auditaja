@@ -7,6 +7,7 @@ Todas as mudanças relevantes do site ficam aqui. O formato segue o [Keep a Chan
 ### Adicionado
 
 - "Para onde foi o dinheiro das emendas Pix" no perfil: emenda, ente e empresas pagas pelo ente (Transferegov), com os indícios "empresa recém-aberta" (menos de 180 dias entre a abertura da matriz e o primeiro pagamento) e "ciclo fechado" (empresa da emenda também fornecedora da campanha), cada um com regra, taxa de base e arquivos de origem. Metodologia 1.11 e CSV da trilha.
+- Grafo do caminho do dinheiro em `/parlamentares/{id}/trilha/grafo` (faixa "Abrir o grafo" em destaque abaixo dos indicadores da trilha e link "Ver em grafo" no topo da seção): colunas parlamentar → emendas Pix → municípios → quem recebeu → campanha (TSE), com espessura pelo valor, expansão progressiva (até 5 municípios e 4 recebedores à vista, o resto em grupos), filtro "Só caminhos com indício", painel de detalhes com regra e taxa de base de cada indício, forma "Lista" equivalente e árvore vertical no celular.
 - Coletas `transferegov-pix`, `tse-contas` e importação local do lote Estabelecimentos da Receita (`receita --arquivo`).
 - SEO: `robots.txt` (libera todos os robôs, inclusive de IA), `sitemap.xml` com todos os perfis, canonical em todas as páginas, `noindex` na busca e nos formulários, title e description por perfil e por lista (Casa e UF).
 - Dados estruturados (JSON-LD): `WebSite` com busca e `Organization` no site; `ProfilePage`, `Person`, `BreadcrumbList` e `Dataset` (CSVs) no perfil.

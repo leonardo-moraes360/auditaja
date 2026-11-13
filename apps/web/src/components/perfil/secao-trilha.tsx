@@ -88,6 +88,7 @@ export function SecaoTrilha({
           data-acoes-topo
           className="flex gap-4 text-base sm:text-sm [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center sm:[&_a]:min-h-0"
         >
+          {!trilha.vazio && <Link href={`/parlamentares/${parlamentarId}/trilha/grafo`}>Ver em grafo</Link>}
           {!trilha.vazio && (
             <a href={`/parlamentares/${parlamentarId}/trilha.csv`} download>
               Baixar CSV
@@ -109,11 +110,70 @@ export function SecaoTrilha({
           {fraseSemPix(quem)}
         </p>
       ) : (
-        <ConteudoTrilha trilha={trilha} quem={quem} contestar={contestar} />
+        <ConteudoTrilha
+          trilha={trilha}
+          quem={quem}
+          contestar={contestar}
+          grafo={`/parlamentares/${parlamentarId}/trilha/grafo`}
+        />
       )}
 
       <ComoSeguimos className="lg:hidden" />
     </section>
+  );
+}
+
+/** Chamada para o grafo: cartão com o caminho resumido e um botão primário, logo abaixo da explicação. */
+function ChamadaGrafo({ href }: { href: string }) {
+  return (
+    <div
+      data-chamada-grafo
+      className="flex flex-col gap-3 rounded-[12px] border border-primaria/40 bg-primaria-fundo p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+    >
+      <div className="flex items-start gap-3">
+        <svg
+          aria-hidden="true"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="mt-0.5 flex-none text-primaria"
+        >
+          <circle cx="5" cy="12" r="2.5" />
+          <circle cx="19" cy="5" r="2.5" />
+          <circle cx="19" cy="19" r="2.5" />
+          <path d="M7.3 10.9 16.7 6.1M7.3 13.1l9.4 4.8" />
+        </svg>
+        <p className="flex flex-col gap-0.5">
+          <span className="font-semibold text-texto">Veja o caminho do dinheiro em grafo</span>
+          <span className="text-sm text-texto-2">
+            Da emenda ao município e a quem recebeu, com um clique em cada passo.
+          </span>
+        </p>
+      </div>
+      <Link
+        href={href}
+        className="inline-flex min-h-11 flex-none items-center justify-center gap-1.5 self-stretch rounded-md bg-primaria px-5 font-semibold text-sobre-primaria no-underline hover:bg-primaria-hover hover:text-sobre-primaria sm:self-auto"
+      >
+        Abrir o grafo
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </Link>
+    </div>
   );
 }
 
@@ -169,7 +229,17 @@ function ufUnica(t: TrilhaCheia) {
   return ufs.size === 1 ? ` (${[...ufs][0]})` : "";
 }
 
-function ConteudoTrilha({ trilha, quem, contestar }: { trilha: TrilhaCheia; quem: QuemIndicou; contestar: string }) {
+function ConteudoTrilha({
+  trilha,
+  quem,
+  contestar,
+  grafo,
+}: {
+  trilha: TrilhaCheia;
+  quem: QuemIndicou;
+  contestar: string;
+  grafo: string;
+}) {
   const { totais, indicios, emendas, avaliacao } = trilha;
   const pctPago = pct(totais.pago, totais.transferido);
   const recem = indicios.filter((i): i is IndicioRecemAberta => i.tipo === "recem-aberta");
@@ -214,6 +284,8 @@ function ConteudoTrilha({ trilha, quem, contestar }: { trilha: TrilhaCheia; quem
           detalhe={detalheIndicios}
         />
       </div>
+
+      <ChamadaGrafo href={grafo} />
 
       {notas.length > 0 && (
         <div
