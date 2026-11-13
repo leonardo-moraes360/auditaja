@@ -106,6 +106,8 @@ describe("perfil em Markdown (Postgres)", () => {
     expect(md).not.toContain("MARIA EXEMPLO DA SILVA");
     expect(md).toContain("https://a.br/parlamentares/900000001/gastos.csv?ano=2026");
     expect(md).toContain("https://a.br/llms.txt");
+    expect(md).toContain("Licença deste resumo e dos CSVs: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)");
+    expect(md).toContain("https://a.br/sobre#licenca");
     await semear(db);
   });
 

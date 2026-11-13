@@ -130,6 +130,9 @@ describe("jsonLdDoPerfil", () => {
       "https://a.br/parlamentares/204554/emendas.csv",
     ]);
     expect(datasets.every((d) => d.citation === "https://a.br/fontes")).toBe(true);
+    expect(
+      datasets.every((d) => (d as { license?: string }).license === "https://creativecommons.org/licenses/by/4.0/"),
+    ).toBe(true);
   });
   it("sem notas nem emendas, não declara Dataset", () => {
     const s = jsonLdDoPerfil(deputada, { base: "https://a.br", descricao: "D", temGastos: false, temEmendas: false });
@@ -162,6 +165,13 @@ describe("llms.txt", () => {
     expect(t).toMatch(/^## Optional$/m);
     expect(t).toContain("[Metodologia](https://a.br/metodologia)");
     expect(t).toContain("https://a.br/parlamentares/{id}.md");
+  });
+  it("declara a licença dos dados (CC BY 4.0), a do código (AGPL) e que as fontes têm licença própria", () => {
+    expect(t).toContain("CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)");
+    expect(t).toContain("GNU AGPL-3.0");
+    expect(t).toMatch(/dados de origem seguem a licença de cada órgão/);
+    expect(t).toContain("[Licença](https://a.br/sobre#licenca)");
+    expect(t).toContain("[Código-fonte](https://github.com/leonardo-moraes360/auditaja)");
   });
   it("linha do índice aponta para o Markdown e marca quem está fora de exercício", () => {
     expect(linhaDoIndice("https://a.br", deputada)).toBe(

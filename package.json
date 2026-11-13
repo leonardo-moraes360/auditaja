@@ -1,6 +1,7 @@
 {
   "name": "auditaja",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "pnpm --filter @auditaja/web dev",
     "build": "pnpm --filter @auditaja/web build",

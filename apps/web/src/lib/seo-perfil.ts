@@ -1,3 +1,4 @@
+import { LICENCA_DADOS } from "@/lib/licenca";
 import { brl } from "@auditaja/core/format";
 import { cargoParlamentar, NOME_UF } from "@auditaja/core/rotulos";
 import { DESLOCAMENTO_SENADO } from "@auditaja/core/senado";
@@ -119,7 +120,8 @@ export function jsonLdDoPerfil(
     publisher: { "@id": `${base}/#organizacao` },
     about: { "@id": `${url}#pessoa` },
     isBasedOn: fonte.portal,
-    // Licença de cada fonte, com data e hash de cada coleta.
+    // Licença do arquivo do Auditaja. A licença de cada fonte, com data e hash da coleta, fica em /fontes.
+    license: LICENCA_DADOS.url,
     citation: urlAbsoluta("/fontes", base),
     ...(modificado ? { dateModified: modificado } : {}),
     distribution: [{ "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: urlAbsoluta(arquivo, base) }],

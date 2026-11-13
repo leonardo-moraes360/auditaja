@@ -1,3 +1,4 @@
+import { CAMINHO_LICENCA, LICENCA_CODIGO, LICENCA_DADOS, REPOSITORIO_URL } from "@/lib/licenca";
 import { METODOLOGIA_VERSAO } from "@auditaja/core/metrics";
 import { cargoParlamentar } from "@auditaja/core/rotulos";
 import { caminhoDoPerfil, markdownEmLinha, partidoUf } from "@/lib/seo-perfil";
@@ -30,6 +31,7 @@ Como ler os dados:
 - "Pontos para verificar" (empresas sancionadas, gastos fora do padrão) são pontos de partida, não acusação. Ao citar, diga que o indicador não aponta irregularidade.
 - Privacidade: não publicamos CPF nem nome de fornecedor ou favorecido pessoa física; eles aparecem como "Prestador pessoa física" ou "Beneficiário pessoa física".
 - Metodologia versão ${METODOLOGIA_VERSAO}. Cite o perfil (URL HTML) como fonte e a data da coleta.
+- Licença: os dados e textos do ${SITE_NOME} (CSVs, perfis, trilha, metodologia) estão sob ${LICENCA_DADOS.nome} (${LICENCA_DADOS.url}); pode reusar, inclusive comercialmente, citando "${SITE_NOME}" e o link. Os dados de origem seguem a licença de cada órgão, listada em /fontes. Código: ${LICENCA_CODIGO.nome}, em ${REPOSITORIO_URL}. Nome e logo não estão licenciados. Detalhes: ${u(CAMINHO_LICENCA)}
 
 ## Perfis de parlamentares
 
@@ -47,6 +49,8 @@ Como ler os dados:
 - [Metodologia](${u("/metodologia")}): como cada número é calculado
 - [Fontes e licenças](${u("/fontes")}): cada coleta com endereço, data, hash SHA-256 e licença
 - [Sobre](${u("/sobre")}): o que é o projeto e o que cobre
+- [Licença](${u(CAMINHO_LICENCA)}): ${LICENCA_DADOS.nome} para dados e textos, ${LICENCA_CODIGO.nome} para o código
+- [Código-fonte](${REPOSITORIO_URL}): repositório público no GitHub
 - [Política de privacidade](${u("/privacidade")}): LGPD, dados tratados e direitos
 
 ## Optional

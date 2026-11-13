@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Rodape } from "@/components/rodape";
 import { Topo } from "@/components/topo";
+import { LICENCA_DADOS, REPOSITORIO_URL } from "@/lib/licenca";
 import { jsonLd, SITE_DESCRICAO, SITE_NOME, siteUrl, urlAbsoluta } from "@/lib/site";
 import "./globals.css";
 
@@ -40,6 +41,8 @@ function dadosDoSite() {
         name: SITE_NOME,
         description: SITE_DESCRICAO,
         inLanguage: "pt-BR",
+        // Licença dos textos e dados derivados; os dados de origem seguem a licença de cada órgão (/fontes).
+        license: LICENCA_DADOS.url,
         publisher: { "@id": `${base}/#organizacao` },
         potentialAction: {
           "@type": "SearchAction",
@@ -53,6 +56,7 @@ function dadosDoSite() {
         name: SITE_NOME,
         url: `${base}/`,
         logo: urlAbsoluta("/icones/icone-512.png", base),
+        sameAs: [REPOSITORIO_URL],
       },
     ],
   };
