@@ -1,0 +1,204 @@
+:root {
+  --fundo: #f7f7f4;
+  --superficie: #ffffff;
+  --texto: #14171c;
+  --texto-2: #3d424b;
+  --texto-3: #555b66;
+  --primaria: #1a44b8;
+  --primaria-hover: #0b2a78;
+  --link: #1a44b8;
+  --link-hover: #0b2a78;
+  --borda: #e2e2dc;
+  --azul-bandeira: #002776;
+  --verde-bandeira: #009c3b;
+  --amarelo-bandeira: #ffdf00;
+  --rodape-fundo: #15181e;
+  --rodape-texto: #d5d7dc;
+  --rodape-link: #a9bef5;
+  --atipico: #6b4b00;
+  --atipico-fundo: #fff6d6;
+  --atipico-borda: #8a6100;
+  --sancao: #7b2d69;
+  --sancao-fundo: #f7ecf3;
+  --sancao-borda: #a1458c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #0e1424;
+    --superficie: #161d30;
+    --texto: #eceef2;
+    --texto-2: #c3c8d2;
+    --texto-3: #9aa2b1;
+    --primaria: #7fa2ff;
+    --primaria-hover: #a9c1ff;
+    --link: #9db8ff;
+    --link-hover: #c2cbf2;
+    --borda: #2a3349;
+    --azul-bandeira: #4f74d9;
+    --rodape-fundo: #0a0f1c;
+    --rodape-link: #c2cbf2;
+    --atipico: #ffd966;
+    --atipico-fundo: #2b2410;
+    --atipico-borda: #c9a227;
+    --sancao: #f0a8db;
+    --sancao-fundo: #2c1428;
+    --sancao-borda: #d27dbb;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--fundo);
+  color: var(--texto);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--link-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--primaria);
+  outline-offset: 2px;
+}
+
+header {
+  background: linear-gradient(
+    to right,
+    var(--verde-bandeira) 0%,
+    var(--verde-bandeira) 33.33%,
+    var(--amarelo-bandeira) 33.33%,
+    var(--amarelo-bandeira) 66.66%,
+    var(--azul-bandeira) 66.66%,
+    var(--azul-bandeira) 100%
+  );
+  height: 4px;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 40rem;
+  width: 100%;
+  text-align: center;
+}
+
+.icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: var(--texto);
+}
+
+.card {
+  background-color: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 0.625rem;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.card.manutencao {
+  background-color: var(--atipico-fundo);
+  border-left: 4px solid var(--atipico-borda);
+}
+
+.card.judicial {
+  background-color: var(--sancao-fundo);
+  border-left: 4px solid var(--sancao-borda);
+}
+
+.mensagem {
+  font-size: 1.125rem;
+  color: var(--texto-2);
+  margin: 0 0 1rem 0;
+}
+
+.detalhes {
+  font-size: 0.875rem;
+  color: var(--texto-3);
+  margin: 1rem 0 0 0;
+}
+
+.detalhes p {
+  margin: 0.5rem 0;
+}
+
+.contato {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--borda);
+}
+
+.contato p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--texto-3);
+}
+
+footer {
+  background-color: var(--rodape-fundo);
+  color: var(--rodape-texto);
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+footer a {
+  color: var(--rodape-link);
+}
+
+footer a:focus-visible {
+  outline-color: #ffffff;
+}
+
+.footer-content {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  h1 {
+    font-size: 2.25rem;
+  }
+
+  .card {
+    padding: 2.5rem;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
