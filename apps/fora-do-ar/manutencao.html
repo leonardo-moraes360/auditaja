@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Em manutenção — Auditaja</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header role="banner">
+    <span class="visually-hidden">Auditaja</span>
+  </header>
+
+  <main role="main" aria-labelledby="titulo-pagina">
+    <div class="container">
+      <div class="icon" aria-hidden="true">🔧</div>
+      <h1 id="titulo-pagina">Em manutenção</h1>
+
+      <div class="card manutencao" role="status">
+        <p class="mensagem">
+          O Auditaja está temporariamente fora do ar para manutenção programada.
+        </p>
+
+        <div class="detalhes">
+          {{LINHA_PREVISAO}}
+          {{LINHA_MOTIVO}}
+        </div>
+      </div>
+
+      <div class="contato">
+        {{LINHA_CONTATO}}
+      </div>
+    </div>
+  </main>
+
+  <footer role="contentinfo">
+    <div class="footer-content">
+      <p>Auditaja — Transparência e controle social</p>
+    </div>
+  </footer>
+</body>
+</html>
