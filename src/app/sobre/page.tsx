@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { metadataDaPagina } from "@/lib/site";
 import Link from "next/link";
-import { LICENCA_CODIGO, LICENCA_DADOS } from "@/lib/licenca";
+import { LICENCA_CODIGO, LICENCA_DADOS, REPOSITORIO_URL } from "@/lib/licenca";
 
 export const metadata: Metadata = metadataDaPagina({
   titulo: "Sobre",
@@ -82,8 +82,9 @@ export default function Sobre() {
             Federal), listada nas <Link href="/fontes">fontes e licenças</Link>.
           </li>
           <li>
-            O código-fonte está sob a <a href={LICENCA_CODIGO.url}>{LICENCA_CODIGO.nome}</a> (ou versão posterior): quem
-            colocar no ar uma versão modificada precisa publicar o código dela.
+            O código-fonte é aberto, no <a href={REPOSITORIO_URL}>repositório do Auditaja no GitHub</a>, sob a{" "}
+            <a href={LICENCA_CODIGO.url}>{LICENCA_CODIGO.nome}</a> (ou versão posterior): quem colocar no ar uma versão
+            modificada precisa publicar o código dela.
           </li>
           <li>O nome Auditaja e o logo não estão licenciados: identificam o projeto.</li>
           <li>

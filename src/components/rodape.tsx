@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CAMINHO_LICENCA, LICENCA_CODIGO, LICENCA_DADOS } from "@/lib/licenca";
+import { CAMINHO_LICENCA, LICENCA_CODIGO, LICENCA_DADOS, REPOSITORIO_URL } from "@/lib/licenca";
 import { responsavel } from "@/lib/responsavel";
 import { versaoDoSite } from "@/lib/versao";
 
@@ -31,9 +31,15 @@ export function Rodape() {
   );
   // Licença do que o Auditaja publica (dados e textos) e do código; detalhes em /sobre#licenca.
   const linkLicenca = (
-    <Link href={CAMINHO_LICENCA} className="sm:text-rodape-link sm:hover:text-white">
-      Licença: dados {LICENCA_DADOS.nome}, código {LICENCA_CODIGO.curto}
-    </Link>
+    <>
+      <Link href={CAMINHO_LICENCA} className="sm:text-rodape-link sm:hover:text-white">
+        Licença: dados {LICENCA_DADOS.nome}, código {LICENCA_CODIGO.curto}
+      </Link>{" "}
+      ·{" "}
+      <a href={REPOSITORIO_URL} className="sm:text-rodape-link sm:hover:text-white">
+        Código-fonte
+      </a>
+    </>
   );
   return (
     <footer className="bg-background text-muted-foreground sm:border-t sm:border-borda sm:bg-rodape-fundo sm:text-rodape-texto">

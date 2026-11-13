@@ -18,5 +18,8 @@ export const LICENCA_DADOS = {
   resumo: "https://creativecommons.org/licenses/by/4.0/deed.pt-br",
 } as const;
 
+/** Código-fonte público (exigência da AGPL para quem usa o site pela rede). */
+export const REPOSITORIO_URL = "https://github.com/leonardo-moraes360/auditaja";
+
 /** Âncora da seção de licença na página Sobre. */
 export const CAMINHO_LICENCA = "/sobre#licenca";

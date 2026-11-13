@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Rodape } from "@/components/rodape";
 import { Topo } from "@/components/topo";
-import { LICENCA_DADOS } from "@/lib/licenca";
+import { LICENCA_DADOS, REPOSITORIO_URL } from "@/lib/licenca";
 import { jsonLd, SITE_DESCRICAO, SITE_NOME, siteUrl, urlAbsoluta } from "@/lib/site";
 import "./globals.css";
 
@@ -56,6 +56,7 @@ function dadosDoSite() {
         name: SITE_NOME,
         url: `${base}/`,
         logo: urlAbsoluta("/icones/icone-512.png", base),
+        sameAs: [REPOSITORIO_URL],
       },
     ],
   };

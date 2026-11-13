@@ -182,6 +182,9 @@ test("rodapé leva à licença (CC BY nos dados, AGPL no código) na página Sob
   await page.goto("/sobre");
   const link = page.locator("footer").getByRole("link", { name: "Licença: dados CC BY 4.0, código AGPL-3.0" });
   await expect(link.filter({ visible: true })).toHaveCount(1);
+  await expect(
+    page.locator("footer").getByRole("link", { name: "Código-fonte" }).filter({ visible: true }),
+  ).toHaveAttribute("href", "https://github.com/leonardo-moraes360/auditaja");
   await link.filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/sobre#licenca$/);
   const secao = page.locator("#licenca");

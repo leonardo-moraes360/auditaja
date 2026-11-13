@@ -171,6 +171,7 @@ describe("llms.txt", () => {
     expect(t).toContain("GNU AGPL-3.0");
     expect(t).toMatch(/dados de origem seguem a licença de cada órgão/);
     expect(t).toContain("[Licença](https://a.br/sobre#licenca)");
+    expect(t).toContain("[Código-fonte](https://github.com/leonardo-moraes360/auditaja)");
   });
   it("linha do índice aponta para o Markdown e marca quem está fora de exercício", () => {
     expect(linhaDoIndice("https://a.br", deputada)).toBe(
