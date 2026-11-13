@@ -1,6 +1,6 @@
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 import { cargoParlamentar } from "@/lib/rotulos";
-import { caminhoDoPerfil, partidoUf } from "@/lib/seo-perfil";
+import { caminhoDoPerfil, markdownEmLinha, partidoUf } from "@/lib/seo-perfil";
 import { SITE_DESCRICAO, SITE_NOME } from "@/lib/site";
 
 type Item = {
@@ -34,7 +34,7 @@ Como ler os dados:
 ## Perfis de parlamentares
 
 - [Lista de parlamentares](${u("/parlamentares")}): todos em exercício; filtros \`?casa=camara\`, \`?casa=senado\`, \`?uf=SP\` e busca \`?q=nome\`
-- Perfil HTML: \`${u("/parlamentares/{id}")}\`, com o código da Câmara ou do Senado como id
+- Perfil HTML: \`${u("/parlamentares/{id}")}\`. Deputado: id = código da Câmara. Senador: id = 10000000 + código do Senado (código 5529 → 10005529). Na dúvida, procure o nome no índice do llms-full.txt
 - Perfil em Markdown: \`${u("/parlamentares/{id}.md")}\`, mesmo conteúdo em texto, ideal para agentes
 - Notas da cota em CSV: \`${u("/parlamentares/{id}/gastos.csv")}\` (\`?ano=AAAA\` ou \`?ano=mandato\`; separador ";", UTF-8 com BOM)
 - Emendas em CSV: \`${u("/parlamentares/{id}/emendas.csv")}\` (\`?tabela=favorecidos\` para quem recebeu)
@@ -59,5 +59,5 @@ Como ler os dados:
 export function linhaDoIndice(base: string, p: Item): string {
   const pu = partidoUf(p);
   const situacao = p.em_exercicio ? "" : ", fora de exercício";
-  return `- [${p.nome}](${base}${caminhoDoPerfil(p.id)}.md): ${cargoParlamentar(p.casa, p.sexo)}${pu ? `, ${pu}` : ""}${situacao}`;
+  return `- [${markdownEmLinha(p.nome)}](${base}${caminhoDoPerfil(p.id)}.md): ${cargoParlamentar(p.casa, p.sexo)}${pu ? `, ${markdownEmLinha(pu)}` : ""}${situacao}`;
 }

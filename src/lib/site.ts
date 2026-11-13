@@ -86,7 +86,8 @@ export function metadataDaPagina({ titulo, descricao, caminho, tipo = "website",
       siteName: SITE_NOME,
       locale: "pt_BR",
       url: caminho,
-      title: `${titulo} · ${SITE_NOME}`,
+      // O template "%s · Auditaja" do layout já vale para openGraph.title.
+      title: titulo,
       description: descricao,
       // Ao redefinir openGraph, a página perde a imagem do layout (src/app/opengraph-image.tsx). O perfil
       // tem opengraph-image próprio, que só vale se a página não declarar images.

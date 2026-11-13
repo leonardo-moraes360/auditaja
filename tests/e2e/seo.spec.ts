@@ -5,6 +5,8 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 const DEPUTADA = 900000001;
 const SENADOR = 10009001;
 const GPTBOT = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)";
+const GOOGLEBOT =
+  "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/130.0.0.0 Safari/537.36";
 const CLAUDEBOT =
   "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)";
 
@@ -27,13 +29,13 @@ const meta = (head: string, chave: string) =>
   head.match(new RegExp(`<meta (?:name|property)="${chave}" content="([^"]*)"`))?.[1] ?? null;
 const canonical = (head: string) => head.match(/<link rel="canonical" href="([^"]+)"/)?.[1] ?? null;
 
-test("robots.txt libera todos os robôs, bloqueia formulários e aponta o sitemap", async ({ request }) => {
+test("robots.txt libera todos os robôs e aponta o sitemap; formulários usam noindex", async ({ request }) => {
   const r = await request.get("/robots.txt");
   const t = await r.text();
   expect(t).toMatch(/^User-Agent: \*$/m);
   expect(t).toMatch(/^Allow: \/$/m);
-  expect(t).toContain("Disallow: /parlamentares/*/contestar");
-  expect(t).toContain("Disallow: /parlamentares/*/acompanhar");
+  // Um Disallow esconderia o noindex dos formulários dos robôs.
+  expect(t).not.toContain("Disallow");
   expect(t).not.toMatch(/GPTBot|ClaudeBot|CCBot/);
   expect(t).toMatch(/^Sitemap: https?:\/\/.+\/sitemap\.xml$/m);
 });
@@ -66,6 +68,7 @@ test("perfil: title, description, canonical sem filtros, Open Graph, X e alterna
   expect(meta(head, "description")).toMatch(/^Deputada federal por São Paulo\. Cota parlamentar em 2026: R\$/);
   expect(canonical(head)).toBe(`${base}/parlamentares/${DEPUTADA}`);
   expect(meta(head, "og:type")).toBe("profile");
+  expect(meta(head, "og:title")).toBe("Maria Exemplo (PFX-SP), deputada federal · Auditaja");
   expect(meta(head, "og:site_name")).toBe("Auditaja");
   expect(meta(head, "og:locale")).toBe("pt_BR");
   expect(meta(head, "og:image")).toContain(`${base}/parlamentares/${DEPUTADA}/opengraph-image`);
@@ -75,9 +78,12 @@ test("perfil: title, description, canonical sem filtros, Open Graph, X e alterna
   expect(head).toContain(`type="application/atom+xml"`);
 });
 
-test("ClaudeBot também recebe a metadata no <head>", async ({ request }) => {
-  const { head } = await cabecalho(request, `/parlamentares/${SENADOR}`, CLAUDEBOT);
-  expect(head).toContain("<title>Otávio Modelo (PFX-MG), senador · Auditaja</title>");
+test("ClaudeBot e Googlebot também recebem a metadata no <head>", async ({ request }) => {
+  for (const ua of [CLAUDEBOT, GOOGLEBOT]) {
+    const { head } = await cabecalho(request, `/parlamentares/${SENADOR}`, ua);
+    expect(head).toContain("<title>Otávio Modelo (PFX-MG), senador · Auditaja</title>");
+    expect(canonical(head)).toMatch(new RegExp(`/parlamentares/${SENADOR}$`));
+  }
 });
 
 test("JSON-LD do perfil e do site é válido e descreve a pessoa", async ({ request }) => {
@@ -141,6 +147,7 @@ test("páginas institucionais: canonical e Open Graph completos", async ({ reque
     const { head } = await cabecalho(request, c);
     expect(canonical(head)).toBe(`${base}${c}`);
     expect(meta(head, "og:url")).toBe(`${base}${c}`);
+    expect(meta(head, "og:title")).not.toContain("Auditaja · Auditaja");
     expect(meta(head, "description")?.length).toBeGreaterThan(50);
     expect(meta(head, "og:image")).toContain("/opengraph-image");
   }

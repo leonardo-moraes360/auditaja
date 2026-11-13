@@ -25,11 +25,19 @@ function hashCurto(): string {
   }
 }
 
+// Sem domínio no build de produção, canonical, sitemap e cartões apontariam para localhost.
+if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_SITE_URL) {
+  console.warn(
+    "\n⚠ NEXT_PUBLIC_SITE_URL não definido: canonical, sitemap, robots.txt e llms.txt vão apontar para http://localhost:3000.\n",
+  );
+}
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   // Robôs que não executam JavaScript recebem title, description e Open Graph no <head>, sem streaming.
-  // A lista padrão do Next.js não traz os robôs de IA (GPTBot, ClaudeBot, PerplexityBot...).
-  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE_STRING}|${ROBOS_DE_IA.join("|")}`, "i"),
+  // A lista padrão do Next.js não traz os robôs de IA (GPTBot, ClaudeBot, PerplexityBot...) nem o Googlebot,
+  // que receberia canonical e description no <body> (o Google só garante o canonical no <head>).
+  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE_STRING}|Googlebot|${ROBOS_DE_IA.join("|")}`, "i"),
   partialPrefetching: true,
   env: {
     NEXT_PUBLIC_VERSAO: version,

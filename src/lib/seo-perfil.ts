@@ -18,6 +18,19 @@ export type IdentificacaoPublica = {
 
 export type CotaResumo = { ano: number; total: number; documentos: number } | null;
 
+/**
+ * Texto da fonte dentro de Markdown (título, item de lista, link): uma linha só e sinais de Markdown
+ * escapados, para que um nome com "# ", "[x](y)" ou "|" não vire título, link ou coluna.
+ */
+export function markdownEmLinha(s: string): string {
+  // Sem "[" e "]" não há link; "(" e "*" ficam como estão para o texto seguir legível em bruto.
+  return s
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[\\`[\]<>|]/g, "\\$&")
+    .replace(/^([#>+-])/, "\\$1");
+}
+
 export const caminhoDoPerfil = (id: number) => `/parlamentares/${id}`;
 
 /** "PT-SP", "PT", "SP" ou "" conforme o que a fonte informa. */
@@ -59,7 +72,7 @@ export function perfilOficial(p: Pick<IdentificacaoPublica, "id" | "casa">): str
  */
 export function jsonLdDoPerfil(
   p: IdentificacaoPublica,
-  opts: { base: string; descricao: string; dataColeta?: Date | null },
+  opts: { base: string; descricao: string; dataColeta?: Date | null; temGastos?: boolean; temEmendas?: boolean },
 ) {
   const { base } = opts;
   const url = urlAbsoluta(caminhoDoPerfil(p.id), base);
@@ -87,21 +100,27 @@ export function jsonLdDoPerfil(
   if (p.url_foto) pessoa.image = p.url_foto;
   if (p.sigla_partido) pessoa.affiliation = { "@type": "PoliticalParty", name: p.sigla_partido };
   if (p.sigla_uf && NOME_UF[p.sigla_uf])
-    pessoa.workLocation = { "@type": "AdministrativeArea", name: NOME_UF[p.sigla_uf], addressCountry: "BR" };
+    pessoa.workLocation = { "@type": "AdministrativeArea", name: NOME_UF[p.sigla_uf] };
 
-  const dataset = (nome: string, arquivo: string, descricao: string, fonte: { creator: object; portal: string }) => ({
+  const dataset = (
+    nome: string,
+    ancora: string,
+    arquivo: string,
+    descricao: string,
+    fonte: { creator: object; portal: string },
+  ) => ({
     "@type": "Dataset",
     name: `${nome}: ${p.nome}`,
     description: descricao,
-    url,
+    url: `${url}#${ancora}`,
     inLanguage: "pt-BR",
     isAccessibleForFree: true,
     creator: fonte.creator,
     publisher: { "@id": `${base}/#organizacao` },
     about: { "@id": `${url}#pessoa` },
     isBasedOn: fonte.portal,
-    // Licença de cada fonte: listada em /fontes, junto com a data e o hash de cada coleta.
-    license: urlAbsoluta("/fontes", base),
+    // Licença de cada fonte, com data e hash de cada coleta.
+    citation: urlAbsoluta("/fontes", base),
     ...(modificado ? { dateModified: modificado } : {}),
     distribution: [{ "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: urlAbsoluta(arquivo, base) }],
   });
@@ -135,18 +154,29 @@ export function jsonLdDoPerfil(
           { "@type": "ListItem", position: 4, name: p.nome, item: url },
         ],
       },
-      dataset(
-        senado ? "Gastos da cota do senador (CEAPS)" : "Gastos da cota parlamentar (CEAP)",
-        `${caminhoDoPerfil(p.id)}/gastos.csv`,
-        "Notas fiscais da cota parlamentar, uma por linha, com fornecedor, tipo de despesa e valor. Fornecedor pessoa física aparece sem nome nem CPF.",
-        { creator: casa, portal: portalDaCasa },
-      ),
-      dataset(
-        "Emendas parlamentares e quem recebeu",
-        `${caminhoDoPerfil(p.id)}/emendas.csv`,
-        "Emendas ao Orçamento indicadas pelo parlamentar e os favorecidos, segundo o Portal da Transparência (CGU).",
-        { creator: cgu, portal: "https://portaldatransparencia.gov.br/emendas" },
-      ),
+      // Só declara o Dataset quando há dados: perfil sem notas ou sem emendas não promete arquivo vazio.
+      ...(opts.temGastos === false
+        ? []
+        : [
+            dataset(
+              senado ? "Gastos da cota do senador (CEAPS)" : "Gastos da cota parlamentar (CEAP)",
+              "gastos",
+              `${caminhoDoPerfil(p.id)}/gastos.csv`,
+              "Notas fiscais da cota parlamentar, uma por linha, com fornecedor, tipo de despesa e valor. Fornecedor pessoa física aparece sem nome nem CPF.",
+              { creator: casa, portal: portalDaCasa },
+            ),
+          ]),
+      ...(opts.temEmendas === false
+        ? []
+        : [
+            dataset(
+              "Emendas parlamentares e quem recebeu",
+              "emendas",
+              `${caminhoDoPerfil(p.id)}/emendas.csv`,
+              "Emendas ao Orçamento indicadas pelo parlamentar e os favorecidos, segundo o Portal da Transparência (CGU).",
+              { creator: cgu, portal: "https://portaldatransparencia.gov.br/emendas" },
+            ),
+          ]),
     ],
   };
 }

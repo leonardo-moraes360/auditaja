@@ -4,6 +4,7 @@ import {
   caminhoDoPerfil,
   descricaoDoPerfil,
   jsonLdDoPerfil,
+  markdownEmLinha,
   partidoUf,
   perfilOficial,
   tituloDoPerfil,
@@ -123,12 +124,16 @@ describe("jsonLdDoPerfil", () => {
       "https://a.br/parlamentares?casa=camara",
       "https://a.br/parlamentares/204554",
     ]);
-    const datasets = doTipo("Dataset") as { distribution: { contentUrl: string }[]; license: string }[];
+    const datasets = doTipo("Dataset") as { distribution: { contentUrl: string }[]; citation: string }[];
     expect(datasets.map((d) => d.distribution[0].contentUrl)).toEqual([
       "https://a.br/parlamentares/204554/gastos.csv",
       "https://a.br/parlamentares/204554/emendas.csv",
     ]);
-    expect(datasets.every((d) => d.license === "https://a.br/fontes")).toBe(true);
+    expect(datasets.every((d) => d.citation === "https://a.br/fontes")).toBe(true);
+  });
+  it("sem notas nem emendas, não declara Dataset", () => {
+    const s = jsonLdDoPerfil(deputada, { base: "https://a.br", descricao: "D", temGastos: false, temEmendas: false });
+    expect((s["@graph"] as { "@type": string }[]).some((g) => g["@type"] === "Dataset")).toBe(false);
   });
   it("sem foto nem partido, omite os campos em vez de mandar null", () => {
     const s = jsonLdDoPerfil({ ...senador, url_foto: null }, { base: "https://a.br", descricao: "D" });
@@ -137,6 +142,15 @@ describe("jsonLdDoPerfil", () => {
     expect(pessoa).not.toHaveProperty("affiliation");
     expect(pessoa.worksFor).toMatchObject({ name: "Senado Federal" });
   });
+});
+
+describe("markdownEmLinha", () => {
+  it("nome hostil não vira título, link, HTML nem coluna", () => {
+    const s = markdownEmLinha("# Maria </script> | [y](javascript:alert(2))\n# Injetado");
+    expect(s).toBe("\\# Maria \\</script\\> \\| \\[y\\](javascript:alert(2)) # Injetado");
+    expect(s).not.toContain("\n");
+  });
+  it("texto comum fica legível", () => expect(markdownEmLinha("São Paulo (SP)")).toBe("São Paulo (SP)"));
 });
 
 describe("llms.txt", () => {

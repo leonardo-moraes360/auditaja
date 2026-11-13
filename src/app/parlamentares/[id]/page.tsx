@@ -160,6 +160,8 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
     base: siteUrl(),
     descricao: descricaoDoPerfil(p, resumo?.cota ?? null),
     dataColeta: coletas[p.casa],
+    temGastos: !!resumo?.cota,
+    temEmendas: !emendas.vazio,
   });
 
   return (

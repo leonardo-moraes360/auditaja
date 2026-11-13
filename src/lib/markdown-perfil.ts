@@ -3,12 +3,12 @@ import type { Perfil } from "@/data/perfil";
 import { brl, dataHoraBr, MESES, pct } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 import { cargoParlamentar, partidoPorExtenso, periodoLegislatura, periodoMandato, ufPorExtenso } from "@/lib/rotulos";
-import { caminhoDoPerfil, perfilOficial, tituloDoPerfil } from "@/lib/seo-perfil";
+import { caminhoDoPerfil, markdownEmLinha, perfilOficial, tituloDoPerfil } from "@/lib/seo-perfil";
 import { rotuloVotoSenado } from "@/lib/senado";
 import { SITE_NOME, urlAbsoluta } from "@/lib/site";
 
 /** Texto vindo da fonte numa célula de tabela Markdown: sem quebra de linha nem "|" solto. */
-const celula = (s: string) => s.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
+const celula = markdownEmLinha;
 
 /**
  * Resumo do perfil em Markdown, para agentes e leitores de texto. Mesmos números da página (mesma
@@ -23,7 +23,7 @@ export function markdownDoPerfil(perfil: Perfil, emendas: EmendasDoParlamentar, 
   const linhas: string[] = [];
   const add = (...l: string[]) => linhas.push(...l);
 
-  add(`# ${tituloDoPerfil(p)}`, "");
+  add(`# ${markdownEmLinha(tituloDoPerfil(p))}`, "");
   add(
     `> Resumo em Markdown do perfil publicado em ${url}. Dados abertos oficiais, com fonte e data de coleta. ` +
       `Indicadores são pontos de partida para verificação, não acusação. Metodologia versão ${METODOLOGIA_VERSAO}: ${urlAbsoluta("/metodologia", base)}.`,
