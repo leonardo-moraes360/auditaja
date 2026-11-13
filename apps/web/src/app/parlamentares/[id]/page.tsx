@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Esqueleto } from "@/components/esqueleto";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import {
   baseDasSancoes,
   emendasDoParlamentar,
@@ -15,7 +14,7 @@ import { padraoAtipico } from "@/data/atipico";
 import { anosComPonto, PontosParaVerificar, pontosParaVerificar } from "@/components/perfil/pontos";
 import { anoInicialDoSenador, juntarSancionados } from "@auditaja/core/emendas";
 import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
-import { resumoDoParlamentar, ultimaColetaPorCasa } from "@/data/seo";
+import { indiceDeParlamentares, resumoDoParlamentar, ultimaColetaPorCasa } from "@/data/seo";
 import { caminhoDoPerfil, descricaoDoPerfil, jsonLdDoPerfil, tituloDoPerfil } from "@/lib/seo-perfil";
 import { jsonLd, metadataDaPagina, siteUrl } from "@/lib/site";
 import { SecaoEmendas } from "@/components/perfil/secao-emendas";
@@ -46,8 +45,16 @@ function idValido(s: string) {
   return /^\d{1,9}$/.test(s) ? Number(s) : null;
 }
 
+export async function generateStaticParams() {
+  try {
+    const parlamentares = await indiceDeParlamentares();
+    return parlamentares.map((p) => ({ id: String(p.id) }));
+  } catch {
+    return [{ id: "0" }];
+  }
+}
+
 export async function generateMetadata({ params }: PageProps<"/parlamentares/[id]">): Promise<Metadata> {
-  await connection();
   const id = idValido((await params).id);
   const r = id ? await resumoDoParlamentar(id) : null;
   if (!r) return { title: "Parlamentar não encontrado", robots: { index: false, follow: true } };
@@ -80,7 +87,6 @@ export default function PaginaPerfil({ params, searchParams }: PageProps<"/parla
 }
 
 async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">) {
-  await connection();
   const id = idValido((await params).id);
   if (!id) notFound();
   const sp = await searchParams;
