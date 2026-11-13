@@ -2,7 +2,16 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator } from "@playwright/test";
 import { createDb } from "@/db/client";
 import { nomeLegivel } from "@/lib/trilha";
-import { CNPJ, EMENDA, MUNICIPIOS_QUINTO, ORDEM_PAGO_QUINTO, QUINTO, RITA, semearTrilha } from "../fixtures/trilha";
+import {
+  CNPJ,
+  EMENDA,
+  MUNICIPIOS_QUINTO,
+  ORDEM_PAGO_QUINTO,
+  OUTRO,
+  QUINTO,
+  RITA,
+  semearTrilha,
+} from "../fixtures/trilha";
 
 // Dados fictícios: tests/fixtures/trilha.ts (Rita: 6 emendas Pix com 5 indícios; Quinto: 15 municípios, sem base).
 const URL_TESTE = process.env.TEST_DATABASE_URL ?? "postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test";
@@ -260,8 +269,7 @@ test("DENS-03, DENS-06: 10 municípios à vista em ordem de valor pago, os outro
 
   // Chevron do município acompanha o próprio município, não a emenda.
   const primeiro = visiveis.first();
-  const giro = () =>
-    primeiro.locator(":scope > summary [data-chevron]").evaluate((el) => getComputedStyle(el).rotate);
+  const giro = () => primeiro.locator(":scope > summary [data-chevron]").evaluate((el) => getComputedStyle(el).rotate);
   await expect(primeiro).not.toHaveAttribute("open", "");
   expect(await giro()).toBe("none");
   await primeiro.locator(":scope > summary").click();
@@ -310,6 +318,39 @@ test("DENS-09: Ver na trilha leva ao município da empresa e o abre, mesmo se fo
   await expect(page).toHaveURL(new RegExp(`${href}$`));
   await expect(alvo).toHaveAttribute("open", "");
   await expect(page.locator(href)).toBeInViewport();
+});
+
+test("TRI-05: emenda sem nenhum pagamento mostra o saldo no elo 3", async ({ page }) => {
+  await page.goto(`/parlamentares/${RITA}`);
+  const e = page.locator(`[data-trilha-emenda="${EMENDA.fundo}"]`);
+  await e.locator(":scope > summary").click();
+  await expect(e.locator("[data-saldo-emenda]")).toHaveText("Sem pagamento registrado: R$ 1,8 mi");
+  await expect(e.locator("[data-saldo-emenda]")).toBeVisible();
+});
+
+test("DENS-01: emenda em duas UFs mostra a UF de cada município", async ({ page }) => {
+  await page.goto(`/parlamentares/${OUTRO}`);
+  const e = page.locator(`[data-trilha-emenda="${EMENDA.doOutro}"]`);
+  await expect(e).toHaveAttribute("open", "");
+  const nomes = e.locator("[data-municipio] > summary > span:first-child");
+  await expect(nomes).toHaveText(["Sorocaba (SP)", "Uberaba (MG)"]);
+});
+
+test("celular estreito: nome longo de município não cobre o valor pago", async ({ page }) => {
+  for (const largura of [320, 390]) {
+    await page.setViewportSize({ width: largura, height: 800 });
+    await page.goto(`/parlamentares/${QUINTO}`);
+    await page.locator("section#trilha").waitFor();
+    await page.evaluate(() =>
+      document.querySelectorAll("section#trilha details").forEach((d) => d.setAttribute("open", "")),
+    );
+    const transbordando = await page
+      .locator("[data-municipio] > summary > span")
+      .evaluateAll((els) => els.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent));
+    expect(transbordando).toEqual([]);
+    // O nome longo quebra em mais de uma linha e o valor fica inteiro ao lado.
+    await expect(page.getByText("Santo Antonio das Missoes e Vale do Taquari Superior").first()).toBeVisible();
+  }
 });
 
 test("EDGE-04: sem emenda Pix, frase de vazio com gênero e sem trilha", async ({ page }) => {

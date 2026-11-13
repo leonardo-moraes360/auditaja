@@ -31,7 +31,7 @@ export const MUNICIPIOS_QUINTO = [
   "LAJEADO",
   "SANTO ANGELO",
   "CANGUCU",
-  "CANDELARIA",
+  "SANTO ANTONIO DAS MISSOES E VALE DO TAQUARI SUPERIOR",
   "CARAZINHO",
   "FREDERICO WESTPHALEN",
   "ALEGRETE",
@@ -65,6 +65,9 @@ export const CNPJ = {
   /** Filial sem CNAE cuja matriz é da administração pública (CNAE 84). */
   enteFilial: comDv("840840840002"),
   enteMatriz: comDv("840840840001"),
+  uberaba: comDv("970000050001"),
+  /** Paga em MG; fora da base da Receita. */
+  mineira: comDv("313131310001"),
   /** Primeiro pagamento da emenda é anterior à abertura; outro plano paga 30 dias depois dela. */
   pagaAntesDeAbrir: comDv("101010100001"),
 };
@@ -265,6 +268,11 @@ export async function semearTrilha(db: Kysely<Database>) {
       plano(97004, RITA, EMENDA.itu, CNPJ.enteX, "MUNICIPIO DE ITU", 500_000, "2025-03-01"),
       plano(97005, RITA, EMENDA.bauru, CNPJ.enteX, "MUNICIPIO DE ITU", 300_000, "2025-03-01"),
       plano(97009, OUTRO, EMENDA.doOutro, CNPJ.sorocaba, "MUNICIPIO DE SOROCABA", 900_000, "2025-03-01"),
+      // Mesma emenda em outra UF: cada município mostra a sua (DENS-01).
+      {
+        ...plano(97010, OUTRO, EMENDA.doOutro, CNPJ.uberaba, "MUNICIPIO DE UBERABA", 100_000, "2025-03-01"),
+        beneficiario_uf: "MG",
+      },
       plano(97031, TERCEIRO, EMENDA.doTerceiro, CNPJ.enteX, "MUNICIPIO DE ITU", 600_000, "2025-02-01"),
       plano(97032, TERCEIRO, EMENDA.doTerceiro, CNPJ.campinas, "MUNICIPIO DE CAMPINAS", 400_000, "2025-02-01"),
       ...EMENDA.terceiroGrandes.map((c, i) =>
@@ -330,6 +338,7 @@ export async function semearTrilha(db: Kysely<Database>) {
       pj(97004, CNPJ.associacao, "ASSOCIACAO BENEFICENTE EXEMPLO", 500_000, "2025-07-01"),
       pj(97005, CNPJ.servicos, "SERVICOS MEDICOS FICTICIOS LTDA", 100_000, "2025-08-01"),
       pj(97009, CNPJ.construtora, "CONSTRUTORA ILUSTRATIVA LTDA", 300_000, "2025-04-01"),
+      pj(97010, CNPJ.mineira, "OBRAS MINEIRAS FICTICIAS LTDA", 40_000, "2025-04-02"),
       // Plano 97031 paga depois de 180 dias; o 97032, da mesma emenda, antes: vale o primeiro da emenda.
       pj(97031, CNPJ.novaDoisPlanos, "NOVA DOIS PLANOS LTDA", 70_000, "2025-08-01"),
       pj(97032, CNPJ.novaDoisPlanos, "NOVA DOIS PLANOS LTDA", 30_000, "2025-03-01"),

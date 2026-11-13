@@ -225,7 +225,10 @@ describe("coletarTransferegovPix", () => {
       [2, 501, "pj", "19681377000181", "SAFRA EQUIPAMENTOS LTDA", "100.10", "2026-05-01"],
       [4, 501, "pf", null, null, "3500.96", "2026-04-03"],
     ]);
-    const tudo = JSON.stringify(await db.selectFrom("transf_plano").selectAll().execute()) + JSON.stringify(pg);
+    // Sem coleta_id: o id da coleta pode conter "1428" por acaso.
+    const semColeta = (xs: object[]) =>
+      JSON.stringify(xs.map((x) => Object.fromEntries(Object.entries(x).filter(([k]) => k !== "coleta_id"))));
+    const tudo = semColeta(await db.selectFrom("transf_plano").selectAll().execute()) + semColeta(pg);
     for (const proibido of ["LUCIANY", "823135", "1428", "34782", "Banco do Brasil", "DV ERRADO"]) {
       expect(tudo).not.toContain(proibido);
     }

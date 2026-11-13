@@ -669,7 +669,7 @@ function Elos({ emenda: e }: { emenda: EmendaTrilha }) {
           target="_blank"
           className="text-sm"
         >
-          Transferegov · pagamentos
+          Transferegov · pagamentos (base completa; por município abaixo)
         </a>
       </li>
     </ol>
@@ -765,16 +765,17 @@ function Municipio({
       className="group/mun scroll-mt-4 border-b border-borda-suave"
     >
       <summary
-        className={`${SUMMARY} flex min-h-11 items-center justify-between gap-2 px-3 py-1.5 text-base ${GRADE_MUNICIPIO}`}
+        className={`${SUMMARY} flex min-h-11 flex-wrap items-center justify-between gap-x-2 gap-y-0.5 px-3 py-1.5 text-base ${GRADE_MUNICIPIO}`}
       >
-        <span className="min-w-0 font-semibold">
+        <span className="min-w-0 flex-1 font-semibold break-words">
           {nome}
           {p.ente.uf && (!e.uf || e.uf === "várias UFs") && (
             <span className="font-normal text-muted-foreground"> ({p.ente.uf})</span>
           )}
         </span>
         <span className="hidden text-right tabular-nums sm:inline">{brlMi(p.valor)}</span>
-        <span className="text-right whitespace-nowrap tabular-nums">
+        {/* Celular: o valor vai para a linha de baixo, para o nome caber inteiro ao lado da seta. */}
+        <span className="order-last basis-full text-sm whitespace-nowrap text-texto-2 tabular-nums sm:order-none sm:basis-auto sm:text-right sm:text-base sm:text-foreground">
           <span className="sm:hidden">pagou </span>
           {brlMi(p.pago)}
         </span>

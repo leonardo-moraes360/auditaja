@@ -147,7 +147,7 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 
 **Acceptance Criteria**:
 
-1. The system SHALL mostrar cada emenda Pix numa linha com código, área, número de municípios ou estados (com a UF), valor transferido e porcentagem paga; WHEN a emenda tem indício THEN ela abre aberta e vem antes das outras; as demais vêm fechadas. <!-- DENS-01 -->
+1. The system SHALL mostrar cada emenda Pix numa linha com código, área (só quando o Portal informa uma função diferente de "Encargos especiais", que é a de toda transferência especial), número de municípios ou estados (com a UF), valor transferido e porcentagem paga; WHEN a emenda tem indício THEN ela abre aberta e vem antes das outras; as demais vêm fechadas. <!-- DENS-01 -->
 2. WHEN uma emenda está aberta THEN the system SHALL mostrar os três elos uma vez, cada um com o seu valor: reservado no Orçamento (empenhado, Portal da Transparência), transferido a N municípios ou estados (Transferegov) e pago pelos municípios (Transferegov), com o saldo "Sem pagamento registrado: R$ X" quando houver (TRI-05). <!-- DENS-02 -->
 3. The system SHALL listar os municípios ou estados da emenda em ordem de valor pago, mostrar no máximo 10 com pagamento e oferecer "Ver os outros N municípios com pagamento"; os que não têm pagamento ficam numa linha só, "N municípios sem pagamento registrado · R$ X". <!-- DENS-03 -->
 4. WHEN o cidadão abre um município THEN the system SHALL mostrar quem ele pagou (nome, CNPJ, abertura, 1º pagamento, valor), os pagamentos a pessoas físicas numa linha somada e um selo em cada empresa com indício ("recém-aberta" ou "também na campanha"). <!-- DENS-04 -->

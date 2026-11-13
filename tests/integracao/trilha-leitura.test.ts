@@ -379,4 +379,14 @@ describe("trilhaDoParlamentar", () => {
       await semearTrilha(db);
     }
   });
+
+  it("DENS-01: emenda em duas UFs fica 'várias UFs' e cada município mantém a sua", async (ctx) => {
+    if (!disponivel) ctx.skip();
+    const e = (await cheia(OUTRO)).emendas.find((x) => x.codigo === EMENDA.doOutro)!;
+    expect(e.uf).toBe("várias UFs");
+    expect(e.planos.map((p) => [p.ente.nome, p.ente.uf])).toEqual([
+      ["MUNICIPIO DE SOROCABA", "SP"],
+      ["MUNICIPIO DE UBERABA", "MG"],
+    ]);
+  });
 });
