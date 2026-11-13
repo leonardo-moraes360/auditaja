@@ -138,3 +138,31 @@ test("LING-04: Contestar leva ao formulário de correção existente", async ({ 
     "Para onde foi o dinheiro (indícios das emendas Pix)",
   );
 });
+
+test("LING-05: CSV da trilha com elos, indício e versão da metodologia, sem PF", async ({ request }) => {
+  const r = await request.get(`/parlamentares/${RITA}/trilha.csv`);
+  expect(r.ok()).toBe(true);
+  expect(r.headers()["content-type"]).toContain("text/csv");
+  const [cab, ...linhas] = (await r.text()).replace(/^﻿/, "").trim().split("\r\n");
+  const col = cab.split(";");
+  expect(col).toContain("indicio");
+  expect(col).toContain("versao_metodologia");
+  // Nenhuma coluna de nome ou documento de pessoa física.
+  expect(col.filter((c) => /cpf|pessoa_fisica|nome_pf/.test(c))).toEqual([]);
+  const linha = (pred: (c: string[]) => boolean) => linhas.map((l) => l.split(";")).find(pred)!;
+  const ix = (n: string) => col.indexOf(n);
+  const construtora = linha(
+    (c) => c[ix("recebedor")] === "CONSTRUTORA ILUSTRATIVA LTDA" && c[ix("codigo_emenda")] === EMENDA.sorocaba,
+  );
+  expect(construtora[ix("indicio")]).toBe("recem-aberta");
+  expect(construtora[ix("valor")]).toBe("1200000.00");
+  expect(construtora[ix("versao_metodologia")]).toMatch(/^1\.\d+$/);
+  const pf = linha((c) => c[ix("elo")] === "pessoas_fisicas");
+  expect([pf[ix("recebedor")], pf[ix("recebedor_cnpj")], pf[ix("valor")]]).toEqual(["", "", "12000.00"]);
+  expect(
+    linha((c) => c[ix("elo")] === "sem_pagamento_registrado" && c[ix("codigo_emenda")] === EMENDA.sorocaba)[
+      ix("valor")
+    ],
+  ).toBe("391000.00");
+  expect(linha((c) => c[ix("elo")] === "favorecido_direto")[ix("indicio")]).toBe("ciclo-fechado");
+});

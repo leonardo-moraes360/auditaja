@@ -388,11 +388,12 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Nenhuma coluna com nome ou documento de PF
-- [ ] Colunas `indicio` e `versao_metodologia` presentes
-- [ ] Full gate passa
+- [x] Nenhuma coluna com nome ou documento de PF
+- [x] Colunas `indicio` e `versao_metodologia` presentes
+- [x] Full gate passa
 
 **Tests**: e2e
+**Status**: ✅ Done
 **Gate**: full
 
 ---
