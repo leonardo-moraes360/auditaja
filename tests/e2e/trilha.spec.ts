@@ -166,3 +166,30 @@ test("LING-05: CSV da trilha com elos, indício e versão da metodologia, sem PF
   ).toBe("391000.00");
   expect(linha((c) => c[ix("elo")] === "favorecido_direto")[ix("indicio")]).toBe("ciclo-fechado");
 });
+
+test("LING-03, LING-08: metodologia 1.11 com uma seção por sinal e as âncoras dos avisos", async ({ page }) => {
+  await page.goto("/metodologia#recem-aberta");
+  await expect(page.getByText("Versão 1.11. Toda mudança gera nova versão.")).toBeVisible();
+  const recem = page.locator("section#recem-aberta");
+  await expect(recem.getByRole("heading", { name: "Indício: empresa recém-aberta" })).toBeVisible();
+  for (const t of [
+    "Fonte:",
+    "Regra e limiar:",
+    "menos de 180 dias",
+    "Exemplo:",
+    "Causas conhecidas de falso positivo:",
+    "MEI",
+  ])
+    await expect(recem).toContainText(t);
+  const ciclo = page.locator("section#ciclo-fechado");
+  await expect(ciclo.getByRole("heading", { name: "Indício: ciclo fechado entre emenda e campanha" })).toBeVisible();
+  for (const t of ["Fonte:", "Regra:", "Exemplo:", "Causas conhecidas de falso positivo:", "gráficas"])
+    await expect(ciclo).toContainText(t);
+  // Os links "Como calculamos" dos avisos apontam para essas âncoras.
+  await page.goto(`/parlamentares/${RITA}`);
+  const links = page.locator("section#trilha [data-indicio]").getByRole("link", { name: /Como calculamos/ });
+  await expect(links).toHaveCount(4);
+  const hrefs = await links.evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))].sort());
+  expect(hrefs).toEqual(["/metodologia#ciclo-fechado", "/metodologia#recem-aberta"]);
+  await expect(links.first()).toContainText("metodologia 1.11");
+});

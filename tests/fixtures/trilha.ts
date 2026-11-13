@@ -52,14 +52,20 @@ const ESP = "Emenda Individual - Transferências Especiais";
 const FD = "Emenda Individual - Transferências com Finalidade Definida";
 
 export async function semearTrilha(db: Kysely<Database>) {
-  const coleta = async (fonte: string, url: string, sha: string, observacao: string) =>
+  const coleta = async (
+    fonte: string,
+    url: string,
+    sha: string,
+    observacao: string,
+    coletado_em = "2026-11-12T09:30:00Z",
+  ) =>
     (
       await db
         .insertInto("coleta")
         .values({
           fonte,
           url,
-          coletado_em: "2026-11-12T09:30:00Z",
+          coletado_em,
           sha256: sha.padEnd(64, "0"),
           bytes: 0,
           licenca: "dados fictícios de teste",
@@ -73,6 +79,8 @@ export async function semearTrilha(db: Kysely<Database>) {
     "https://dadosabertos-download.cgu.gov.br/x.zip",
     "c9e1",
     "base de 09/11/2026",
+    // Mais antiga que a do seed: a seção de emendas cita a coleta mais recente da CGU.
+    "2026-11-01T09:30:00Z",
   );
   const cTg = await coleta(
     "transferegov_especiais",

@@ -167,41 +167,41 @@ Medido no banco local em 2026-11-12: R$ 66,5 bi em favorecidos de emendas (2020�
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| TRI-01 | P1: Trilha | Design | Pending |
-| TRI-02 | P1: Trilha | Design | Pending |
-| TRI-03 | P1: Trilha | Design | Pending |
-| TRI-04 | P1: Trilha | Design | Pending |
-| TRI-05 | P1: Trilha | Design | Pending |
-| TRI-06 | P1: Trilha | Design | Pending |
-| TRI-07 | P1: Trilha | Design | Pending |
-| CNPJ-01 | P1: Recém-aberta | Design | Pending |
-| CNPJ-02 | P1: Recém-aberta | Design | Pending |
-| CNPJ-03 | P1: Recém-aberta | Design | Pending |
-| CNPJ-04 | P1: Recém-aberta | Design | Pending |
-| CNPJ-05 | P1: Recém-aberta | Design | Pending |
-| CNPJ-06 | P1: Recém-aberta | Design | Pending |
-| CNPJ-07 | P1: Recém-aberta | Design | Pending |
-| CICLO-01 | P2: Ciclo fechado | Design | Pending |
-| CICLO-02 | P2: Ciclo fechado | Design | Pending |
-| CICLO-03 | P2: Ciclo fechado | Design | Pending |
-| CICLO-04 | P2: Ciclo fechado | Design | Pending |
-| LING-01 | P1: Linguagem | Design | Pending |
-| LING-02 | P1: Linguagem | Design | Pending |
-| LING-03 | P1: Linguagem | Design | Pending |
-| LING-04 | P1: Linguagem | Design | Pending |
-| LING-05 | P1: Linguagem | Design | Pending |
-| LING-06 | P1: Linguagem | Design | Pending |
-| LING-07 | P1: Linguagem | Design | Pending |
-| LING-08 | P1: Linguagem | Design | Pending |
-| LING-09 | P1: Linguagem | Design | Pending |
-| EDGE-01 | Edge cases | Design | Pending |
-| EDGE-02 | Edge cases | Design | Pending |
-| EDGE-03 | Edge cases | Design | Pending |
-| EDGE-04 | Edge cases | Design | Pending |
-| EDGE-05 | Edge cases | Design | Pending |
-| EDGE-06 | Edge cases | Design | Pending |
+| TRI-01 | P1: Trilha | Execute | Implemented |
+| TRI-02 | P1: Trilha | Execute | Implemented |
+| TRI-03 | P1: Trilha | Execute | Implemented |
+| TRI-04 | P1: Trilha | Execute | Implemented |
+| TRI-05 | P1: Trilha | Execute | Implemented |
+| TRI-06 | P1: Trilha | Execute | Implemented |
+| TRI-07 | P1: Trilha | Execute | Implemented |
+| CNPJ-01 | P1: Recém-aberta | Execute | Implemented |
+| CNPJ-02 | P1: Recém-aberta | Execute | Implemented |
+| CNPJ-03 | P1: Recém-aberta | Execute | Implemented |
+| CNPJ-04 | P1: Recém-aberta | Execute | Implemented |
+| CNPJ-05 | P1: Recém-aberta | Execute | Implemented |
+| CNPJ-06 | P1: Recém-aberta | Execute | Implemented |
+| CNPJ-07 | P1: Recém-aberta | Execute | Implemented |
+| CICLO-01 | P2: Ciclo fechado | Execute | Implemented |
+| CICLO-02 | P2: Ciclo fechado | Execute | Implemented |
+| CICLO-03 | P2: Ciclo fechado | Execute | Implemented |
+| CICLO-04 | P2: Ciclo fechado | Execute | Implemented |
+| LING-01 | P1: Linguagem | Execute | Implemented |
+| LING-02 | P1: Linguagem | Execute | Implemented |
+| LING-03 | P1: Linguagem | Execute | Implemented |
+| LING-04 | P1: Linguagem | Execute | Implemented |
+| LING-05 | P1: Linguagem | Execute | Implemented |
+| LING-06 | P1: Linguagem | Execute | Implemented |
+| LING-07 | P1: Linguagem | Execute | Implemented |
+| LING-08 | P1: Linguagem | Execute | Implemented |
+| LING-09 | P1: Linguagem | Execute | Implemented |
+| EDGE-01 | Edge cases | Execute | Implemented |
+| EDGE-02 | Edge cases | Execute | Implemented |
+| EDGE-03 | Edge cases | Execute | Implemented |
+| EDGE-04 | Edge cases | Execute | Implemented |
+| EDGE-05 | Edge cases | Execute | Implemented |
+| EDGE-06 | Edge cases | Execute | Implemented |
 
-**Coverage:** 33 total, 0 mapped to tasks, 33 unmapped ⚠️ (Tasks ainda não feitas)
+**Coverage:** 33 total, 33 mapped to tasks (T1–T14), 0 unmapped
 
 ---
 

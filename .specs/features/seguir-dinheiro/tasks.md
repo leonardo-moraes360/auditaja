@@ -413,11 +413,12 @@ T10 → T11 → T12 → T13 → T14
 
 **Done when**:
 
-- [ ] Âncoras `#recem-aberta` e `#ciclo-fechado` usadas pelos links dos avisos
-- [ ] Versão 1.11 em `src/lib/metrics.ts`
-- [ ] Full gate passa
+- [x] Âncoras `#recem-aberta` e `#ciclo-fechado` usadas pelos links dos avisos
+- [x] Versão 1.11 em `src/lib/metrics.ts`
+- [x] Full gate passa
 
 **Tests**: e2e
+**Status**: ✅ Done
 **Gate**: full
 
 ---
