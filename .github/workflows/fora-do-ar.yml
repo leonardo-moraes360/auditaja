@@ -32,7 +32,7 @@ jobs:
 
       - name: Testar modo manutenção (503)
         run: |
-          docker run -d --name fora-manutencao -p 8080:80 -e TIPO=manutencao -e RETRY_AFTER=3600 auditaja-fora-do-ar
+          docker run -d --name fora-manutencao -p 8080:8080 -e TIPO=manutencao -e RETRY_AFTER=3600 auditaja-fora-do-ar
           sleep 2
           
           echo "Testando raiz..."
@@ -62,7 +62,7 @@ jobs:
 
       - name: Testar modo judicial (451)
         run: |
-          docker run -d --name fora-judicial -p 8080:80 -e TIPO=judicial -e BLOCKED_BY_URL=https://www.tjsp.jus.br auditaja-fora-do-ar
+          docker run -d --name fora-judicial -p 8080:8080 -e TIPO=judicial -e BLOCKED_BY_URL=https://www.tjsp.jus.br auditaja-fora-do-ar
           sleep 2
           
           echo "Testando raiz..."

@@ -21,7 +21,7 @@ docker build -t auditaja-fora-do-ar .
 ### Modo manutenção (padrão)
 
 ```bash
-docker run -p 8080:80 \
+docker run -p 80:8080 \
   -e TIPO=manutencao \
   -e RETRY_AFTER=3600 \
   auditaja-fora-do-ar
@@ -33,7 +33,7 @@ docker run -p 8080:80 \
 ### Modo judicial
 
 ```bash
-docker run -p 8080:80 \
+docker run -p 80:8080 \
   -e TIPO=judicial \
   -e BLOCKED_BY_URL=https://www.tjsp.jus.br \
   auditaja-fora-do-ar
@@ -70,7 +70,7 @@ Os arquivos HTML (`manutencao.html` e `judicial.html`) contêm placeholders em c
 Para personalizar em runtime, monte um arquivo editado:
 
 ```bash
-docker run -p 8080:80 \
+docker run -p 80:8080 \
   -e TIPO=manutencao \
   -v $(pwd)/minha-pagina.html:/usr/share/nginx/html/manutencao.html:ro \
   auditaja-fora-do-ar
@@ -103,7 +103,7 @@ Para substituir o app principal pelo modo fora-do-ar:
 docker build -t auditaja-fora-do-ar .
 
 # Modo manutenção
-docker run -d --name fora-test -p 8080:80 -e TIPO=manutencao auditaja-fora-do-ar
+docker run -d --name fora-test -p 8080:8080 -e TIPO=manutencao auditaja-fora-do-ar
 
 curl -I http://localhost:8080/
 # Deve retornar 503 com Retry-After
@@ -117,7 +117,7 @@ curl -I http://localhost:8080/api/qualquer-coisa
 docker stop fora-test && docker rm fora-test
 
 # Modo judicial
-docker run -d --name fora-test -p 8080:80 -e TIPO=judicial -e BLOCKED_BY_URL=https://www.tjsp.jus.br auditaja-fora-do-ar
+docker run -d --name fora-test -p 8080:8080 -e TIPO=judicial -e BLOCKED_BY_URL=https://www.tjsp.jus.br auditaja-fora-do-ar
 
 curl -I http://localhost:8080/
 # Deve retornar 451 com Link rel="blocked-by"
