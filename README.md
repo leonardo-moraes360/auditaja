@@ -45,6 +45,22 @@ Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `
 - **R10:** partido só de parlamentares; nada de listas de filiados.
 - **R13:** rodapé e política de privacidade (`/privacidade`) com controlador e encarregado (variáveis `NEXT_PUBLIC_*`, hoje placeholders).
 
+## SEO e agentes de IA
+
+O domínio público vem de `NEXT_PUBLIC_SITE_URL`, lido no build: sem ele, canonical, sitemap e cartões apontam para `http://localhost:3000`.
+
+| Endereço                          | Para quê                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| `/robots.txt`                     | Libera todos os robôs, inclusive de IA e de treino; bloqueia formulários |
+| `/sitemap.xml`                    | Páginas fixas, listas por Casa e UF e todos os perfis                    |
+| `/llms.txt`, `/llms-full.txt`     | Guia do site para agentes e índice de perfis em Markdown                 |
+| `/parlamentares/{id}.md`          | Perfil em Markdown (`noindex`, canonical para o HTML)                    |
+| `opengraph-image`/`twitter-image` | Cartões 1200×630 do site e de cada perfil                                |
+
+Cada página define title, description e canonical por `metadataDaPagina` (`src/lib/site.ts`). O perfil traz JSON-LD (`Person`, `ProfilePage`, `BreadcrumbList`, `Dataset`) montado em `src/lib/seo-perfil.ts`, só com o que a página já mostra (R2). Robôs de IA (lista em `ROBOS_DE_IA`) recebem a metadata no `<head>` sem streaming (`htmlLimitedBots` no `next.config.ts`).
+
+Limite conhecido: o conteúdo dos perfis e das listas chega por streaming (Suspense). Quem executa JavaScript, como o Googlebot, vê tudo; um robô sem JavaScript recebe o texto num bloco oculto do HTML, e por isso o perfil também sai em Markdown.
+
 ## Versão (semver)
 
 A versão do site fica no `package.json` e segue o [Versionamento Semântico](https://semver.org/lang/pt-BR/). O rodapé mostra `vX.Y.Z · <hash curto>`, lidos no build pelo `next.config.ts` (hash: `NEXT_PUBLIC_COMMIT`, depois `SOURCE_COMMIT` do Coolify, depois `git rev-parse --short HEAD`). Sem git, aparece só a versão.

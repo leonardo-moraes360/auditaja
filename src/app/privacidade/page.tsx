@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
+import { metadataDaPagina } from "@/lib/site";
 import Link from "next/link";
 import { responsavel } from "@/lib/responsavel";
 
-export const metadata: Metadata = { title: "Política de privacidade" };
+export const metadata: Metadata = metadataDaPagina({
+  titulo: "Política de privacidade",
+  descricao: "Que dados o Auditaja trata, por quê, por quanto tempo e como exercer seus direitos pela LGPD.",
+  caminho: "/privacidade",
+});
 
 /** Toda mudança no texto atualiza esta data. */
 const PRIVACIDADE_ATUALIZADA_EM = "11/11/2026";

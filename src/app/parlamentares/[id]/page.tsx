@@ -15,6 +15,9 @@ import { padraoAtipico } from "@/data/atipico";
 import { anosComPonto, PontosParaVerificar, pontosParaVerificar } from "@/components/perfil/pontos";
 import { anoInicialDoSenador, juntarSancionados } from "@/lib/emendas";
 import { perfilParlamentar, type PeriodoCeap } from "@/data/perfil";
+import { resumoDoParlamentar, ultimaColetaPorCasa } from "@/data/seo";
+import { caminhoDoPerfil, descricaoDoPerfil, jsonLdDoPerfil, tituloDoPerfil } from "@/lib/seo-perfil";
+import { jsonLd, metadataDaPagina, siteUrl } from "@/lib/site";
 import { SecaoEmendas } from "@/components/perfil/secao-emendas";
 import { FotoParlamentar } from "@/components/perfil/foto";
 import { AbasSecoes } from "@/components/perfil/abas";
@@ -44,12 +47,19 @@ function idValido(s: string) {
 export async function generateMetadata({ params }: PageProps<"/parlamentares/[id]">): Promise<Metadata> {
   await connection();
   const id = idValido((await params).id);
-  const perfil = id ? await perfilParlamentar(id) : null;
+  const r = id ? await resumoDoParlamentar(id) : null;
+  if (!r) return { title: "Parlamentar não encontrado", robots: { index: false, follow: true } };
+  const caminho = caminhoDoPerfil(r.id);
+  const titulo = tituloDoPerfil(r);
+  const descricao = descricaoDoPerfil(r, r.cota);
+  // Filtros (?ano=, ?votos=, ?lista=) mostram o mesmo perfil: a URL canônica é a sem parâmetros.
+  const base = metadataDaPagina({ titulo, descricao, caminho, tipo: "profile" });
   return {
-    title: perfil ? perfil.parlamentar.nome : "Parlamentar não encontrado",
-    alternates: perfil
-      ? { types: { "application/atom+xml": `/parlamentares/${perfil.parlamentar.id}/feed.xml` } }
-      : undefined,
+    ...base,
+    alternates: {
+      canonical: caminho,
+      types: { "application/atom+xml": `${caminho}/feed.xml`, "text/markdown": `${caminho}.md` },
+    },
   };
 }
 
@@ -85,13 +95,15 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   // Emendas e sanções (CGU) valem para as duas Casas; a coleta liga cada emenda a um único perfil.
   const anosCeap = perfil.mandato ? perfil.anosDisponiveis : [perfil.ano];
   const anosTodos = perfil.anosDisponiveis;
-  const [emendas, extras, resumoSancoes, atipicosTodos, baseSancoes] = await Promise.all([
+  const [emendas, extras, resumoSancoes, atipicosTodos, baseSancoes, resumo, coletas] = await Promise.all([
     emendasDoParlamentar(id, sp.emendas),
     fornecedoresComSancaoNoPeriodo(id, anosCeap),
     resumoSancoesPorAno(id, anosTodos),
     // Pontos para verificar valem para todos os anos coletados, não só o exibido.
     perfil.mandato ? perfil.atipico : padraoAtipico(perfil.parlamentar.casa, anosTodos, id),
     baseDasSancoes(),
+    resumoDoParlamentar(id),
+    ultimaColetaPorCasa(),
   ]);
   const pontos = pontosParaVerificar(id, resumoSancoes, atipicosTodos);
   const periodoPontos =
@@ -144,8 +156,15 @@ async function Perfil({ params, searchParams }: PageProps<"/parlamentares/[id]">
   const cota = perfil.mandato ? "no mandato" : `em ${perfil.ano}`;
   const docs = `${ceap.documentos.toLocaleString("pt-BR")} documentos`;
 
+  const dadosEstruturados = jsonLdDoPerfil(p, {
+    base: siteUrl(),
+    descricao: descricaoDoPerfil(p, resumo?.cota ?? null),
+    dataColeta: coletas[p.casa],
+  });
+
   return (
     <div className="mx-auto max-w-[1200px] sm:px-6 sm:pt-5 sm:pb-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(dadosEstruturados) }} />
       <nav aria-label="Trilha" className="mb-4 hidden text-sm text-muted-foreground sm:block">
         <Link href="/parlamentares" className="text-muted-foreground">
           Parlamentares

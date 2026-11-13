@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { NOME_UF } from "@/lib/rotulos";
+import { metadataDaPagina, SITE_DESCRICAO, SITE_NOME } from "@/lib/site";
+
+export const metadata: Metadata = {
+  ...metadataDaPagina({ titulo: "Fiscalize deputados e senadores", descricao: SITE_DESCRICAO, caminho: "/" }),
+  // A página inicial usa o título padrão do layout, sem o sufixo " · Auditaja".
+  title: { absolute: `${SITE_NOME}: fiscalize deputados e senadores` },
+};
 
 const UFS = Object.keys(NOME_UF).toSorted();
 

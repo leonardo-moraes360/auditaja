@@ -8,7 +8,7 @@ import { getDb } from "@/db/client";
 import { SECOES, secoesDaCasa } from "./secoes";
 import { FormularioPedido } from "./formulario";
 
-export const metadata: Metadata = { title: "Pedir correção" };
+export const metadata: Metadata = { title: "Pedir correção", robots: { index: false, follow: true } };
 
 export default function Contestar({ params, searchParams }: PageProps<"/parlamentares/[id]/contestar">) {
   return (

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
 
-export const metadata: Metadata = { title: "Acompanhar atualizações" };
+export const metadata: Metadata = { title: "Acompanhar atualizações", robots: { index: false, follow: true } };
 
 export default function Acompanhar({ params }: PageProps<"/parlamentares/[id]/acompanhar">) {
   return (
