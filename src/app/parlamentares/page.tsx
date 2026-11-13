@@ -10,11 +10,37 @@ import {
   ufsDisponiveis,
   type Casa,
 } from "@/data/perfil";
-import { cargoParlamentar } from "@/lib/rotulos";
+import { cargoParlamentar, NOME_UF } from "@/lib/rotulos";
+import { metadataDaPagina } from "@/lib/site";
 import { FotoParlamentar } from "@/components/perfil/foto";
 import { Esqueleto } from "@/components/esqueleto";
 
-export const metadata: Metadata = { title: "Parlamentares" };
+/**
+ * Lista por Casa e por UF é indexável, com canonical só com esses dois filtros. Resultado de busca
+ * (?q=) fica fora do índice, mas os links para os perfis continuam sendo seguidos.
+ */
+export async function generateMetadata({ searchParams }: PageProps<"/parlamentares">): Promise<Metadata> {
+  const sp = await searchParams;
+  const uf = typeof sp.uf === "string" && NOME_UF[sp.uf] ? sp.uf : "";
+  const casa = casaDoFiltro(sp.casa);
+  const busca = typeof sp.q === "string" && sp.q.trim() !== "";
+  const quem =
+    casa === "senado" ? "Senadores" : casa === "camara" ? "Deputados federais" : "Deputados federais e senadores";
+  // Nome do estado na frente ("Bahia: senadores"): evita a preposição (de, da, do) e cabe nos ~60
+  // caracteres que o buscador mostra.
+  const titulo = uf ? `${NOME_UF[uf]}: ${quem.toLowerCase()}` : `${quem} em exercício`;
+  const descricao = `${uf ? `${NOME_UF[uf]} (${uf}): ${quem.toLowerCase()}` : quem} em exercício. Gastos da cota, votações, presença, emendas e bens, com fonte oficial.`;
+  const canon = new URLSearchParams();
+  if (casa) canon.set("casa", casa);
+  if (uf) canon.set("uf", uf);
+  const t = canon.toString();
+  return metadataDaPagina({
+    titulo,
+    descricao,
+    caminho: t ? `/parlamentares?${t}` : "/parlamentares",
+    indexar: !busca,
+  });
+}
 
 export default function Parlamentares({ searchParams }: PageProps<"/parlamentares">) {
   return (

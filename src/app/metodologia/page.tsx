@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
+import { metadataDaPagina } from "@/lib/site";
 import { TETO_CEAP_ANO, TETO_CEAP_ATO, TETO_CEAP_CONFERIDO_EM, TETO_CEAP_FONTE } from "@/data/teto-ceap";
 import { FATOR_TUKEY, MESES_MINIMOS_SALTO, MINIMO_COLEGAS, PISO_REAIS } from "@/lib/atipico";
 import { brl } from "@/lib/format";
 import { METODOLOGIA_VERSAO } from "@/lib/metrics";
 import { LICENCAS_SENADO } from "@/lib/senado";
 
-export const metadata: Metadata = { title: "Metodologia" };
+export const metadata: Metadata = metadataDaPagina({
+  titulo: "Metodologia",
+  descricao:
+    "Como o Auditaja calcula gastos da cota, presença, alinhamento com o partido, padrão atípico e sanções de fornecedores, com versão e regras de privacidade.",
+  caminho: "/metodologia",
+});
 
 export default function Metodologia() {
   return (

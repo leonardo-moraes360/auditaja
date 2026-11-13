@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
+import { metadataDaPagina } from "@/lib/site";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { Esqueleto } from "@/components/esqueleto";
 import { getDb } from "@/db/client";
 import { dataHoraBr } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Fontes e licenças" };
+export const metadata: Metadata = metadataDaPagina({
+  titulo: "Fontes e licenças",
+  descricao:
+    "De onde vêm os dados do Auditaja: Câmara, Senado, TSE e CGU. Endereço, data, hash e licença de cada coleta.",
+  caminho: "/fontes",
+});
 
 export default function Fontes() {
   return (

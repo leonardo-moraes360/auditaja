@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { metadataDaPagina } from "@/lib/site";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Sobre" };
+export const metadata: Metadata = metadataDaPagina({
+  titulo: "Sobre",
+  descricao:
+    "O que é o Auditaja, quem pode usar e como ler os dados de deputados federais e senadores publicados aqui.",
+  caminho: "/sobre",
+});
 
 export default function Sobre() {
   return (
