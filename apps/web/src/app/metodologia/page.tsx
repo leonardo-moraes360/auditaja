@@ -138,6 +138,30 @@ export default function Metodologia() {
         </p>
       </section>
 
+      <section id="tres-poderes" className="scroll-mt-4 space-y-2">
+        <h2 className="font-heading text-xl font-bold">KPIs dos três poderes</h2>
+        <p>
+          Além dos indicadores do Legislativo (cota, presença, alinhamento e bens), o Auditaja calcula KPIs equivalentes
+          para o Executivo federal e para o Judiciário federal (STF). As funções puras ficam em{" "}
+          <code>@auditaja/core/kpis-poderes</code> e reutilizam a variação patrimonial de <code>metrics</code>.
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            <strong>Executivo:</strong> taxa de uso da verba publicada (viagens, cartão, diárias), média mensal,
+            concentração no maior fornecedor e variação nominal de bens (Presidente/Vice).
+          </li>
+          <li>
+            <strong>Judiciário:</strong> presença em sessões do Plenário, concordância com a maioria do colegiado
+            (análogo ao alinhamento partidário) e média mensal das despesas publicadas.
+          </li>
+          <li>
+            <strong>Legislativo:</strong> os mesmos blocos de uso de verba, bens, alinhamento e presença, expostos no
+            mesmo módulo para comparação entre poderes.
+          </li>
+        </ul>
+        <p>Todos continuam sendo pontos de partida para verificação — não qualificam pessoas nem decisões.</p>
+      </section>
+
       <section id="senado" className="scroll-mt-4 space-y-2">
         <h2 className="font-heading text-xl font-bold">Senado Federal</h2>
         <p>

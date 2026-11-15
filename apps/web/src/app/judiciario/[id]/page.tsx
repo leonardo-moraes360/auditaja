@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { brl, dataBr, dataHoraBr } from "@auditaja/core/format";
+import { brl, dataBr, dataHoraBr, pct } from "@auditaja/core/format";
+import { kpisJudiciario } from "@auditaja/core/kpis-poderes";
 import { cargoJudiciario } from "@auditaja/core/poderes";
 import { indiceDeJudiciario, judiciarioExiste, perfilJudiciario } from "@/data/judiciario";
 import { Esqueleto } from "@/components/esqueleto";
@@ -57,6 +58,26 @@ async function Conteudo({ params }: PageProps<"/judiciario/[id]">) {
   if (!p) notFound();
   const sessoes = p.votos.length;
   const presentes = p.votos.filter((v) => v.presente).length;
+  const meses = new Set<string>();
+  let gastoAno = 0;
+  const anoRef = p.despesas[0]?.ano;
+  for (const d of p.despesas) {
+    if (anoRef !== undefined && d.ano === anoRef) {
+      gastoAno += Number(d.valor_liquido);
+      meses.add(`${d.ano}-${d.mes}`);
+    }
+  }
+  const kpis = kpisJudiciario({
+    comparecimentos: presentes,
+    sessoes,
+    votos: p.votos.map((v) => ({
+      voto: v.voto,
+      presente: v.presente,
+      maioria: p.maioriaPorSessao.get(v.sessao_id) ?? null,
+    })),
+    gastoAno,
+    mesesComLancamento: meses.size,
+  });
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-8 px-4 py-8 sm:px-6">
@@ -70,6 +91,37 @@ async function Conteudo({ params }: PageProps<"/judiciario/[id]">) {
           {p.titular.posse ? ` · posse em ${dataBr(p.titular.posse)}` : ""}
         </p>
       </header>
+
+      <section className="space-y-3 rounded-[14px] border bg-card p-4" aria-labelledby="kpis-jud">
+        <h2 id="kpis-jud" className="font-heading text-xl font-bold">
+          Indicadores
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Presença e concordância com a maioria do colegiado — análogos à presença e ao alinhamento do Legislativo.
+        </p>
+        <ul className="grid gap-3 sm:grid-cols-3">
+          <li className="rounded-[10px] border border-borda-suave bg-superficie p-3">
+            <p className="text-sm text-muted-foreground">Presença</p>
+            <p className="font-heading text-xl font-bold tabular-nums">
+              {kpis.presenca.taxa !== null ? `${pct(kpis.presenca.comparecimentos, kpis.presenca.sessoes)}%` : "—"}
+            </p>
+          </li>
+          <li className="rounded-[10px] border border-borda-suave bg-superficie p-3">
+            <p className="text-sm text-muted-foreground">Concordância com a maioria</p>
+            <p className="font-heading text-xl font-bold tabular-nums">
+              {kpis.concordancia.taxa !== null
+                ? `${pct(kpis.concordancia.iguais, kpis.concordancia.comparaveis)}%`
+                : "—"}
+            </p>
+          </li>
+          <li className="rounded-[10px] border border-borda-suave bg-superficie p-3">
+            <p className="text-sm text-muted-foreground">Média mensal de despesas</p>
+            <p className="font-heading text-xl font-bold tabular-nums">
+              {kpis.mediaMensal !== null ? brl(kpis.mediaMensal) : "—"}
+            </p>
+          </li>
+        </ul>
+      </section>
 
       <section className="space-y-3 rounded-[14px] border bg-card p-4" aria-labelledby="sessoes-jud">
         <h2 id="sessoes-jud" className="font-heading text-xl font-bold">

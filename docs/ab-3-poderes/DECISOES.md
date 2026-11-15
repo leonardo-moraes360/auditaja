@@ -31,7 +31,15 @@ Ids sintéticos: Executivo a partir de 20_000_000; Judiciário a partir de 30_00
 
 ## KPIs (tarefa 2)
 
-Ver seção em `packages/core/src/kpis-poderes.ts` e metodologia. Coerência com o Legislativo: presença/comparecimento, alinhamento (no Judiciário: concordância com a maioria do colegiado), uso de verba e variação patrimonial (`variacaoNominal` já existente).
+Implementados em `packages/core/src/kpis-poderes.ts` (metodologia 1.12), com testes em `packages/core/tests/unit/kpis-poderes.test.ts`.
+
+| Poder       | KPI                                                                              | Análogo legislativo      |
+| ----------- | -------------------------------------------------------------------------------- | ------------------------ |
+| Legislativo | uso de cota, presença, alinhamento, bens                                         | já em `metrics` / perfil |
+| Executivo   | `taxaUsoVerba`, `mediaMensalGastos`, `concentracaoFornecedor`, `variacaoNominal` | cota + bens              |
+| Judiciário  | `presencaSessoes`, `concordanciaMaioria`, `mediaMensalGastos`                    | presença + alinhamento   |
+
+A concordância com a maioria do colegiado usa o voto majoritário de **toda** a sessão (não só o do titular do perfil).
 
 ## Landing (tarefa 3)
 

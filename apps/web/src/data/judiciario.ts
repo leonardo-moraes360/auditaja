@@ -51,7 +51,34 @@ export async function perfilJudiciario(id: number) {
       .where("id", "=", titular.coleta_id)
       .executeTakeFirst(),
   ]);
-  return { titular, despesas, votos, coleta };
+  const sessaoIds = [...new Set(votos.map((v) => v.sessao_id))];
+  const votosDaCorte =
+    sessaoIds.length === 0
+      ? []
+      : await db
+          .selectFrom("voto_judiciario")
+          .select(["sessao_id", "voto", "presente"])
+          .where("sessao_id", "in", sessaoIds)
+          .where("presente", "=", true)
+          .execute();
+  const maioriaPorSessao = new Map<string, string | null>();
+  for (const sid of sessaoIds) {
+    const contagem = new Map<string, number>();
+    for (const v of votosDaCorte) {
+      if (v.sessao_id !== sid || !v.voto) continue;
+      contagem.set(v.voto, (contagem.get(v.voto) ?? 0) + 1);
+    }
+    let melhor: string | null = null;
+    let n = 0;
+    for (const [voto, q] of contagem) {
+      if (q > n) {
+        melhor = voto;
+        n = q;
+      }
+    }
+    maioriaPorSessao.set(sid, melhor);
+  }
+  return { titular, despesas, votos, coleta, maioriaPorSessao };
 }
 
 export async function judiciarioExiste(id: number): Promise<boolean> {
