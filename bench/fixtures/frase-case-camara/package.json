@@ -1,0 +1,8 @@
+{
+  "name": "frase-case-camara",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test frase.test.js"
+  }
+}

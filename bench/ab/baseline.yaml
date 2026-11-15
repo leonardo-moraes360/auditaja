@@ -1,0 +1,12 @@
+label: baseline
+flags:
+  toolbelt: "off"
+  graph: "off"
+env:
+  TB_USE_MEM: "0"
+  TB_GRAPH: "0"
+  AUDITAJA_ROOT: "/agent/repos/auditaja"
+agent:
+  id: deterministic-baseline
+  command: "node \"$AUDITAJA_ROOT/bench/agents/deterministic.mjs\" --workdir {workdir}"
+  output_parser: json

@@ -1,0 +1,14 @@
+id: privacy-r3-mask
+name: Corrigir mascara R3 de CPF
+description: |
+  Extraido de packages/core/src/privacy.ts. A mascara parcial deixa digitos e
+  viola a regra R3 do Auditaja (trechos de fontes diferentes remontam o CPF).
+category: bugfix
+difficulty: easy
+prompt: Corrija mascararCpfsNoTexto em privacy.js para mascarar CPF com ***.***.***-** sem nenhum digito. Rode node --test.
+fixture: privacy-r3-mask
+verification:
+  command: "node --test privacy.test.js"
+  timeout: "30s"
+  expected_exit_code: 0
+timeout: "5m"

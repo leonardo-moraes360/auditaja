@@ -1,0 +1,19 @@
+version: 1
+protected_paths:
+  - pattern: "tests/hidden/**"
+    reason: "Suite oculta do discriminador; implementador nao pode alterar"
+    allow_modifications: false
+  - pattern: "bench/tasks/**"
+    reason: "Definicao das tarefas de bench e imutavel durante a execucao"
+    allow_modifications: false
+  - pattern: ".toolbelt/thresholds.yaml"
+    reason: "Thresholds nao podem ser relaxados sem decisao"
+    detect_relaxation: true
+  - pattern: ".toolbelt/invariants.yaml"
+    reason: "Invariantes fora da compactacao"
+    allow_modifications: false
+decision_sources:
+  - ".toolbelt/vault/**"
+on_violation:
+  ci: fail
+  local: warn

@@ -1,0 +1,27 @@
+defaults:
+  sandbox: false
+  timeout: 30s
+  json_output: false
+sandbox:
+  allow_net: []
+  cpu_limit: 100
+  mem_limit: 1G
+  time_limit: 5m
+graph:
+  auto_index: true
+  index_on_change: true
+  infer_relations: false
+vault:
+  path: .toolbelt/vault
+  sync_on_change: true
+logging:
+  level: info
+  file: .toolbelt/logs/tb.log
+  format: text
+bench:
+  tasks_dir: bench/tasks
+  fixtures_dir: bench/fixtures
+  output_dir: .toolbelt/bench
+  default_agent: ""
+  repetitions: 1
+  timeout: 10m

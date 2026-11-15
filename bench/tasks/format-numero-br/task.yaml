@@ -1,0 +1,14 @@
+id: format-numero-br
+name: Corrigir numeroBr e pct
+description: |
+  Extraido de packages/core/src/format.ts. numeroBr precisa aceitar TSE (1.234,56)
+  e Camara (1234.56); pct deve devolver null quando total=0.
+category: bugfix
+difficulty: easy
+prompt: Corrija numeroBr e pct em format.js conforme format.test.js. Rode node --test.
+fixture: format-numero-br
+verification:
+  command: "node --test format.test.js"
+  timeout: "30s"
+  expected_exit_code: 0
+timeout: "5m"

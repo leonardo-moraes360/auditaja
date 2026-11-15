@@ -1,0 +1,14 @@
+id: frase-case-camara
+name: Corrigir fraseCase da Camara
+description: |
+  Extraido de packages/core/src/format.ts. A Camara publica categorias com
+  virgula colada ("HOSPEDAGEM ,EXCETO"); fraseCase deve normalizar.
+category: bugfix
+difficulty: easy
+prompt: Corrija fraseCase em frase.js para normalizar virgula colada e title-case. Rode node --test.
+fixture: frase-case-camara
+verification:
+  command: "node --test frase.test.js"
+  timeout: "30s"
+  expected_exit_code: 0
+timeout: "5m"

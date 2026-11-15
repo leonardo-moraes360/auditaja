@@ -1,0 +1,8 @@
+{
+  "name": "documento-cnpj",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test documento.test.js"
+  }
+}

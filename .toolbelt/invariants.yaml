@@ -1,0 +1,52 @@
+version: 1
+invariants:
+    - id: inv-1794763629939784000
+      category: anti_cheat
+      rule: NUNCA modifique arquivos em tests/hidden/
+      added_at: 2026-11-15T17:27:09.939785173Z
+      immutable: true
+    - id: inv-1794763629939966208
+      category: anti_cheat
+      rule: NUNCA altere thresholds em .toolbelt/thresholds.yaml
+      added_at: 2026-11-15T17:27:09.939966678Z
+      immutable: true
+    - id: inv-1794763629940061734
+      category: security
+      rule: Secrets nunca aparecem em logs ou prompts
+      added_at: 2026-11-15T17:27:09.940062105Z
+      immutable: true
+    - id: inv-1794763629944373059
+      category: mandate
+      rule: Nao altere o comportamento publico do site; so adicione configs/docs do piloto toolbelt fora do runtime.
+      added_at: 2026-11-15T17:27:09.944373969Z
+      immutable: true
+    - id: inv-1794763629946396693
+      category: security
+      rule: 'R2 minimizacao: nao guardar CPF do parlamentar, nome de passageiros da CEAP, nem descricao livre de bens.'
+      added_at: 2026-11-15T17:27:09.946397826Z
+      immutable: true
+    - id: inv-1794763629948485478
+      category: security
+      rule: 'R3 mascaramento: CPF de fornecedor PF vira mascara total sem digitos; nome vira Prestador pessoa fisica.'
+      added_at: 2026-11-15T17:27:09.948486372Z
+      immutable: true
+    - id: inv-1794763629950476071
+      category: mandate
+      rule: 'R4 linguagem: indicadores sao pontos de partida para verificacao, nao acusacoes.'
+      added_at: 2026-11-15T17:27:09.950477027Z
+      immutable: true
+    - id: inv-1794763629952919843
+      category: mandate
+      rule: Commits em conventional commits; mensagens em ingles; respostas de agente em portugues.
+      added_at: 2026-11-15T17:27:09.95292073Z
+      immutable: true
+    - id: inv-1794763629955459116
+      category: anti_cheat
+      rule: Nunca relaxe thresholds em .toolbelt/thresholds.yaml sem decisao registrada.
+      added_at: 2026-11-15T17:27:09.95546004Z
+      immutable: true
+    - id: inv-1794763629957587076
+      category: mandate
+      rule: 'Comandos de verificacao do projeto: pnpm lint && pnpm typecheck && pnpm format:check && pnpm test.'
+      added_at: 2026-11-15T17:27:09.957587956Z
+      immutable: true

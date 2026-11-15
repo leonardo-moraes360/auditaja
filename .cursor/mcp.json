@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "toolbelt": {
+      "command": "tb",
+      "args": ["mcp"],
+      "env": {
+        "TB_GRAPH": "off"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+version: 1
+base_url: http://127.0.0.1:3000
+screens:
+  - name: home
+    route: /
+    modes: [light]
+    viewport: [1280, 720]
+    references:
+      light: references/home-light.png
+  - name: privacidade
+    route: /privacidade
+    modes: [light]
+    viewport: [1280, 720]
+    references:
+      light: references/privacidade-light.png
+thresholds:
+  min_similarity: 0.95

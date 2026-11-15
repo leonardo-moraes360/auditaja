@@ -49,3 +49,10 @@ next-env.d.ts
 /packages/*/.cache/
 /apps/*/test-results/
 /apps/*/playwright-report/
+
+# toolbelt (runtime)
+.toolbelt/logs/
+.toolbelt/bench/
+.toolbelt/vault/
+.toolbelt/graph.json
+bench/results/

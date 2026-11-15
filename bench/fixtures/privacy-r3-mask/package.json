@@ -1,0 +1,8 @@
+{
+  "name": "privacy-r3-mask",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test privacy.test.js"
+  }
+}

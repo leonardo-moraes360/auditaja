@@ -1,0 +1,14 @@
+id: documento-cnpj
+name: Corrigir formatacao de CNPJ
+description: |
+  Extraido de packages/core/src/privacy.ts. formatarCnpj deve padronizar 14
+  digitos; CPF nao publica nenhum digito (R3).
+category: bugfix
+difficulty: easy
+prompt: Corrija formatarCnpj e documentoPublicavel em documento.js. Rode node --test.
+fixture: documento-cnpj
+verification:
+  command: "node --test documento.test.js"
+  timeout: "30s"
+  expected_exit_code: 0
+timeout: "5m"
