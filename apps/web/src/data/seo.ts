@@ -1,6 +1,7 @@
 import "server-only";
 import { sql } from "kysely";
 import { getDb } from "@auditaja/db/client";
+import { CASAS_LEGISLATIVO, ehCasaLegislativo } from "@auditaja/core/poderes";
 import type { Casa } from "@/data/perfil";
 
 export type ParlamentarIndice = {
@@ -15,13 +16,15 @@ export type ParlamentarIndice = {
 
 /** Todos os perfis publicados, em exercício primeiro, para sitemap e llms.txt. */
 export async function indiceDeParlamentares(): Promise<ParlamentarIndice[]> {
-  return getDb()
+  const rows = await getDb()
     .selectFrom("parlamentar")
     .select(["id", "casa", "nome", "sexo", "sigla_partido", "sigla_uf", "em_exercicio"])
+    .where("casa", "in", [...CASAS_LEGISLATIVO])
     .orderBy("em_exercicio", "desc")
     .orderBy("casa")
     .orderBy("nome")
     .execute();
+  return rows.map((r) => ({ ...r, casa: r.casa as Casa }));
 }
 
 /**
@@ -55,12 +58,13 @@ export async function ultimaColetaPorCasa(): Promise<Record<Casa | "geral", Date
  */
 export async function resumoDoParlamentar(id: number) {
   const db = getDb();
-  const p = await db
+  const bruto = await db
     .selectFrom("parlamentar")
     .select(["id", "casa", "nome", "sexo", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio", "source_url"])
     .where("id", "=", id)
     .executeTakeFirst();
-  if (!p) return null;
+  if (!bruto || !ehCasaLegislativo(bruto.casa)) return null;
+  const p = { ...bruto, casa: bruto.casa };
   const cota = await db
     .selectFrom("despesa_ceap")
     .select(["ano", sql<string>`sum(valor_liquido)`.as("total"), sql<string>`count(*)`.as("documentos")])

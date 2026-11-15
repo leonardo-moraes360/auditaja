@@ -24,9 +24,11 @@ export interface ColetaTable {
   observacao: string | null;
 }
 
+export type CasaTitular = "camara" | "senado" | "executivo" | "stf" | "stj";
+
 export interface ParlamentarTable {
   id: number;
-  casa: "camara" | "senado";
+  casa: CasaTitular;
   nome: string;
   nome_civil: string | null;
   sigla_partido: string | null;
@@ -45,6 +47,10 @@ export interface ParlamentarTable {
   participacao: ColumnType<string | null, string | null | undefined, string | null>;
   /** Senado: nome do bloco parlamentar. */
   bloco: ColumnType<string | null, string | null | undefined, string | null>;
+  /** Executivo/Judiciário: presidente | vice_presidente | ministro | … */
+  cargo: ColumnType<string | null, string | null | undefined, string | null>;
+  /** Executivo: pasta; Judiciário: tribunal (STF/STJ). */
+  orgao: ColumnType<string | null, string | null | undefined, string | null>;
   source_url: string;
   coleta_id: number;
   /** Coleta de /deputados/{id}/historico; null = histórico ainda não coletado. */
@@ -289,12 +295,29 @@ export interface CampanhaDespesaTable {
   coleta_id: number;
 }
 
+/** Gasto público de titular do Executivo ou Judiciário (R3 no fornecedor PF). */
+export interface DespesaTitularTable {
+  id: Generated<string>;
+  parlamentar_id: number;
+  ano: number;
+  mes: number;
+  tipo_despesa: string;
+  fornecedor_nome: string;
+  fornecedor_doc: string | null;
+  fornecedor_classe: ClasseTitular;
+  data_emissao: DateCol | null;
+  valor_liquido: Numeric;
+  url_documento: string | null;
+  coleta_id: number;
+}
+
 export interface Database {
   coleta: ColetaTable;
   parlamentar: ParlamentarTable;
   orgao_membro: OrgaoMembroTable;
   suplente: SuplenteTable;
   despesa_ceap: DespesaCeapTable;
+  despesa_titular: DespesaTitularTable;
   votacao: VotacaoTable;
   voto: VotoTable;
   orientacao: OrientacaoTable;

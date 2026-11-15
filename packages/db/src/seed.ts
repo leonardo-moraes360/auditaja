@@ -16,6 +16,12 @@ export const SEED = {
   senadorAfastado: 10009003,
   /** Fora de exercício, sem votos nem notas: estados vazios. */
   senadoraSemRegistro: 10009004,
+  /** Executivo federal: id = 20.000.000 + código. */
+  presidente: 20000001,
+  ministro: 20000010,
+  /** Judiciário: STF 30e6 +, STJ 31e6 +. */
+  ministroStf: 30000001,
+  ministroStj: 31000001,
 };
 
 export async function semear(db: Kysely<Database>) {
@@ -35,6 +41,7 @@ export async function semear(db: Kysely<Database>) {
       "periodo_fora_exercicio",
       "voto",
       "votacao",
+      "despesa_titular",
       "despesa_ceap",
       "orgao_membro",
       "suplente",
@@ -897,6 +904,113 @@ export async function semear(db: Kysely<Database>) {
           tipo: "Aplicação de renda fixa (CDB, RDB e outros)",
           valor: 780000,
           coleta_id: cTse,
+        },
+      ])
+      .execute();
+
+    const cExec = await coleta("gov_executivo_composicao", "https://www.gov.br/planalto/pt-br/composicao/ministerios");
+    const cJud = await coleta("judiciario_composicao", "https://portal.stf.jus.br/composicao/");
+    await trx
+      .insertInto("parlamentar")
+      .values([
+        {
+          id: SEED.presidente,
+          casa: "executivo",
+          nome: "Presidente Exemplo",
+          nome_civil: null,
+          sigla_partido: "PFX",
+          sigla_uf: "SP",
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "M",
+          id_legislatura: null,
+          em_exercicio: true,
+          cargo: "presidente",
+          orgao: "Presidência da República",
+          source_url: "https://www.gov.br/planalto/pt-br/composicao",
+          coleta_id: cExec,
+        },
+        {
+          id: SEED.ministro,
+          casa: "executivo",
+          nome: "Ministra Exemplo",
+          nome_civil: null,
+          sigla_partido: null,
+          sigla_uf: null,
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "F",
+          id_legislatura: null,
+          em_exercicio: true,
+          cargo: "ministro",
+          orgao: "Fazenda",
+          source_url: "https://www.gov.br/planalto/pt-br/composicao/ministerios",
+          coleta_id: cExec,
+        },
+        {
+          id: SEED.ministroStf,
+          casa: "stf",
+          nome: "Ministro STF Exemplo",
+          nome_civil: null,
+          sigla_partido: null,
+          sigla_uf: null,
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "M",
+          id_legislatura: null,
+          em_exercicio: true,
+          cargo: "ministro",
+          orgao: "STF",
+          source_url: "https://portal.stf.jus.br/composicao/",
+          coleta_id: cJud,
+        },
+        {
+          id: SEED.ministroStj,
+          casa: "stj",
+          nome: "Ministra STJ Exemplo",
+          nome_civil: null,
+          sigla_partido: null,
+          sigla_uf: null,
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "F",
+          id_legislatura: null,
+          em_exercicio: true,
+          cargo: "ministro",
+          orgao: "STJ",
+          source_url: "https://www.stj.jus.br/sites/portalp/Institucional/Ministros",
+          coleta_id: cJud,
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("despesa_titular")
+      .values([
+        {
+          parlamentar_id: SEED.ministro,
+          ano: 2026,
+          mes: 3,
+          tipo_despesa: "Diárias",
+          fornecedor_nome: "Prestador pessoa física",
+          fornecedor_doc: null,
+          fornecedor_classe: "terceiro_pf",
+          data_emissao: "2026-03-10",
+          valor_liquido: 2500,
+          url_documento: null,
+          coleta_id: cExec,
+        },
+        {
+          parlamentar_id: SEED.ministroStf,
+          ano: 2026,
+          mes: 2,
+          tipo_despesa: "Passagens",
+          fornecedor_nome: "Cia Aérea Exemplo Ltda",
+          fornecedor_doc: "12.345.678/0001-90",
+          fornecedor_classe: "pessoa_juridica",
+          data_emissao: "2026-02-15",
+          valor_liquido: 4200,
+          url_documento: null,
+          coleta_id: cJud,
         },
       ])
       .execute();

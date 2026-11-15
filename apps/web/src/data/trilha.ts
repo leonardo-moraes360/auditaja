@@ -246,7 +246,10 @@ export async function trilhaDoParlamentar(id: number, periodo: PeriodoEmendas) {
     .select(["casa", "id_legislatura", "mandato_inicio"])
     .where("id", "=", id)
     .executeTakeFirst();
-  const eleicao = parlamentar ? eleicaoDoMandato(parlamentar) : null;
+  const eleicao =
+    parlamentar && (parlamentar.casa === "camara" || parlamentar.casa === "senado")
+      ? eleicaoDoMandato({ ...parlamentar, casa: parlamentar.casa })
+      : null;
 
   let qEmendas = db
     .selectFrom("emenda")

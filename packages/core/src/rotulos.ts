@@ -98,6 +98,8 @@ export function cargoParlamentar(casa: string, sexo: string | null): string {
   return casa === "senado" ? cargoSenador(sexo) : cargoDeputado(sexo);
 }
 
+export { cargoTitular, nomeDaCasa, nomeDoPoder } from "./poderes";
+
 /** Legislatura que começa no ano dado (57ª em 2023; uma a cada 4 anos). */
 export function legislaturaDoAno(ano: number): number {
   return 57 + Math.floor((ano - 2023) / 4);

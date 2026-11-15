@@ -50,3 +50,28 @@ invariants:
       rule: 'Comandos de verificacao do projeto: pnpm lint && pnpm typecheck && pnpm format:check && pnpm test.'
       added_at: 2026-11-15T17:27:09.957587956Z
       immutable: true
+    - id: inv-1794773145965203607
+      category: mandate
+      rule: 'Escopo 3 poderes (esfera federal): Legislativo (deputados/senadores), Executivo (Presidente, Vice, Ministros), Judiciario (ministros STF/STJ). Mesmas regras R1-R13.'
+      added_at: 2026-11-15T20:05:45.965205096Z
+      immutable: true
+    - id: inv-1794773145968861651
+      category: security
+      rule: 'R2/R3 tambem para titulares do Executivo e Judiciario: sem CPF do titular, sem descricao livre de bens; CPF de fornecedor PF mascarado.'
+      added_at: 2026-11-15T20:05:45.968862557Z
+      immutable: true
+    - id: inv-1794773145972976452
+      category: mandate
+      rule: KPIs dos tres poderes sao pontos de partida para verificacao (R4); linguagem neutra, sem acusacao.
+      added_at: 2026-11-15T20:05:45.972977654Z
+      immutable: true
+    - id: inv-1794773145977376771
+      category: mandate
+      rule: 'Branch ab/3-poderes-com-tb: commits separados por tarefa; nao abrir PR; nao alterar o codigo do toolbelt.'
+      added_at: 2026-11-15T20:05:45.97737772Z
+      immutable: true
+    - id: inv-1794773145982079736
+      category: mandate
+      rule: Para a rodada ab/3-poderes, alterar runtime do site e pacotes e permitido; invariante de piloto toolbelt-only nao se aplica neste branch.
+      added_at: 2026-11-15T20:05:45.982080589Z
+      immutable: true

@@ -18,6 +18,8 @@
  *   pnpm ingest ceaps 2026
  *   pnpm ingest votacoes-senado 2026
  *   pnpm ingest senado 2026  (senadores, CEAPS e votações do ano; ~170 requisições a 1 req/s)
+ *   pnpm ingest executivo    (Presidente, Vice e Ministros — esfera federal)
+ *   pnpm ingest judiciario   (Ministros do STF e do STJ)
  *
  * Rode `senadores` (ou `senado`) antes de `bens` para o TSE casar também os senadores.
  * Rode `emendas` depois de `deputados` e `senadores`, e `sancoes` depois de `ceap` e `ceaps`: as emendas
@@ -41,6 +43,8 @@ import { coletarBens, coletarDespesasCampanha } from "../src/tse";
 import { importarEstabelecimentos, PAGINA_RECEITA } from "../src/receita";
 import { coletarTransferegovPix } from "../src/transferegov";
 import { coletarEmendas, coletarSancoes } from "../src/transparencia";
+import { coletarExecutivo } from "../src/executivo";
+import { coletarJudiciario } from "../src/judiciario";
 
 const [cmd, anoArg] = process.argv.slice(2);
 
@@ -117,6 +121,12 @@ async function main() {
         console.log("senadores:", await coletarSenadores(db, cli));
         console.log(`CEAPS ${ano}:`, await coletarCeaps(db, cli, ano));
         console.log(`votações do Senado ${ano}:`, await coletarVotacoesSenado(db, cli, ano));
+        break;
+      case "executivo":
+        console.log("executivo:", await coletarExecutivo(db, cli));
+        break;
+      case "judiciario":
+        console.log("judiciário:", await coletarJudiciario(db, cli));
         break;
       case "tudo":
         console.log(`deputados: ${await coletarDeputados(db, cli)}`);

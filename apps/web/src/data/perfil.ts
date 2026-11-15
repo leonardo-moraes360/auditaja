@@ -19,8 +19,13 @@ import {
   presencaSenado,
 } from "@auditaja/core/senado";
 import { NOME_UF } from "@auditaja/core/rotulos";
+import { CASAS_LEGISLATIVO, ehCasaLegislativo, type CasaLegislativo } from "@auditaja/core/poderes";
 
-export type Casa = "camara" | "senado";
+function comoLegislativo<T extends { casa: string }>(rows: T[]): (Omit<T, "casa"> & { casa: Casa })[] {
+  return rows.filter((r): r is T & { casa: Casa } => ehCasaLegislativo(r.casa));
+}
+
+export type Casa = CasaLegislativo;
 
 /** `?casa=` aceita só "camara" e "senado"; qualquer outro valor é "Todos" (SUI-09). */
 export function casaDoFiltro(v: unknown): Casa | null {
@@ -80,13 +85,14 @@ export async function buscarParlamentares(opts: {
   if (!opts.todos) query = query.where("em_exercicio", "=", true);
   if (opts.uf) query = query.where("sigla_uf", "=", opts.uf);
   if (opts.casa) query = query.where("casa", "=", opts.casa);
+  else query = query.where("casa", "in", [...CASAS_LEGISLATIVO]);
   const q = opts.q?.trim();
   if (q) {
     const ufBuscada = ufDaBusca(q);
     if (ufBuscada) {
       // A UF substitui a busca por pedaço de nome; sem ninguém na UF, vale o nome ("ma" → Maria).
       const daUf = await query.where("sigla_uf", "=", ufBuscada).execute();
-      if (daUf.length) return daUf;
+      if (daUf.length) return comoLegislativo(daUf);
     }
     // Cada palavra precisa aparecer no nome parlamentar ou no nome civil, sem diferenciar acento
     // ("jaques wagner", "wagner jaques" e "Acacio" funcionam).
@@ -100,7 +106,7 @@ export async function buscarParlamentares(opts: {
       );
     }
   }
-  return query.execute();
+  return comoLegislativo(await query.execute());
 }
 
 /**
@@ -134,7 +140,8 @@ export async function buscarParecidos(opts: {
     .limit(opts.limite ?? 8);
   if (opts.uf) query = query.where("sigla_uf", "=", opts.uf);
   if (opts.casa) query = query.where("casa", "=", opts.casa);
-  return query.execute();
+  else query = query.where("casa", "in", [...CASAS_LEGISLATIVO]);
+  return comoLegislativo(await query.execute());
 }
 
 /** Parlamentares em exercício por Casa, para os filtros da lista (SUI-06). */
@@ -143,10 +150,13 @@ export async function contarPorCasa(): Promise<Record<Casa, number>> {
     .selectFrom("parlamentar")
     .select(["casa", sql<string>`count(*)`.as("n")])
     .where("em_exercicio", "=", true)
+    .where("casa", "in", [...CASAS_LEGISLATIVO])
     .groupBy("casa")
     .execute();
   const r: Record<Casa, number> = { camara: 0, senado: 0 };
-  for (const x of rows) r[x.casa] = Number(x.n);
+  for (const x of rows) {
+    if (x.casa === "camara" || x.casa === "senado") r[x.casa] = Number(x.n);
+  }
   return r;
 }
 
@@ -156,6 +166,7 @@ export async function ufsDisponiveis(): Promise<string[]> {
     .select("sigla_uf")
     .distinct()
     .where("em_exercicio", "=", true)
+    .where("casa", "in", [...CASAS_LEGISLATIVO])
     .where("sigla_uf", "is not", null)
     .orderBy("sigla_uf")
     .execute();
@@ -271,7 +282,7 @@ async function presencaMediaDoSenado(ano: number): Promise<number | null> {
 
 export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
   const db = getDb();
-  const p = await db
+  const bruto = await db
     .selectFrom("parlamentar")
     .select([
       "id",
@@ -293,7 +304,8 @@ export async function perfilParlamentar(id: number, anoPedido?: PeriodoCeap) {
     ])
     .where("id", "=", id)
     .executeTakeFirst();
-  if (!p) return null;
+  if (!bruto || !ehCasaLegislativo(bruto.casa)) return null;
+  const p = { ...bruto, casa: bruto.casa };
 
   const anos = await db
     .selectFrom("despesa_ceap")
