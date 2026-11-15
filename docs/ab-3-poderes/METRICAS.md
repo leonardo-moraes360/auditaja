@@ -59,3 +59,4 @@ Ambiente: sem Docker neste host — migração/seed e testes de integração que
 | Tool calls (aprox.) | ~95 |
 | Arquivos distintos tocados | ~30 |
 | Linhas líquidas nos 3 commits | +2129 / −16 |
+| Head do branch | `5c79ed9a22e82fd7b29471e8e9360fd8c7969234` |
