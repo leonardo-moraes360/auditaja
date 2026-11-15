@@ -98,4 +98,4 @@ Medição por tarefa. Tempos de parede via `date`. Tool calls são aproximadas (
 | Tool calls (aprox. sessão) | ~90–110 |
 | Catches úteis do `tb` | 3 (scope tickets; home fora do scope; scope-missing no ticket 1) |
 | Falsos positivos | invariante `tests/hidden/` em toda review |
-| Head SHA | ver commit final deste arquivo / `git rev-parse HEAD` |
+| Head SHA | `4e33231c5aba44a41bf02b544c32b423f2986dfd` |
