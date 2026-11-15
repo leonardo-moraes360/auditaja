@@ -117,11 +117,7 @@ export function kpiLegislativo(opts: {
   };
 }
 
-export function kpiExecutivo(opts: {
-  gastos: LinhaGasto[];
-  bensAnterior?: number;
-  bensAtual?: number;
-}): KpiExecutivo {
+export function kpiExecutivo(opts: { gastos: LinhaGasto[]; bensAnterior?: number; bensAtual?: number }): KpiExecutivo {
   return {
     poder: "executivo",
     gastos: resumoGastos(opts.gastos),

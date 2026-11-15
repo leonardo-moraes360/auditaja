@@ -42,10 +42,7 @@ function urlDaCasa(casa: CasaJudiciario): string {
 }
 
 /** Transformação pura: ministros STF/STJ com ids deslocados (sem CPF, R2). */
-export function montarJudiciario(
-  lista: TitularJudiciarioBruto[],
-  coletaId: number,
-): Insertable<ParlamentarTable>[] {
+export function montarJudiciario(lista: TitularJudiciarioBruto[], coletaId: number): Insertable<ParlamentarTable>[] {
   return lista.map((t) => ({
     id: idDaCasa(t.casa, t.codigo),
     casa: t.casa,

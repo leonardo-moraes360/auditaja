@@ -1,13 +1,7 @@
 import "server-only";
 import { sql } from "kysely";
 import { getDb } from "@auditaja/db/client";
-import {
-  CASAS_JUDICIARIO,
-  cargoTitular,
-  poderDaCasa,
-  type CasaTitular,
-  type Poder,
-} from "@auditaja/core/poderes";
+import { CASAS_JUDICIARIO, cargoTitular, poderDaCasa, type CasaTitular, type Poder } from "@auditaja/core/poderes";
 
 export type TitularResumo = {
   id: number;
@@ -32,18 +26,7 @@ export async function listarTitulares(opts?: {
   const db = getDb();
   let query = db
     .selectFrom("parlamentar")
-    .select([
-      "id",
-      "casa",
-      "nome",
-      "sexo",
-      "cargo",
-      "orgao",
-      "sigla_partido",
-      "sigla_uf",
-      "url_foto",
-      "em_exercicio",
-    ])
+    .select(["id", "casa", "nome", "sexo", "cargo", "orgao", "sigla_partido", "sigla_uf", "url_foto", "em_exercicio"])
     .orderBy("casa")
     .orderBy("nome")
     .limit(opts?.limite ?? 200);

@@ -10,8 +10,7 @@ import { sha256De, type ClienteEducado } from "./http";
  * Fontes oficiais (R1/R7): composição ministerial em dados.gov.br / Portal da Transparência.
  * A lista estruturada abaixo espelha o formato do dataset público; a coleta registra URL e SHA-256.
  */
-export const URL_COMPOSICAO_EXECUTIVO =
-  "https://www.gov.br/planalto/pt-br/composicao/ministerios";
+export const URL_COMPOSICAO_EXECUTIVO = "https://www.gov.br/planalto/pt-br/composicao/ministerios";
 export const LICENCA_EXECUTIVO = "gov.br / Portal da Transparência (CGU); dados abertos, Decreto 8.777/2016";
 
 export type TitularExecutivoBruto = {
@@ -40,10 +39,7 @@ export type DespesaExecutivoBruta = {
 };
 
 /** Transformação pura: titulares do Executivo com ids deslocados e sem CPF (R2). */
-export function montarExecutivo(
-  lista: TitularExecutivoBruto[],
-  coletaId: number,
-): Insertable<ParlamentarTable>[] {
+export function montarExecutivo(lista: TitularExecutivoBruto[], coletaId: number): Insertable<ParlamentarTable>[] {
   return lista.map((t) => ({
     id: idExecutivo(t.codigo),
     casa: "executivo" as const,
