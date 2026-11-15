@@ -37,7 +37,19 @@ Toda coleta registra `coleta` (R1: URL, SHA-256, licença). Coletores usam `Clie
 
 ## KPIs (tarefa 2)
 
-Ver seção seguinte e `packages/core/src/metrics-poderes.ts`.
+Implementados em `packages/core/src/metrics-poderes.ts` (`METODOLOGIA_PODERES_VERSAO = 1.0`).
+
+| KPI | Legislativo | Executivo | Judiciário | Base |
+| --- | ----------- | --------- | ---------- | ---- |
+| Total de gastos no período | sim (CEAP/CEAPS) | sim (`despesa_titular`) | sim (`despesa_titular`) | `resumoGastos` |
+| Média mensal (meses com nota) | sim | sim | sim | igual à CEAP |
+| Composição por tipo | sim | sim | sim | `participacaoPorTipo` |
+| Concentração no maior fornecedor | sim | sim | sim | ponto de partida (R4) |
+| Presença em votações | sim | não | não (MVP) | já em `metrics`/`senado` |
+| Alinhamento com orientação | sim | não (sem bancada) | não | `alinhamento` |
+| Variação nominal de bens | sim | sim (se houver candidatura TSE) | não no MVP | `variacaoNominal` |
+
+Decisão: não inventar “alinhamento” no Executivo/Judiciário; reutilizar as funções puras do Legislativo onde o conceito existe.
 
 ## Landing (tarefa 3)
 

@@ -28,3 +28,5 @@ Estender o Auditaja além do Legislativo, incluindo titulares do Poder Executivo
 - Documentação de escopo e fontes em DECISOES.md
 - Testes/lint/typecheck do que for tocado passam
 - tb review + tb drift OK contra este ticket
+
+Scope: packages/db, packages/core/src/poderes.ts, packages/ingest/src/executivo.ts, packages/ingest/src/judiciario.ts, apps/web/src/data, docs/ab-3-poderes
