@@ -16,6 +16,7 @@ const paginas = {
   "/executivo/[id]": () => import("@/app/executivo/[id]/page"),
   "/judiciario": () => import("@/app/judiciario/page"),
   "/judiciario/[id]": () => import("@/app/judiciario/[id]/page"),
+  "/poderes": () => import("@/app/poderes/page"),
   "/fontes": () => import("@/app/fontes/page"),
 };
 /** Páginas sem dados de banco: casca toda estática, sem componente assíncrono. */

@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const u = (caminho: string) => urlAbsoluta(caminho, base);
   const fixas: MetadataRoute.Sitemap = [
     { url: u("/"), lastModified: geral, changeFrequency: "weekly", priority: 1 },
+    { url: u("/poderes"), lastModified: geral, changeFrequency: "weekly", priority: 0.95 },
     { url: u("/parlamentares"), lastModified: geral, changeFrequency: "weekly", priority: 0.9 },
     { url: u("/executivo"), lastModified: geral, changeFrequency: "weekly", priority: 0.85 },
     { url: u("/judiciario"), lastModified: geral, changeFrequency: "weekly", priority: 0.85 },

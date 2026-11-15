@@ -43,4 +43,4 @@ A concordância com a maioria do colegiado usa o voto majoritário de **toda** a
 
 ## Landing (tarefa 3)
 
-Rota `/poderes`: apanhado dos três poderes com o design system existente (tipografia `font-heading`, superfícies, bordas).
+Rota `/poderes`: apanhado dos três poderes com o design system existente (tipografia `font-heading`, superfícies, bordas, botão primário). Contagens em exercício vêm do banco via Suspense. Entrada no menu principal e no sitemap; link a partir da home.

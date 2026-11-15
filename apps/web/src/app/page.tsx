@@ -90,7 +90,8 @@ export default function Inicio() {
           ))}
         </ul>
         <p className="text-sm text-muted-foreground">
-          Fontes: Câmara dos Deputados, Senado Federal, TSE e Portal da Transparência (CGU).{" "}
+          Fontes: Câmara dos Deputados, Senado Federal, TSE e Portal da Transparência (CGU). Também há o{" "}
+          <Link href="/poderes">apanhado dos três poderes</Link> (Legislativo, Executivo e Judiciário).{" "}
           <Link href="/sobre">Como funciona</Link>
         </p>
       </section>

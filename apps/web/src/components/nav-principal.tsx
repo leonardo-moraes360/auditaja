@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITENS = [
+  { href: "/poderes", rotulo: "Três poderes" },
   { href: "/parlamentares", rotulo: "Parlamentares" },
   { href: "/executivo", rotulo: "Executivo" },
   { href: "/judiciario", rotulo: "Judiciário" },
