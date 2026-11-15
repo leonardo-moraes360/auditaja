@@ -10,6 +10,7 @@ import * as m0008 from "./migrations/0008_senado";
 import * as m0011 from "./migrations/0011_cpf_oculto";
 import * as m0012 from "./migrations/0012_trilha";
 import * as m0013 from "./migrations/0013_busca_parecidos";
+import * as m0014 from "./migrations/0014_tres_poderes";
 
 /** Lista explícita: funciona igual em scripts, testes e build. */
 const provider: MigrationProvider = {
@@ -25,6 +26,7 @@ const provider: MigrationProvider = {
       "0011_cpf_oculto": m0011,
       "0012_trilha": m0012,
       "0013_busca_parecidos": m0013,
+      "0014_tres_poderes": m0014,
     };
   },
 };

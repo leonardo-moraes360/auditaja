@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 import { indiceDeParlamentares, ultimaColetaPorCasa } from "@/data/seo";
+import { indiceDeExecutivo } from "@/data/executivo";
+import { indiceDeJudiciario } from "@/data/judiciario";
 import { NOME_UF } from "@auditaja/core/rotulos";
 import { caminhoDoPerfil } from "@/lib/seo-perfil";
 import { siteUrl, urlAbsoluta } from "@/lib/site";
@@ -13,12 +15,19 @@ import { siteUrl, urlAbsoluta } from "@/lib/site";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
   const base = siteUrl();
-  const [parlamentares, coletas] = await Promise.all([indiceDeParlamentares(), ultimaColetaPorCasa()]);
+  const [parlamentares, coletas, executivo, judiciario] = await Promise.all([
+    indiceDeParlamentares(),
+    ultimaColetaPorCasa(),
+    indiceDeExecutivo().catch(() => []),
+    indiceDeJudiciario().catch(() => []),
+  ]);
   const geral = coletas.geral ?? undefined;
   const u = (caminho: string) => urlAbsoluta(caminho, base);
   const fixas: MetadataRoute.Sitemap = [
     { url: u("/"), lastModified: geral, changeFrequency: "weekly", priority: 1 },
     { url: u("/parlamentares"), lastModified: geral, changeFrequency: "weekly", priority: 0.9 },
+    { url: u("/executivo"), lastModified: geral, changeFrequency: "weekly", priority: 0.85 },
+    { url: u("/judiciario"), lastModified: geral, changeFrequency: "weekly", priority: 0.85 },
     {
       url: u("/parlamentares?casa=camara"),
       lastModified: coletas.camara ?? undefined,
@@ -51,5 +60,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: p.em_exercicio ? 0.8 : 0.4,
   }));
-  return [...fixas, ...perfis];
+  const perfisExec: MetadataRoute.Sitemap = executivo.map((p) => ({
+    url: u(`/executivo/${p.id}`),
+    lastModified: geral,
+    changeFrequency: "weekly",
+    priority: p.em_exercicio ? 0.75 : 0.4,
+  }));
+  const perfisJud: MetadataRoute.Sitemap = judiciario.map((p) => ({
+    url: u(`/judiciario/${p.id}`),
+    lastModified: geral,
+    changeFrequency: "weekly",
+    priority: p.em_exercicio ? 0.75 : 0.4,
+  }));
+  return [...fixas, ...perfis, ...perfisExec, ...perfisJud];
 }

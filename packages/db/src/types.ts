@@ -289,6 +289,112 @@ export interface CampanhaDespesaTable {
   coleta_id: number;
 }
 
+/** Poder Executivo federal: Presidente, Vice e Ministros de Estado. */
+export type CargoExecutivo = "presidente" | "vice_presidente" | "ministro";
+
+export interface ExecutivoTable {
+  id: number;
+  cargo: CargoExecutivo;
+  orgao: string;
+  nome: string;
+  nome_civil: string | null;
+  sigla_partido: string | null;
+  sigla_uf: string | null;
+  url_foto: string | null;
+  /** Uso interno: casamento com o TSE. Não é exibido (R2). */
+  data_nascimento: DateCol | null;
+  sexo: string | null;
+  em_exercicio: boolean;
+  mandato_inicio: DateCol | null;
+  mandato_fim: DateCol | null;
+  source_url: string;
+  coleta_id: number;
+}
+
+export type TipoDespesaExecutivo = "viagem" | "cartao" | "diaria";
+
+export interface DespesaExecutivoTable {
+  id: Generated<string>;
+  executivo_id: number;
+  ano: number;
+  mes: number;
+  tipo: TipoDespesaExecutivo;
+  descricao: string;
+  fornecedor_nome: string;
+  /** CNPJ formatado ou null (CPF de terceiro não é gravado — R3). */
+  fornecedor_doc: string | null;
+  fornecedor_classe: ClasseTitular;
+  data_emissao: DateCol | null;
+  valor_liquido: Numeric;
+  url_documento: string | null;
+  coleta_id: number;
+}
+
+export interface BemExecutivoTable {
+  id: Generated<string>;
+  ano_eleicao: number;
+  executivo_id: number;
+  ordem: number;
+  /** Só o tipo: a descrição livre pode conter endereço (R2). */
+  tipo: string;
+  valor: Numeric;
+  coleta_id: number;
+}
+
+/** Poder Judiciário federal (MVP): Ministros do STF. */
+export type CargoJudiciario = "ministro_stf";
+
+export interface JudiciarioTable {
+  id: number;
+  cargo: CargoJudiciario;
+  tribunal: "STF";
+  nome: string;
+  nome_civil: string | null;
+  url_foto: string | null;
+  data_nascimento: DateCol | null;
+  sexo: string | null;
+  em_exercicio: boolean;
+  posse: DateCol | null;
+  source_url: string;
+  coleta_id: number;
+}
+
+export type TipoDespesaJudiciario = "diaria" | "auxilio" | "passagem";
+
+export interface DespesaJudiciarioTable {
+  id: Generated<string>;
+  judiciario_id: number;
+  ano: number;
+  mes: number;
+  tipo: TipoDespesaJudiciario;
+  descricao: string;
+  fornecedor_nome: string;
+  fornecedor_doc: string | null;
+  fornecedor_classe: ClasseTitular;
+  data_emissao: DateCol | null;
+  valor_liquido: Numeric;
+  url_documento: string | null;
+  coleta_id: number;
+}
+
+export interface SessaoJudiciarioTable {
+  id: string;
+  data: DateCol;
+  tribunal: "STF";
+  tipo: string;
+  descricao: string;
+  source_url: string;
+  coleta_id: number;
+}
+
+export interface VotoJudiciarioTable {
+  sessao_id: string;
+  judiciario_id: number;
+  voto: string;
+  presente: boolean;
+  coleta_id: number;
+}
+
 export interface Database {
   coleta: ColetaTable;
   parlamentar: ParlamentarTable;
@@ -311,6 +417,13 @@ export interface Database {
   transf_pagamento: TransfPagamentoTable;
   cnpj_abertura: CnpjAberturaTable;
   campanha_despesa: CampanhaDespesaTable;
+  executivo: ExecutivoTable;
+  despesa_executivo: DespesaExecutivoTable;
+  bem_executivo: BemExecutivoTable;
+  judiciario: JudiciarioTable;
+  despesa_judiciario: DespesaJudiciarioTable;
+  sessao_judiciario: SessaoJudiciarioTable;
+  voto_judiciario: VotoJudiciarioTable;
 }
 
 export type Parlamentar = Selectable<ParlamentarTable>;

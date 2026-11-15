@@ -10,8 +10,10 @@ O app Next.js mora em `apps/web`: leia `apps/web/AGENTS.md` antes de mexer nele.
 | ------------------ | ----------------- | ------------------------------------------------------------------------------------------- |
 | `@auditaja/web`    | `apps/web`        | Site Next.js: páginas, componentes, leituras do banco (`src/data`), SEO, e2e com Playwright |
 | `@auditaja/db`     | `packages/db`     | Esquema Kysely, cliente PostgreSQL, migrações, seed de teste e `db-init` do Docker          |
-| `@auditaja/core`   | `packages/core`   | Regras de domínio puras: métricas, privacidade, emendas, trilha, Senado, padrão atípico     |
+| `@auditaja/core`   | `packages/core`   | Regras de domínio puras: métricas, privacidade, emendas, trilha, Senado, padrão atípico, três poderes |
 | `@auditaja/ingest` | `packages/ingest` | Coletores das fontes públicas e o CLI `pnpm ingest`                                         |
+
+Escopo dos três poderes (federal): Legislativo (deputados e senadores); Executivo (Presidente, Vice, Ministros); Judiciário (Ministros do STF). Decisões em `docs/ab-3-poderes/DECISOES.md`.
 
 Dependências: `db ← core ← ingest` e `web → core, db`. Os pacotes exportam TypeScript direto (`@auditaja/core/metrics`, `@auditaja/db/client`...), sem etapa de build: o Next compila via `transpilePackages`, e tsx e Vitest leem o código-fonte.
 
@@ -41,6 +43,8 @@ Sem rede, use os dados fictícios do banco de teste: `pnpm db:seed:test` e apont
 | `votacoes`  | Câmara, arquivos anuais de votações, votos e orientações         |
 | `bens`      | TSE, `consulta_cand` e `bem_candidato` (download em lote no CDN) |
 | `tudo`      | Todos acima; bens de 2018, 2022 e 2026                           |
+| `executivo` | Composição do gabinete federal (gov.br / Presidência)            |
+| `judiciario`| Composição do STF                                                |
 
 Os coletores rodam à mão. Preferem arquivos em lote a varrer a API, e usam o `ClienteEducado` (`packages/ingest/src/http.ts`): User-Agent identificado, leitura do `robots.txt` antes de cada host, no máximo 1 requisição por segundo (ou o `Crawl-delay`), backoff em 429/5xx e parada em 401/403. A API CKAN do TSE fica de fora porque o `robots.txt` dela proíbe `/api/`.
 

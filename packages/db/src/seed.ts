@@ -16,6 +16,13 @@ export const SEED = {
   senadorAfastado: 10009003,
   /** Fora de exercício, sem votos nem notas: estados vazios. */
   senadoraSemRegistro: 10009004,
+  /** Executivo federal fictício (deslocamento 20.000.000). */
+  presidente: 200000001,
+  vicePresidente: 200000002,
+  ministro: 200000003,
+  /** Judiciário federal fictício (deslocamento 30.000.000). */
+  ministroStf: 300000001,
+  ministraStf: 300000002,
 };
 
 export async function semear(db: Kysely<Database>) {
@@ -40,6 +47,13 @@ export async function semear(db: Kysely<Database>) {
       "suplente",
       "bloco_partido",
       "bloco",
+      "voto_judiciario",
+      "sessao_judiciario",
+      "despesa_judiciario",
+      "judiciario",
+      "bem_executivo",
+      "despesa_executivo",
+      "executivo",
       "parlamentar",
       "coleta",
     ] as const) {
@@ -897,6 +911,233 @@ export async function semear(db: Kysely<Database>) {
           tipo: "Aplicação de renda fixa (CDB, RDB e outros)",
           valor: 780000,
           coleta_id: cTse,
+        },
+      ])
+      .execute();
+
+    const cExec = await coleta("planalto_composicao_executivo", "https://www.gov.br/planalto/pt-br/composicao");
+    const cViagem = await coleta(
+      "cgu_viagens_executivo",
+      "https://portaldatransparencia.gov.br/download-de-dados/viagens",
+    );
+    await trx
+      .insertInto("executivo")
+      .values([
+        {
+          id: SEED.presidente,
+          cargo: "presidente",
+          orgao: "Presidência da República",
+          nome: "Ana Presidente",
+          nome_civil: "ANA PRESIDENTE EXEMPLO",
+          sigla_partido: "PFX",
+          sigla_uf: "DF",
+          url_foto: null,
+          data_nascimento: "1968-03-01",
+          sexo: "F",
+          em_exercicio: true,
+          mandato_inicio: "2023-01-01",
+          mandato_fim: "2026-12-31",
+          source_url: "https://www.gov.br/planalto/pt-br/composicao",
+          coleta_id: cExec,
+        },
+        {
+          id: SEED.vicePresidente,
+          cargo: "vice_presidente",
+          orgao: "Presidência da República",
+          nome: "Bruno Vice",
+          nome_civil: "BRUNO VICE EXEMPLO",
+          sigla_partido: "PFY",
+          sigla_uf: "MG",
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "M",
+          em_exercicio: true,
+          mandato_inicio: "2023-01-01",
+          mandato_fim: "2026-12-31",
+          source_url: "https://www.gov.br/planalto/pt-br/composicao",
+          coleta_id: cExec,
+        },
+        {
+          id: SEED.ministro,
+          cargo: "ministro",
+          orgao: "Ministério da Transparência Ilustrativa",
+          nome: "Carla Ministra",
+          nome_civil: "CARLA MINISTRA EXEMPLO",
+          sigla_partido: null,
+          sigla_uf: "SP",
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "F",
+          em_exercicio: true,
+          mandato_inicio: "2024-01-15",
+          mandato_fim: null,
+          source_url: "https://www.gov.br/planalto/pt-br/composicao",
+          coleta_id: cExec,
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("despesa_executivo")
+      .values([
+        {
+          executivo_id: SEED.presidente,
+          ano: 2026,
+          mes: 3,
+          tipo: "viagem",
+          descricao: "Deslocamento a serviço",
+          fornecedor_nome: "Companhia Aérea Exemplo S.A.",
+          fornecedor_doc: "12.345.678/0001-90",
+          fornecedor_classe: "pessoa_juridica",
+          data_emissao: "2026-03-10",
+          valor_liquido: 4200,
+          url_documento: null,
+          coleta_id: cViagem,
+        },
+        {
+          executivo_id: SEED.ministro,
+          ano: 2026,
+          mes: 4,
+          tipo: "cartao",
+          descricao: "Despesa com cartão de pagamento",
+          fornecedor_nome: "Prestador pessoa física",
+          fornecedor_doc: null,
+          fornecedor_classe: "terceiro_pf",
+          data_emissao: "2026-04-02",
+          valor_liquido: 850,
+          url_documento: null,
+          coleta_id: cViagem,
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("bem_executivo")
+      .values([
+        {
+          ano_eleicao: 2022,
+          executivo_id: SEED.presidente,
+          ordem: 1,
+          tipo: "Apartamento",
+          valor: 1200000,
+          coleta_id: cTse,
+        },
+        {
+          ano_eleicao: 2018,
+          executivo_id: SEED.presidente,
+          ordem: 1,
+          tipo: "Apartamento",
+          valor: 900000,
+          coleta_id: cTse,
+        },
+      ])
+      .execute();
+
+    const cStf = await coleta("stf_composicao", "https://portal.stf.jus.br/composicao");
+    const cSessao = await coleta("stf_sessoes", "https://portal.stf.jus.br/processos");
+    await trx
+      .insertInto("judiciario")
+      .values([
+        {
+          id: SEED.ministroStf,
+          cargo: "ministro_stf",
+          tribunal: "STF",
+          nome: "Diego Ministro",
+          nome_civil: "DIEGO MINISTRO EXEMPLO",
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "M",
+          em_exercicio: true,
+          posse: "2015-06-01",
+          source_url: "https://portal.stf.jus.br/composicao",
+          coleta_id: cStf,
+        },
+        {
+          id: SEED.ministraStf,
+          cargo: "ministro_stf",
+          tribunal: "STF",
+          nome: "Elena Ministra",
+          nome_civil: "ELENA MINISTRA EXEMPLO",
+          url_foto: null,
+          data_nascimento: null,
+          sexo: "F",
+          em_exercicio: true,
+          posse: "2018-11-10",
+          source_url: "https://portal.stf.jus.br/composicao",
+          coleta_id: cStf,
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("despesa_judiciario")
+      .values([
+        {
+          judiciario_id: SEED.ministroStf,
+          ano: 2026,
+          mes: 2,
+          tipo: "diaria",
+          descricao: "Diária de deslocamento",
+          fornecedor_nome: "Tribunal — verba interna",
+          fornecedor_doc: null,
+          fornecedor_classe: "desconhecido",
+          data_emissao: "2026-02-18",
+          valor_liquido: 1100,
+          url_documento: null,
+          coleta_id: cStf,
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("sessao_judiciario")
+      .values([
+        {
+          id: "stf-seed-1",
+          data: "2026-03-05",
+          tribunal: "STF",
+          tipo: "Plenário",
+          descricao: "Sessão ilustrativa do Plenário",
+          source_url: "https://portal.stf.jus.br/processos",
+          coleta_id: cSessao,
+        },
+        {
+          id: "stf-seed-2",
+          data: "2026-03-12",
+          tribunal: "STF",
+          tipo: "Plenário",
+          descricao: "Segunda sessão ilustrativa",
+          source_url: "https://portal.stf.jus.br/processos",
+          coleta_id: cSessao,
+        },
+      ])
+      .execute();
+    await trx
+      .insertInto("voto_judiciario")
+      .values([
+        {
+          sessao_id: "stf-seed-1",
+          judiciario_id: SEED.ministroStf,
+          voto: "Acompanhou",
+          presente: true,
+          coleta_id: cSessao,
+        },
+        {
+          sessao_id: "stf-seed-1",
+          judiciario_id: SEED.ministraStf,
+          voto: "Divergiu",
+          presente: true,
+          coleta_id: cSessao,
+        },
+        {
+          sessao_id: "stf-seed-2",
+          judiciario_id: SEED.ministroStf,
+          voto: "Acompanhou",
+          presente: true,
+          coleta_id: cSessao,
+        },
+        {
+          sessao_id: "stf-seed-2",
+          judiciario_id: SEED.ministraStf,
+          voto: "",
+          presente: false,
+          coleta_id: cSessao,
         },
       ])
       .execute();

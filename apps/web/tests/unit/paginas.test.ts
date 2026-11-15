@@ -12,6 +12,10 @@ const paginas = {
   "/parlamentares": () => import("@/app/parlamentares/page"),
   "/parlamentares/[id]": () => import("@/app/parlamentares/[id]/page"),
   "/parlamentares/[id]/contestar": () => import("@/app/parlamentares/[id]/contestar/page"),
+  "/executivo": () => import("@/app/executivo/page"),
+  "/executivo/[id]": () => import("@/app/executivo/[id]/page"),
+  "/judiciario": () => import("@/app/judiciario/page"),
+  "/judiciario/[id]": () => import("@/app/judiciario/[id]/page"),
   "/fontes": () => import("@/app/fontes/page"),
 };
 /** Páginas sem dados de banco: casca toda estática, sem componente assíncrono. */
