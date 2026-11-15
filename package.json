@@ -13,6 +13,7 @@
     "db:seed:test": "DATABASE_URL=postgres://auditaja:auditaja@127.0.0.1:5436/auditaja_test tsx packages/db/scripts/seed.ts",
     "ingest": "tsx --env-file=.env packages/ingest/scripts/ingest.ts",
     "test": "pnpm -r --workspace-concurrency=1 --no-bail test",
+    "test:hidden": "node tests/hidden/check.mjs",
     "test:e2e": "pnpm --filter @auditaja/web test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check apps/web/src apps/web/tests apps/web/scripts packages/core/src packages/core/tests packages/db/src packages/db/tests packages/db/scripts packages/ingest/src packages/ingest/tests packages/ingest/scripts",

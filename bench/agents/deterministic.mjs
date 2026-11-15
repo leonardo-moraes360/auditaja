@@ -9,10 +9,11 @@ function arg(name, fallback = "") {
   return process.env[name.replace(/^--/, "").toUpperCase().replace(/-/g, "_")] || fallback;
 }
 
-const workdir = arg("--workdir", process.cwd());
+const workdir = arg("--workdir", process.env.TB_BENCH_WORKDIR || process.cwd());
 const useMem = process.env.TB_USE_MEM === "1" || process.env.TB_FLAG_TOOLBELT === "on";
 const repoRoot = process.env.AUDITAJA_ROOT || process.env.TB_REPO_ROOT || "";
 const started = Date.now();
+
 
 let toolCalls = 0;
 let tokensIn = 400;

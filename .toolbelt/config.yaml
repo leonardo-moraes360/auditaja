@@ -11,6 +11,17 @@ graph:
   auto_index: true
   index_on_change: true
   infer_relations: false
+  languages:
+    - javascript
+  docs:
+    - markdown
+    - html
+    - txt
+  frameworks:
+    - react
+    - routes
+    - mdx
+  max_file_bytes: 524288
 vault:
   path: .toolbelt/vault
   sync_on_change: true
@@ -25,3 +36,6 @@ bench:
   default_agent: ""
   repetitions: 1
   timeout: 10m
+verify:
+  test_cmd: "pnpm --filter @auditaja/core test"
+  hidden_test_cmd: "pnpm test:hidden"

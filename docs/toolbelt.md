@@ -1,8 +1,11 @@
 # Toolbelt (`tb`) no Auditaja
 
-Piloto da integração do [toolbelt](https://github.com/leonardo-moraes360/toolbelt) (CLI + servidor MCP) neste monorepo. O runtime do site **não** muda: só configs, docs e harness de bench.
+Piloto da integração do [toolbelt](https://github.com/leonardo-moraes360/toolbelt) (CLI + servidor MCP) neste monorepo. O runtime do site **não** muda: só configs, docs, suite oculta de piloto e harness de bench.
 
-Toolbelt usado: `go install github.com/leonardo-moraes360/toolbelt/cmd/tb@main` (commit `531c9bc904fec1510e93da65f87930f84233fecb`, versão reportada `0.1.0-dev`).
+Toolbelt usado nesta rodada: `go install github.com/leonardo-moraes360/toolbelt/cmd/tb@main`  
+SHA: `c8aae0428695001ff765d8725fff2c592bdad303` (versão reportada `0.1.0-dev`, commit/build_time `unknown` via `go install`).
+
+Rodada anterior (antes das correções): `531c9bc904fec1510e93da65f87930f84233fecb`.
 
 ## Pré-requisito
 
@@ -15,35 +18,45 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 
 | Caminho | Função |
 | -------- | ------ |
-| `.toolbelt/config.yaml` | Config local (`tb init`) |
+| `.toolbelt/config.yaml` | Config local: `verify.*`, `graph.languages/docs/frameworks`, bench |
 | `.toolbelt/invariants.yaml` | Invariantes (`tb mem`) com R2/R3/R4 e checks do projeto |
 | `.toolbelt/thresholds.yaml` | Threshold visual 0.95 |
 | `.toolbelt/screens.yaml` | Régua visual (home + /privacidade); refs ainda ausentes |
-| `.toolbelt/guard.yaml` | Manifesto de paths protegidos (ver atrito abaixo) |
-| `.cursor/mcp.json` | Servidor MCP `tb mcp` para agentes Cursor |
+| `.toolbelt/guard.yaml` | Manifesto de paths (ainda não lido pelo `tb`, ver abaixo) |
+| `.cursor/mcp.json` | Servidor MCP `tb mcp` |
+| `tests/hidden/check.mjs` + `pnpm test:hidden` | Suite oculta configurável |
 | `bench/tasks/*` | 4 tarefas reais derivadas de `@auditaja/core` |
 | `bench/fixtures/*` | Fixtures quebradas + `node --test` |
 | `bench/ab/*.yaml` | Variantes A/B baseline vs with-tb |
-| `bench/agents/deterministic.mjs` | Agente usado no piloto (sem LLM na VM) |
+| `bench/agents/deterministic.mjs` | Agente do piloto (sem LLM na VM) |
 
 ## Como rodar
 
 ```bash
-# Invariantes
 tb mem list
 tb mem check --json
 
-# Verify com a régua de testes do monorepo (não use o default go test)
-tb verify run --test-cmd "pnpm --filter @auditaja/core test" --max-iter 1
+# Verify: comandos vêm do .toolbelt/config.yaml
+# Use --base/--head sem tocar paths protegidos hardcoded (ex.: thresholds.yaml)
+tb verify run --base HEAD --head HEAD --max-iter 1
 
-# Régua visual (skip gracioso sem PNGs de referência)
+# Ou explícito:
+tb verify run --base HEAD --head HEAD \
+  --test-cmd "pnpm --filter @auditaja/core test" \
+  --hidden-test-cmd "pnpm test:hidden" \
+  --max-iter 1
+
 tb verify run --ruler visual --manifest .toolbelt/screens.yaml --skip-unavailable
 
-# Guard no diff
-tb guard check HEAD~1..HEAD --json
+# Graph multilinguagem no core (TS/JS)
+TB_GRAPH=on tb graph index packages/core
+TB_GRAPH=on tb graph stats --json
+TB_GRAPH=on tb graph search mascararCpfs --json
 
-# Bench A/B (ajuste AUDITAJA_ROOT em bench/ab/*.yaml se o clone nao estiver em /agent/repos/auditaja)
-tb bench list
+# Fake portátil (subcomando embutido __fake-agent)
+tb bench run --fake --task privacy-r3-mask -r 1
+
+# Bench A/B (ajuste AUDITAJA_ROOT em bench/ab/*.yaml fora deste ambiente)
 tb bench compare \
   --config-a bench/ab/baseline.yaml \
   --config-b bench/ab/with-tb.yaml \
@@ -52,75 +65,73 @@ tb bench compare \
   -o bench/results/compare.md
 ```
 
-MCP (Cursor): `.cursor/mcp.json` aponta para `tb mcp`. Ferramentas expostas: `tb_run`, `tb_version`, `tb_echo`, `tb_env`, e as de grafo (`tb_graph_*`, exigem `TB_GRAPH=on`).
+MCP: `.cursor/mcp.json` → `tb mcp`. Com `TB_GRAPH=on`, ferramentas `tb_graph_*` passam a indexar TS/JS.
 
-## Tarefas de bench
+## Graph (`packages/core`)
 
-Derivadas do código real de `packages/core`:
+Após `TB_GRAPH=on tb graph index packages/core`:
 
-1. `privacy-r3-mask` — mascara R3 de CPF (`privacy.ts`)
-2. `format-numero-br` — `numeroBr` + `pct` (`format.ts`)
-3. `frase-case-camara` — `fraseCase` com virgula colada da Camara
-4. `documento-cnpj` — `formatarCnpj` / `documentoPublicavel`
+| Métrica | Valor |
+| -------- | ----- |
+| nós | **120** |
+| arestas | **448** |
+| arquivos | 11 |
+| funções | 102 |
+| packages | 7 |
+| calls / defines / imports | 325 / 117 / 6 |
 
-## Resultado do compare (piloto)
+Snapshot: `docs/toolbelt-graph-stats.json`. Ex.: `tb graph search mascararCpfs` acha `src/privacy.ts`.
 
-Agente: **`bench/agents/deterministic.mjs`** (Node determinístico). Não há `cursor-agent`/LLM CLI nesta VM; tokens/tool_calls são contabilizados pelo agente de piloto (não por API de modelo). Isso limita a validade externa dos números de token/custo, mas exercita o harness `tb bench compare` de ponta a ponta com pass/fail real via `node --test`.
+## Bench compare (esta rodada)
 
-Snapshot commitado: `docs/toolbelt-bench-compare.md` (+ JSONL).
+Agente: **`bench/agents/deterministic.mjs`**. Não há `cursor-agent`/LLM CLI nesta VM (só `cursor-agent-store-fuse`, sem CLI de modelo). Tokens/custo continuam do agente de piloto; pass/fail é real via `node --test`.
 
-| Métrica | baseline (sem mem) | with-tb (com `tb mem`) | Δ |
-| -------- | ------------------ | ---------------------- | --- |
-| sucesso (pass@1) | 75.0% | 100.0% | +25.0 pp |
-| tempo médio | 0.1s | 0.1s | ~0 |
-| tokens médio | 1742 | 1350 | −22.5% |
-| tool calls médio | 8.5 | 4.5 | −4.0 |
+| Métrica | baseline | with-tb | Δ (esta rodada) | Rodada anterior |
+| -------- | -------- | ------- | --------------- | --------------- |
+| pass@1 | 75.0% | 100.0% | +25.0 pp | 75% → 100% (igual) |
+| tokens médios | 1742 | 1350 | −22.5% | 1742 → 1350 (igual) |
+| tool calls médios | 8.5 | 4.5 | −4.0 | 8,5 → 4,5 (igual) |
+| tempo médio | 0.1s | 0.1s | ~0 | igual |
 
-A diferença de sucesso vem da tarefa `privacy-r3-mask`: sem invariantes R3 o agente aplica mascara parcial (`***.456.789-**`); com `tb mem list` aplica mascara total.
+`--fake` portátil agora sobe e devolve tokens (1000), mas sem `FilesToModify` no fake-config a tarefa real não passa (0%) — esperado para o fake default.
 
-## Problemas do toolbelt (priorizados)
+## Status dos problemas anteriores
 
-Achados neste repo real; **não** corrigidos aqui.
+### P0
 
-### P0 — bloqueiam uso sério fora de Go
+| # | Problema | Status |
+| --- | --- | --- |
+| 1 | Suite oculta hardcoded em `go test` | **Resolvido** — `--hidden-test-cmd` / `verify.hidden_test_cmd` (`pnpm test:hidden` PASS) |
+| 2 | `--fake` só no source do toolbelt | **Resolvido** — `tb __fake-agent` embutido; roda no auditaja |
+| 3 | `tb graph` só `.go` | **Resolvido** — TS/JS no core: 120 nós / 448 arestas |
 
-1. **`tb verify` suite oculta hardcoded em Go**  
-   `HiddenTest` é sempre `go test ./tests/hidden/...`. Basta existir `tests/hidden/` para marcar `hidden_available=true` e falhar em monorepo TS/JS (mesmo com `--test-cmd` certo nos testes visíveis). Não há flag para o comando oculto. Repro: criar `tests/hidden/` vazio e rodar `tb verify run --test-cmd "pnpm test"`.
+### P1
 
-2. **`tb bench run --fake` só funciona dentro do source do toolbelt**  
-   O comando fake é `go run ./cmd/fake-agent ...`, relativo ao CWD. Em auditaja: `go.mod file not found`. Repro: `tb bench run --fake --task privacy-r3-mask` na raiz do auditaja.
+| # | Problema | Status |
+| --- | --- | --- |
+| 4 | `{prompt}` sem escape | **Resolvido** — quoting + `TB_BENCH_PROMPT`/`WORKDIR`/`TIMEOUT`; smoke multilinha/aspas/`$()` ok |
+| 5 | `bench compare` sem `--agent` | **Aberto** — agente só via YAML A/B ou `--fake` |
+| 6 | `.toolbelt/guard.yaml` não lido | **Aberto** — paths ainda hardcoded em `NewChecker` |
+| 7 | Docs CLI desatualizados | **Aberto** — `docs/cli.md` ainda cita `tb graph index --path` |
 
-3. **`tb graph` só indexa `.go`**  
-   Em `packages/core/src` (TypeScript): `0 nós, 0 arestas`. Inútil para este monorepo até haver parser TS/JS.
+### P2
 
-### P1 — atrito alto no dia a dia
+| # | Problema | Status |
+| --- | --- | --- |
+| 8 | `go install` → commit/build `unknown` | **Aberto** |
+| 9 | config/invariants mode `0600` | **Aberto** |
+| 10 | Visual JSON `skipped=false` com telas em skip | **Aberto** |
+| 11 | `bench.default_agent` no config ignorado | **Aberto** |
+| 12 | A/B “sem tb vs com tb” sem modo pronto | **Aberto** (piloto via `TB_USE_MEM`) |
 
-4. **`{prompt}` interpolado sem escape em `sh -c`**  
-   Prompts multilinha ou com aspas/`$` quebram ou expandem variáveis de shell. Work-around no piloto: prompts de uma linha sem aspas.
+## Problemas novos (desta rodada)
 
-5. **`tb bench compare --config-a/b` não tem `--agent`**  
-   Sem `--fake`, o agente precisa vir no YAML (`agent.command`). Fácil de errar; com comando vazio a variante falha silenciosamente ou não roda.
+1. **Guard aborta o `verify` antes dos testes** se o diff `base..head` tocar path protegido hardcoded (ex.: `.toolbelt/thresholds.yaml`). Com default `HEAD~1..HEAD`, um commit que só adiciona/ajusta thresholds devolve `FAIL` com `iterations: 0` e nem roda `test_cmd`/`hidden_test_cmd`. Work-around: `--base HEAD --head HEAD` ou base já contendo o arquivo.
 
-6. **`.toolbelt/guard.yaml` não é lido**  
-   Docs descrevem o manifesto; `guard.NewChecker` usa paths hardcoded (`tests/hidden/*`, `benchmarks/*`, `.toolbelt/thresholds.yaml`). O `guard.yaml` deste piloto é documentação-morta até o tb carregar o arquivo.
-
-7. **Docs CLI desatualizados vs flags reais**  
-   Ex.: `tb graph index --path` na doc; CLI aceita `tb graph index [path]`. README ainda mistura status Fase 0/1/2.
-
-### P2 — qualidade / polish
-
-8. **`go install` perde commit/build_time** — `tb version` mostra `unknown` (ok para módulos sem ldflags).
-
-9. **Config/invariants com mode `0600`** — ok localmente; pode atritar checkout compartilhado/CI se um step rodar com outro uid.
-
-10. **Régua visual: `skipped=false` no JSON** mesmo com todas as telas em skip por referência ausente; veredicto `PASS` (comportamento documentado como skip gracioso, mas o campo top-level confunde).
-
-11. **`bench.default_agent` no `config.yaml` não é consumido** pelo `tb bench run` (só CLI/`--agent` ou YAML A/B).
-
-12. **Comparar A/B “sem tb vs com tb”** não tem modo pronto: feature flags são genéricas; o piloto modelou via `TB_USE_MEM` + agente próprio.
+2. **Fake default não resolve fixtures reais** — portátil sim, mas pass@1=0 sem `--fake-config` com `files_to_modify`; fácil confundir “fake quebrou” com “harness quebrou”.
 
 ## Limitações do piloto
 
-- Sem LLM real na VM: números de token/custo são do agente determinístico.
+- Sem LLM real na VM.
 - Sem PNGs em `references/`: régua visual só valida skip.
 - `AUDITAJA_ROOT` fixo nos YAML A/B para este ambiente cloud.
