@@ -2,11 +2,11 @@
 
 ## Escopo escolhido
 
-| Poder | Esfera | Cargos cobertos | Fora de escopo (nesta rodada) |
-| ----- | ------ | --------------- | ----------------------------- |
-| Legislativo | Federal | Deputados federais, Senadores | Assembleias, Câmaras municipais |
-| Executivo | Federal | Presidente, Vice-presidente, Ministros de Estado | Governadores, prefeitos, cargos comissionados |
-| Judiciário | Federal | Ministros do STF e do STJ | TRF, TJ, TRT, tribunais superiores demais (TST, TSE, STM) |
+| Poder       | Esfera  | Cargos cobertos                                  | Fora de escopo (nesta rodada)                             |
+| ----------- | ------- | ------------------------------------------------ | --------------------------------------------------------- |
+| Legislativo | Federal | Deputados federais, Senadores                    | Assembleias, Câmaras municipais                           |
+| Executivo   | Federal | Presidente, Vice-presidente, Ministros de Estado | Governadores, prefeitos, cargos comissionados             |
+| Judiciário  | Federal | Ministros do STF e do STJ                        | TRF, TJ, TRT, tribunais superiores demais (TST, TSE, STM) |
 
 Justificativa: o MVP legislativo já é federal e centrado em pessoa+coleta; Executivo/Judiciário seguem o mesmo recorte para comparar indicadores entre poderes sem misturar esferas.
 
@@ -21,11 +21,11 @@ Justificativa: o MVP legislativo já é federal e centrado em pessoa+coleta; Exe
 
 ## Fontes públicas oficiais
 
-| Poder | Fonte | Uso |
-| ----- | ----- | --- |
-| Legislativo | Câmara, Senado, TSE, CGU | Já existentes |
-| Executivo | gov.br composição ministerial; Portal da Transparência (CGU) para despesas | `pnpm ingest executivo` |
-| Judiciário | Portais de composição do STF e do STJ; CGU para despesas | `pnpm ingest judiciario` |
+| Poder       | Fonte                                                                      | Uso                      |
+| ----------- | -------------------------------------------------------------------------- | ------------------------ |
+| Legislativo | Câmara, Senado, TSE, CGU                                                   | Já existentes            |
+| Executivo   | gov.br composição ministerial; Portal da Transparência (CGU) para despesas | `pnpm ingest executivo`  |
+| Judiciário  | Portais de composição do STF e do STJ; CGU para despesas                   | `pnpm ingest judiciario` |
 
 Toda coleta registra `coleta` (R1: URL, SHA-256, licença). Coletores usam `ClienteEducado` (R7).
 
@@ -39,18 +39,21 @@ Toda coleta registra `coleta` (R1: URL, SHA-256, licença). Coletores usam `Clie
 
 Implementados em `packages/core/src/metrics-poderes.ts` (`METODOLOGIA_PODERES_VERSAO = 1.0`).
 
-| KPI | Legislativo | Executivo | Judiciário | Base |
-| --- | ----------- | --------- | ---------- | ---- |
-| Total de gastos no período | sim (CEAP/CEAPS) | sim (`despesa_titular`) | sim (`despesa_titular`) | `resumoGastos` |
-| Média mensal (meses com nota) | sim | sim | sim | igual à CEAP |
-| Composição por tipo | sim | sim | sim | `participacaoPorTipo` |
-| Concentração no maior fornecedor | sim | sim | sim | ponto de partida (R4) |
-| Presença em votações | sim | não | não (MVP) | já em `metrics`/`senado` |
-| Alinhamento com orientação | sim | não (sem bancada) | não | `alinhamento` |
-| Variação nominal de bens | sim | sim (se houver candidatura TSE) | não no MVP | `variacaoNominal` |
+| KPI                              | Legislativo      | Executivo                       | Judiciário              | Base                     |
+| -------------------------------- | ---------------- | ------------------------------- | ----------------------- | ------------------------ |
+| Total de gastos no período       | sim (CEAP/CEAPS) | sim (`despesa_titular`)         | sim (`despesa_titular`) | `resumoGastos`           |
+| Média mensal (meses com nota)    | sim              | sim                             | sim                     | igual à CEAP             |
+| Composição por tipo              | sim              | sim                             | sim                     | `participacaoPorTipo`    |
+| Concentração no maior fornecedor | sim              | sim                             | sim                     | ponto de partida (R4)    |
+| Presença em votações             | sim              | não                             | não (MVP)               | já em `metrics`/`senado` |
+| Alinhamento com orientação       | sim              | não (sem bancada)               | não                     | `alinhamento`            |
+| Variação nominal de bens         | sim              | sim (se houver candidatura TSE) | não no MVP              | `variacaoNominal`        |
 
 Decisão: não inventar “alinhamento” no Executivo/Judiciário; reutilizar as funções puras do Legislativo onde o conceito existe.
 
 ## Landing (tarefa 3)
 
-Rota `/poderes` com apanhado dos três poderes; design system existente.
+- Rota `/poderes`: painel com titulares em exercício e gastos do ano por poder; escopo e fontes.
+- Listas `/poderes/executivo` e `/poderes/judiciario`.
+- Nav: item “Três poderes”; home e sitemap apontam para as novas rotas.
+- Design: mesmos tokens (`font-heading`, `bg-card`, `rounded-[14px]`, `max-w-6xl`) da home.

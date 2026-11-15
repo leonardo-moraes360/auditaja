@@ -92,6 +92,8 @@ export default function Inicio() {
         <p className="text-sm text-muted-foreground">
           Fontes: Câmara dos Deputados, Senado Federal, TSE e Portal da Transparência (CGU).{" "}
           <Link href="/sobre">Como funciona</Link>
+          {" · "}
+          <Link href="/poderes">Três poderes</Link>
         </p>
       </section>
     </div>
