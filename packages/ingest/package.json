@@ -16,7 +16,7 @@
     "@auditaja/db": "workspace:*",
     "csv-parse": "^7.0.3",
     "iconv-lite": "^0.7.3",
-    "kysely": "^0.29.8",
+    "kysely": "^0.29.9",
     "yauzl": "^3.4.0"
   },
   "devDependencies": {
